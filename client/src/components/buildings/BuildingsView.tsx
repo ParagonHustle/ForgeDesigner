@@ -176,25 +176,10 @@ const BuildingsView = () => {
     const townhall = getBuildingByType('townhall');
     const townhallLevel = townhall?.currentLevel || 1;
     
-    // Determine max allowed level based on townhall level
-    let maxAllowedLevel = 9; // Default max level is 9
+    // Fixed max level of 9 for all buildings regardless of Townhall level
+    const maxAllowedLevel = 9;
     
-    if (townhallLevel >= 40) {
-      maxAllowedLevel = 49;
-    } else if (townhallLevel >= 30) {
-      maxAllowedLevel = 39;
-    } else if (townhallLevel >= 20) {
-      maxAllowedLevel = 29;
-    } else if (townhallLevel >= 10) {
-      maxAllowedLevel = 19;
-    }
-    
-    // Townhall itself can go up to max level regardless (50 is the max level)
-    if (building.id === 'townhall') {
-      return currentLevel >= 50;
-    }
-    
-    // For other buildings, check against the max allowed level based on townhall
+    // For all buildings, check against the max allowed level (including townhall)
     return currentLevel >= maxAllowedLevel;
   };
 
