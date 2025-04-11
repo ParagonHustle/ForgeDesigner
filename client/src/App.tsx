@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import MainLayout from "@/components/layout/MainLayout";
 import Dashboard from "@/pages/dashboard";
-import Characters from "@/pages/characters";
+import Inventory from "@/pages/inventory";
 import Dungeons from "@/pages/dungeons";
 import Farming from "@/pages/farming";
 import Forge from "@/pages/forge";
@@ -18,7 +18,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/characters" component={Characters} />
+      <Route path="/inventory" component={Inventory} />
       <Route path="/dungeons" component={Dungeons} />
       <Route path="/farming" component={Farming} />
       <Route path="/forge" component={Forge} />
