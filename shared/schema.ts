@@ -119,12 +119,14 @@ export const blackMarketListings = pgTable("black_market_listings", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   itemType: text("item_type").notNull(), // 'character', 'aura', 'resource'
-  itemId: integer("item_id").notNull(),
+  itemId: integer("item_id"),
+  itemData: jsonb("item_data"),
   price: integer("price").notNull(),
   currencyType: text("currency_type").notNull(), // 'forgeTokens', 'rogueCredits'
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at"),
   sold: boolean("sold").default(false),
+  featured: boolean("featured").default(false),
 });
 
 // Bounty quest model

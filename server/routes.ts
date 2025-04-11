@@ -838,220 +838,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (listings.length === 0) {
         const systemId = 0; // System listings created by ID 0
         
+        // Helper function to create premium listings (Forge Tokens)
+        const createPremiumListing = (type, data, price, featured = false) => ({
+          userId: systemId,
+          itemType: type,
+          itemData: data,
+          price,
+          currencyType: 'forgeTokens',
+          sold: false,
+          listedAt: new Date(),
+          expiresAt: new Date(Date.now() + 86400000),
+          featured
+        });
+        
+        // Helper function to create standard listings (Rogue Credits)
+        const createStandardListing = (type, data, price) => ({
+          userId: systemId,
+          itemType: type,
+          itemData: data,
+          price,
+          currencyType: 'rogueCredits', 
+          sold: false,
+          listedAt: new Date(),
+          expiresAt: new Date(Date.now() + 86400000)
+        });
+        
         // Sample premium character listings (forge tokens)
         const premiumCharacters = [
-          {
-            userId: systemId,
-            itemType: 'character',
-            itemId: null,
-            itemData: {
-              name: 'Shadow Rogue',
-              level: 25,
-              rarity: 'Epic',
-              class: 'Rogue',
-              stats: {
-                strength: 52,
-                agility: 85,
-                intelligence: 60,
-                vitality: 70
-              },
-              equippedAuraIds: [],
-              passiveSkills: [
-                { name: 'Shadowstep', description: 'Can teleport behind enemies once per battle' },
-                { name: 'Critical Mastery', description: '15% increased critical hit chance' }
-              ]
+          createPremiumListing('character', {
+            name: 'Shadow Rogue',
+            level: 25,
+            rarity: 'Epic',
+            class: 'Rogue',
+            stats: {
+              strength: 52,
+              agility: 85,
+              intelligence: 60,
+              vitality: 70
             },
-            price: 750,
-            currencyType: 'forgeTokens',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000), // Expires in 24h
-            featured: true
-          },
-          {
-            userId: systemId,
-            itemType: 'character',
-            itemId: null,
-            itemData: {
-              name: 'Arcane Scholar',
-              level: 20,
-              rarity: 'Rare',
-              class: 'Mage',
-              stats: {
-                strength: 30,
-                agility: 45,
-                intelligence: 90,
-                vitality: 55
-              },
-              equippedAuraIds: [],
-              passiveSkills: [
-                { name: 'Spell Mastery', description: 'Spells cost 10% less mana' },
-                { name: 'Arcane Shield', description: 'Automatically blocks first spell damage in battle' }
-              ]
+            equippedAuraIds: [],
+            passiveSkills: [
+              { name: 'Shadowstep', description: 'Can teleport behind enemies once per battle' },
+              { name: 'Critical Mastery', description: '15% increased critical hit chance' }
+            ]
+          }, 750, true),
+          
+          createPremiumListing('character', {
+            name: 'Arcane Scholar',
+            level: 20,
+            rarity: 'Rare',
+            class: 'Mage',
+            stats: {
+              strength: 30,
+              agility: 45,
+              intelligence: 90,
+              vitality: 55
             },
-            price: 550,
-            currencyType: 'forgeTokens',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000)
-          }
+            equippedAuraIds: [],
+            passiveSkills: [
+              { name: 'Spell Mastery', description: 'Spells cost 10% less mana' },
+              { name: 'Arcane Shield', description: 'Automatically blocks first spell damage in battle' }
+            ]
+          }, 550)
         ];
         
         // Sample standard character listings (rogue credits)
         const standardCharacters = [
-          {
-            userId: systemId,
-            itemType: 'character',
-            itemId: null,
-            itemData: {
-              name: 'Veteran Warrior',
-              level: 15,
-              rarity: 'Uncommon',
-              class: 'Warrior',
-              stats: {
-                strength: 70,
-                agility: 40,
-                intelligence: 30,
-                vitality: 65
-              },
-              equippedAuraIds: [],
-              passiveSkills: [
-                { name: 'Battle Hardened', description: 'Takes 5% less damage from physical attacks' }
-              ]
+          createStandardListing('character', {
+            name: 'Veteran Warrior',
+            level: 15,
+            rarity: 'Uncommon',
+            class: 'Warrior',
+            stats: {
+              strength: 70,
+              agility: 40,
+              intelligence: 30,
+              vitality: 65
             },
-            price: 2500,
-            currencyType: 'rogueCredits',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000)
-          }
+            equippedAuraIds: [],
+            passiveSkills: [
+              { name: 'Battle Hardened', description: 'Takes 5% less damage from physical attacks' }
+            ]
+          }, 2500)
         ];
         
         // Sample premium aura listings
         const premiumAuras = [
-          {
-            userId: systemId,
-            itemType: 'aura',
-            itemId: null,
-            itemData: {
-              name: 'Flame Emperor\'s Might',
-              rarity: 'Epic',
-              element: 'Fire',
-              level: 3,
-              statMultipliers: { strength: 1.2, agility: 1.1, intelligence: 1.0, vitality: 1.15 },
-              skills: [
-                { name: 'Inferno', description: 'Deals massive fire damage to all enemies', tier: 'Ultimate' },
-                { name: 'Burning Aura', description: 'Enemies take burn damage when attacking the wearer', tier: 'Advanced' },
-                { name: 'Fire Resistance', description: '25% resistance to fire damage', tier: 'Basic' }
-              ]
-            },
-            price: 900,
-            currencyType: 'forgeTokens',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000),
-            featured: true
-          },
-          {
-            userId: systemId,
-            itemType: 'aura',
-            itemId: null,
-            itemData: {
-              name: 'Tidal Mastery',
-              rarity: 'Rare',
-              element: 'Water',
-              level: 2,
-              statMultipliers: { strength: 1.0, agility: 1.15, intelligence: 1.2, vitality: 1.05 },
-              skills: [
-                { name: 'Healing Tide', description: 'Restores health to all allies', tier: 'Advanced' },
-                { name: 'Water Shield', description: 'Creates a barrier that absorbs damage', tier: 'Basic' }
-              ]
-            },
-            price: 600,
-            currencyType: 'forgeTokens',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000)
-          }
+          createPremiumListing('aura', {
+            name: 'Flame Emperor\'s Might',
+            rarity: 'Epic',
+            element: 'Fire',
+            level: 3,
+            statMultipliers: { strength: 1.2, agility: 1.1, intelligence: 1.0, vitality: 1.15 },
+            skills: [
+              { name: 'Inferno', description: 'Deals massive fire damage to all enemies', tier: 'Ultimate' },
+              { name: 'Burning Aura', description: 'Enemies take burn damage when attacking the wearer', tier: 'Advanced' },
+              { name: 'Fire Resistance', description: '25% resistance to fire damage', tier: 'Basic' }
+            ]
+          }, 900, true),
+          
+          createPremiumListing('aura', {
+            name: 'Tidal Mastery',
+            rarity: 'Rare',
+            element: 'Water',
+            level: 2,
+            statMultipliers: { strength: 1.0, agility: 1.15, intelligence: 1.2, vitality: 1.05 },
+            skills: [
+              { name: 'Healing Tide', description: 'Restores health to all allies', tier: 'Advanced' },
+              { name: 'Water Shield', description: 'Creates a barrier that absorbs damage', tier: 'Basic' }
+            ]
+          }, 600)
         ];
         
         // Sample standard aura listings
         const standardAuras = [
-          {
-            userId: systemId,
-            itemType: 'aura',
-            itemId: null,
-            itemData: {
-              name: 'Earthen Protection',
-              rarity: 'Uncommon',
-              element: 'Earth',
-              level: 1,
-              statMultipliers: { strength: 1.1, agility: 0.9, intelligence: 1.0, vitality: 1.2 },
-              skills: [
-                { name: 'Stone Skin', description: 'Reduces physical damage by 10%', tier: 'Basic' }
-              ]
-            },
-            price: 1800,
-            currencyType: 'rogueCredits',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000)
-          }
+          createStandardListing('aura', {
+            name: 'Earthen Protection',
+            rarity: 'Uncommon',
+            element: 'Earth',
+            level: 1,
+            statMultipliers: { strength: 1.1, agility: 0.9, intelligence: 1.0, vitality: 1.2 },
+            skills: [
+              { name: 'Stone Skin', description: 'Reduces physical damage by 10%', tier: 'Basic' }
+            ]
+          }, 1800)
         ];
         
         // Sample resource listings
         const resources = [
-          {
-            userId: systemId,
-            itemType: 'resource',
-            itemId: null,
-            itemData: {
-              name: 'Celestial Ore',
-              type: 'material',
-              quantity: 50,
-              description: 'Rare material used for crafting high-level auras',
-              iconUrl: 'https://images.unsplash.com/photo-1618221118493-9bce6d4b04cd?w=150&h=150&fit=crop'
-            },
-            price: 300,
-            currencyType: 'forgeTokens',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000)
-          },
-          {
-            userId: systemId,
-            itemType: 'resource',
-            itemId: null,
-            itemData: {
-              name: 'Aether Crystal',
-              type: 'material',
-              quantity: 20,
-              description: 'Magical crystal that enhances aura crafting success rates',
-              iconUrl: 'https://images.unsplash.com/photo-1566792368824-44a7882c53e5?w=150&h=150&fit=crop'
-            },
-            price: 1200,
-            currencyType: 'rogueCredits',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000)
-          },
-          {
-            userId: systemId,
-            itemType: 'resource',
-            itemId: null,
-            itemData: {
-              name: 'Soul Shard Bundle',
-              type: 'currency',
-              quantity: 10,
-              description: 'Bundle of soul shards used for advanced crafting',
-              iconUrl: 'https://images.unsplash.com/photo-1518563071562-1e3a85d4523d?w=150&h=150&fit=crop'
-            },
-            price: 450,
-            currencyType: 'forgeTokens',
-            sold: false,
-            listedAt: new Date(),
-            expiresAt: new Date(Date.now() + 86400000)
-          }
+          createPremiumListing('resource', {
+            name: 'Celestial Ore',
+            type: 'material',
+            quantity: 50,
+            description: 'Rare material used for crafting high-level auras',
+            iconUrl: 'https://images.unsplash.com/photo-1618221118493-9bce6d4b04cd?w=150&h=150&fit=crop'
+          }, 300),
+          
+          createStandardListing('resource', {
+            name: 'Aether Crystal',
+            type: 'material',
+            quantity: 20,
+            description: 'Magical crystal that enhances aura crafting success rates',
+            iconUrl: 'https://images.unsplash.com/photo-1566792368824-44a7882c53e5?w=150&h=150&fit=crop'
+          }, 1200),
+          
+          createPremiumListing('resource', {
+            name: 'Soul Shard Bundle',
+            type: 'currency',
+            quantity: 10,
+            description: 'Bundle of soul shards used for advanced crafting',
+            iconUrl: 'https://images.unsplash.com/photo-1518563071562-1e3a85d4523d?w=150&h=150&fit=crop'
+          }, 450)
         ];
         
         // Create all the listings
@@ -1097,23 +1034,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'User not found' });
       }
       
-      if (listing.currencyType === 'forgeTokens' && user.forgeTokens < listing.price) {
-        return res.status(400).json({ message: 'Not enough Forge Tokens' });
-      }
-      
-      if (listing.currencyType === 'rogueCredits' && user.rogueCredits < listing.price) {
-        return res.status(400).json({ message: 'Not enough Rogue Credits' });
-      }
-      
-      // Deduct currency
+      // Validate currency for purchase
       if (listing.currencyType === 'forgeTokens') {
+        if (user.forgeTokens === null || user.forgeTokens < listing.price) {
+          return res.status(400).json({ message: 'Not enough Forge Tokens' });
+        }
+        // Deduct forge tokens from user
         await storage.updateUser(user.id, {
           forgeTokens: user.forgeTokens - listing.price
         });
-      } else {
+      } else if (listing.currencyType === 'rogueCredits') {
+        if (user.rogueCredits === null || user.rogueCredits < listing.price) {
+          return res.status(400).json({ message: 'Not enough Rogue Credits' });
+        }
+        // Deduct rogue credits from user
         await storage.updateUser(user.id, {
           rogueCredits: user.rogueCredits - listing.price
         });
+      } else {
+        return res.status(400).json({ message: 'Invalid currency type' });
       }
       
       // Mark as sold
@@ -1359,7 +1298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Award rewards
       const user = await storage.getUserById(req.session.userId!);
       if (user && quest.rewards) {
-        const updates: Partial<User> = {};
+        const updates: Partial<typeof user> = {};
         
         if ('rogueCredits' in quest.rewards && quest.rewards.rogueCredits) {
           updates.rogueCredits = (user.rogueCredits || 0) + quest.rewards.rogueCredits;
