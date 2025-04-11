@@ -1,7 +1,5 @@
-import InventoryView from "@/components/inventory/InventoryView";
+import InventoryView from '@/components/inventory/InventoryView';
 
-const Inventory = () => {
+export default function InventoryPage() {
   return <InventoryView />;
-};
-
-export default Inventory;
+}

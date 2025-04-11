@@ -395,7 +395,7 @@ const InventoryView = () => {
                     <div className="mt-2 bg-[#1F1D36]/80 p-3 rounded-lg text-sm">
                       <h4 className="font-semibold mb-1">Stat Multipliers:</h4>
                       <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-                        {aura.statMultipliers && Object.entries(aura.statMultipliers).map(([stat, value]) => (
+                        {aura.statMultipliers && Object.entries(aura.statMultipliers as Record<string, number>).map(([stat, value]) => (
                           <div key={stat} className="flex justify-between">
                             <span className="capitalize">{stat}</span>
                             <span className="text-[#00B9AE]">
@@ -477,9 +477,9 @@ const InventoryView = () => {
               >
                 <div className="flex items-center">
                   <div className="w-10 h-10 rounded-full bg-[#432874]/30 flex items-center justify-center mr-3">
-                    {resource.category === 'essence' ? (
+                    {resource.type === 'essence' ? (
                       <Sparkles className="h-5 w-5 text-[#FF9D00]" />
-                    ) : resource.category === 'currency' ? (
+                    ) : resource.type === 'currency' ? (
                       <Gem className="h-5 w-5 text-[#FFD700]" />
                     ) : (
                       <Box className="h-5 w-5 text-[#C8B8DB]" />
@@ -487,15 +487,15 @@ const InventoryView = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#FF9D00]">{resource.name}</h3>
-                    <div className="text-sm text-[#C8B8DB]/80 capitalize">{resource.category}</div>
+                    <div className="text-sm text-[#C8B8DB]/80 capitalize">{resource.type}</div>
                   </div>
                   <div className="ml-auto bg-[#432874]/30 px-3 py-1 rounded-full">
                     <span className="text-[#C8B8DB]">{resource.quantity}</span>
                   </div>
                 </div>
                 <div className="mt-3 text-sm text-[#C8B8DB]/70">
-                  {resource.description || `Used for ${resource.category === 'essence' ? 'crafting auras' : 
-                    resource.category === 'currency' ? 'purchasing items and upgrades' : 
+                  {resource.description || `Used for ${resource.type === 'essence' ? 'crafting auras' : 
+                    resource.type === 'currency' ? 'purchasing items and upgrades' : 
                     'crafting and upgrading'}.`}
                 </div>
               </motion.div>
