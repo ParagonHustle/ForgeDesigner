@@ -8,14 +8,31 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Star, AlignCenter, Sparkles, Swords, Target, Zap, Shield, BookOpenText, Flame } from 'lucide-react';
+import { 
+  Star, 
+  Sparkles, 
+  Swords, 
+  Zap, 
+  Shield, 
+  Flame,
+  Wind,
+  Droplets,
+  Mountain,
+  Activity,
+  BrainCircuit,
+  Lightbulb
+} from 'lucide-react';
 
 const CollectionsView = () => {
-  const [selectedTab, setSelectedTab] = useState('achievements');
+  const [selectedTab, setSelectedTab] = useState('collections');
   const gameStore = useGameStore();
   const { user } = useDiscordAuth();
   const { toast } = useToast();
-
+  
+  // Mock account power calculation
+  const accountPower = 8750; // This would be calculated based on characters, auras and buildings
+  const skillPoints = Math.floor(accountPower / 1000);
+  
   // Animation variants
   const container = {
     hidden: { opacity: 0 },
@@ -32,56 +49,7 @@ const CollectionsView = () => {
     show: { opacity: 1, y: 0 }
   };
 
-  // Mock achievement data (to be replaced with real data from API)
-  const achievements = [
-    {
-      id: 1,
-      name: "Forge Apprentice",
-      description: "Create your first Aura in the Forge",
-      progress: 100,
-      icon: <Flame className="h-8 w-8 text-[#FF9D00]" />,
-      reward: "50 Forge Tokens",
-      completed: true
-    },
-    {
-      id: 2,
-      name: "Bounty Hunter",
-      description: "Complete 10 bounty quests",
-      progress: 40,
-      icon: <Target className="h-8 w-8 text-[#00B9AE]" />,
-      reward: "100 Rogue Credits",
-      completed: false
-    },
-    {
-      id: 3,
-      name: "Dungeon Master",
-      description: "Complete all available dungeons",
-      progress: 30,
-      icon: <Swords className="h-8 w-8 text-[#DC143C]" />,
-      reward: "Rare Character",
-      completed: false
-    },
-    {
-      id: 4,
-      name: "Farming Prodigy",
-      description: "Collect 1000 resources from farming",
-      progress: 65,
-      icon: <AlignCenter className="h-8 w-8 text-[#4CAF50]" />,
-      reward: "100 Soul Shards",
-      completed: false
-    },
-    {
-      id: 5,
-      name: "Builder",
-      description: "Upgrade all buildings to level 3",
-      progress: 50,
-      icon: <Shield className="h-8 w-8 text-[#9C27B0]" />,
-      reward: "200 Forge Tokens",
-      completed: false
-    }
-  ];
-
-  // Mock perks data
+  // Mock perks data (for skill tree)
   const perks = [
     {
       id: 1,
@@ -91,7 +59,8 @@ const CollectionsView = () => {
       maxLevel: 5,
       icon: <Zap className="h-8 w-8 text-[#4CAF50]" />,
       effect: "+10% Essence per level",
-      cost: "100 Forge Tokens"
+      cost: "1 Skill Point",
+      position: { x: 1, y: 1 }
     },
     {
       id: 2,
@@ -101,7 +70,8 @@ const CollectionsView = () => {
       maxLevel: 5,
       icon: <Swords className="h-8 w-8 text-[#DC143C]" />,
       effect: "+5% Character Stats per level",
-      cost: "150 Forge Tokens"
+      cost: "1 Skill Point",
+      position: { x: 2, y: 1 }
     },
     {
       id: 3,
@@ -111,17 +81,88 @@ const CollectionsView = () => {
       maxLevel: 3,
       icon: <Flame className="h-8 w-8 text-[#FF9D00]" />,
       effect: "-10% Forging Time per level",
-      cost: "200 Forge Tokens"
+      cost: "1 Skill Point",
+      position: { x: 3, y: 1 }
     },
     {
       id: 4,
-      name: "Treasure Hunter",
-      description: "Increases rare item drops by 15%",
+      name: "Resilient Mind",
+      description: "Increases Focus stat by 15%",
       level: 0,
       maxLevel: 3,
-      icon: <Trophy className="h-8 w-8 text-[#FFD700]" />,
-      effect: "+15% Rare Drop Chance per level",
-      cost: "250 Forge Tokens"
+      icon: <BrainCircuit className="h-8 w-8 text-[#9C27B0]" />,
+      effect: "+15% Focus per level",
+      cost: "1 Skill Point",
+      position: { x: 2, y: 2 }
+    },
+    {
+      id: 5,
+      name: "Vital Energies",
+      description: "Increases Vitality stat by 15%",
+      level: 0,
+      maxLevel: 3,
+      icon: <Activity className="h-8 w-8 text-[#F44336]" />,
+      effect: "+15% Vitality per level",
+      cost: "1 Skill Point",
+      position: { x: 1, y: 2 }
+    },
+    {
+      id: 6,
+      name: "Strategic Mind",
+      description: "Increases Defense stat by 15%",
+      level: 0,
+      maxLevel: 3,
+      icon: <Shield className="h-8 w-8 text-[#2196F3]" />,
+      effect: "+15% Defense per level",
+      cost: "1 Skill Point",
+      position: { x: 3, y: 2 }
+    },
+    {
+      id: 7,
+      name: "Enlightened Spirit",
+      description: "Increases all resource gathering by 20%",
+      level: 0,
+      maxLevel: 2,
+      icon: <Lightbulb className="h-8 w-8 text-[#FFD700]" />,
+      effect: "+20% Resource Gathering per level",
+      cost: "2 Skill Points",
+      position: { x: 2, y: 3 }
+    }
+  ];
+
+  // Mock aura collection data
+  const auraCollection = [
+    {
+      id: 1,
+      type: "Fire",
+      discovered: true,
+      icon: <Flame className="h-12 w-12 text-[#FF4500]" />,
+      count: 3,
+      description: "Fiery auras enhance attack power and focus."
+    },
+    {
+      id: 2,
+      type: "Water",
+      discovered: true,
+      icon: <Droplets className="h-12 w-12 text-[#1E90FF]" />,
+      count: 2,
+      description: "Water auras enhance defense and resilience."
+    },
+    {
+      id: 3,
+      type: "Earth",
+      discovered: true,
+      icon: <Mountain className="h-12 w-12 text-[#8B4513]" />,
+      count: 2,
+      description: "Earth auras enhance vitality and defense."
+    },
+    {
+      id: 4,
+      type: "Wind",
+      discovered: true,
+      icon: <Wind className="h-12 w-12 text-[#32CD32]" />,
+      count: 1,
+      description: "Wind auras enhance speed and accuracy."
     }
   ];
 
@@ -132,7 +173,7 @@ const CollectionsView = () => {
       name: "The Collector",
       description: "Collect 50 unique items",
       progress: 70,
-      icon: <BookOpenText className="h-8 w-8 text-[#FFD700]" />,
+      icon: <Star className="h-8 w-8 text-[#FFD700]" />,
       requirements: "50/50 unique items collected",
       status: "Unlocked"
     },
@@ -159,7 +200,7 @@ const CollectionsView = () => {
   const handleUpgradePerk = (perkId: number) => {
     // API call to upgrade a perk would go here
     toast({
-      title: "Perk Upgraded",
+      title: "Skill Allocated",
       description: "Your account-wide bonus has been increased.",
     });
   };
@@ -169,152 +210,314 @@ const CollectionsView = () => {
       <div className="mb-6">
         <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">Collections</h1>
         <p className="text-[#C8B8DB]/80">
-          Track your achievements, unlock account-wide bonuses, and earn exclusive titles.
+          Discover elemental auras, unlock account-wide bonuses, and earn exclusive titles.
+        </p>
+      </div>
+      
+      {/* Account Power Display */}
+      <div className="mb-8 bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-cinzel font-bold text-[#FF9D00]">Account Power</h2>
+          <div className="bg-[#432874]/30 px-4 py-2 rounded-lg">
+            <span className="text-2xl font-bold text-[#FF9D00]">{accountPower}</span>
+          </div>
+        </div>
+        
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[#C8B8DB]/80">Available Skill Points</span>
+          <span className="text-[#00B9AE] font-semibold">{skillPoints}</span>
+        </div>
+        
+        <div className="h-2 bg-[#1F1D36] rounded-full overflow-hidden mb-4">
+          <div 
+            className="h-full bg-[#FF9D00]" 
+            style={{ width: `${((accountPower % 1000) / 1000) * 100}%` }}
+          ></div>
+        </div>
+        
+        <p className="text-[#C8B8DB]/80 text-sm">
+          Account Power combines the total stats of all Characters with their Aura Stat Multipliers plus 100 points for each building Level. Earn 1 Skill Point for every 1,000 Account Power.
         </p>
       </div>
       
       {/* Collection Tabs */}
-      <Tabs defaultValue="achievements" value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+      <Tabs defaultValue="collections" value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="bg-[#432874]/20 mb-6">
-          <TabsTrigger value="achievements" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
-            <Trophy className="h-4 w-4 mr-2" />
-            Achievements
+          <TabsTrigger value="collections" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
+            <Star className="h-4 w-4 mr-2" />
+            Collections
           </TabsTrigger>
           <TabsTrigger value="perks" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
-            <Star className="h-4 w-4 mr-2" />
+            <Sparkles className="h-4 w-4 mr-2" />
             Account Perks
           </TabsTrigger>
           <TabsTrigger value="titles" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
-            <Sparkles className="h-4 w-4 mr-2" />
+            <Shield className="h-4 w-4 mr-2" />
             Titles
           </TabsTrigger>
         </TabsList>
         
-        {/* Achievements Tab */}
-        <TabsContent value="achievements">
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-          >
-            {achievements.map(achievement => (
-              <motion.div
-                key={achievement.id}
-                variants={item}
-                className={`bg-[#1A1A2E] border ${achievement.completed ? 'border-[#FFD700]/50' : 'border-[#432874]/30'} rounded-xl overflow-hidden`}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center">
-                      {achievement.icon}
-                      <CardTitle className="ml-2 font-cinzel">{achievement.name}</CardTitle>
-                    </div>
-                    <Badge className={`${achievement.completed ? 'bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/30' : 'bg-[#432874]/30 text-[#C8B8DB] border-[#432874]/50'}`}>
-                      {achievement.completed ? 'Completed' : `${achievement.progress}%`}
-                    </Badge>
-                  </div>
-                  <CardDescription>{achievement.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="pt-2">
-                  <div className="mb-4">
-                    <Progress 
-                      value={achievement.progress} 
-                      className="h-2 bg-[#1F1D36] border-[#432874]/20" 
-                    />
-                  </div>
-                  
-                  <div className="bg-[#432874]/20 p-3 rounded-lg">
-                    <div className="flex items-center">
-                      <Trophy className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
-                      <p className="text-sm text-[#C8B8DB]/90">
-                        Reward: {achievement.reward}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </motion.div>
-            ))}
-          </motion.div>
-        </TabsContent>
-        
-        {/* Account Perks Tab */}
-        <TabsContent value="perks">
+        {/* Collections Tab */}
+        <TabsContent value="collections">
+          <div className="mb-6">
+            <h3 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-4">Aura Collection</h3>
+            <p className="text-[#C8B8DB]/80 mb-6">
+              Discover and collect elemental auras to enhance your power and unlock special abilities.
+            </p>
+          </div>
+          
           <motion.div
             variants={container}
             initial="hidden"
             animate="show"
             className="grid gap-6 md:grid-cols-2"
           >
-            {perks.map(perk => (
+            {auraCollection.map(aura => (
               <motion.div
-                key={perk.id}
+                key={aura.id}
                 variants={item}
                 className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
               >
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center">
-                      {perk.icon}
-                      <CardTitle className="ml-2 font-cinzel">{perk.name}</CardTitle>
-                    </div>
-                    <Badge className="bg-[#432874]/30 text-[#C8B8DB] border-[#432874]/50">
-                      Level {perk.level}/{perk.maxLevel}
-                    </Badge>
-                  </div>
-                  <CardDescription>{perk.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="pt-2">
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-[#C8B8DB]/80">Progress</span>
-                      <span className="text-[#FF9D00]">{perk.level}/{perk.maxLevel}</span>
-                    </div>
-                    <div className="h-2 bg-[#1F1D36] rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-[#FF9D00]" 
-                        style={{ width: `${(perk.level / perk.maxLevel) * 100}%` }}
-                      ></div>
+                <div className="flex items-stretch">
+                  <div className="bg-[#1F1D36] p-6 flex items-center justify-center">
+                    <div className="bg-[#432874]/30 p-4 rounded-full">
+                      {aura.icon}
                     </div>
                   </div>
                   
-                  <div className="bg-[#432874]/20 p-3 rounded-lg mb-4">
-                    <div className="flex items-center mb-2">
-                      <Zap className="h-4 w-4 text-[#FF9D00] mr-2 flex-shrink-0" />
-                      <p className="text-sm text-[#C8B8DB]/90">
-                        Current Effect: {perk.level > 0 ? `+${perk.level * 10}%` : 'None'}
-                      </p>
+                  <div className="p-6 flex-1">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">{aura.type} Aura</h4>
+                      <Badge className="bg-[#432874]/30 text-[#C8B8DB] border-[#432874]/50">
+                        {aura.count} Collected
+                      </Badge>
                     </div>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
-                      <p className="text-sm text-[#C8B8DB]/90">
-                        Next Level: {perk.effect}
-                      </p>
+                    
+                    <p className="text-[#C8B8DB]/80 mb-4 text-sm">
+                      {aura.description}
+                    </p>
+                    
+                    <div className="bg-[#432874]/20 p-3 rounded-lg">
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
+                        <p className="text-sm text-[#C8B8DB]/90">
+                          Collection Bonus: +{aura.count * 5}% {aura.type} Element Damage
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-                
-                <CardFooter>
-                  {perk.level < perk.maxLevel ? (
-                    <Button
-                      className="w-full bg-[#432874] hover:bg-[#432874]/80"
-                      onClick={() => handleUpgradePerk(perk.id)}
-                    >
-                      <Star className="h-4 w-4 mr-2" />
-                      Upgrade ({perk.cost})
-                    </Button>
-                  ) : (
-                    <div className="w-full flex items-center justify-center bg-[#00B9AE]/20 py-2 rounded-lg text-sm text-[#00B9AE]">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Maximum Level Reached
-                    </div>
-                  )}
-                </CardFooter>
+                </div>
               </motion.div>
             ))}
           </motion.div>
+        </TabsContent>
+        
+        {/* Account Perks Tab - Skill Tree */}
+        <TabsContent value="perks">
+          <div className="mb-6">
+            <h3 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-2">Account Perks</h3>
+            <p className="text-[#C8B8DB]/80 mb-2">
+              Allocate your Skill Points to enhance your account-wide abilities.
+            </p>
+            <div className="flex justify-between items-center bg-[#1F1D36] p-3 rounded-lg">
+              <span className="text-[#C8B8DB]">Available Skill Points:</span>
+              <span className="text-[#00B9AE] font-bold">{skillPoints}</span>
+            </div>
+          </div>
+          
+          {/* Skill Tree Grid */}
+          <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6 mb-6">
+            <div className="relative" style={{ minHeight: '500px' }}>
+              {/* Skill connections (lines) */}
+              <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }}>
+                {/* Tier 1 to Tier 2 connections */}
+                <line x1="25%" y1="25%" x2="25%" y2="50%" stroke="#432874" strokeWidth="2" />
+                <line x1="50%" y1="25%" x2="25%" y2="50%" stroke="#432874" strokeWidth="2" />
+                <line x1="50%" y1="25%" x2="50%" y2="50%" stroke="#432874" strokeWidth="2" />
+                <line x1="50%" y1="25%" x2="75%" y2="50%" stroke="#432874" strokeWidth="2" />
+                <line x1="75%" y1="25%" x2="75%" y2="50%" stroke="#432874" strokeWidth="2" />
+                
+                {/* Tier 2 to Tier 3 connections */}
+                <line x1="25%" y1="50%" x2="50%" y2="75%" stroke="#432874" strokeWidth="2" />
+                <line x1="50%" y1="50%" x2="50%" y2="75%" stroke="#432874" strokeWidth="2" />
+                <line x1="75%" y1="50%" x2="50%" y2="75%" stroke="#432874" strokeWidth="2" />
+              </svg>
+              
+              {/* Skill Nodes */}
+              <div className="grid grid-rows-3 gap-8" style={{ position: 'relative', zIndex: 1 }}>
+                {/* Row 1 */}
+                <div className="flex justify-around">
+                  {perks.filter(p => p.position.y === 1).map(perk => (
+                    <motion.div
+                      key={perk.id}
+                      whileHover={{ scale: 1.05 }}
+                      className="bg-[#1F1D36] border border-[#432874]/50 rounded-xl p-4 shadow-lg w-64"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center">
+                          <div className="bg-[#432874]/30 p-2 rounded-full">
+                            {perk.icon}
+                          </div>
+                          <div className="ml-3">
+                            <h4 className="text-md font-cinzel font-semibold text-[#FF9D00]">{perk.name}</h4>
+                            <p className="text-xs text-[#C8B8DB]/70">{perk.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-[#C8B8DB]/80">Level</span>
+                          <span className="text-[#FF9D00]">{perk.level}/{perk.maxLevel}</span>
+                        </div>
+                        <div className="h-1.5 bg-[#1A1A2E] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-[#FF9D00]" 
+                            style={{ width: `${(perk.level / perk.maxLevel) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3">
+                        {perk.level < perk.maxLevel ? (
+                          <Button
+                            size="sm"
+                            className="w-full bg-[#432874] hover:bg-[#432874]/80 text-xs"
+                            onClick={() => handleUpgradePerk(perk.id)}
+                            disabled={skillPoints < 1}
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            Upgrade ({perk.cost})
+                          </Button>
+                        ) : (
+                          <div className="w-full flex items-center justify-center bg-[#00B9AE]/20 py-1.5 rounded-lg text-xs text-[#00B9AE]">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Maximum Level
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                
+                {/* Row 2 */}
+                <div className="flex justify-around">
+                  {perks.filter(p => p.position.y === 2).map(perk => (
+                    <motion.div
+                      key={perk.id}
+                      whileHover={{ scale: 1.05 }}
+                      className="bg-[#1F1D36] border border-[#432874]/50 rounded-xl p-4 shadow-lg w-64"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center">
+                          <div className="bg-[#432874]/30 p-2 rounded-full">
+                            {perk.icon}
+                          </div>
+                          <div className="ml-3">
+                            <h4 className="text-md font-cinzel font-semibold text-[#FF9D00]">{perk.name}</h4>
+                            <p className="text-xs text-[#C8B8DB]/70">{perk.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-[#C8B8DB]/80">Level</span>
+                          <span className="text-[#FF9D00]">{perk.level}/{perk.maxLevel}</span>
+                        </div>
+                        <div className="h-1.5 bg-[#1A1A2E] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-[#FF9D00]" 
+                            style={{ width: `${(perk.level / perk.maxLevel) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3">
+                        {perk.level < perk.maxLevel ? (
+                          <Button
+                            size="sm"
+                            className="w-full bg-[#432874] hover:bg-[#432874]/80 text-xs"
+                            onClick={() => handleUpgradePerk(perk.id)}
+                            disabled={skillPoints < 1}
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            Upgrade ({perk.cost})
+                          </Button>
+                        ) : (
+                          <div className="w-full flex items-center justify-center bg-[#00B9AE]/20 py-1.5 rounded-lg text-xs text-[#00B9AE]">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Maximum Level
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                
+                {/* Row 3 */}
+                <div className="flex justify-center">
+                  {perks.filter(p => p.position.y === 3).map(perk => (
+                    <motion.div
+                      key={perk.id}
+                      whileHover={{ scale: 1.05 }}
+                      className="bg-[#1F1D36] border border-[#432874]/50 rounded-xl p-4 shadow-lg w-64"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center">
+                          <div className="bg-[#432874]/30 p-2 rounded-full">
+                            {perk.icon}
+                          </div>
+                          <div className="ml-3">
+                            <h4 className="text-md font-cinzel font-semibold text-[#FF9D00]">{perk.name}</h4>
+                            <p className="text-xs text-[#C8B8DB]/70">{perk.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-[#C8B8DB]/80">Level</span>
+                          <span className="text-[#FF9D00]">{perk.level}/{perk.maxLevel}</span>
+                        </div>
+                        <div className="h-1.5 bg-[#1A1A2E] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-[#FF9D00]" 
+                            style={{ width: `${(perk.level / perk.maxLevel) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3">
+                        {perk.level < perk.maxLevel ? (
+                          <Button
+                            size="sm"
+                            className="w-full bg-[#432874] hover:bg-[#432874]/80 text-xs"
+                            onClick={() => handleUpgradePerk(perk.id)}
+                            disabled={skillPoints < 2}
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            Upgrade ({perk.cost})
+                          </Button>
+                        ) : (
+                          <div className="w-full flex items-center justify-center bg-[#00B9AE]/20 py-1.5 rounded-lg text-xs text-[#00B9AE]">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Maximum Level
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-4">
+            <p className="text-[#C8B8DB]/80 text-sm">
+              <span className="text-[#FF9D00] font-semibold">Note:</span> Account Perks apply to all characters and activities in your account. Higher tier perks require investing points in prerequisite perks.
+            </p>
+          </div>
         </TabsContent>
         
         {/* Titles Tab */}
@@ -389,37 +592,6 @@ const CollectionsView = () => {
           </motion.div>
         </TabsContent>
       </Tabs>
-      
-      {/* Collections Info */}
-      <div className="mt-12 bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6">
-        <h2 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-4">Collection Benefits</h2>
-        <div className="space-y-4">
-          <div className="flex">
-            <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
-              <Trophy className="h-4 w-4 text-[#FFD700]" />
-            </div>
-            <p className="text-[#C8B8DB]/80">
-              <span className="text-[#FFD700] font-semibold">Achievements</span> track your progress through the game and reward you with resources and special items.
-            </p>
-          </div>
-          <div className="flex">
-            <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
-              <Star className="h-4 w-4 text-[#FF9D00]" />
-            </div>
-            <p className="text-[#C8B8DB]/80">
-              <span className="text-[#FF9D00] font-semibold">Account Perks</span> provide permanent, account-wide bonuses that affect all your characters and activities.
-            </p>
-          </div>
-          <div className="flex">
-            <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
-              <Sparkles className="h-4 w-4 text-[#00B9AE]" />
-            </div>
-            <p className="text-[#C8B8DB]/80">
-              <span className="text-[#00B9AE] font-semibold">Titles</span> are exclusive designations you can show off to other players and may grant special bonuses.
-            </p>
-          </div>
-        </div>
-      </div>
     </>
   );
 };

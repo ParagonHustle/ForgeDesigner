@@ -4,10 +4,10 @@ import { useDiscordAuth } from '@/lib/discordAuth';
 import { Redirect } from 'wouter';
 
 export default function Collections() {
-  const { isAuthenticated, isAuthenticating } = useDiscordAuth();
+  const { user } = useDiscordAuth();
 
   // Redirect unauthenticated users
-  if (!isAuthenticated && !isAuthenticating) {
+  if (!user) {
     return <Redirect to="/" />;
   }
 
