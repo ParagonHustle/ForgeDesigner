@@ -344,7 +344,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
               <div className="flex items-center text-xs">
                 <div className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mr-1"></div>
                 <span className="text-[#00B9AE]">
-                  {aura ? `${aura.element} Aura (Lv.${aura.level})` : 'Aura Equipped'}
+                  {aura ? `${aura.element} Aura (Lv.${aura.level || 1})` : 'Aura Equipped'}
                 </span>
               </div>
             ) : (
@@ -455,7 +455,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             {aura ? `${aura.element} Aura` : 'Aura Equipped'}
                           </div>
                           <div className="text-xs text-[#C8B8DB]/60">
-                            {aura ? `Level ${aura.level} • Tier ${aura.tier}` : 'Loading...'}
+                            {aura ? `Level ${aura.level || 1} • Tier ${aura.tier || 1}` : 'Loading...'}
                           </div>
                         </div>
                       </div>
