@@ -1,0 +1,98 @@
+Create a visually exotic, detailed, and interactive web application for "The Forge" featuring the following sections and functionalities:
+
+### Main Menu
+- Displays comprehensive account overview, including:
+  - Active and completed dungeon missions
+  - Ongoing farming tasks
+  - Aura forging and fusion progress
+  - Summary of characters, resources, and recent activities
+
+### Character Menu
+- Exotic and appealing character avatars displayed prominently
+- Apply Auras to characters visually
+- Upgrade characters using Soul Shards
+- Detailed view of character stats, skills, levels, and equipped Auras
+- Interactive visual upgrades and progression paths clearly shown
+
+### Dungeon Menu
+- Selection interface showcasing available dungeons
+- Choose heroes for party formation (4-member teams)
+- Initiate autoplay dungeon runs
+- Later retrieval option with detailed battle logs, including:
+  - Rewards obtained and missed
+  - Total damage inflicted and received by each hero
+  - Visual animations highlighting dungeon outcomes
+
+### Farming Menu
+- Six slots for farming activities, visually clear which slots are locked/unlocked based on Townhall upgrades
+- Individual selection for materials to farm in each slot
+- Hero selection for farming with appealing visual animations of heroes performing tasks
+- Clearly visible countdown timers and status indicators
+
+### Black Market Menu
+- Exotic, visually striking marketplace aesthetic
+- Purchase premium items with Forge Tokens
+- Purchase standard items with Rogue Credits
+- Multiple item slots unlocked as the Black Market's level increases
+- Interactive and dynamic browsing experience
+
+### Forge Menu
+- Crafting interface to forge brand new level 1 Auras
+  - Combine materials visually and initiate 1-minute countdown crafting timer
+  - Display progression clearly
+- Aura Fusion option allowing upgrades to a max level of 5
+  - Visually appealing merging animation when two level 5 Auras combine to create a new class Aura
+
+### Collections Page
+- Exotic and visually appealing display of collectible items
+- Each collection item providing account-wide bonuses (crafting speed, character stats)
+- Progress tracking clearly shown, motivating continued collection
+
+### Bounty Board
+- Visually engaging presentation of daily and weekly quests
+- Progress bars indicating quest completion status
+- Clear display of potential rewards and incentives
+
+### Skill Tree System (for Each Building)
+- Interactive, customizable upgrade paths available based on building level
+- Users visually select and activate desired upgrades
+- Clear indication of current and future upgrades, benefits explained
+
+### Townhall
+- Upgrade system with exotic and visually appealing design
+- Skill tree that unlocks:
+  - Additional farming slots
+  - Increased active character tasks
+  - Account-wide stat enhancements
+  - Superior upgrades including guild access
+
+### Tavern Menu
+- Exotic visual ambiance
+- Option to trade three specific characters for a rare/exclusive character
+- Skill tree to enhance ticket production rates and visual feedback on progression
+
+### Integrated Discord Chatbar
+- A seamless chat integration allowing interaction with Discord friends
+- Visually unobtrusive but easily accessible and interactive
+
+### Limited-Time Banner
+- Prominent, attractive visual banner showcasing special offer: 6,200 Forge Tokens
+
+### AI Companion Avatar
+- Consistent presence across all pages
+- Interactive avatar offering contextual tips and guidance based on current page
+- Clickable for detailed assistance and Q&A
+
+### Visual Theme
+- Exotic, lush, vibrant aesthetics
+- Engaging animations and transitions enhancing user experience
+- Clear, intuitive, and attractive design promoting ease of use and engagement
+
+### Additional Suggested Features
+- Achievements system for accomplishing milestones
+- Leaderboard for competitive player progression
+- Player profile customization options
+- Notifications center for updates, completed tasks, and news
+
+Ensure the design promotes sustained engagement through visual appeal, intuitive interaction, and clear progression feedback.
+
