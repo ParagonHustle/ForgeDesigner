@@ -39,7 +39,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { BountyQuest, BuildingUpgrade } from '@shared/schema';
-import BountyBoardSkillTree from './BountyBoardSkillTree';
+import { BountyBoardSkillTree } from './BountyBoardSkillTree';
 
 // Sample quest templates for demonstrations
 const questTemplates = [
@@ -95,11 +95,17 @@ const BountyBoardView = () => {
   const { user } = useDiscordAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showSkillTree, setShowSkillTree] = useState<boolean>(false);
   
   // Fetch bounty quests
-  const { data: bountyQuests = [], isLoading, refetch: refetchQuests } = useQuery<BountyQuest[]>({
+  const { data: bountyQuests = [], isLoading: questsLoading, refetch: refetchQuests } = useQuery<BountyQuest[]>({
     queryKey: ['/api/bounty/quests'],
     refetchInterval: 60000 // Refresh every minute
+  });
+  
+  // Fetch bounty board building data
+  const { data: bountyBoard, isLoading: buildingLoading } = useQuery<BuildingUpgrade>({
+    queryKey: ['/api/buildings/bountyBoard']
   });
 
   // Get difficulty color
@@ -234,10 +240,12 @@ const BountyBoardView = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  const isLoading = questsLoading || buildingLoading;
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-[#FF9D00] text-xl animate-pulse">Loading bounty quests...</div>
+        <div className="text-[#FF9D00] text-xl animate-pulse">Loading bounty board data...</div>
       </div>
     );
   }
@@ -481,6 +489,53 @@ const BountyBoardView = () => {
           </div>
         </div>
         
+        {/* Bounty Board Skills Section */}
+        <div className="mb-6">
+          <Collapsible
+            open={showSkillTree}
+            onOpenChange={setShowSkillTree}
+            className="w-full"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <Settings className="h-5 w-5 text-[#00B9AE] mr-2" />
+                <h3 className="font-semibold">Bounty Board Skill Tree</h3>
+                {bountyBoard?.availableSkillPoints > 0 && (
+                  <Badge className="ml-3 bg-amber-500/20 text-amber-300 border-amber-400/30">
+                    {bountyBoard.availableSkillPoints} Points Available
+                  </Badge>
+                )}
+              </div>
+              <CollapsibleTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="hover:bg-[#432874]/30"
+                >
+                  {showSkillTree ? (
+                    <div className="flex items-center">
+                      <ChevronDown className="h-4 w-4 mr-1" />
+                      <span className="text-sm">Hide Skill Tree</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <ChevronRight className="h-4 w-4 mr-1" />
+                      <span className="text-sm">Show Skill Tree</span>
+                    </div>
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            
+            <CollapsibleContent>
+              <BountyBoardSkillTree building={bountyBoard} />
+            </CollapsibleContent>
+          </Collapsible>
+          
+          <Separator className="my-6 bg-[#432874]/30" />
+        </div>
+        
+        {/* Tips and Information */}
         <div className="space-y-4">
           <div className="flex">
             <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
@@ -504,6 +559,14 @@ const BountyBoardView = () => {
             </div>
             <p className="text-[#C8B8DB]/80">
               Upgrade your Bounty Board building to unlock more daily quests and higher-tier quest types.
+            </p>
+          </div>
+          <div className="flex">
+            <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+              <span className="text-[#FF9D00] font-bold">4</span>
+            </div>
+            <p className="text-[#C8B8DB]/80">
+              Allocate skill points in the Bounty Board Skill Tree to enhance your quest rewards and unlock special abilities.
             </p>
           </div>
         </div>
