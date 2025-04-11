@@ -1458,18 +1458,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const townhall = await storage.getBuildingUpgradeByTypeAndUserId('townhall', req.session.userId!);
       const townhallLevel = townhall?.currentLevel || 1;
       
-      // Calculate max allowed level based on townhall level
-      let maxAllowedLevel = 9; // Default max level is 9
-      
-      if (townhallLevel >= 40) {
-        maxAllowedLevel = 49;
-      } else if (townhallLevel >= 30) {
-        maxAllowedLevel = 39;
-      } else if (townhallLevel >= 20) {
-        maxAllowedLevel = 29;
-      } else if (townhallLevel >= 10) {
-        maxAllowedLevel = 19;
-      }
+      // Set max allowed level to 9 for all buildings regardless of townhall level
+      const maxAllowedLevel = 9;
       
       // Get the existing building
       const existingBuilding = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
@@ -1494,13 +1484,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Building configs with max level and upgrade time
       const buildingConfigs = {
-        townhall: { maxLevel: 50, upgradeTime: 60 },
-        forge: { maxLevel: 50, upgradeTime: 45 },
-        blackmarket: { maxLevel: 50, upgradeTime: 30 },
-        barracks: { maxLevel: 50, upgradeTime: 45 },
-        library: { maxLevel: 50, upgradeTime: 30 },
-        guild: { maxLevel: 50, upgradeTime: 90 },
-        bountyBoard: { maxLevel: 50, upgradeTime: 40 }
+        townhall: { maxLevel: 9, upgradeTime: 60 },
+        forge: { maxLevel: 9, upgradeTime: 45 },
+        blackmarket: { maxLevel: 9, upgradeTime: 30 },
+        barracks: { maxLevel: 9, upgradeTime: 45 },
+        library: { maxLevel: 9, upgradeTime: 30 },
+        guild: { maxLevel: 9, upgradeTime: 90 },
+        bountyBoard: { maxLevel: 9, upgradeTime: 40 }
       };
       
       const config = buildingConfigs[buildingType as keyof typeof buildingConfigs];

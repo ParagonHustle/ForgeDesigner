@@ -61,7 +61,7 @@ const buildings = [
       { level: 30, text: 'Allows other buildings to reach level 39' },
       { level: 40, text: 'Allows other buildings to reach level 49' }
     ],
-    maxLevel: 49,
+    maxLevel: 9,
     baseUpgradeCost: { rogueCredits: 1000, forgeTokens: 100 },
     upgradeTimeInMinutes: 60
   },
@@ -78,7 +78,7 @@ const buildings = [
       { level: 4, text: 'Characters can reach level 25' },
       { level: 5, text: 'Aura fusion up to level 10, characters can reach level 49' }
     ],
-    maxLevel: 49,
+    maxLevel: 9,
     baseUpgradeCost: { rogueCredits: 800, forgeTokens: 80 },
     upgradeTimeInMinutes: 45
   },
@@ -95,7 +95,7 @@ const buildings = [
       { level: 4, text: 'Unlock 4 personal listing slots' },
       { level: 5, text: 'Unlock all 6 personal listing slots' }
     ],
-    maxLevel: 49,
+    maxLevel: 9,
     baseUpgradeCost: { rogueCredits: 750, forgeTokens: 75 },
     upgradeTimeInMinutes: 40
   },
