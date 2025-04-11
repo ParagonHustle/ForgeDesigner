@@ -111,11 +111,7 @@ export const BountyBoardSkillTree = ({ building, onUpgrade }: BountyBoardSkillTr
   // Mutation to update skill distribution
   const updateSkillsMutation = useMutation({
     mutationFn: async (data: { skillDistribution: Record<string, number> }) => {
-      return apiRequest('/api/buildings/skills/bountyBoard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+      return apiRequest('POST', '/api/buildings/skills/bountyBoard', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/buildings/bountyBoard'] });
@@ -317,4 +313,5 @@ export const BountyBoardSkillTree = ({ building, onUpgrade }: BountyBoardSkillTr
   );
 };
 
-export default BountyBoardSkillTree;
+// We use named export for consistency
+// export default BountyBoardSkillTree is removed intentionally
