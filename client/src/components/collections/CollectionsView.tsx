@@ -137,7 +137,6 @@ const CollectionsView = () => {
       type: "Fire",
       discovered: true,
       icon: <Flame className="h-12 w-12 text-[#FF4500]" />,
-      count: 3,
       description: "Fiery auras enhance attack power and focus."
     },
     {
@@ -145,7 +144,6 @@ const CollectionsView = () => {
       type: "Water",
       discovered: true,
       icon: <Droplets className="h-12 w-12 text-[#1E90FF]" />,
-      count: 2,
       description: "Water auras enhance defense and resilience."
     },
     {
@@ -153,7 +151,6 @@ const CollectionsView = () => {
       type: "Earth",
       discovered: true,
       icon: <Mountain className="h-12 w-12 text-[#8B4513]" />,
-      count: 2,
       description: "Earth auras enhance vitality and defense."
     },
     {
@@ -161,8 +158,21 @@ const CollectionsView = () => {
       type: "Wind",
       discovered: true,
       icon: <Wind className="h-12 w-12 text-[#32CD32]" />,
-      count: 1,
       description: "Wind auras enhance speed and accuracy."
+    },
+    {
+      id: 5,
+      type: "Aura of Growth",
+      discovered: false,
+      icon: <Zap className="h-12 w-12 text-[#9C27B0]" />,
+      description: "???"
+    },
+    {
+      id: 6,
+      type: "Nature's Wrath",
+      discovered: false,
+      icon: <Zap className="h-12 w-12 text-[#8BC34A]" />,
+      description: "???"
     }
   ];
 
@@ -288,8 +298,8 @@ const CollectionsView = () => {
                   <div className="p-6 flex-1">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">{aura.type} Aura</h4>
-                      <Badge className="bg-[#432874]/30 text-[#C8B8DB] border-[#432874]/50">
-                        {aura.count} Collected
+                      <Badge className={`${aura.discovered ? 'bg-[#432874]/30 text-[#C8B8DB]' : 'bg-[#FF9D00]/30 text-[#FF9D00]'} border-[#432874]/50`}>
+                        {aura.discovered ? 'Discovered' : 'Locked'}
                       </Badge>
                     </div>
                     
@@ -297,14 +307,20 @@ const CollectionsView = () => {
                       {aura.description}
                     </p>
                     
-                    <div className="bg-[#432874]/20 p-3 rounded-lg">
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
-                        <p className="text-sm text-[#C8B8DB]/90">
-                          Collection Bonus: +{aura.count * 5}% {aura.type} Element Damage
-                        </p>
+                    {aura.discovered && (
+                      <div className="bg-[#432874]/20 p-3 rounded-lg">
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
+                          <p className="text-sm text-[#C8B8DB]/90">
+                            {aura.type === "Fire" || aura.type === "Water" || aura.type === "Earth" || aura.type === "Wind" ? (
+                              "Collection Reward: Collect all 4 elemental auras to earn 5 Basic Kleos Shards"
+                            ) : (
+                              `Special Aura with unique abilities`
+                            )}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
