@@ -214,6 +214,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.get('/api/auras/:id', authenticateUser, async (req, res) => {
+    try {
+      const auraId = parseInt(req.params.id);
+      const aura = await storage.getAuraById(auraId);
+      
+      if (!aura) {
+        return res.status(404).json({ message: 'Aura not found' });
+      }
+      
+      if (aura.userId !== req.session.userId) {
+        return res.status(403).json({ message: 'Not authorized to access this aura' });
+      }
+      
+      res.json(aura);
+    } catch (error) {
+      console.error('Error fetching aura:', error);
+      res.status(500).json({ message: 'Failed to fetch aura' });
+    }
+  });
+  
+  // Equip Aura to Character endpoint
+  app.post('/api/characters/:characterId/equip-aura/:auraId', authenticateUser, async (req, res) => {
+    try {
+      const characterId = parseInt(req.params.characterId);
+      const auraId = parseInt(req.params.auraId);
+      
+      // Check if character and aura exist and belong to the user
+      const character = await storage.getCharacterById(characterId);
+      const aura = await storage.getAuraById(auraId);
+      
+      if (!character || !aura) {
+        return res.status(404).json({ message: 'Character or Aura not found' });
+      }
+      
+      if (character.userId !== req.session.userId || aura.userId !== req.session.userId) {
+        return res.status(403).json({ message: 'Not authorized to use this character or aura' });
+      }
+      
+      if (character.isActive) {
+        return res.status(400).json({ message: 'Cannot equip aura to an active character' });
+      }
+      
+      if (aura.isFusing) {
+        return res.status(400).json({ message: 'Cannot equip an aura that is currently fusing' });
+      }
+      
+      if (aura.equippedByCharacterId) {
+        return res.status(400).json({ message: 'Aura is already equipped by another character' });
+      }
+      
+      // If character already has an aura, unequip it first
+      if (character.equippedAuraId) {
+        const oldAura = await storage.getAuraById(character.equippedAuraId);
+        if (oldAura) {
+          await storage.updateAura(oldAura.id, { equippedByCharacterId: null });
+        }
+      }
+      
+      // Update character with new aura
+      await storage.updateCharacter(characterId, { equippedAuraId: auraId });
+      
+      // Update aura with character reference
+      await storage.updateAura(auraId, { equippedByCharacterId: characterId });
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: req.session.userId!,
+        activityType: 'aura_equipped',
+        description: `Equipped ${aura.name} to ${character.name}`,
+        relatedIds: { characterId, auraId }
+      });
+      
+      res.json({ success: true, message: 'Aura equipped successfully' });
+    } catch (error) {
+      console.error('Error equipping aura:', error);
+      res.status(500).json({ message: 'Failed to equip aura' });
+    }
+  });
+  
   // Resource routes
   app.get('/api/resources', authenticateUser, async (req, res) => {
     try {
@@ -251,6 +330,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (character.isActive) {
         return res.status(400).json({ message: 'Character is already active in another task' });
+      }
+      
+      // Check if character has an aura equipped
+      if (!character.equippedAuraId) {
+        return res.status(400).json({ message: 'Character must have an aura equipped to start farming' });
       }
       
       // Mark character as active in farming
@@ -378,6 +462,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (character.isActive) {
           return res.status(400).json({
             message: `Character ${character.name} is already active in another task`
+          });
+        }
+        
+        // Check if character has an aura equipped
+        if (!character.equippedAuraId) {
+          return res.status(400).json({ 
+            message: `Character ${character.name} must have an aura equipped to enter dungeons` 
           });
         }
       }
