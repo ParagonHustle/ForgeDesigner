@@ -119,7 +119,7 @@ export const blackMarketListings = pgTable("black_market_listings", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   itemType: text("item_type").notNull(), // 'character', 'aura', 'resource'
-  itemId: integer("item_id"),
+  itemId: integer("item_id").notNull(),
   itemData: jsonb("item_data"),
   price: integer("price").notNull(),
   currencyType: text("currency_type").notNull(), // 'forgeTokens', 'rogueCredits'
