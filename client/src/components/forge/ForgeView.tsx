@@ -793,7 +793,7 @@ const ForgeView = () => {
                     <div className="mt-4 pt-3 border-t border-[#432874]/30">
                       {aura.equippedByCharacterId ? (
                         <div className="text-xs text-[#C8B8DB]/60 flex items-center">
-                          <Lock className="h-3 w-3 mr-1" />
+                          <Sparkles className="h-3 w-3 mr-1" />
                           <span>Equipped by a character</span>
                         </div>
                       ) : (

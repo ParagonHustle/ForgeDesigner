@@ -384,7 +384,7 @@ const InventoryView = () => {
                       </div>
                       <div>
                         <h3 className="font-cinzel font-semibold text-[#FF9D00]">
-                          {aura.element} Aura
+                          {aura.name || `${aura.element || 'Mysterious'} Aura`}
                         </h3>
                         <div className="text-sm text-[#C8B8DB]/80">
                           {aura.rarity} • Level {aura.level || 1}
