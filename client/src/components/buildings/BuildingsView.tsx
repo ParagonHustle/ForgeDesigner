@@ -189,13 +189,13 @@ const BuildingsView = () => {
       maxAllowedLevel = 19;
     }
     
-    // Townhall itself can go up to max level regardless
+    // Townhall itself can go up to max level regardless (50 is the max level)
     if (building.id === 'townhall') {
-      return currentLevel >= building.maxLevel;
+      return currentLevel >= 50;
     }
     
-    // For other buildings, check against the max allowed level and building's max level
-    return currentLevel >= Math.min(maxAllowedLevel, building.maxLevel);
+    // For other buildings, check against the max allowed level based on townhall
+    return currentLevel >= maxAllowedLevel;
   };
 
   // Check if building is currently upgrading

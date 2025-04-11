@@ -1376,6 +1376,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Building type is required' });
       }
       
+      // Get user to check resources
+      const user = await storage.getUserById(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Get the townhall to determine building level restrictions
+      const townhall = await storage.getBuildingUpgradeByTypeAndUserId('townhall', req.session.userId!);
+      const townhallLevel = townhall?.currentLevel || 1;
+      
+      // Calculate max allowed level based on townhall level
+      let maxAllowedLevel = 9; // Default max level is 9
+      
+      if (townhallLevel >= 40) {
+        maxAllowedLevel = 49;
+      } else if (townhallLevel >= 30) {
+        maxAllowedLevel = 39;
+      } else if (townhallLevel >= 20) {
+        maxAllowedLevel = 29;
+      } else if (townhallLevel >= 10) {
+        maxAllowedLevel = 19;
+      }
+      
       // Get the existing building
       const existingBuilding = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
       
@@ -1385,9 +1408,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: req.session.userId!,
           buildingType,
           currentLevel: 1,
-          upgradeInProgress: true,
-          upgradeStartTime: new Date(),
-          upgradeEndTime: new Date(Date.now() + (60 * 60 * 1000)) // 1 hour upgrade time
+          upgradeInProgress: false,
+          unlockedSkills: []
         });
         
         return res.status(201).json(newBuilding);
@@ -1398,26 +1420,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Building is already being upgraded' });
       }
       
-      // Check if max level
+      // Building configs with max level and upgrade time
       const buildingConfigs = {
-        townhall: { maxLevel: 5, upgradeTime: 60 },
-        forge: { maxLevel: 5, upgradeTime: 45 },
-        blackmarket: { maxLevel: 5, upgradeTime: 30 },
-        barracks: { maxLevel: 5, upgradeTime: 45 },
-        library: { maxLevel: 5, upgradeTime: 30 },
-        guild: { maxLevel: 5, upgradeTime: 90 }
+        townhall: { maxLevel: 50, upgradeTime: 60 },
+        forge: { maxLevel: 50, upgradeTime: 45 },
+        blackmarket: { maxLevel: 50, upgradeTime: 30 },
+        barracks: { maxLevel: 50, upgradeTime: 45 },
+        library: { maxLevel: 50, upgradeTime: 30 },
+        guild: { maxLevel: 50, upgradeTime: 90 },
+        bountyBoard: { maxLevel: 50, upgradeTime: 40 }
       };
       
       const config = buildingConfigs[buildingType as keyof typeof buildingConfigs];
+      const maxLevel = config?.maxLevel || 50;
       
-      if (existingBuilding.currentLevel >= (config?.maxLevel || 5)) {
-        return res.status(400).json({ message: 'Building is already at max level' });
-      }
-      
-      // Get user to check resources
-      const user = await storage.getUserById(req.session.userId!);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+      // For townhall, use its own max level
+      if (buildingType === 'townhall') {
+        if (existingBuilding.currentLevel >= maxLevel) {
+          return res.status(400).json({ message: 'Townhall is already at max level' });
+        }
+      } else {
+        // For other buildings, check against the townhall-restricted max level
+        if (existingBuilding.currentLevel >= Math.min(maxAllowedLevel, maxLevel)) {
+          return res.status(400).json({ 
+            message: 'Building cannot be upgraded further until Townhall level is increased',
+            currentLevel: existingBuilding.currentLevel,
+            maxAllowedLevel: maxAllowedLevel,
+            townhallLevel: townhallLevel
+          });
+        }
       }
       
       // Calculate cost
@@ -1427,7 +1458,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         blackmarket: { rogueCredits: 600, forgeTokens: 60 },
         barracks: { rogueCredits: 800, forgeTokens: 80 },
         library: { rogueCredits: 600, forgeTokens: 60 },
-        guild: { rogueCredits: 1200, forgeTokens: 120 }
+        guild: { rogueCredits: 1200, forgeTokens: 120 },
+        bountyBoard: { rogueCredits: 700, forgeTokens: 70 }
       };
       
       const baseCost = baseCosts[buildingType as keyof typeof baseCosts] || { rogueCredits: 500, forgeTokens: 50 };
