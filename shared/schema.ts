@@ -38,6 +38,9 @@ export const characters = pgTable("characters", {
   speed: integer("speed").default(100),
   focus: integer("focus").default(100),
   resilience: integer("resilience").default(100),
+  health: integer("health").default(100),
+  intelligence: integer("intelligence").default(100),
+  luck: integer("luck").default(100),
   passiveSkill: text("passive_skill"),
   isActive: boolean("is_active").default(false),
   activityType: text("activity_type"), // 'farming', 'dungeon', null
