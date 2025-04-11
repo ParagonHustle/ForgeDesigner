@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/lib/zustandStore';
 import { useDiscordAuth } from '@/lib/discordAuth';
@@ -18,18 +18,31 @@ const InventoryView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
   const [showRecruitDialog, setShowRecruitDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const { 
     characters = [], 
     auras = [], 
     resources = [],
-    isLoadingCharacters,
-    isLoadingAuras,
-    isLoadingResources,
     fetchCharacters,
     fetchAuras,
     fetchResources
   } = useGameStore();
+  
+  // Load inventory data
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      await Promise.all([
+        fetchCharacters(),
+        fetchAuras(),
+        fetchResources()
+      ]);
+      setIsLoading(false);
+    };
+    
+    loadData();
+  }, [fetchCharacters, fetchAuras, fetchResources]);
 
   // Define character shards (this would normally come from the API)
   const characterShards = [
@@ -55,8 +68,8 @@ const InventoryView = () => {
     const matchesSearch = aura.element.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = 
       filter === 'all' ||
-      (filter === 'equipped' && aura.equippedCharacterId) ||
-      (filter === 'available' && !aura.equippedCharacterId) ||
+      (filter === 'equipped' && aura.equippedByCharacterId) ||
+      (filter === 'available' && !aura.equippedByCharacterId) ||
       (filter === filter && aura.element.toLowerCase() === filter);
     
     return matchesSearch && matchesFilter;
@@ -66,9 +79,9 @@ const InventoryView = () => {
     const matchesSearch = resource.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = 
       filter === 'all' ||
-      (filter === 'materials' && resource.category === 'material') ||
-      (filter === 'essences' && resource.category === 'essence') ||
-      (filter === 'currencies' && resource.category === 'currency');
+      (filter === 'materials' && resource.type === 'material') ||
+      (filter === 'essences' && resource.type === 'essence') ||
+      (filter === 'currencies' && resource.type === 'currency');
     
     return matchesSearch && matchesFilter;
   });
@@ -147,7 +160,7 @@ const InventoryView = () => {
   };
 
   // Render loading state
-  if (isLoadingCharacters || isLoadingAuras || isLoadingResources) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-[#FF9D00] text-xl animate-pulse">Loading inventory data...</div>
@@ -394,7 +407,7 @@ const InventoryView = () => {
                     </div>
                     
                     <div className="mt-3 text-center">
-                      {aura.equippedCharacterId ? (
+                      {aura.equippedByCharacterId ? (
                         <div className="bg-[#00B9AE]/20 text-[#00B9AE] py-1 px-2 rounded text-sm">
                           Equipped
                         </div>
@@ -422,7 +435,7 @@ const InventoryView = () => {
             initial="hidden"
             animate="show"
           >
-            {resources.filter(r => r.category === 'material').map((material) => (
+            {resources.filter(r => r.type === 'material').map((material) => (
               <motion.div
                 key={material.id}
                 variants={item}

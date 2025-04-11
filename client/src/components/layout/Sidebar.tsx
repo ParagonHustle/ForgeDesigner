@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter';
 import AICompanion from '../ui/AICompanion';
 import { 
   Home, 
-  User, 
+  Package, 
   Grid, 
   Gem, 
   ShoppingBag, 
@@ -15,7 +15,7 @@ import {
 
 const navItems = [
   { path: "/", label: "Dashboard", icon: <Home className="h-6 w-6" /> },
-  { path: "/characters", label: "Characters", icon: <User className="h-6 w-6" /> },
+  { path: "/inventory", label: "Inventory", icon: <Package className="h-6 w-6" /> },
   { path: "/dungeons", label: "Dungeon", icon: <Grid className="h-6 w-6" /> },
   { path: "/farming", label: "Farming", icon: <Gem className="h-6 w-6" /> },
   { path: "/forge", label: "Forge", icon: <Hammer className="h-6 w-6" /> },
