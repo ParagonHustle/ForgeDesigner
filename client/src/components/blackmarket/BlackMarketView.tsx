@@ -55,13 +55,13 @@ const BlackMarketView = () => {
     refetchInterval: 60000 // Refresh every minute
   });
 
-  // Filter listings by currency type
+  // Filter listings by currency type and premium status
   const premiumListings = listings.filter(listing => 
-    listing.currencyType === 'forgeTokens' && !listing.sold
+    (listing.currencyType === 'forgeTokens' || listing.isPremium) && !listing.sold
   );
   
   const standardListings = listings.filter(listing => 
-    listing.currencyType === 'rogueCredits' && !listing.sold
+    listing.currencyType === 'rogueCredits' && !listing.isPremium && !listing.sold
   );
 
   // Generate time until refresh

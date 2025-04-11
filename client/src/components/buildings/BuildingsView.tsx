@@ -240,14 +240,9 @@ const BuildingsView = () => {
     
     try {
       // Call the API to start the upgrade
-      const response = await apiRequest('POST', '/api/buildings/upgrade', {
+      await apiRequest('POST', '/api/buildings/upgrade', {
         buildingType: selectedBuilding.id
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to start upgrade');
-      }
       
       toast({
         title: "Upgrade Started",
@@ -279,12 +274,7 @@ const BuildingsView = () => {
     
     try {
       // Call API to complete upgrade
-      const response = await apiRequest('POST', `/api/buildings/complete/${buildingType}`, {});
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to complete upgrade');
-      }
+      await apiRequest('POST', `/api/buildings/complete/${buildingType}`, {});
       
       const building = buildings.find(b => b.id === buildingType);
       
