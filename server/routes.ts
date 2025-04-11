@@ -1502,13 +1502,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: 'Townhall is already at max level' });
         }
       } else {
-        // For other buildings, check against the townhall-restricted max level
+        // For other buildings, check against the max allowed level
         if (existingBuilding.currentLevel >= Math.min(maxAllowedLevel, maxLevel)) {
           return res.status(400).json({ 
-            message: 'Building cannot be upgraded further until Townhall level is increased',
+            message: 'Building has reached maximum level',
             currentLevel: existingBuilding.currentLevel,
-            maxAllowedLevel: maxAllowedLevel,
-            townhallLevel: townhallLevel
+            maxAllowedLevel: maxAllowedLevel
           });
         }
       }

@@ -112,7 +112,7 @@ const buildings = [
       { level: 4, text: '6 daily quests (higher chance for epic)' },
       { level: 5, text: '7 daily quests (guaranteed epic)' }
     ],
-    maxLevel: 49,
+    maxLevel: 9,
     baseUpgradeCost: { rogueCredits: 600, forgeTokens: 60 },
     upgradeTimeInMinutes: 30
   },
@@ -129,7 +129,7 @@ const buildings = [
       { level: 4, text: 'Generate 4 dungeon tickets per day' },
       { level: 5, text: 'Elite trade options (3 epic for 1 legendary)' }
     ],
-    maxLevel: 49,
+    maxLevel: 9,
     baseUpgradeCost: { rogueCredits: 700, forgeTokens: 70 },
     upgradeTimeInMinutes: 35
   }
@@ -308,16 +308,15 @@ const BuildingsView = () => {
     }
   };
 
-  // Check if a building is locked (requires higher townhall level)
+  // Check if a building is locked (requires townhall to not be level 1)
   const isBuildingLocked = (buildingType: string) => {
     if (buildingType === 'townhall') return false;
     
     const townhall = getBuildingByType('townhall');
     if (!townhall) return true;
     
-    // All buildings require townhall to be at least their level
-    const building = getBuildingByType(buildingType);
-    return !building || building.currentLevel >= townhall.currentLevel;
+    // Buildings are only locked if townhall is level 1
+    return townhall.currentLevel === 1;
   };
 
   // Animation variants
@@ -594,7 +593,7 @@ const BuildingsView = () => {
               <span className="text-[#FF9D00] font-bold">1</span>
             </div>
             <p className="text-[#C8B8DB]/80">
-              Prioritize upgrading the <span className="text-[#FF9D00] font-semibold">Townhall</span> first to unlock higher levels for other buildings.
+              Prioritize upgrading the <span className="text-[#FF9D00] font-semibold">Townhall</span> first as it serves as the foundation of your base and unlocks other buildings.
             </p>
           </div>
           <div className="flex">
