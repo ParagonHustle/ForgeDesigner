@@ -1150,14 +1150,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const nextWeek = new Date();
         nextWeek.setDate(nextWeek.getDate() + 7);
         
-        // Sample daily quests
+        // Get bounty board level to determine quest difficulties
+        const bountyBoardUpgrade = await storage.getBuildingUpgradeByTypeAndUserId('bountyBoard', req.session.userId!);
+        const bountyBoardLevel = bountyBoardUpgrade?.currentLevel || 1;
+        
+        // Determine quest availability based on bounty board level
+        const canGenerateRare = bountyBoardLevel >= 3;
+        const canGenerateEpic = bountyBoardLevel >= 5;
+        const canGenerateMythic = bountyBoardLevel >= 7;
+        const canGenerateLegendary = bountyBoardLevel >= 10;
+        
+        // Determine number of daily quests based on bounty board level
+        const dailyQuestCount = Math.min(5, Math.floor(1.5 * bountyBoardLevel));
+        
+        // Base daily quests
         const dailyQuests = [
           {
             userId: req.session.userId!,
             name: "Resource Collector",
             description: "Gather various resources through farming missions",
             questType: "daily",
-            difficulty: "Easy",
+            difficulty: "Basic",
             requirements: {
               farmingCompleted: { current: 0, target: 3, label: "Complete farming missions" }
             },
@@ -1167,13 +1180,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
             completed: false,
             expiresAt: tomorrow
-          },
-          {
+          }
+        ];
+        
+        // Add Rare quest if available
+        if (canGenerateRare) {
+          dailyQuests.push({
             userId: req.session.userId!,
             name: "Dungeon Explorer",
             description: "Complete dungeon runs to earn extra rewards",
             questType: "daily",
-            difficulty: "Medium",
+            difficulty: "Rare",
             requirements: {
               dungeonRuns: { current: 0, target: 2, label: "Complete dungeon runs" }
             },
@@ -1184,33 +1201,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
             completed: false,
             expiresAt: tomorrow
-          },
-          {
+          });
+        }
+        
+        // Add Epic quest if available
+        if (canGenerateEpic) {
+          dailyQuests.push({
             userId: req.session.userId!,
             name: "Forge Apprentice",
             description: "Craft or fuse auras at The Forge",
             questType: "daily",
-            difficulty: "Medium",
+            difficulty: "Epic",
             requirements: {
               craftAuras: { current: 0, target: 1, label: "Craft an aura" }
             },
             rewards: {
               forgeTokens: 80,
+              soulShards: 5,
               material: { name: "Celestial Ore", amount: 20 }
             },
             completed: false,
             expiresAt: tomorrow
-          }
-        ];
+          });
+        }
         
-        // Sample weekly quests
+        // Add Mythic quest if available
+        if (canGenerateMythic) {
+          dailyQuests.push({
+            userId: req.session.userId!,
+            name: "Elite Dungeon Challenge",
+            description: "Conquer the most difficult dungeons",
+            questType: "daily",
+            difficulty: "Mythic",
+            requirements: {
+              eliteDungeons: { current: 0, target: 2, label: "Complete elite dungeons" },
+              bossDefeats: { current: 0, target: 1, label: "Defeat dungeon boss" }
+            },
+            rewards: {
+              rogueCredits: 500,
+              forgeTokens: 100,
+              soulShards: 8
+            },
+            completed: false,
+            expiresAt: tomorrow
+          });
+        }
+        
+        // Base weekly quests
         const weeklyQuests = [
           {
             userId: req.session.userId!,
             name: "Master Collector",
             description: "Gather a large amount of resources throughout the week",
             questType: "weekly",
-            difficulty: "Hard",
+            difficulty: canGenerateRare ? "Rare" : "Basic",
             requirements: {
               farmingCompleted: { current: 0, target: 15, label: "Complete farming missions" }
             },
@@ -1221,8 +1265,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
             completed: false,
             expiresAt: nextWeek
-          },
-          {
+          }
+        ];
+        
+        // Add Epic weekly quest if available
+        if (canGenerateEpic) {
+          weeklyQuests.push({
             userId: req.session.userId!,
             name: "Dungeon Master",
             description: "Prove your skill by completing multiple challenging dungeons",
@@ -1239,8 +1287,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
             completed: false,
             expiresAt: nextWeek
-          }
-        ];
+          });
+        }
+        
+        // Add Legendary weekly quest if available
+        if (canGenerateLegendary) {
+          weeklyQuests.push({
+            userId: req.session.userId!,
+            name: "The Ultimate Challenge",
+            description: "Only the most dedicated adventurers can complete this quest",
+            questType: "weekly",
+            difficulty: "Legendary",
+            requirements: {
+              legendaryDungeons: { current: 0, target: 5, label: "Complete legendary dungeons" },
+              legendaryBosses: { current: 0, target: 3, label: "Defeat legendary bosses" },
+              craftAuras: { current: 0, target: 5, label: "Craft high-level auras" }
+            },
+            rewards: {
+              rogueCredits: 5000,
+              forgeTokens: 1000,
+              soulShards: 50,
+              material: { name: "Celestial Essence", amount: 100 }
+            },
+            completed: false,
+            expiresAt: nextWeek
+          });
+        }
         
         // Create all the quests
         for (const quest of [...dailyQuests, ...weeklyQuests]) {

@@ -67,8 +67,8 @@ const questTemplates = [
 ];
 
 // Helper function to format time remaining
-const formatTimeRemaining = (expiresAt: string) => {
-  const expires = new Date(expiresAt);
+const formatTimeRemaining = (expiresAt: string | Date) => {
+  const expires = typeof expiresAt === 'string' ? new Date(expiresAt) : expiresAt;
   const now = new Date();
   const diffMs = expires.getTime() - now.getTime();
   
@@ -94,14 +94,16 @@ const BountyBoardView = () => {
   // Get difficulty color
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
-      case 'easy':
+      case 'basic':
         return 'bg-green-700/30 text-green-400 border-green-600/30';
-      case 'medium':
-        return 'bg-yellow-700/30 text-yellow-400 border-yellow-600/30';
-      case 'hard':
-        return 'bg-orange-700/30 text-orange-400 border-orange-600/30';
+      case 'rare':
+        return 'bg-blue-700/30 text-blue-400 border-blue-600/30';
       case 'epic':
         return 'bg-purple-700/30 text-purple-400 border-purple-600/30';
+      case 'mythic':
+        return 'bg-orange-700/30 text-orange-400 border-orange-600/30';
+      case 'legendary':
+        return 'bg-yellow-700/30 text-yellow-400 border-yellow-600/30';
       default:
         return 'bg-slate-700/30 text-slate-300 border-slate-600/30';
     }
@@ -152,22 +154,34 @@ const BountyBoardView = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real implementation, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the API to claim the quest
+      const response = await apiRequest('POST', `/api/bounty/quests/${questId}/claim`, {});
       
-      // Mock what rewards would be received
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to claim quest rewards');
+      }
+      
+      const data = await response.json();
+      
+      // Generate reward description from API response
       const claimedQuest = bountyQuests.find(q => q.id === questId);
       let rewardDescription = '';
       
       if (claimedQuest?.rewards) {
         const rewards = claimedQuest.rewards;
-        if ('rogueCredits' in rewards) rewardDescription += `${rewards.rogueCredits} Rogue Credits, `;
-        if ('forgeTokens' in rewards) rewardDescription += `${rewards.forgeTokens} Forge Tokens, `;
-        if ('soulShards' in rewards) rewardDescription += `${rewards.soulShards} Soul Shards, `;
-        if ('materials' in rewards && Array.isArray(rewards.materials)) {
-          rewards.materials.forEach((mat: any) => {
-            rewardDescription += `${mat.amount} ${mat.name}, `;
-          });
+        if ('rogueCredits' in rewards && rewards.rogueCredits) {
+          rewardDescription += `${rewards.rogueCredits} Rogue Credits, `;
+        }
+        if ('forgeTokens' in rewards && rewards.forgeTokens) {
+          rewardDescription += `${rewards.forgeTokens} Forge Tokens, `;
+        }
+        if ('soulShards' in rewards && rewards.soulShards) {
+          rewardDescription += `${rewards.soulShards} Soul Shards, `;
+        }
+        if ('material' in rewards && rewards.material) {
+          const mat = rewards.material as any;
+          rewardDescription += `${mat.amount} ${mat.name}, `;
         }
         
         // Remove trailing comma and space
@@ -179,13 +193,13 @@ const BountyBoardView = () => {
         description: `You received: ${rewardDescription || 'various rewards'}`,
       });
       
-      // Refresh quests
+      // Refresh quests and user data
       refetchQuests();
     } catch (error) {
       console.error('Error claiming quest rewards:', error);
       toast({
         title: "Error",
-        description: "Failed to claim quest rewards.",
+        description: typeof error === 'object' && error instanceof Error ? error.message : "Failed to claim quest rewards.",
         variant: "destructive"
       });
     } finally {
@@ -339,6 +353,11 @@ const BountyBoardView = () => {
                                     {quest.rewards.soulShards} Soul Shards
                                   </Badge>
                                 )}
+                                {'material' in quest.rewards && quest.rewards.material && (
+                                  <Badge className="bg-[#C8B8DB]/20 text-[#C8B8DB] border-[#C8B8DB]/30">
+                                    {(quest.rewards.material as any).amount} {(quest.rewards.material as any).name}
+                                  </Badge>
+                                )}
                                 {'materials' in quest.rewards && Array.isArray(quest.rewards.materials) && 
                                   quest.rewards.materials.map((mat: any, idx: number) => (
                                     <Badge key={idx} className="bg-[#C8B8DB]/20 text-[#C8B8DB] border-[#C8B8DB]/30">
@@ -419,22 +438,32 @@ const BountyBoardView = () => {
               <div className="text-sm font-semibold mb-1">Quest Rarity Chance:</div>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
+                  <span>Legendary Quests:</span>
+                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 10 ? 'text-yellow-400' : 'text-[#C8B8DB]/50'}>
+                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 10 ? 'Unlocked' : 'Locked (Lvl 10)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Mythic Quests:</span>
+                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 7 ? 'text-orange-400' : 'text-[#C8B8DB]/50'}>
+                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 7 ? 'Unlocked' : 'Locked (Lvl 7)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span>Epic Quests:</span>
                   <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 5 ? 'text-purple-400' : 'text-[#C8B8DB]/50'}>
-                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 5 ? 'Guaranteed' : 'Locked'}
+                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 5 ? 'Unlocked' : 'Locked (Lvl 5)'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Hard Quests:</span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? 'text-orange-400' : 'text-[#C8B8DB]/50'}>
-                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? `${user.bountyBoardLevel * 10}%` : 'Locked'}
+                  <span>Rare Quests:</span>
+                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? 'text-blue-400' : 'text-[#C8B8DB]/50'}>
+                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? 'Unlocked' : 'Locked (Lvl 3)'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Medium Quests:</span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 2 ? 'text-yellow-400' : 'text-[#C8B8DB]/50'}>
-                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 2 ? `${user.bountyBoardLevel * 15}%` : 'Locked'}
-                  </span>
+                  <span>Basic Quests:</span>
+                  <span className="text-green-400">Always Available</span>
                 </div>
               </div>
             </div>
