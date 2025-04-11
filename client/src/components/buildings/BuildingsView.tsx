@@ -160,7 +160,7 @@ const BuildingsView = () => {
 
   // Check if user can afford upgrade
   const canAffordUpgrade = (building: any, currentLevel: number) => {
-    if (!user) return false;
+    if (!user || !user.rogueCredits || !user.forgeTokens) return false;
     
     const cost = calculateUpgradeCost(building, currentLevel);
     return user.rogueCredits >= cost.rogueCredits && user.forgeTokens >= cost.forgeTokens;

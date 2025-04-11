@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useGameStore } from '@/lib/zustandStore';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import type { BuildingUpgrade } from '@shared/schema';
 import { 
   Card, 
   CardContent,
@@ -70,13 +71,13 @@ const ForgeView = () => {
   const { toast } = useToast();
   
   // Get forge building level
-  const { data: buildingUpgrades = [] } = useQuery({ 
+  const { data: buildingUpgrades = [] } = useQuery<BuildingUpgrade[]>({ 
     queryKey: ['/api/buildings/upgrades'], 
   });
   
   // Determine available crafting slots based on forge level (1 by default, +1 per level)
   const forgeUpgrade = buildingUpgrades.find(u => u.buildingType === 'forge');
-  const forgeLevel = forgeUpgrade?.level || 1;
+  const forgeLevel = forgeUpgrade?.currentLevel || 1;
   const maxCraftingSlots = forgeLevel;
   const [selectedTab, setSelectedTab] = useState('craft');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
