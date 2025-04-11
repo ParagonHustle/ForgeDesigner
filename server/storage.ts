@@ -1,19 +1,15 @@
+import { db } from './db';
 import {
   users, characters, auras, resources, farmingTasks, dungeonRuns,
-  forgingTasks, blackMarketListings, bountyQuests, buildingUpgrades,
-  activityLogs,
-  type User, type InsertUser,
-  type Character, type InsertCharacter,
-  type Aura, type InsertAura,
-  type Resource, type InsertResource,
-  type FarmingTask, type InsertFarmingTask,
-  type DungeonRun, type InsertDungeonRun,
-  type ForgingTask, type InsertForgingTask,
-  type BlackMarketListing, type InsertBlackMarketListing,
-  type BountyQuest, type InsertBountyQuest,
-  type BuildingUpgrade, type InsertBuildingUpgrade,
+  forgingTasks, blackMarketListings, bountyQuests, buildingUpgrades, activityLogs,
+  type User, type InsertUser, type Character, type InsertCharacter,
+  type Aura, type InsertAura, type Resource, type InsertResource,
+  type FarmingTask, type InsertFarmingTask, type DungeonRun, type InsertDungeonRun,
+  type ForgingTask, type InsertForgingTask, type BlackMarketListing, type InsertBlackMarketListing,
+  type BountyQuest, type InsertBountyQuest, type BuildingUpgrade, type InsertBuildingUpgrade,
   type ActivityLog, type InsertActivityLog
-} from "@shared/schema";
+} from '@shared/schema';
+import { eq, and, desc, sql } from 'drizzle-orm';
 
 export interface IStorage {
   // User methods
@@ -85,365 +81,270 @@ export interface IStorage {
   createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private characters: Map<number, Character>;
-  private auras: Map<number, Aura>;
-  private resources: Map<number, Resource>;
-  private farmingTasks: Map<number, FarmingTask>;
-  private dungeonRuns: Map<number, DungeonRun>;
-  private forgingTasks: Map<number, ForgingTask>;
-  private blackMarketListings: Map<number, BlackMarketListing>;
-  private bountyQuests: Map<number, BountyQuest>;
-  private buildingUpgrades: Map<number, BuildingUpgrade>;
-  private activityLogs: Map<number, ActivityLog>;
-  
-  private userIdCounter: number;
-  private characterIdCounter: number;
-  private auraIdCounter: number;
-  private resourceIdCounter: number;
-  private farmingTaskIdCounter: number;
-  private dungeonRunIdCounter: number;
-  private forgingTaskIdCounter: number;
-  private blackMarketListingIdCounter: number;
-  private bountyQuestIdCounter: number;
-  private buildingUpgradeIdCounter: number;
-  private activityLogIdCounter: number;
-
-  constructor() {
-    this.users = new Map();
-    this.characters = new Map();
-    this.auras = new Map();
-    this.resources = new Map();
-    this.farmingTasks = new Map();
-    this.dungeonRuns = new Map();
-    this.forgingTasks = new Map();
-    this.blackMarketListings = new Map();
-    this.bountyQuests = new Map();
-    this.buildingUpgrades = new Map();
-    this.activityLogs = new Map();
-    
-    this.userIdCounter = 1;
-    this.characterIdCounter = 1;
-    this.auraIdCounter = 1;
-    this.resourceIdCounter = 1;
-    this.farmingTaskIdCounter = 1;
-    this.dungeonRunIdCounter = 1;
-    this.forgingTaskIdCounter = 1;
-    this.blackMarketListingIdCounter = 1;
-    this.bountyQuestIdCounter = 1;
-    this.buildingUpgradeIdCounter = 1;
-    this.activityLogIdCounter = 1;
-  }
-
-  // User methods
+export class DatabaseStorage implements IStorage {
   async getUserById(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByDiscordId(discordId: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.discordId === discordId);
+    const [user] = await db.select().from(users).where(eq(users.discordId, discordId));
+    return user;
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
-    const newUser: User = { ...user, id, lastLogin: new Date() };
-    this.users.set(id, newUser);
+    const [newUser] = await db.insert(users).values(user).returning();
     return newUser;
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, ...updates };
-    this.users.set(id, updatedUser);
+    const [updatedUser] = await db.update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
     return updatedUser;
   }
 
-  // Character methods
   async getCharacters(userId: number): Promise<Character[]> {
-    return Array.from(this.characters.values()).filter(
-      character => character.userId === userId
-    );
+    return db.select().from(characters).where(eq(characters.userId, userId));
   }
 
   async getCharacterById(id: number): Promise<Character | undefined> {
-    return this.characters.get(id);
+    const [character] = await db.select().from(characters).where(eq(characters.id, id));
+    return character;
   }
 
   async createCharacter(character: InsertCharacter): Promise<Character> {
-    const id = this.characterIdCounter++;
-    const newCharacter: Character = { ...character, id };
-    this.characters.set(id, newCharacter);
+    const [newCharacter] = await db.insert(characters).values(character).returning();
     return newCharacter;
   }
 
   async updateCharacter(id: number, updates: Partial<Character>): Promise<Character | undefined> {
-    const character = this.characters.get(id);
-    if (!character) return undefined;
-    
-    const updatedCharacter = { ...character, ...updates };
-    this.characters.set(id, updatedCharacter);
+    const [updatedCharacter] = await db.update(characters)
+      .set(updates)
+      .where(eq(characters.id, id))
+      .returning();
     return updatedCharacter;
   }
 
   async deleteCharacter(id: number): Promise<boolean> {
-    return this.characters.delete(id);
+    const result = await db.delete(characters).where(eq(characters.id, id));
+    return !!result.rowCount;
   }
 
-  // Aura methods
   async getAuras(userId: number): Promise<Aura[]> {
-    return Array.from(this.auras.values()).filter(
-      aura => aura.userId === userId
-    );
+    return db.select().from(auras).where(eq(auras.userId, userId));
   }
 
   async getAuraById(id: number): Promise<Aura | undefined> {
-    return this.auras.get(id);
+    const [aura] = await db.select().from(auras).where(eq(auras.id, id));
+    return aura;
   }
 
   async createAura(aura: InsertAura): Promise<Aura> {
-    const id = this.auraIdCounter++;
-    const newAura: Aura = { ...aura, id };
-    this.auras.set(id, newAura);
+    const [newAura] = await db.insert(auras).values(aura).returning();
     return newAura;
   }
 
   async updateAura(id: number, updates: Partial<Aura>): Promise<Aura | undefined> {
-    const aura = this.auras.get(id);
-    if (!aura) return undefined;
-    
-    const updatedAura = { ...aura, ...updates };
-    this.auras.set(id, updatedAura);
+    const [updatedAura] = await db.update(auras)
+      .set(updates)
+      .where(eq(auras.id, id))
+      .returning();
     return updatedAura;
   }
 
   async deleteAura(id: number): Promise<boolean> {
-    return this.auras.delete(id);
+    const result = await db.delete(auras).where(eq(auras.id, id));
+    return !!result.rowCount;
   }
 
-  // Resource methods
   async getResources(userId: number): Promise<Resource[]> {
-    return Array.from(this.resources.values()).filter(
-      resource => resource.userId === userId
-    );
+    return db.select().from(resources).where(eq(resources.userId, userId));
   }
 
   async getResourceByNameAndUserId(name: string, userId: number): Promise<Resource | undefined> {
-    return Array.from(this.resources.values()).find(
-      resource => resource.name === name && resource.userId === userId
-    );
+    const [resource] = await db.select().from(resources)
+      .where(and(eq(resources.name, name), eq(resources.userId, userId)));
+    return resource;
   }
 
   async createResource(resource: InsertResource): Promise<Resource> {
-    const id = this.resourceIdCounter++;
-    const newResource: Resource = { ...resource, id };
-    this.resources.set(id, newResource);
+    const [newResource] = await db.insert(resources).values(resource).returning();
     return newResource;
   }
 
   async updateResource(id: number, updates: Partial<Resource>): Promise<Resource | undefined> {
-    const resource = this.resources.get(id);
-    if (!resource) return undefined;
-    
-    const updatedResource = { ...resource, ...updates };
-    this.resources.set(id, updatedResource);
+    const [updatedResource] = await db.update(resources)
+      .set(updates)
+      .where(eq(resources.id, id))
+      .returning();
     return updatedResource;
   }
 
-  // Farming Task methods
   async getFarmingTasks(userId: number): Promise<FarmingTask[]> {
-    return Array.from(this.farmingTasks.values()).filter(
-      task => task.userId === userId
-    );
+    return db.select().from(farmingTasks).where(eq(farmingTasks.userId, userId));
   }
 
   async getFarmingTaskById(id: number): Promise<FarmingTask | undefined> {
-    return this.farmingTasks.get(id);
+    const [task] = await db.select().from(farmingTasks).where(eq(farmingTasks.id, id));
+    return task;
   }
 
   async createFarmingTask(task: InsertFarmingTask): Promise<FarmingTask> {
-    const id = this.farmingTaskIdCounter++;
-    const newTask: FarmingTask = { ...task, id };
-    this.farmingTasks.set(id, newTask);
+    const [newTask] = await db.insert(farmingTasks).values(task).returning();
     return newTask;
   }
 
   async updateFarmingTask(id: number, updates: Partial<FarmingTask>): Promise<FarmingTask | undefined> {
-    const task = this.farmingTasks.get(id);
-    if (!task) return undefined;
-    
-    const updatedTask = { ...task, ...updates };
-    this.farmingTasks.set(id, updatedTask);
+    const [updatedTask] = await db.update(farmingTasks)
+      .set(updates)
+      .where(eq(farmingTasks.id, id))
+      .returning();
     return updatedTask;
   }
 
   async deleteFarmingTask(id: number): Promise<boolean> {
-    return this.farmingTasks.delete(id);
+    const result = await db.delete(farmingTasks).where(eq(farmingTasks.id, id));
+    return result.rowCount > 0;
   }
 
-  // Dungeon Run methods
   async getDungeonRuns(userId: number): Promise<DungeonRun[]> {
-    return Array.from(this.dungeonRuns.values()).filter(
-      run => run.userId === userId
-    );
+    return db.select().from(dungeonRuns).where(eq(dungeonRuns.userId, userId));
   }
 
   async getDungeonRunById(id: number): Promise<DungeonRun | undefined> {
-    return this.dungeonRuns.get(id);
+    const [run] = await db.select().from(dungeonRuns).where(eq(dungeonRuns.id, id));
+    return run;
   }
 
   async createDungeonRun(run: InsertDungeonRun): Promise<DungeonRun> {
-    const id = this.dungeonRunIdCounter++;
-    const newRun: DungeonRun = { ...run, id };
-    this.dungeonRuns.set(id, newRun);
+    const [newRun] = await db.insert(dungeonRuns).values(run).returning();
     return newRun;
   }
 
   async updateDungeonRun(id: number, updates: Partial<DungeonRun>): Promise<DungeonRun | undefined> {
-    const run = this.dungeonRuns.get(id);
-    if (!run) return undefined;
-    
-    const updatedRun = { ...run, ...updates };
-    this.dungeonRuns.set(id, updatedRun);
+    const [updatedRun] = await db.update(dungeonRuns)
+      .set(updates)
+      .where(eq(dungeonRuns.id, id))
+      .returning();
     return updatedRun;
   }
 
-  // Forging Task methods
   async getForgingTasks(userId: number): Promise<ForgingTask[]> {
-    return Array.from(this.forgingTasks.values()).filter(
-      task => task.userId === userId
-    );
+    return db.select().from(forgingTasks).where(eq(forgingTasks.userId, userId));
   }
 
   async getForgingTaskById(id: number): Promise<ForgingTask | undefined> {
-    return this.forgingTasks.get(id);
+    const [task] = await db.select().from(forgingTasks).where(eq(forgingTasks.id, id));
+    return task;
   }
 
   async createForgingTask(task: InsertForgingTask): Promise<ForgingTask> {
-    const id = this.forgingTaskIdCounter++;
-    const newTask: ForgingTask = { ...task, id };
-    this.forgingTasks.set(id, newTask);
+    const [newTask] = await db.insert(forgingTasks).values(task).returning();
     return newTask;
   }
 
   async updateForgingTask(id: number, updates: Partial<ForgingTask>): Promise<ForgingTask | undefined> {
-    const task = this.forgingTasks.get(id);
-    if (!task) return undefined;
-    
-    const updatedTask = { ...task, ...updates };
-    this.forgingTasks.set(id, updatedTask);
+    const [updatedTask] = await db.update(forgingTasks)
+      .set(updates)
+      .where(eq(forgingTasks.id, id))
+      .returning();
     return updatedTask;
   }
 
-  // Black Market methods
   async getBlackMarketListings(userId?: number): Promise<BlackMarketListing[]> {
-    const allListings = Array.from(this.blackMarketListings.values());
     if (userId) {
-      return allListings.filter(listing => listing.userId === userId);
+      return db.select().from(blackMarketListings).where(eq(blackMarketListings.userId, userId));
     }
-    return allListings;
+    return db.select().from(blackMarketListings);
   }
 
   async getBlackMarketListingById(id: number): Promise<BlackMarketListing | undefined> {
-    return this.blackMarketListings.get(id);
+    const [listing] = await db.select().from(blackMarketListings).where(eq(blackMarketListings.id, id));
+    return listing;
   }
 
   async createBlackMarketListing(listing: InsertBlackMarketListing): Promise<BlackMarketListing> {
-    const id = this.blackMarketListingIdCounter++;
-    const newListing: BlackMarketListing = { ...listing, id };
-    this.blackMarketListings.set(id, newListing);
+    const [newListing] = await db.insert(blackMarketListings).values(listing).returning();
     return newListing;
   }
 
   async updateBlackMarketListing(id: number, updates: Partial<BlackMarketListing>): Promise<BlackMarketListing | undefined> {
-    const listing = this.blackMarketListings.get(id);
-    if (!listing) return undefined;
-    
-    const updatedListing = { ...listing, ...updates };
-    this.blackMarketListings.set(id, updatedListing);
+    const [updatedListing] = await db.update(blackMarketListings)
+      .set(updates)
+      .where(eq(blackMarketListings.id, id))
+      .returning();
     return updatedListing;
   }
 
   async deleteBlackMarketListing(id: number): Promise<boolean> {
-    return this.blackMarketListings.delete(id);
+    const result = await db.delete(blackMarketListings).where(eq(blackMarketListings.id, id));
+    return result.rowCount > 0;
   }
 
-  // Bounty Quest methods
   async getBountyQuests(userId: number): Promise<BountyQuest[]> {
-    return Array.from(this.bountyQuests.values()).filter(
-      quest => quest.userId === userId
-    );
+    return db.select().from(bountyQuests).where(eq(bountyQuests.userId, userId));
   }
 
   async getBountyQuestById(id: number): Promise<BountyQuest | undefined> {
-    return this.bountyQuests.get(id);
+    const [quest] = await db.select().from(bountyQuests).where(eq(bountyQuests.id, id));
+    return quest;
   }
 
   async createBountyQuest(quest: InsertBountyQuest): Promise<BountyQuest> {
-    const id = this.bountyQuestIdCounter++;
-    const newQuest: BountyQuest = { ...quest, id };
-    this.bountyQuests.set(id, newQuest);
+    const [newQuest] = await db.insert(bountyQuests).values(quest).returning();
     return newQuest;
   }
 
   async updateBountyQuest(id: number, updates: Partial<BountyQuest>): Promise<BountyQuest | undefined> {
-    const quest = this.bountyQuests.get(id);
-    if (!quest) return undefined;
-    
-    const updatedQuest = { ...quest, ...updates };
-    this.bountyQuests.set(id, updatedQuest);
+    const [updatedQuest] = await db.update(bountyQuests)
+      .set(updates)
+      .where(eq(bountyQuests.id, id))
+      .returning();
     return updatedQuest;
   }
 
-  // Building Upgrade methods
   async getBuildingUpgrades(userId: number): Promise<BuildingUpgrade[]> {
-    return Array.from(this.buildingUpgrades.values()).filter(
-      upgrade => upgrade.userId === userId
-    );
+    return db.select().from(buildingUpgrades).where(eq(buildingUpgrades.userId, userId));
   }
 
   async getBuildingUpgradeByTypeAndUserId(buildingType: string, userId: number): Promise<BuildingUpgrade | undefined> {
-    return Array.from(this.buildingUpgrades.values()).find(
-      upgrade => upgrade.buildingType === buildingType && upgrade.userId === userId
-    );
+    const [upgrade] = await db.select().from(buildingUpgrades)
+      .where(and(eq(buildingUpgrades.buildingType, buildingType), eq(buildingUpgrades.userId, userId)));
+    return upgrade;
   }
 
   async createBuildingUpgrade(upgrade: InsertBuildingUpgrade): Promise<BuildingUpgrade> {
-    const id = this.buildingUpgradeIdCounter++;
-    const newUpgrade: BuildingUpgrade = { ...upgrade, id };
-    this.buildingUpgrades.set(id, newUpgrade);
+    const [newUpgrade] = await db.insert(buildingUpgrades).values(upgrade).returning();
     return newUpgrade;
   }
 
   async updateBuildingUpgrade(id: number, updates: Partial<BuildingUpgrade>): Promise<BuildingUpgrade | undefined> {
-    const upgrade = this.buildingUpgrades.get(id);
-    if (!upgrade) return undefined;
-    
-    const updatedUpgrade = { ...upgrade, ...updates };
-    this.buildingUpgrades.set(id, updatedUpgrade);
+    const [updatedUpgrade] = await db.update(buildingUpgrades)
+      .set(updates)
+      .where(eq(buildingUpgrades.id, id))
+      .returning();
     return updatedUpgrade;
   }
 
-  // Activity Log methods
   async getActivityLogs(userId: number, limit?: number): Promise<ActivityLog[]> {
-    const logs = Array.from(this.activityLogs.values())
-      .filter(log => log.userId === userId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    
+    const baseQuery = db.select()
+      .from(activityLogs)
+      .where(eq(activityLogs.userId, userId))
+      .orderBy(desc(activityLogs.timestamp));
+
     if (limit) {
-      return logs.slice(0, limit);
+      return baseQuery.limit(limit);
     }
-    return logs;
+
+    return baseQuery;
   }
 
   async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> {
-    const id = this.activityLogIdCounter++;
-    const newLog: ActivityLog = { ...log, id };
-    this.activityLogs.set(id, newLog);
+    const [newLog] = await db.insert(activityLogs).values(log).returning();
     return newLog;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

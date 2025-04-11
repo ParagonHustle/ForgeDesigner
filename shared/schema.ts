@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, jsonb, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // User model
 export const users = pgTable("users", {
@@ -161,6 +162,115 @@ export const activityLogs = pgTable("activity_logs", {
   timestamp: timestamp("timestamp").defaultNow(),
   relatedIds: jsonb("related_ids"),
 });
+
+// Define relations between tables
+export const usersRelations = relations(users, ({ many }) => ({
+  characters: many(characters),
+  auras: many(auras),
+  resources: many(resources),
+  farmingTasks: many(farmingTasks),
+  dungeonRuns: many(dungeonRuns),
+  forgingTasks: many(forgingTasks),
+  blackMarketListings: many(blackMarketListings),
+  bountyQuests: many(bountyQuests),
+  buildingUpgrades: many(buildingUpgrades),
+  activityLogs: many(activityLogs),
+}));
+
+export const charactersRelations = relations(characters, ({ one, many }) => ({
+  user: one(users, {
+    fields: [characters.userId],
+    references: [users.id],
+  }),
+  equippedAura: one(auras, {
+    fields: [characters.equippedAuraId],
+    references: [auras.id],
+  }),
+  farmingTasks: many(farmingTasks),
+}));
+
+export const aurasRelations = relations(auras, ({ one }) => ({
+  user: one(users, {
+    fields: [auras.userId],
+    references: [users.id],
+  }),
+  equippedByCharacter: one(characters, {
+    fields: [auras.equippedByCharacterId],
+    references: [characters.id],
+  }),
+}));
+
+export const resourcesRelations = relations(resources, ({ one }) => ({
+  user: one(users, {
+    fields: [resources.userId],
+    references: [users.id],
+  }),
+}));
+
+export const farmingTasksRelations = relations(farmingTasks, ({ one }) => ({
+  user: one(users, {
+    fields: [farmingTasks.userId],
+    references: [users.id],
+  }),
+  character: one(characters, {
+    fields: [farmingTasks.characterId],
+    references: [characters.id],
+  }),
+}));
+
+export const dungeonRunsRelations = relations(dungeonRuns, ({ one }) => ({
+  user: one(users, {
+    fields: [dungeonRuns.userId],
+    references: [users.id],
+  }),
+}));
+
+export const forgingTasksRelations = relations(forgingTasks, ({ one }) => ({
+  user: one(users, {
+    fields: [forgingTasks.userId],
+    references: [users.id],
+  }),
+  primaryAura: one(auras, {
+    fields: [forgingTasks.primaryAuraId],
+    references: [auras.id],
+  }),
+  secondaryAura: one(auras, {
+    fields: [forgingTasks.secondaryAuraId],
+    references: [auras.id],
+  }),
+  resultAura: one(auras, {
+    fields: [forgingTasks.resultAuraId],
+    references: [auras.id],
+  }),
+}));
+
+export const blackMarketListingsRelations = relations(blackMarketListings, ({ one }) => ({
+  user: one(users, {
+    fields: [blackMarketListings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const bountyQuestsRelations = relations(bountyQuests, ({ one }) => ({
+  user: one(users, {
+    fields: [bountyQuests.userId],
+    references: [users.id],
+  }),
+}));
+
+export const buildingUpgradesRelations = relations(buildingUpgrades, ({ one }) => ({
+  user: one(users, {
+    fields: [buildingUpgrades.userId],
+    references: [users.id],
+  }),
+}));
+
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [activityLogs.userId],
+    references: [users.id],
+  }),
+}));
 
 // Define insert schemas for each model
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
