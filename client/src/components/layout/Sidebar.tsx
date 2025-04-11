@@ -9,7 +9,8 @@ import {
   ShoppingBag, 
   Building2, 
   List, 
-  Hammer
+  Hammer,
+  Award
 } from 'lucide-react';
 
 const navItems = [
@@ -21,6 +22,7 @@ const navItems = [
   { path: "/blackmarket", label: "Black Market", icon: <ShoppingBag className="h-6 w-6" /> },
   { path: "/buildings", label: "Buildings", icon: <Building2 className="h-6 w-6" /> },
   { path: "/bounty", label: "Bounty Board", icon: <List className="h-6 w-6" /> },
+  { path: "/collections", label: "Collections", icon: <Award className="h-6 w-6" /> },
 ];
 
 const Sidebar = () => {

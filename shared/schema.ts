@@ -130,6 +130,7 @@ export const blackMarketListings = pgTable("black_market_listings", {
   expiresAt: timestamp("expires_at"),
   sold: boolean("sold").default(false),
   featured: boolean("featured").default(false),
+  isPremium: boolean("is_premium").default(false),
   listedAt: timestamp("listed_at").defaultNow(),
 });
 

@@ -12,6 +12,7 @@ import Forge from "@/pages/forge";
 import BlackMarket from "@/pages/blackmarket";
 import Buildings from "@/pages/buildings";
 import Bounty from "@/pages/bounty";
+import Collections from "@/pages/collections";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/blackmarket" component={BlackMarket} />
       <Route path="/buildings" component={Buildings} />
       <Route path="/bounty" component={Bounty} />
+      <Route path="/collections" component={Collections} />
       <Route component={NotFound} />
     </Switch>
   );
