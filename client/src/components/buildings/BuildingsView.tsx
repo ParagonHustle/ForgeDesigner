@@ -164,11 +164,13 @@ const BuildingsView = () => {
 
   // Check if user can afford upgrade
   const canAffordUpgrade = (building: any, currentLevel: number) => {
-    if (!user || user.rogueCredits === undefined || user.rogueCredits === null || 
-        user.forgeTokens === undefined || user.forgeTokens === null) return false;
+    if (!user) return false;
     
     const cost = calculateUpgradeCost(building, currentLevel);
-    return user.rogueCredits >= cost.rogueCredits && user.forgeTokens >= cost.forgeTokens;
+    const userCredits = user.rogueCredits || 0;
+    const userTokens = user.forgeTokens || 0;
+    
+    return userCredits >= cost.rogueCredits && userTokens >= cost.forgeTokens;
   };
 
   // Check if building is at max level based on townhall level
