@@ -206,7 +206,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFarmingTask(id: number): Promise<boolean> {
     const result = await db.delete(farmingTasks).where(eq(farmingTasks.id, id));
-    return result.rowCount > 0;
+    return !!result.rowCount;
   }
 
   async getDungeonRuns(userId: number): Promise<DungeonRun[]> {
@@ -280,7 +280,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBlackMarketListing(id: number): Promise<boolean> {
     const result = await db.delete(blackMarketListings).where(eq(blackMarketListings.id, id));
-    return result.rowCount > 0;
+    return !!result.rowCount;
   }
 
   async getBountyQuests(userId: number): Promise<BountyQuest[]> {
