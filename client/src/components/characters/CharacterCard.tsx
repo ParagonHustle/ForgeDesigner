@@ -76,7 +76,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
     
     setIsEquipping(true);
     try {
-      await apiRequest(`/api/characters/${character.id}/equip-aura/${selectedAuraId}`, 'POST');
+      await apiRequest('POST', `/api/characters/${character.id}/equip-aura/${selectedAuraId}`);
       
       // Invalidate character and aura queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
