@@ -60,14 +60,24 @@ const rarities = [
 
 // Required materials for crafting
 const requiredMaterials = {
-  'common': { 'Celestial Ore': 20, 'Moonsilver': 10 },
-  'rare': { 'Celestial Ore': 40, 'Moonsilver': 20, 'Dragon Scale': 5 },
-  'epic': { 'Celestial Ore': 60, 'Moonsilver': 30, 'Dragon Scale': 15, 'Phoenix Feather': 5 }
+  'common': { 'Essence': 500 },
+  'rare': { 'Essence': 500 },
+  'epic': { 'Essence': 500 }
 };
 
 const ForgeView = () => {
   const { auras = [], resources = [], fetchAuras, fetchResources, fetchForgingTasks } = useGameStore();
   const { toast } = useToast();
+  
+  // Get forge building level
+  const { data: buildingUpgrades = [] } = useQuery({ 
+    queryKey: ['/api/buildings/upgrades'], 
+  });
+  
+  // Determine available crafting slots based on forge level (1 by default, +1 per level)
+  const forgeUpgrade = buildingUpgrades.find(u => u.buildingType === 'forge');
+  const forgeLevel = forgeUpgrade?.level || 1;
+  const maxCraftingSlots = forgeLevel;
   const [selectedTab, setSelectedTab] = useState('craft');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedRarity, setSelectedRarity] = useState<string | null>(null);
@@ -103,6 +113,16 @@ const ForgeView = () => {
 
   // Start aura crafting
   const startCrafting = async () => {
+    // Check if the player has reached their crafting slot limit
+    if (activeForgingTasks.length >= maxCraftingSlots) {
+      toast({
+        title: "Forge Capacity Reached",
+        description: `You can only have ${maxCraftingSlots} active crafting task${maxCraftingSlots > 1 ? 's' : ''} at once. Upgrade your Forge to increase capacity.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!selectedElement) {
       toast({
         title: "Incomplete Selection",
