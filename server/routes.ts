@@ -1630,6 +1630,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Register building skill routes
+  await addBuildingSkillRoutes(app);
+  
   // Add error handling middleware
   app.use(handleErrors);
   
@@ -1686,4 +1689,92 @@ function generateMockBattleLog(run: any, success: boolean) {
   });
   
   return log;
+}
+
+// Add routes for specific buildings and skill trees
+export async function addBuildingSkillRoutes(app: Express) {
+  // Get Bounty Board building data
+  app.get('/api/buildings/bountyBoard', authenticateUser, async (req, res) => {
+    try {
+      const bountyBoard = await storage.getBuildingUpgradeByTypeAndUserId('bountyBoard', req.session.userId!);
+      
+      if (!bountyBoard) {
+        // Create a default one if it doesn't exist
+        const newBountyBoard = await storage.createBuildingUpgrade({
+          userId: req.session.userId!,
+          buildingType: 'bountyBoard',
+          currentLevel: 1,
+          upgradeInProgress: false,
+          unlockedSkills: [],
+          availableSkillPoints: 0,
+          skillDistribution: {}
+        });
+        
+        return res.json(newBountyBoard);
+      }
+      
+      // Calculate available skill points if not set
+      if (bountyBoard.availableSkillPoints === null || bountyBoard.availableSkillPoints === undefined) {
+        const totalPoints = Math.max(0, (bountyBoard.currentLevel - 1) * 2);
+        const usedPoints = bountyBoard.skillDistribution
+          ? Object.values(bountyBoard.skillDistribution as Record<string, number>).reduce((sum: number, level) => sum + (typeof level === 'number' ? level : 0), 0)
+          : 0;
+        
+        bountyBoard.availableSkillPoints = totalPoints - usedPoints;
+        
+        // Save the calculated value
+        await storage.updateBuildingUpgrade(bountyBoard.id, {
+          availableSkillPoints: bountyBoard.availableSkillPoints
+        });
+      }
+      
+      res.json(bountyBoard);
+    } catch (error) {
+      console.error('Error fetching bounty board:', error);
+      res.status(500).json({ message: 'Failed to fetch bounty board data' });
+    }
+  });
+  
+  // Update Bounty Board skill distribution
+  app.post('/api/buildings/skills/bountyBoard', authenticateUser, async (req, res) => {
+    try {
+      const { skillDistribution } = req.body;
+      
+      if (!skillDistribution || typeof skillDistribution !== 'object') {
+        return res.status(400).json({ message: 'Invalid skill distribution data' });
+      }
+      
+      const bountyBoard = await storage.getBuildingUpgradeByTypeAndUserId('bountyBoard', req.session.userId!);
+      
+      if (!bountyBoard) {
+        return res.status(404).json({ message: 'Bounty Board not found' });
+      }
+      
+      // Calculate total points
+      const totalPoints = Math.max(0, (bountyBoard.currentLevel - 1) * 2);
+      const newUsedPoints = Object.values(skillDistribution).reduce((sum: number, level) => sum + (typeof level === 'number' ? level : 0), 0);
+      
+      if (newUsedPoints > totalPoints) {
+        return res.status(400).json({ 
+          message: 'Too many skill points allocated',
+          allocated: newUsedPoints,
+          available: totalPoints
+        });
+      }
+      
+      // Calculate available points
+      const availableSkillPoints = totalPoints - newUsedPoints;
+      
+      // Update the building
+      const updatedBountyBoard = await storage.updateBuildingUpgrade(bountyBoard.id, {
+        skillDistribution: skillDistribution,
+        availableSkillPoints: availableSkillPoints
+      });
+      
+      res.json(updatedBountyBoard);
+    } catch (error) {
+      console.error('Error updating bounty board skills:', error);
+      res.status(500).json({ message: 'Failed to update skill distribution' });
+    }
+  });
 }

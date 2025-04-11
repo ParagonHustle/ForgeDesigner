@@ -1,552 +1,319 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { useDiscordAuth } from '@/lib/discordAuth';
-import { useToast } from '@/hooks/use-toast';
-import { motion } from 'framer-motion';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  TreeDeciduous,
-  ChevronRight,
-  Plus,
-  Minus,
-  Info,
-  Lock,
-  Target,
-  Clock,
-  Coins,
-  Zap,
-  Award,
-  Sparkles,
-} from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
+import { Plus, Minus, Lock } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { BuildingUpgrade } from '@shared/schema';
 
-import type { BuildingUpgrade } from '@shared/schema';
-
-// Define skill tree skills for the Bounty Board
-const bountySkills = [
+// Define skill tree data
+export const bountySkills = [
+  {
+    id: 'questRewards',
+    name: 'Quest Rewards',
+    description: 'Increases gold rewards from bounty quests by 10% per level',
+    maxLevel: 5,
+    requires: [],
+    position: { x: 1, y: 1 },
+    color: '#FFD700',
+    icon: '💰'
+  },
   {
     id: 'questSlots',
     name: 'Quest Slots',
-    description: 'Increases maximum number of active quests',
-    maxLevel: 5,
-    icon: <Target className="h-5 w-5" />,
-    color: 'text-[#00B9AE]',
-    benefits: [
-      '+1 quest slot',
-      '+2 quest slots',
-      '+3 quest slots',
-      '+4 quest slots',
-      '+5 quest slots',
-    ],
-    requires: null,
+    description: 'Increases available daily quest slots by 1 per level',
+    maxLevel: 3,
+    requires: [],
+    position: { x: 3, y: 1 },
+    color: '#4169E1',
+    icon: '📜'
+  },
+  {
+    id: 'resourceBonus',
+    name: 'Resource Hunter',
+    description: 'Increases resource rewards from bounty quests by 15% per level',
+    maxLevel: 4,
+    requires: ['questRewards'],
+    position: { x: 1, y: 2 },
+    color: '#32CD32',
+    icon: '🌿'
   },
   {
     id: 'questDuration',
-    name: 'Improved Duration',
-    description: 'Increases quest duration time',
+    name: 'Swift Hunter',
+    description: 'Decreases quest completion time by 5% per level',
     maxLevel: 3,
-    icon: <Clock className="h-5 w-5" />,
-    color: 'text-[#9B59B6]',
-    benefits: [
-      '+4 hours to quest duration',
-      '+8 hours to quest duration',
-      '+12 hours to quest duration',
-    ],
-    requires: 'questSlots',
-    requiredLevel: 2,
-  },
-  {
-    id: 'rewardBonus',
-    name: 'Reward Multiplier',
-    description: 'Increases rewards from completed quests',
-    maxLevel: 5,
-    icon: <Coins className="h-5 w-5" />,
-    color: 'text-[#FFD700]',
-    benefits: [
-      '+10% increased rewards',
-      '+20% increased rewards',
-      '+30% increased rewards',
-      '+40% increased rewards',
-      '+50% increased rewards',
-    ],
-    requires: 'questSlots',
-    requiredLevel: 3,
+    requires: ['questSlots'],
+    position: { x: 3, y: 2 },
+    color: '#1E90FF',
+    icon: '⏱️'
   },
   {
     id: 'rareQuests',
     name: 'Rare Quests',
-    description: 'Chance to discover rare quests with special rewards',
+    description: 'Increases chance to find rare quests by 10% per level',
     maxLevel: 3,
-    icon: <Sparkles className="h-5 w-5" />,
-    color: 'text-[#FF9D00]',
-    benefits: [
-      '10% chance for rare quests',
-      '20% chance for rare quests',
-      '30% chance for rare quests',
-    ],
-    requires: 'rewardBonus',
-    requiredLevel: 2,
-  },
-  {
-    id: 'progressionSpeed',
-    name: 'Faster Progression',
-    description: 'Tasks in quests progress faster',
-    maxLevel: 3,
-    icon: <Zap className="h-5 w-5" />,
-    color: 'text-[#3498DB]',
-    benefits: [
-      '+15% faster progression',
-      '+30% faster progression',
-      '+45% faster progression',
-    ],
-    requires: 'questDuration',
-    requiredLevel: 2,
+    requires: ['resourceBonus', 'questDuration'],
+    position: { x: 2, y: 3 },
+    color: '#9932CC',
+    icon: '✨'
   },
   {
     id: 'legendaryQuests',
-    name: 'Legendary Quests',
-    description: 'Chance to discover legendary quests with powerful rewards',
+    name: 'Legendary Pursuit',
+    description: 'Unlocks legendary quests with exceptional rewards',
     maxLevel: 1,
-    icon: <Award className="h-5 w-5" />,
-    color: 'text-[#E74C3C]',
-    benefits: [
-      'Unlocks legendary quests with unique rewards',
-    ],
-    requires: 'rareQuests',
-    requiredLevel: 3,
-  },
+    requires: ['rareQuests'],
+    position: { x: 2, y: 4 },
+    color: '#FF4500',
+    icon: '🏆'
+  }
 ];
 
-interface SkillNodeProps {
-  skill: typeof bountySkills[0];
-  currentLevel: number;
-  availablePoints: number;
-  skillDistribution: Record<string, number>;
-  canAllocate: (skillId: string) => boolean;
-  onAllocate: (skillId: string, add: boolean) => void;
+interface BountyBoardSkillTreeProps {
+  building?: BuildingUpgrade;
+  onUpgrade?: () => void;
 }
 
-// Skill Node Component
-const SkillNode: React.FC<SkillNodeProps> = ({
-  skill,
-  currentLevel,
-  availablePoints,
-  skillDistribution,
-  canAllocate,
-  onAllocate,
-}) => {
-  const skillLevel = skillDistribution[skill.id] || 0;
-  const isMaxed = skillLevel >= skill.maxLevel;
-  const canAdd = !isMaxed && availablePoints > 0 && canAllocate(skill.id);
-  const hasPoints = skillLevel > 0;
-  const isLocked = !canAllocate(skill.id) && skillLevel === 0;
-  
-  return (
-    <div className={`relative ${isLocked ? 'opacity-60' : ''}`}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div 
-              className={`
-                flex flex-col items-center justify-center w-20 h-20 rounded-lg p-2
-                ${hasPoints ? 'bg-[#432874]/50 border-2 border-[#FF9D00]' : 'bg-[#1F1D36]/80 border border-[#432874]/50'}
-                ${canAdd ? 'cursor-pointer hover:bg-[#432874]/70' : 'cursor-default'}
-                transition-all duration-200
-              `}
-              onClick={() => canAdd && onAllocate(skill.id, true)}
-            >
-              <div className={`${skill.color} mb-1`}>
-                {skill.icon}
-              </div>
-              <div className="text-xs font-semibold text-center">{skill.name}</div>
-              {skillLevel > 0 && (
-                <Badge className="bg-[#FF9D00]/80 text-[#1A1A2E] mt-1 text-xs px-2 py-0">
-                  {skillLevel}/{skill.maxLevel}
-                </Badge>
-              )}
-              {isLocked && (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#000]/50 rounded-lg">
-                  <Lock className="h-6 w-6 text-[#C8B8DB]/70" />
-                </div>
-              )}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="w-64 p-3 bg-[#1A1A2E] border border-[#432874]">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className={`${skill.color} mr-2`}>
-                    {skill.icon}
-                  </div>
-                  <h4 className="font-semibold">{skill.name}</h4>
-                </div>
-                <Badge className={isMaxed ? 'bg-[#00B9AE]' : 'bg-[#432874]/80'}>
-                  {skillLevel}/{skill.maxLevel}
-                </Badge>
-              </div>
-              
-              <p className="text-sm text-[#C8B8DB]/80">{skill.description}</p>
-              
-              {skill.requires && (
-                <div className="text-xs text-[#C8B8DB]/70 flex items-center mt-1">
-                  <Info className="h-3 w-3 mr-1" />
-                  Requires {bountySkills.find(s => s.id === skill.requires)?.name} Lv.{skill.requiredLevel}
-                </div>
-              )}
-              
-              <div className="mt-2">
-                <div className="text-xs font-semibold mb-1">Current Benefit:</div>
-                <div className="text-sm text-[#FF9D00]">
-                  {skillLevel > 0 ? skill.benefits[skillLevel - 1] : 'None'}
-                </div>
-              </div>
-              
-              {!isMaxed && (
-                <div className="mt-1">
-                  <div className="text-xs font-semibold mb-1">Next Level:</div>
-                  <div className="text-sm text-[#C8B8DB]/80">
-                    {skillLevel < skill.maxLevel ? skill.benefits[skillLevel] : 'Maxed'}
-                  </div>
-                </div>
-              )}
-              
-              {hasPoints && (
-                <div className="flex justify-between mt-2 pt-2 border-t border-[#432874]/30">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAllocate(skill.id, false);
-                    }}
-                    disabled={skillLevel <= 0}
-                  >
-                    <Minus className="h-3 w-3" />
-                    <span className="ml-1">Remove</span>
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 bg-[#FF9D00]/20 border-[#FF9D00]/50 hover:bg-[#FF9D00]/30 text-[#FF9D00]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAllocate(skill.id, true);
-                    }}
-                    disabled={!canAdd}
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span className="ml-1">Upgrade</span>
-                  </Button>
-                </div>
-              )}
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      
-      {/* Lines connecting skills in the tree */}
-      {bountySkills.filter(s => s.requires === skill.id).map(childSkill => (
-        <div 
-          key={`${skill.id}-${childSkill.id}`}
-          className={`absolute top-1/2 right-0 h-0.5 w-8 
-            ${skillDistribution[childSkill.id] > 0 ? 'bg-[#FF9D00]/70' : 'bg-[#432874]/50'}`}
-          style={{ 
-            transform: 'translateY(-50%)', 
-            left: '100%' 
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Main Skill Tree Component
-const BountyBoardSkillTree = () => {
-  const { user } = useDiscordAuth();
+export const BountyBoardSkillTree = ({ building, onUpgrade }: BountyBoardSkillTreeProps) => {
   const { toast } = useToast();
-  const [availableSkillPoints, setAvailableSkillPoints] = useState<number>(0);
+  const queryClient = useQueryClient();
   const [skillDistribution, setSkillDistribution] = useState<Record<string, number>>({});
-  const [pendingChanges, setPendingChanges] = useState<boolean>(false);
-  
-  // Fetch bounty board building data
-  const { data: bountyBoard, isLoading } = useQuery<BuildingUpgrade>({
+  const [availablePoints, setAvailablePoints] = useState(0);
+
+  // Fetch bounty board data
+  const { data: bountyBoard, isLoading, isError } = useQuery({
     queryKey: ['/api/buildings/bountyBoard'],
-    enabled: !!user,
+    enabled: !!building
   });
-  
-  // Allocate skill point mutation
-  const allocatePointMutation = useMutation({
+
+  useEffect(() => {
+    if (bountyBoard) {
+      // Ensure skillDistribution is a valid object
+      const distribution = bountyBoard.skillDistribution || {};
+      setSkillDistribution(distribution as Record<string, number>);
+      
+      // Initialize skill levels that aren't set
+      bountySkills.forEach(skill => {
+        if (!(skill.id in distribution)) {
+          setSkillDistribution(prev => ({ ...prev, [skill.id]: 0 }));
+        }
+      });
+      
+      // Set available points
+      setAvailablePoints(bountyBoard.availableSkillPoints || 0);
+    }
+  }, [bountyBoard]);
+
+  // Mutation to update skill distribution
+  const updateSkillsMutation = useMutation({
     mutationFn: async (data: { skillDistribution: Record<string, number> }) => {
-      const response = await apiRequest('POST', '/api/buildings/skills/bountyBoard', data);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to allocate skill points');
-      }
-      return response.json();
+      return apiRequest('/api/buildings/skills/bountyBoard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/buildings/bountyBoard'] });
-      setPendingChanges(false);
       toast({
         title: 'Skills Updated',
-        description: 'Your Bounty Board skill points have been allocated.',
+        description: 'Your skill points have been allocated successfully.',
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to allocate skill points',
+        description: error.message || 'Failed to update skills. Please try again.',
         variant: 'destructive',
       });
     }
   });
-  
-  // Update local state when data loads
-  useEffect(() => {
-    if (bountyBoard) {
-      setAvailableSkillPoints(bountyBoard.availableSkillPoints || 0);
-      setSkillDistribution(bountyBoard.skillDistribution as Record<string, number> || {});
-    }
-  }, [bountyBoard]);
-  
-  // Function to check if a skill can be allocated points
-  const canAllocateToSkill = (skillId: string): boolean => {
+
+  // Check if a skill can be allocated points
+  const canAllocateSkill = (skillId: string): boolean => {
+    if (availablePoints <= 0) return false;
+    
     const skill = bountySkills.find(s => s.id === skillId);
     if (!skill) return false;
     
-    // If no prerequisites, can always allocate
-    if (!skill.requires) return true;
+    // Check level cap
+    const currentLevel = skillDistribution[skillId] || 0;
+    if (currentLevel >= skill.maxLevel) return false;
     
-    // Check if prerequisite skill has required level
-    const prerequisiteSkill = skill.requires;
-    const requiredLevel = skill.requiredLevel || 1;
-    return (skillDistribution[prerequisiteSkill] || 0) >= requiredLevel;
-  };
-  
-  // Allocate or deallocate points
-  const handleAllocatePoint = (skillId: string, add: boolean) => {
-    const newDistribution = { ...skillDistribution };
-    
-    if (add) {
-      // Add point
-      const currentLevel = newDistribution[skillId] || 0;
-      const skill = bountySkills.find(s => s.id === skillId);
-      
-      if (availableSkillPoints <= 0) return;
-      if (!skill) return;
-      if (currentLevel >= skill.maxLevel) return;
-      if (!canAllocateToSkill(skillId)) return;
-      
-      newDistribution[skillId] = currentLevel + 1;
-      setAvailableSkillPoints(prev => prev - 1);
-    } else {
-      // Remove point
-      const currentLevel = newDistribution[skillId] || 0;
-      if (currentLevel <= 0) return;
-      
-      // Check if any skills depend on this one
-      const dependentSkills = bountySkills.filter(s => s.requires === skillId);
-      const canRemove = dependentSkills.every(s => {
-        const requiredLevel = s.requiredLevel || 1;
-        return (skillDistribution[s.id] || 0) === 0 || currentLevel - 1 >= requiredLevel;
+    // Check prerequisites
+    if (skill.requires.length > 0) {
+      const hasPrerequisites = skill.requires.every(reqId => {
+        const reqSkill = bountySkills.find(s => s.id === reqId);
+        return reqSkill && (skillDistribution[reqId] || 0) > 0;
       });
       
-      if (!canRemove) {
-        toast({
-          title: 'Cannot Remove Point',
-          description: 'This skill is required by other allocated skills.',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      newDistribution[skillId] = currentLevel - 1;
-      setAvailableSkillPoints(prev => prev + 1);
+      if (!hasPrerequisites) return false;
     }
     
+    return true;
+  };
+
+  // Check if points can be removed from a skill
+  const canDeallocateSkill = (skillId: string): boolean => {
+    const currentLevel = skillDistribution[skillId] || 0;
+    if (currentLevel <= 0) return false;
+    
+    // Check if any dependent skills are allocated
+    const dependentSkills = bountySkills.filter(skill => 
+      skill.requires.includes(skillId) && (skillDistribution[skill.id] || 0) > 0
+    );
+    
+    return dependentSkills.length === 0;
+  };
+
+  // Handle allocating/deallocating skill points
+  const handleSkillChange = (skillId: string, add: boolean) => {
+    if (add && !canAllocateSkill(skillId)) return;
+    if (!add && !canDeallocateSkill(skillId)) return;
+    
+    const newDistribution = { ...skillDistribution };
+    newDistribution[skillId] = (newDistribution[skillId] || 0) + (add ? 1 : -1);
+    
+    // Update in the state
     setSkillDistribution(newDistribution);
-    setPendingChanges(true);
-  };
-  
-  // Save changes
-  const saveChanges = () => {
-    allocatePointMutation.mutate({ skillDistribution });
-  };
-  
-  // Get the level of the bounty board
-  const getBountyBoardLevel = (): number => {
-    return bountyBoard?.currentLevel || 1;
-  };
-  
-  // Calculate total skill points based on building level
-  const getTotalSkillPoints = (): number => {
-    const level = getBountyBoardLevel();
-    // Formula: (level - 1) * 2 points
-    return Math.max(0, (level - 1) * 2);
-  };
-  
-  // Calculate points allocated
-  const getAllocatedPoints = (): number => {
-    return Object.values(skillDistribution).reduce((sum, level) => sum + level, 0);
+    setAvailablePoints(prev => prev + (add ? -1 : 1));
+    
+    // Send to the server
+    updateSkillsMutation.mutate({ skillDistribution: newDistribution });
   };
   
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <div className="text-[#FF9D00] text-xl animate-pulse">Loading skill tree...</div>
-      </div>
-    );
+    return <div className="text-center p-8">Loading skill tree...</div>;
   }
   
-  const totalPoints = getTotalSkillPoints();
-  const allocatedPoints = getAllocatedPoints();
+  if (isError) {
+    return <div className="text-center p-8 text-red-500">Failed to load skill tree. Please try again.</div>;
+  }
   
   return (
-    <Card className="bg-[#1A1A2E] border border-[#432874]/30 shadow-md mt-8">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <TreeDeciduous className="h-6 w-6 text-[#FF9D00] mr-2" />
-            <CardTitle className="font-cinzel">Bounty Board Skill Tree</CardTitle>
+    <div className="relative w-full">
+      <Card className="bg-gradient-to-br from-[#2A1657] to-[#392179] border-[#4F3293] text-white p-6 mb-6">
+        <h3 className="text-xl font-bold mb-4">Bounty Board Skill Tree</h3>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <span className="text-sm text-[#A390D3]">Building Level:</span>
+            <span className="ml-2 font-semibold">{building?.currentLevel || 1}</span>
           </div>
-          <Badge className="bg-[#432874]/70 text-white">
-            Level {getBountyBoardLevel()}
-          </Badge>
-        </div>
-        <CardDescription>
-          Allocate skill points to unlock and enhance bounty board capabilities.
-          Upgrade your Bounty Board to earn more skill points.
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="flex justify-between items-center mb-4 p-3 bg-[#1F1D36] rounded-lg">
-          <div className="text-sm text-[#C8B8DB]/90">
-            <span className="font-semibold">Available Skill Points:</span> {availableSkillPoints}/{totalPoints}
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
-              onClick={() => {
-                setSkillDistribution(bountyBoard?.skillDistribution as Record<string, number> || {});
-                setAvailableSkillPoints(bountyBoard?.availableSkillPoints || 0);
-                setPendingChanges(false);
-              }}
-              disabled={!pendingChanges || allocatePointMutation.isPending}
-            >
-              Reset Changes
-            </Button>
-            <Button
-              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
-              size="sm"
-              onClick={saveChanges}
-              disabled={!pendingChanges || allocatePointMutation.isPending}
-            >
-              {allocatePointMutation.isPending ? 'Saving...' : 'Save Skill Points'}
-            </Button>
+          <div>
+            <span className="text-sm text-[#A390D3]">Available Points:</span>
+            <span className="ml-2 font-semibold text-amber-300">{availablePoints}</span>
           </div>
         </div>
         
-        <div className="mt-8 relative">
-          <motion.div 
-            className="flex items-center justify-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* First Layer - Root Skills */}
-            <div className="flex flex-col space-y-8">
-              {bountySkills.filter(skill => !skill.requires).map(skill => (
-                <SkillNode 
-                  key={skill.id}
-                  skill={skill}
-                  currentLevel={getBountyBoardLevel()}
-                  availablePoints={availableSkillPoints}
-                  skillDistribution={skillDistribution}
-                  canAllocate={canAllocateToSkill}
-                  onAllocate={handleAllocatePoint}
-                />
-              ))}
-            </div>
+        <div className="grid grid-cols-3 gap-4 relative">
+          {bountySkills.map(skill => {
+            const currentLevel = skillDistribution[skill.id] || 0;
+            const maxLevel = skill.maxLevel;
+            const progress = (currentLevel / maxLevel) * 100;
+            const isLocked = skill.requires.some(reqId => !(skillDistribution[reqId] || 0));
             
-            {/* Second Layer - Tier 2 Skills */}
-            <div className="flex flex-col space-y-8 ml-12">
-              {bountySkills.filter(skill => skill.requires === 'questSlots').map(skill => (
-                <SkillNode 
-                  key={skill.id}
-                  skill={skill}
-                  currentLevel={getBountyBoardLevel()}
-                  availablePoints={availableSkillPoints}
-                  skillDistribution={skillDistribution}
-                  canAllocate={canAllocateToSkill}
-                  onAllocate={handleAllocatePoint}
-                />
-              ))}
-            </div>
-            
-            {/* Third Layer - Tier 3 Skills */}
-            <div className="flex flex-col space-y-8 ml-12">
-              {bountySkills.filter(skill => 
-                skill.requires === 'rewardBonus' || skill.requires === 'questDuration'
-              ).map(skill => (
-                <SkillNode 
-                  key={skill.id}
-                  skill={skill}
-                  currentLevel={getBountyBoardLevel()}
-                  availablePoints={availableSkillPoints}
-                  skillDistribution={skillDistribution}
-                  canAllocate={canAllocateToSkill}
-                  onAllocate={handleAllocatePoint}
-                />
-              ))}
-            </div>
-            
-            {/* Fourth Layer - Tier 4 Skills */}
-            <div className="flex flex-col space-y-8 ml-12">
-              {bountySkills.filter(skill => skill.requires === 'rareQuests').map(skill => (
-                <SkillNode 
-                  key={skill.id}
-                  skill={skill}
-                  currentLevel={getBountyBoardLevel()}
-                  availablePoints={availableSkillPoints}
-                  skillDistribution={skillDistribution}
-                  canAllocate={canAllocateToSkill}
-                  onAllocate={handleAllocatePoint}
-                />
-              ))}
-            </div>
-          </motion.div>
+            return (
+              <div 
+                key={skill.id}
+                className={`relative col-start-${skill.position.x} row-start-${skill.position.y}`}
+                style={{ gridColumn: skill.position.x, gridRow: skill.position.y }}
+              >
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card 
+                        className={`p-3 w-full h-full flex flex-col items-center 
+                          ${isLocked 
+                            ? 'bg-gray-800/60 border-gray-700' 
+                            : `bg-gradient-to-b from-${skill.color}/20 to-${skill.color}/5 border-${skill.color}/30`}`}
+                      >
+                        {isLocked && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-md z-10">
+                            <Lock className="text-gray-500 w-6 h-6" />
+                          </div>
+                        )}
+                        
+                        <div className="text-2xl mb-2">{skill.icon}</div>
+                        <div className="font-semibold text-center mb-1">{skill.name}</div>
+                        <div className="text-xs text-center text-gray-300 mb-2">Level: {currentLevel}/{maxLevel}</div>
+                        
+                        <Progress value={progress} className="h-2 w-full mb-3" />
+                        
+                        <div className="flex justify-between w-full mt-auto">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            disabled={!canDeallocateSkill(skill.id)}
+                            onClick={() => handleSkillChange(skill.id, false)}
+                            className="h-7 w-7 rounded-full"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            disabled={!canAllocateSkill(skill.id)}
+                            onClick={() => handleSkillChange(skill.id, true)}
+                            className="h-7 w-7 rounded-full"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <div className="font-bold">{skill.name}</div>
+                      <div className="text-sm">{skill.description}</div>
+                      <div className="text-xs mt-1">
+                        {skill.requires.length > 0 && (
+                          <div className="mt-1">
+                            <span className="font-semibold">Requires:</span> {skill.requires.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            );
+          })}
+          
+          {/* Draw lines between connected skills */}
+          <svg className="absolute inset-0 w-full h-full -z-10 text-white/20">
+            {bountySkills.map(skill => 
+              skill.requires.map(reqId => {
+                const parentSkill = bountySkills.find(s => s.id === reqId);
+                if (!parentSkill) return null;
+                
+                // Calculate line positions
+                const startX = (parentSkill.position.x - 0.5) * 33.33 + '%';
+                const startY = (parentSkill.position.y - 0.5) * 33.33 + '%';
+                const endX = (skill.position.x - 0.5) * 33.33 + '%';
+                const endY = (skill.position.y - 0.5) * 33.33 + '%';
+                
+                return (
+                  <line 
+                    key={`${skill.id}-${reqId}`}
+                    x1={startX} 
+                    y1={startY} 
+                    x2={endX} 
+                    y2={endY} 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    strokeDasharray={!(skillDistribution[reqId] || 0) ? "4" : "0"}
+                  />
+                );
+              })
+            )}
+          </svg>
         </div>
-        
-        <div className="mt-8 p-4 bg-[#1F1D36]/70 rounded-lg text-sm text-[#C8B8DB]/70">
-          <div className="flex items-start">
-            <Info className="h-5 w-5 mr-2 text-[#FF9D00] flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="mb-2">Upgrade your Bounty Board to gain more skill points. Each level beyond the first grants 2 skill points.</p>
-              <p className="text-xs">Allocated: {allocatedPoints} / Total Available: {totalPoints}</p>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 };
 
