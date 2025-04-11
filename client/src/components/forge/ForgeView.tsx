@@ -51,20 +51,8 @@ const elements = [
   { id: 'wind', name: 'Wind', icon: <Wind className="h-5 w-5 text-cyan-400" />, color: 'bg-cyan-700/30 text-cyan-400 border-cyan-600/30' }
 ];
 
-// Rarity types for Auras
-const rarities = [
-  { id: 'common', name: 'Common', color: 'bg-slate-700/30 text-slate-300 border-slate-600/30', chance: 60 },
-  { id: 'rare', name: 'Rare', color: 'bg-blue-700/30 text-blue-300 border-blue-600/30', chance: 30 },
-  { id: 'epic', name: 'Epic', color: 'bg-purple-700/30 text-purple-300 border-purple-600/30', chance: 10 },
-  { id: 'legendary', name: 'Legendary', color: 'bg-yellow-700/30 text-yellow-300 border-yellow-600/30', chance: 0 } // Legendary not available in basic crafting
-];
-
 // Required materials for crafting
-const requiredMaterials = {
-  'common': { 'Essence': 500 },
-  'rare': { 'Essence': 500 },
-  'epic': { 'Essence': 500 }
-};
+const requiredMaterials = { 'Essence': 500 };
 
 const ForgeView = () => {
   const { auras = [], resources = [], fetchAuras, fetchResources, fetchForgingTasks } = useGameStore();
@@ -81,7 +69,6 @@ const ForgeView = () => {
   const maxCraftingSlots = forgeLevel;
   const [selectedTab, setSelectedTab] = useState('craft');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-  const [selectedRarity, setSelectedRarity] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [primaryAura, setPrimaryAura] = useState<Aura | null>(null);
   const [secondaryAura, setSecondaryAura] = useState<Aura | null>(null);
@@ -97,14 +84,10 @@ const ForgeView = () => {
   const activeForgingTasks = forgingTasks.filter(task => !task.completed);
 
   // Check if user has enough materials for crafting
-  const hasEnoughMaterials = (rarityId: string) => {
-    if (!rarityId || !requiredMaterials[rarityId as keyof typeof requiredMaterials]) return false;
-    
-    const requiredMats = requiredMaterials[rarityId as keyof typeof requiredMaterials];
-    
-    for (const [matName, amount] of Object.entries(requiredMats)) {
+  const hasEnoughMaterials = () => {
+    for (const [matName, amount] of Object.entries(requiredMaterials)) {
       const resource = resources.find(r => r.name === matName);
-      if (!resource || resource.quantity < amount) {
+      if (!resource || resource.quantity! < amount) {
         return false;
       }
     }
@@ -133,19 +116,10 @@ const ForgeView = () => {
       return;
     }
     
-    // Automatically choose the highest rarity the user can afford
-    let selectedRarityForCraft = null;
-    for (const rarity of ['epic', 'rare', 'common']) {
-      if (hasEnoughMaterials(rarity)) {
-        selectedRarityForCraft = rarity;
-        break;
-      }
-    }
-    
-    if (!selectedRarityForCraft) {
+    if (!hasEnoughMaterials()) {
       toast({
         title: "Insufficient Materials",
-        description: "You don't have enough materials to craft an Aura.",
+        description: "You don't have enough Essence to craft an Aura.",
         variant: "destructive"
       });
       return;
@@ -154,15 +128,12 @@ const ForgeView = () => {
     setIsSubmitting(true);
     
     try {
-      // Get required materials for this rarity
-      const materialsNeeded = requiredMaterials[selectedRarityForCraft as keyof typeof requiredMaterials];
-      
-      // Submit crafting request
+      // Submit crafting request with common rarity by default
       const response = await apiRequest('POST', '/api/forge/craft', {
         taskType: 'craft',
         targetElement: selectedElement,
-        targetRarity: selectedRarityForCraft,
-        requiredMaterials: materialsNeeded,
+        targetRarity: 'common', // Default to common rarity
+        requiredMaterials: requiredMaterials,
         // Crafting takes 1 minute
         endTime: new Date(new Date().getTime() + 60 * 1000)
       });
@@ -427,55 +398,26 @@ const ForgeView = () => {
               </motion.div>
               
               <motion.div variants={item}>
-                <h3 className="text-lg font-cinzel font-semibold mb-3">Select Rarity</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {rarities.slice(0, 3).map(rarity => {
-                    const canCraft = hasEnoughMaterials(rarity.id);
-                    
-                    return (
-                      <div
-                        key={rarity.id}
-                        className={`flex flex-col rounded-lg border p-4 ${
-                          !canCraft ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                        } ${
-                          selectedRarity === rarity.id
-                            ? `${rarity.color.split(' ')[0]} border-${rarity.color.split(' ')[2]}`
-                            : 'bg-[#1F1D36]/50 border-[#432874]/30 hover:bg-[#432874]/20'
-                        }`}
-                        onClick={() => canCraft && setSelectedRarity(rarity.id)}
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <span className={`text-lg font-semibold ${rarity.color.split(' ')[1]}`}>
-                            {rarity.name}
-                          </span>
-                          <Badge className={rarity.color}>
-                            {rarity.chance}% Chance
-                          </Badge>
-                        </div>
+                <h3 className="text-lg font-cinzel font-semibold mb-3">Required Materials</h3>
+                <div className="bg-[#1F1D36]/50 border border-[#432874]/30 rounded-lg p-4">
+                  <div className="text-sm">
+                    <h4 className="font-semibold mb-2">Materials for Crafting:</h4>
+                    <div className="space-y-1">
+                      {Object.entries(requiredMaterials).map(([mat, amount]) => {
+                        const resource = resources.find(r => r.name === mat);
+                        const hasEnough = resource && resource.quantity! >= amount;
                         
-                        <div className="mt-2 text-sm">
-                          <h4 className="font-semibold mb-1">Required Materials:</h4>
-                          <div className="space-y-1">
-                            {requiredMaterials[rarity.id as keyof typeof requiredMaterials] && 
-                              Object.entries(requiredMaterials[rarity.id as keyof typeof requiredMaterials]).map(([mat, amount]) => {
-                                const resource = resources.find(r => r.name === mat);
-                                const hasEnough = resource && resource.quantity >= amount;
-                                
-                                return (
-                                  <div key={mat} className="flex justify-between">
-                                    <span>{mat}</span>
-                                    <span className={hasEnough ? 'text-green-400' : 'text-red-400'}>
-                                      {resource ? resource.quantity : 0}/{amount}
-                                    </span>
-                                  </div>
-                                );
-                              })
-                            }
+                        return (
+                          <div key={mat} className="flex justify-between">
+                            <span>{mat}</span>
+                            <span className={hasEnough ? 'text-green-400' : 'text-red-400'}>
+                              {resource ? resource.quantity : 0}/{amount}
+                            </span>
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
               
@@ -483,13 +425,13 @@ const ForgeView = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="text-lg font-cinzel font-semibold">Craft Summary</h3>
-                    {selectedElement && selectedRarity ? (
+                    {selectedElement ? (
                       <p className="text-sm text-[#C8B8DB]/80">
-                        Creating a {selectedRarity} {selectedElement} Aura (1 minute)
+                        Creating a {selectedElement} Aura (1 minute)
                       </p>
                     ) : (
                       <p className="text-sm text-[#C8B8DB]/80">
-                        Select an element and rarity to craft a new Aura
+                        Select an element to craft a new Aura
                       </p>
                     )}
                   </div>
@@ -497,7 +439,7 @@ const ForgeView = () => {
                   <Button
                     className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
                     onClick={startCrafting}
-                    disabled={isSubmitting || !selectedElement || !selectedRarity || !hasEnoughMaterials(selectedRarity)}
+                    disabled={isSubmitting || !selectedElement || !hasEnoughMaterials()}
                   >
                     <Hammer className="h-4 w-4 mr-2" />
                     {isSubmitting ? 'Starting...' : 'Start Crafting'}
