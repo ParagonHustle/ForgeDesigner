@@ -499,7 +499,7 @@ const ForgeView = () => {
                                   </Button>
                                 </div>
                                 <p className="text-sm text-[#C8B8DB]/70 mt-1">
-                                  {primaryAura.rarity} • {Object.entries(primaryAura.statMultipliers || {}).map(([stat, value]) => (
+                                  {Object.entries(primaryAura.statMultipliers || {}).map(([stat, value]) => (
                                     `${stat.charAt(0).toUpperCase() + stat.slice(1)}: ${typeof value === 'number' ? value.toFixed(2) : '0.00'}x`
                                   )).join(', ')}
                                 </p>
