@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 35% 11%;
+    --foreground: 263 30% 85%;
+
+    --card: 240 35% 13%;
+    --card-foreground: 263 30% 85%;
+
+    --popover: 240 38% 13%;
+    --popover-foreground: 263 30% 85%;
+
+    --primary: 263 48% 30%;
+    --primary-foreground: 26 100% 50%;
+
+    --secondary: 26 100% 50%;
+    --secondary-foreground: 240 38% 13%;
+
+    --muted: 263 15% 25%;
+    --muted-foreground: 263 20% 70%;
+
+    --accent: 174 100% 36%;
+    --accent-foreground: 240 38% 13%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 263 30% 30%;
+    --input: 263 30% 20%;
+    --ring: 263 50% 45%;
+
+    --radius: 0.5rem;
+
+    --chart-1: 263 48% 30%;
+    --chart-2: 26 100% 50%;
+    --chart-3: 174 100% 36%;
+    --chart-4: 184 80% 50%;
+    --chart-5: 330 80% 50%;
+
+    --sidebar-background: 240 35% 13%;
+    --sidebar-foreground: 263 30% 85%;
+    --sidebar-primary: 263 48% 30%;
+    --sidebar-primary-foreground: 26 100% 50%;
+    --sidebar-accent: 174 100% 36%;
+    --sidebar-accent-foreground: 240 38% 13%;
+    --sidebar-border: 263 30% 30%;
+    --sidebar-ring: 263 50% 45%;
+  }
+  
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Custom font families */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-nunito {
+  font-family: 'Nunito', sans-serif;
+}
+
+.font-metamorphous {
+  font-family: 'Metamorphous', cursive;
+}

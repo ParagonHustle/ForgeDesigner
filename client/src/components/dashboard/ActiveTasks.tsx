@@ -1,0 +1,339 @@
+import { useEffect, useState } from 'react';
+import CountdownTimer from '../common/CountdownTimer';
+import { Link } from 'wouter';
+import { Grid, Gem, Hammer } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { useGameStore } from '@/lib/zustandStore';
+import { apiRequest } from '@/lib/queryClient';
+import { queryClient } from '@/lib/queryClient';
+import type { FarmingTask, DungeonRun, ForgingTask, Character } from '@shared/schema';
+
+interface ActiveTasksProps {
+  farmingTasks: FarmingTask[];
+  dungeonRuns: DungeonRun[];
+  forgingTasks: ForgingTask[];
+}
+
+const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksProps) => {
+  const { toast } = useToast();
+  const { characters, fetchFarmingTasks, fetchDungeonRuns, fetchForgingTasks } = useGameStore();
+  const [completingTask, setCompletingTask] = useState<number | null>(null);
+
+  // Filter only active tasks
+  const activeFarmingTasks = farmingTasks.filter(task => !task.completed);
+  const activeDungeonRuns = dungeonRuns.filter(run => !run.completed);
+  const activeForgingTasks = forgingTasks.filter(task => !task.completed);
+
+  // Group characters by ID for easier lookup
+  const charactersById = characters.reduce<Record<number, Character>>((acc, char) => {
+    acc[char.id] = char;
+    return acc;
+  }, {});
+
+  const handleCompleteFarmingTask = async (taskId: number) => {
+    if (completingTask) return;
+    setCompletingTask(taskId);
+    
+    try {
+      const res = await apiRequest('POST', `/api/farming/complete/${taskId}`, undefined);
+      const data = await res.json();
+      
+      toast({
+        title: "Farming Complete",
+        description: `Gained ${data.amount} ${data.resource}`,
+      });
+      
+      // Refresh farming tasks
+      fetchFarmingTasks();
+    } catch (error) {
+      console.error('Error completing farming task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete farming task",
+        variant: "destructive",
+      });
+    } finally {
+      setCompletingTask(null);
+    }
+  };
+
+  const handleCompleteDungeonRun = async (runId: number) => {
+    if (completingTask) return;
+    setCompletingTask(runId);
+    
+    try {
+      const res = await apiRequest('POST', `/api/dungeons/complete/${runId}`, undefined);
+      const data = await res.json();
+      
+      toast({
+        title: data.success ? "Dungeon Cleared!" : "Dungeon Failed",
+        description: data.success 
+          ? `You gained rewards from the dungeon` 
+          : "Your party had to retreat from the dungeon",
+        variant: data.success ? "default" : "destructive",
+      });
+      
+      // Refresh dungeon runs
+      fetchDungeonRuns();
+    } catch (error) {
+      console.error('Error completing dungeon run:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete dungeon run",
+        variant: "destructive",
+      });
+    } finally {
+      setCompletingTask(null);
+    }
+  };
+
+  const handleCompleteForging = async (taskId: number) => {
+    if (completingTask) return;
+    setCompletingTask(taskId);
+    
+    try {
+      const res = await apiRequest('POST', `/api/forge/complete/${taskId}`, undefined);
+      const data = await res.json();
+      
+      toast({
+        title: "Forging Complete",
+        description: `Created a new ${data.aura.element} Aura (Level ${data.aura.level})`,
+      });
+      
+      // Refresh forging tasks
+      fetchForgingTasks();
+    } catch (error) {
+      console.error('Error completing forging task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete forging task",
+        variant: "destructive",
+      });
+    } finally {
+      setCompletingTask(null);
+    }
+  };
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
+  if (activeFarmingTasks.length === 0 && activeDungeonRuns.length === 0 && activeForgingTasks.length === 0) {
+    return (
+      <motion.div 
+        className="bg-[#1A1A2E] rounded-xl p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-cinzel font-bold">Active Tasks</h2>
+        </div>
+        
+        <div className="bg-[#2D1B4E]/20 rounded-lg p-8 text-center">
+          <p className="text-[#C8B8DB]/80 mb-4">You have no active tasks at the moment.</p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Link href="/dungeons">
+              <Button className="bg-[#432874] hover:bg-[#432874]/80">
+                <Grid className="mr-2 h-4 w-4" />
+                Start Dungeon
+              </Button>
+            </Link>
+            <Link href="/farming">
+              <Button className="bg-[#432874] hover:bg-[#432874]/80">
+                <Gem className="mr-2 h-4 w-4" />
+                Start Farming
+              </Button>
+            </Link>
+            <Link href="/forge">
+              <Button className="bg-[#432874] hover:bg-[#432874]/80">
+                <Hammer className="mr-2 h-4 w-4" />
+                Start Forging
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div 
+      className="bg-[#1A1A2E] rounded-xl p-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-cinzel font-bold">Active Tasks</h2>
+        <Link href="/dungeons">
+          <button className="text-[#FF9D00] text-sm hover:underline">View All</button>
+        </Link>
+      </div>
+      
+      <motion.div 
+        className="space-y-4"
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
+        {/* Dungeon Tasks */}
+        {activeDungeonRuns.map((run) => (
+          <motion.div 
+            key={`dungeon-${run.id}`}
+            className="bg-[#1F1D36]/50 p-4 rounded-lg border border-[#432874]/30"
+            variants={item}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Grid className="h-5 w-5 text-[#DC143C]" />
+                <span className="ml-2 font-semibold">{run.dungeonName} (Level {run.dungeonLevel})</span>
+              </div>
+              <div className="flex items-center text-sm">
+                <div className="bg-[#DC143C]/20 text-[#DC143C] px-2 py-0.5 rounded">In Progress</div>
+                <CountdownTimer 
+                  endTime={run.endTime} 
+                  className="ml-2" 
+                  onComplete={() => handleCompleteDungeonRun(run.id)}
+                />
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {run.characterIds.map((charId) => (
+                <img 
+                  key={charId}
+                  src={charactersById[charId]?.avatarUrl || "https://via.placeholder.com/150"} 
+                  alt={charactersById[charId]?.name || "Character"} 
+                  className="w-10 h-10 rounded-full border border-[#DC143C]/50"
+                />
+              ))}
+            </div>
+            {new Date(run.endTime) <= new Date() && (
+              <Button 
+                className="w-full mt-2 bg-[#DC143C] hover:bg-[#DC143C]/80 text-white"
+                onClick={() => handleCompleteDungeonRun(run.id)}
+                disabled={completingTask === run.id}
+              >
+                {completingTask === run.id ? "Completing..." : "Complete Dungeon"}
+              </Button>
+            )}
+          </motion.div>
+        ))}
+        
+        {/* Farming Tasks */}
+        {activeFarmingTasks.map((task) => (
+          <motion.div 
+            key={`farming-${task.id}`}
+            className="bg-[#1F1D36]/50 p-4 rounded-lg border border-[#432874]/30"
+            variants={item}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Gem className="h-5 w-5 text-[#228B22]" />
+                <span className="ml-2 font-semibold">{task.resourceName} Farming</span>
+              </div>
+              <div className="flex items-center text-sm">
+                <div className="bg-[#228B22]/20 text-[#228B22] px-2 py-0.5 rounded">Active</div>
+                <CountdownTimer 
+                  endTime={task.endTime} 
+                  className="ml-2" 
+                  onComplete={() => handleCompleteFarmingTask(task.id)}
+                />
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="flex items-center">
+                <img 
+                  src={charactersById[task.characterId]?.avatarUrl || "https://via.placeholder.com/150"} 
+                  alt={charactersById[task.characterId]?.name || "Farming Character"} 
+                  className="w-10 h-10 rounded-full border border-[#228B22]/50"
+                />
+                <div className="ml-2">
+                  <div className="text-sm font-semibold">
+                    {charactersById[task.characterId]?.name || "Character"}, Lvl {charactersById[task.characterId]?.level || "?"}
+                  </div>
+                  <div className="text-xs text-[#C8B8DB]/70">+15% Farming Efficiency</div>
+                </div>
+              </div>
+            </div>
+            {new Date(task.endTime) <= new Date() && (
+              <Button 
+                className="w-full mt-2 bg-[#228B22] hover:bg-[#228B22]/80 text-white"
+                onClick={() => handleCompleteFarmingTask(task.id)}
+                disabled={completingTask === task.id}
+              >
+                {completingTask === task.id ? "Collecting..." : "Collect Resources"}
+              </Button>
+            )}
+          </motion.div>
+        ))}
+        
+        {/* Forge Tasks */}
+        {activeForgingTasks.map((task) => {
+          const taskProgress = Math.min(
+            100,
+            Math.max(
+              0,
+              ((new Date().getTime() - new Date(task.startTime).getTime()) /
+                (new Date(task.endTime).getTime() - new Date(task.startTime).getTime())) *
+                100
+            )
+          );
+          
+          return (
+            <motion.div 
+              key={`forge-${task.id}`}
+              className="bg-[#1F1D36]/50 p-4 rounded-lg border border-[#432874]/30"
+              variants={item}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Hammer className="h-5 w-5 text-[#FF9D00]" />
+                  <span className="ml-2 font-semibold">
+                    {task.taskType === 'craft' 
+                      ? `Crafting ${task.targetElement} Aura` 
+                      : 'Aura Fusion'}
+                  </span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <div className="bg-[#FF9D00]/20 text-[#FF9D00] px-2 py-0.5 rounded">Crafting</div>
+                  <CountdownTimer 
+                    endTime={task.endTime} 
+                    className="ml-2" 
+                    onComplete={() => handleCompleteForging(task.id)}
+                  />
+                </div>
+              </div>
+              <div className="mt-3">
+                <Progress value={taskProgress} className="h-2 bg-[#1F1D36] border-[#432874]/20" />
+              </div>
+              {new Date(task.endTime) <= new Date() && (
+                <Button 
+                  className="w-full mt-2 bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+                  onClick={() => handleCompleteForging(task.id)}
+                  disabled={completingTask === task.id}
+                >
+                  {completingTask === task.id ? "Completing..." : "Complete Forging"}
+                </Button>
+              )}
+            </motion.div>
+          )
+        })}
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default ActiveTasks;
