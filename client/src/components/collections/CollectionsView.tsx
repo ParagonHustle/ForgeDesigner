@@ -137,42 +137,48 @@ const CollectionsView = () => {
       type: "Fire",
       discovered: true,
       icon: <Flame className="h-12 w-12 text-[#FF4500]" />,
-      description: "Fiery auras enhance attack power and focus."
+      description: "Fiery auras enhance attack power and focus.",
+      unlockMethod: "Automatically unlocked"
     },
     {
       id: 2,
       type: "Water",
       discovered: true,
       icon: <Droplets className="h-12 w-12 text-[#1E90FF]" />,
-      description: "Water auras enhance defense and resilience."
+      description: "Water auras enhance defense and resilience.",
+      unlockMethod: "Automatically unlocked"
     },
     {
       id: 3,
       type: "Earth",
       discovered: true,
       icon: <Mountain className="h-12 w-12 text-[#8B4513]" />,
-      description: "Earth auras enhance vitality and defense."
+      description: "Earth auras enhance vitality and defense.",
+      unlockMethod: "Automatically unlocked"
     },
     {
       id: 4,
       type: "Wind",
       discovered: true,
       icon: <Wind className="h-12 w-12 text-[#32CD32]" />,
-      description: "Wind auras enhance speed and accuracy."
+      description: "Wind auras enhance speed and accuracy.",
+      unlockMethod: "Automatically unlocked"
     },
     {
       id: 5,
       type: "Aura of Growth",
       discovered: false,
-      icon: <Zap className="h-12 w-12 text-[#9C27B0]" />,
-      description: "???"
+      icon: <Sparkles className="h-12 w-12 text-[#9C27B0]" />,
+      description: "A mysterious aura that enhances growth and resource collection.",
+      unlockMethod: "Complete 20 farming tasks with Level 5+ Characters"
     },
     {
       id: 6,
       type: "Nature's Wrath",
       discovered: false,
-      icon: <Zap className="h-12 w-12 text-[#8BC34A]" />,
-      description: "???"
+      icon: <Activity className="h-12 w-12 text-[#8BC34A]" />,
+      description: "A powerful nature-based aura with devastating effects.",
+      unlockMethod: "Clear 10 Elite Dungeons with Earth Aura-equipped Characters"
     }
   ];
 
