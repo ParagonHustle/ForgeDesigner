@@ -127,7 +127,7 @@ export const blackMarketListings = pgTable("black_market_listings", {
   expiresAt: timestamp("expires_at"),
   sold: boolean("sold").default(false),
   featured: boolean("featured").default(false),
-  listedAt: timestamp("listedAt").defaultNow(),
+  listedAt: timestamp("listed_at").defaultNow(),
 });
 
 // Bounty quest model
