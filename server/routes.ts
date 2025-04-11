@@ -740,8 +740,246 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Black Market routes
   app.get('/api/blackmarket/listings', authenticateUser, async (req, res) => {
     try {
-      // Get all listings (for MVP, we'll only show system listings)
-      const listings = await storage.getBlackMarketListings();
+      // Get all listings
+      let listings = await storage.getBlackMarketListings();
+      
+      // If no listings exist, create some sample listings
+      if (listings.length === 0) {
+        const systemId = 0; // System listings created by ID 0
+        
+        // Sample premium character listings (forge tokens)
+        const premiumCharacters = [
+          {
+            userId: systemId,
+            itemType: 'character',
+            itemId: null,
+            itemData: {
+              name: 'Shadow Rogue',
+              level: 25,
+              rarity: 'Epic',
+              class: 'Rogue',
+              stats: {
+                strength: 52,
+                agility: 85,
+                intelligence: 60,
+                vitality: 70
+              },
+              equippedAuraIds: [],
+              passiveSkills: [
+                { name: 'Shadowstep', description: 'Can teleport behind enemies once per battle' },
+                { name: 'Critical Mastery', description: '15% increased critical hit chance' }
+              ]
+            },
+            price: 750,
+            currencyType: 'forgeTokens',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000), // Expires in 24h
+            featured: true
+          },
+          {
+            userId: systemId,
+            itemType: 'character',
+            itemId: null,
+            itemData: {
+              name: 'Arcane Scholar',
+              level: 20,
+              rarity: 'Rare',
+              class: 'Mage',
+              stats: {
+                strength: 30,
+                agility: 45,
+                intelligence: 90,
+                vitality: 55
+              },
+              equippedAuraIds: [],
+              passiveSkills: [
+                { name: 'Spell Mastery', description: 'Spells cost 10% less mana' },
+                { name: 'Arcane Shield', description: 'Automatically blocks first spell damage in battle' }
+              ]
+            },
+            price: 550,
+            currencyType: 'forgeTokens',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000)
+          }
+        ];
+        
+        // Sample standard character listings (rogue credits)
+        const standardCharacters = [
+          {
+            userId: systemId,
+            itemType: 'character',
+            itemId: null,
+            itemData: {
+              name: 'Veteran Warrior',
+              level: 15,
+              rarity: 'Uncommon',
+              class: 'Warrior',
+              stats: {
+                strength: 70,
+                agility: 40,
+                intelligence: 30,
+                vitality: 65
+              },
+              equippedAuraIds: [],
+              passiveSkills: [
+                { name: 'Battle Hardened', description: 'Takes 5% less damage from physical attacks' }
+              ]
+            },
+            price: 2500,
+            currencyType: 'rogueCredits',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000)
+          }
+        ];
+        
+        // Sample premium aura listings
+        const premiumAuras = [
+          {
+            userId: systemId,
+            itemType: 'aura',
+            itemId: null,
+            itemData: {
+              name: 'Flame Emperor\'s Might',
+              rarity: 'Epic',
+              element: 'Fire',
+              level: 3,
+              statMultipliers: { strength: 1.2, agility: 1.1, intelligence: 1.0, vitality: 1.15 },
+              skills: [
+                { name: 'Inferno', description: 'Deals massive fire damage to all enemies', tier: 'Ultimate' },
+                { name: 'Burning Aura', description: 'Enemies take burn damage when attacking the wearer', tier: 'Advanced' },
+                { name: 'Fire Resistance', description: '25% resistance to fire damage', tier: 'Basic' }
+              ]
+            },
+            price: 900,
+            currencyType: 'forgeTokens',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000),
+            featured: true
+          },
+          {
+            userId: systemId,
+            itemType: 'aura',
+            itemId: null,
+            itemData: {
+              name: 'Tidal Mastery',
+              rarity: 'Rare',
+              element: 'Water',
+              level: 2,
+              statMultipliers: { strength: 1.0, agility: 1.15, intelligence: 1.2, vitality: 1.05 },
+              skills: [
+                { name: 'Healing Tide', description: 'Restores health to all allies', tier: 'Advanced' },
+                { name: 'Water Shield', description: 'Creates a barrier that absorbs damage', tier: 'Basic' }
+              ]
+            },
+            price: 600,
+            currencyType: 'forgeTokens',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000)
+          }
+        ];
+        
+        // Sample standard aura listings
+        const standardAuras = [
+          {
+            userId: systemId,
+            itemType: 'aura',
+            itemId: null,
+            itemData: {
+              name: 'Earthen Protection',
+              rarity: 'Uncommon',
+              element: 'Earth',
+              level: 1,
+              statMultipliers: { strength: 1.1, agility: 0.9, intelligence: 1.0, vitality: 1.2 },
+              skills: [
+                { name: 'Stone Skin', description: 'Reduces physical damage by 10%', tier: 'Basic' }
+              ]
+            },
+            price: 1800,
+            currencyType: 'rogueCredits',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000)
+          }
+        ];
+        
+        // Sample resource listings
+        const resources = [
+          {
+            userId: systemId,
+            itemType: 'resource',
+            itemId: null,
+            itemData: {
+              name: 'Celestial Ore',
+              type: 'material',
+              quantity: 50,
+              description: 'Rare material used for crafting high-level auras',
+              iconUrl: 'https://images.unsplash.com/photo-1618221118493-9bce6d4b04cd?w=150&h=150&fit=crop'
+            },
+            price: 300,
+            currencyType: 'forgeTokens',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000)
+          },
+          {
+            userId: systemId,
+            itemType: 'resource',
+            itemId: null,
+            itemData: {
+              name: 'Aether Crystal',
+              type: 'material',
+              quantity: 20,
+              description: 'Magical crystal that enhances aura crafting success rates',
+              iconUrl: 'https://images.unsplash.com/photo-1566792368824-44a7882c53e5?w=150&h=150&fit=crop'
+            },
+            price: 1200,
+            currencyType: 'rogueCredits',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000)
+          },
+          {
+            userId: systemId,
+            itemType: 'resource',
+            itemId: null,
+            itemData: {
+              name: 'Soul Shard Bundle',
+              type: 'currency',
+              quantity: 10,
+              description: 'Bundle of soul shards used for advanced crafting',
+              iconUrl: 'https://images.unsplash.com/photo-1518563071562-1e3a85d4523d?w=150&h=150&fit=crop'
+            },
+            price: 450,
+            currencyType: 'forgeTokens',
+            sold: false,
+            listedAt: new Date(),
+            expiresAt: new Date(Date.now() + 86400000)
+          }
+        ];
+        
+        // Create all the listings
+        const allListings = [
+          ...premiumCharacters,
+          ...standardCharacters,
+          ...premiumAuras,
+          ...standardAuras,
+          ...resources
+        ];
+        
+        for (const listing of allListings) {
+          await storage.createBlackMarketListing(listing);
+        }
+        
+        // Fetch the newly created listings
+        listings = await storage.getBlackMarketListings();
+      }
+      
       res.json(listings);
     } catch (error) {
       console.error('Error fetching market listings:', error);
@@ -872,11 +1110,220 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Bounty Board routes
   app.get('/api/bounty/quests', authenticateUser, async (req, res) => {
     try {
-      const quests = await storage.getBountyQuests(req.session.userId!);
+      let quests = await storage.getBountyQuests(req.session.userId!);
+      
+      // If no quests are found, create some sample daily and weekly quests
+      if (quests.length === 0) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        
+        // Sample daily quests
+        const dailyQuests = [
+          {
+            userId: req.session.userId!,
+            name: "Resource Collector",
+            description: "Gather various resources through farming missions",
+            questType: "daily",
+            difficulty: "Easy",
+            requirements: {
+              farmingCompleted: { current: 0, target: 3, label: "Complete farming missions" }
+            },
+            rewards: {
+              rogueCredits: 150,
+              forgeTokens: 30
+            },
+            completed: false,
+            expiresAt: tomorrow
+          },
+          {
+            userId: req.session.userId!,
+            name: "Dungeon Explorer",
+            description: "Complete dungeon runs to earn extra rewards",
+            questType: "daily",
+            difficulty: "Medium",
+            requirements: {
+              dungeonRuns: { current: 0, target: 2, label: "Complete dungeon runs" }
+            },
+            rewards: {
+              rogueCredits: 250,
+              forgeTokens: 50,
+              soulShards: 2
+            },
+            completed: false,
+            expiresAt: tomorrow
+          },
+          {
+            userId: req.session.userId!,
+            name: "Forge Apprentice",
+            description: "Craft or fuse auras at The Forge",
+            questType: "daily",
+            difficulty: "Medium",
+            requirements: {
+              craftAuras: { current: 0, target: 1, label: "Craft an aura" }
+            },
+            rewards: {
+              forgeTokens: 80,
+              material: { name: "Celestial Ore", amount: 20 }
+            },
+            completed: false,
+            expiresAt: tomorrow
+          }
+        ];
+        
+        // Sample weekly quests
+        const weeklyQuests = [
+          {
+            userId: req.session.userId!,
+            name: "Master Collector",
+            description: "Gather a large amount of resources throughout the week",
+            questType: "weekly",
+            difficulty: "Hard",
+            requirements: {
+              farmingCompleted: { current: 0, target: 15, label: "Complete farming missions" }
+            },
+            rewards: {
+              rogueCredits: 1000,
+              forgeTokens: 200,
+              material: { name: "Celestial Ore", amount: 50 }
+            },
+            completed: false,
+            expiresAt: nextWeek
+          },
+          {
+            userId: req.session.userId!,
+            name: "Dungeon Master",
+            description: "Prove your skill by completing multiple challenging dungeons",
+            questType: "weekly",
+            difficulty: "Epic",
+            requirements: {
+              dungeonRuns: { current: 0, target: 10, label: "Complete dungeon runs" },
+              bossDefeats: { current: 0, target: 3, label: "Defeat dungeon bosses" }
+            },
+            rewards: {
+              rogueCredits: 2000,
+              forgeTokens: 350,
+              soulShards: 15
+            },
+            completed: false,
+            expiresAt: nextWeek
+          }
+        ];
+        
+        // Create all the quests
+        for (const quest of [...dailyQuests, ...weeklyQuests]) {
+          await storage.createBountyQuest(quest);
+        }
+        
+        // Fetch the newly created quests
+        quests = await storage.getBountyQuests(req.session.userId!);
+      }
+      
       res.json(quests);
     } catch (error) {
       console.error('Error fetching bounty quests:', error);
       res.status(500).json({ message: 'Failed to fetch bounty quests' });
+    }
+  });
+  
+  app.post('/api/bounty/quests/:id/claim', authenticateUser, async (req, res) => {
+    try {
+      const questId = parseInt(req.params.id);
+      const quest = await storage.getBountyQuestById(questId);
+      
+      if (!quest) {
+        return res.status(404).json({ message: 'Quest not found' });
+      }
+      
+      if (quest.userId !== req.session.userId) {
+        return res.status(403).json({ message: 'Not authorized to access this quest' });
+      }
+      
+      if (quest.completed) {
+        return res.status(400).json({ message: 'Quest already claimed' });
+      }
+      
+      // Calculate if the quest is complete
+      let isComplete = true;
+      if (quest.requirements && typeof quest.requirements === 'object') {
+        for (const [key, requirement] of Object.entries(quest.requirements)) {
+          if (typeof requirement === 'object' && 'current' in requirement && 'target' in requirement) {
+            if (requirement.current < requirement.target) {
+              isComplete = false;
+              break;
+            }
+          }
+        }
+      }
+      
+      if (!isComplete) {
+        return res.status(400).json({ message: 'Quest requirements not met' });
+      }
+      
+      // Mark as completed
+      await storage.updateBountyQuest(questId, { completed: true });
+      
+      // Award rewards
+      const user = await storage.getUserById(req.session.userId!);
+      if (user && quest.rewards) {
+        const updates: Partial<User> = {};
+        
+        if ('rogueCredits' in quest.rewards && quest.rewards.rogueCredits) {
+          updates.rogueCredits = (user.rogueCredits || 0) + quest.rewards.rogueCredits;
+        }
+        
+        if ('forgeTokens' in quest.rewards && quest.rewards.forgeTokens) {
+          updates.forgeTokens = (user.forgeTokens || 0) + quest.rewards.forgeTokens;
+        }
+        
+        if ('soulShards' in quest.rewards && quest.rewards.soulShards) {
+          updates.soulShards = (user.soulShards || 0) + quest.rewards.soulShards;
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          await storage.updateUser(user.id, updates);
+        }
+        
+        // Award material rewards if any
+        if ('material' in quest.rewards && quest.rewards.material) {
+          const { name, amount } = quest.rewards.material;
+          const existingResource = await storage.getResourceByNameAndUserId(name, user.id);
+          
+          if (existingResource) {
+            await storage.updateResource(existingResource.id, {
+              quantity: (existingResource.quantity || 0) + amount
+            });
+          } else {
+            await storage.createResource({
+              userId: user.id,
+              name,
+              type: 'material',
+              quantity: amount,
+              description: `A material obtained from quests`,
+              iconUrl: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
+            });
+          }
+        }
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: req.session.userId!,
+        activityType: 'quest_completed',
+        description: `Completed quest: ${quest.name}`,
+        relatedIds: { questId: quest.id }
+      });
+      
+      res.json({
+        success: true,
+        message: 'Quest rewards claimed successfully',
+        rewards: quest.rewards
+      });
+    } catch (error) {
+      console.error('Error claiming quest rewards:', error);
+      res.status(500).json({ message: 'Failed to claim quest rewards' });
     }
   });
   

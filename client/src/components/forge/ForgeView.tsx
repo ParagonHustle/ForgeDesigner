@@ -42,14 +42,12 @@ import {
 import CountdownTimer from '../common/CountdownTimer';
 import type { Aura, Resource, ForgingTask } from '@shared/schema';
 
-// Element types for Auras
+// Element types for Auras - limited to the four requested elements 
 const elements = [
   { id: 'fire', name: 'Fire', icon: <Flame className="h-5 w-5 text-red-400" />, color: 'bg-red-700/30 text-red-400 border-red-600/30' },
   { id: 'water', name: 'Water', icon: <Droplet className="h-5 w-5 text-blue-400" />, color: 'bg-blue-700/30 text-blue-400 border-blue-600/30' },
   { id: 'earth', name: 'Earth', icon: <Leaf className="h-5 w-5 text-green-400" />, color: 'bg-green-700/30 text-green-400 border-green-600/30' },
-  { id: 'air', name: 'Air', icon: <Wind className="h-5 w-5 text-cyan-400" />, color: 'bg-cyan-700/30 text-cyan-400 border-cyan-600/30' },
-  { id: 'light', name: 'Light', icon: <Sun className="h-5 w-5 text-yellow-400" />, color: 'bg-yellow-700/30 text-yellow-400 border-yellow-600/30' },
-  { id: 'dark', name: 'Dark', icon: <Moon className="h-5 w-5 text-purple-400" />, color: 'bg-purple-700/30 text-purple-400 border-purple-600/30' }
+  { id: 'wind', name: 'Wind', icon: <Wind className="h-5 w-5 text-cyan-400" />, color: 'bg-cyan-700/30 text-cyan-400 border-cyan-600/30' }
 ];
 
 // Rarity types for Auras
@@ -105,19 +103,28 @@ const ForgeView = () => {
 
   // Start aura crafting
   const startCrafting = async () => {
-    if (!selectedElement || !selectedRarity) {
+    if (!selectedElement) {
       toast({
         title: "Incomplete Selection",
-        description: "Please select both an element and rarity for your Aura.",
+        description: "Please select an element for your Aura.",
         variant: "destructive"
       });
       return;
     }
     
-    if (!hasEnoughMaterials(selectedRarity)) {
+    // Automatically choose the highest rarity the user can afford
+    let selectedRarityForCraft = null;
+    for (const rarity of ['epic', 'rare', 'common']) {
+      if (hasEnoughMaterials(rarity)) {
+        selectedRarityForCraft = rarity;
+        break;
+      }
+    }
+    
+    if (!selectedRarityForCraft) {
       toast({
         title: "Insufficient Materials",
-        description: "You don't have enough materials to craft this Aura.",
+        description: "You don't have enough materials to craft an Aura.",
         variant: "destructive"
       });
       return;
@@ -127,13 +134,13 @@ const ForgeView = () => {
     
     try {
       // Get required materials for this rarity
-      const materialsNeeded = requiredMaterials[selectedRarity as keyof typeof requiredMaterials];
+      const materialsNeeded = requiredMaterials[selectedRarityForCraft as keyof typeof requiredMaterials];
       
       // Submit crafting request
       const response = await apiRequest('POST', '/api/forge/craft', {
         taskType: 'craft',
         targetElement: selectedElement,
-        targetRarity: selectedRarity,
+        targetRarity: selectedRarityForCraft,
         requiredMaterials: materialsNeeded,
         // Crafting takes 1 minute
         endTime: new Date(new Date().getTime() + 60 * 1000)
@@ -146,7 +153,6 @@ const ForgeView = () => {
       
       // Reset selections
       setSelectedElement(null);
-      setSelectedRarity(null);
       
       // Refresh forging tasks and resources
       fetchForgingTasks();
