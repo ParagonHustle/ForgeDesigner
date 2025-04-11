@@ -143,6 +143,7 @@ export const bountyQuests = pgTable("bounty_quests", {
   requirements: jsonb("requirements").notNull(),
   rewards: jsonb("rewards").notNull(),
   difficulty: text("difficulty").notNull(), // 'easy', 'medium', 'hard', 'epic'
+  frequency: text("frequency").default('daily'), // 'daily', 'weekly'
   createdAt: timestamp("created_at").defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),
   completed: boolean("completed").default(false),
