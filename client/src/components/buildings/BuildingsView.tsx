@@ -55,9 +55,13 @@ const buildings = [
       { level: 2, text: 'Unlocks 4th farming slot' },
       { level: 3, text: 'Unlocks 5th farming slot and increase active character tasks' },
       { level: 4, text: 'Unlocks 6th farming slot' },
-      { level: 5, text: 'Unlocks Guild access and all farming slots' }
+      { level: 5, text: 'Unlocks Guild access and all farming slots' },
+      { level: 10, text: 'Allows other buildings to reach level 19' },
+      { level: 20, text: 'Allows other buildings to reach level 29' },
+      { level: 30, text: 'Allows other buildings to reach level 39' },
+      { level: 40, text: 'Allows other buildings to reach level 49' }
     ],
-    maxLevel: 5,
+    maxLevel: 49,
     baseUpgradeCost: { rogueCredits: 1000, forgeTokens: 100 },
     upgradeTimeInMinutes: 60
   },
@@ -74,7 +78,7 @@ const buildings = [
       { level: 4, text: 'Characters can reach level 25' },
       { level: 5, text: 'Aura fusion up to level 10, characters can reach level 49' }
     ],
-    maxLevel: 5,
+    maxLevel: 49,
     baseUpgradeCost: { rogueCredits: 800, forgeTokens: 80 },
     upgradeTimeInMinutes: 45
   },
@@ -91,7 +95,7 @@ const buildings = [
       { level: 4, text: 'Unlock 4 personal listing slots' },
       { level: 5, text: 'Unlock all 6 personal listing slots' }
     ],
-    maxLevel: 5,
+    maxLevel: 49,
     baseUpgradeCost: { rogueCredits: 750, forgeTokens: 75 },
     upgradeTimeInMinutes: 40
   },
@@ -108,7 +112,7 @@ const buildings = [
       { level: 4, text: '6 daily quests (higher chance for epic)' },
       { level: 5, text: '7 daily quests (guaranteed epic)' }
     ],
-    maxLevel: 5,
+    maxLevel: 49,
     baseUpgradeCost: { rogueCredits: 600, forgeTokens: 60 },
     upgradeTimeInMinutes: 30
   },
@@ -125,7 +129,7 @@ const buildings = [
       { level: 4, text: 'Generate 4 dungeon tickets per day' },
       { level: 5, text: 'Elite trade options (3 epic for 1 legendary)' }
     ],
-    maxLevel: 5,
+    maxLevel: 49,
     baseUpgradeCost: { rogueCredits: 700, forgeTokens: 70 },
     upgradeTimeInMinutes: 35
   }
@@ -166,9 +170,32 @@ const BuildingsView = () => {
     return user.rogueCredits >= cost.rogueCredits && user.forgeTokens >= cost.forgeTokens;
   };
 
-  // Check if building is at max level
+  // Check if building is at max level based on townhall level
   const isMaxLevel = (building: any, currentLevel: number) => {
-    return currentLevel >= building.maxLevel;
+    // Get townhall level
+    const townhall = getBuildingByType('townhall');
+    const townhallLevel = townhall?.currentLevel || 1;
+    
+    // Determine max allowed level based on townhall level
+    let maxAllowedLevel = 9; // Default max level is 9
+    
+    if (townhallLevel >= 40) {
+      maxAllowedLevel = 49;
+    } else if (townhallLevel >= 30) {
+      maxAllowedLevel = 39;
+    } else if (townhallLevel >= 20) {
+      maxAllowedLevel = 29;
+    } else if (townhallLevel >= 10) {
+      maxAllowedLevel = 19;
+    }
+    
+    // Townhall itself can go up to max level regardless
+    if (building.id === 'townhall') {
+      return currentLevel >= building.maxLevel;
+    }
+    
+    // For other buildings, check against the max allowed level and building's max level
+    return currentLevel >= Math.min(maxAllowedLevel, building.maxLevel);
   };
 
   // Check if building is currently upgrading
