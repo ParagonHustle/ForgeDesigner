@@ -498,7 +498,7 @@ const BuildingsView = () => {
                                     <div className="text-sm">
                                       {calculateUpgradeCost(building, currentLevel).rogueCredits} Rogue Credits
                                     </div>
-                                    <div className={`text-xs ${user && user.rogueCredits >= calculateUpgradeCost(building, currentLevel).rogueCredits ? 'text-green-400' : 'text-red-400'}`}>
+                                    <div className={`text-xs ${user && (user.rogueCredits || 0) >= calculateUpgradeCost(building, currentLevel).rogueCredits ? 'text-green-400' : 'text-red-400'}`}>
                                       You have: {user?.rogueCredits || 0}
                                     </div>
                                   </div>
@@ -514,7 +514,7 @@ const BuildingsView = () => {
                                     <div className="text-sm">
                                       {calculateUpgradeCost(building, currentLevel).forgeTokens} Forge Tokens
                                     </div>
-                                    <div className={`text-xs ${user && user.forgeTokens >= calculateUpgradeCost(building, currentLevel).forgeTokens ? 'text-green-400' : 'text-red-400'}`}>
+                                    <div className={`text-xs ${user && (user.forgeTokens || 0) >= calculateUpgradeCost(building, currentLevel).forgeTokens ? 'text-green-400' : 'text-red-400'}`}>
                                       You have: {user?.forgeTokens || 0}
                                     </div>
                                   </div>

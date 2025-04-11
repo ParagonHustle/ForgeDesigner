@@ -128,11 +128,10 @@ const ForgeView = () => {
     setIsSubmitting(true);
     
     try {
-      // Submit crafting request with common rarity by default
+      // Submit crafting request 
       const response = await apiRequest('POST', '/api/forge/craft', {
         taskType: 'craft',
         targetElement: selectedElement,
-        targetRarity: 'common', // Default to common rarity
         requiredMaterials: requiredMaterials,
         // Crafting takes 1 minute
         endTime: new Date(new Date().getTime() + 60 * 1000)
@@ -301,7 +300,7 @@ const ForgeView = () => {
                         </CardTitle>
                         <CardDescription>
                           {task.taskType === 'craft'
-                            ? `${task.targetRarity} Rarity`
+                            ? 'Basic Aura'
                             : 'Enhancing Aura Level'
                           }
                         </CardDescription>
