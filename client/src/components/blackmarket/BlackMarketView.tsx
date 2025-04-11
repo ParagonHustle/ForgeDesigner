@@ -171,9 +171,9 @@ const BlackMarketView = () => {
     if (!user) return false;
     
     if (listing.currencyType === 'forgeTokens') {
-      return user.forgeTokens >= listing.price;
+      return (user.forgeTokens || 0) >= listing.price;
     } else {
-      return user.rogueCredits >= listing.price;
+      return (user.rogueCredits || 0) >= listing.price;
     }
   };
 
@@ -302,6 +302,15 @@ const BlackMarketView = () => {
                     </div>
                     
                     <div className="p-4">
+                      {/* Item details section */}
+                      {itemInfo.detailLines && itemInfo.detailLines.length > 0 && (
+                        <div className="mb-3 text-xs text-[#C8B8DB]/80 bg-[#1A1A2E]/80 rounded p-2 border border-[#432874]/20">
+                          {itemInfo.detailLines.map((line, index) => 
+                            line ? <div key={index} className="mb-1">{line}</div> : null
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center">
                           <img 
@@ -379,6 +388,15 @@ const BlackMarketView = () => {
                     </div>
                     
                     <div className="p-4">
+                      {/* Item details section */}
+                      {itemInfo.detailLines && itemInfo.detailLines.length > 0 && (
+                        <div className="mb-3 text-xs text-[#C8B8DB]/80 bg-[#1A1A2E]/80 rounded p-2 border border-[#432874]/20">
+                          {itemInfo.detailLines.map((line, index) => 
+                            line ? <div key={index} className="mb-1">{line}</div> : null
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center">
                           <img 
@@ -456,6 +474,16 @@ const BlackMarketView = () => {
                   </p>
                 </div>
               </div>
+              
+              {/* Display item details in the confirmation dialog */}
+              {getItemInfo(confirmDialog.listing).detailLines && getItemInfo(confirmDialog.listing).detailLines.length > 0 && (
+                <div className="mb-4 p-3 bg-[#432874]/10 rounded border border-[#432874]/30">
+                  <h4 className="text-sm font-semibold mb-1">Item Details:</h4>
+                  {getItemInfo(confirmDialog.listing).detailLines.map((line, index) => 
+                    line ? <div key={index} className="text-xs text-[#C8B8DB]/80 mb-1">{line}</div> : null
+                  )}
+                </div>
+              )}
               
               <div className="bg-[#432874]/20 p-4 rounded-lg mb-4">
                 <div className="flex justify-between items-center">
