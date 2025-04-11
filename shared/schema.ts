@@ -154,6 +154,8 @@ export const buildingUpgrades = pgTable("building_upgrades", {
   upgradeEndTime: timestamp("upgrade_end_time"),
   upgradeInProgress: boolean("upgrade_in_progress").default(false),
   unlockedSkills: text("unlocked_skills").array(),
+  availableSkillPoints: integer("available_skill_points").default(0),
+  skillDistribution: jsonb("skill_distribution"), // Stores skill point allocation for each building
 });
 
 // Activity log model

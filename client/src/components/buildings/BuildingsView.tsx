@@ -308,15 +308,10 @@ const BuildingsView = () => {
     }
   };
 
-  // Check if a building is locked (requires townhall to not be level 1)
+  // Check if a building is locked
   const isBuildingLocked = (buildingType: string) => {
-    if (buildingType === 'townhall') return false;
-    
-    const townhall = getBuildingByType('townhall');
-    if (!townhall) return true;
-    
-    // Buildings are only locked if townhall is level 1
-    return townhall.currentLevel === 1;
+    // No buildings should be locked - they can all be upgraded up to level 9
+    return false;
   };
 
   // Animation variants
