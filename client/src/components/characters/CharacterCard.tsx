@@ -65,8 +65,10 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
     enabled: equipAuraDialogOpen
   });
 
-  // Get auras that are not equipped by any character
-  const unequippedAuras = availableAuras.filter(a => !a.equippedByCharacterId && !a.isFusing);
+  // Get auras that are not equipped by any character, sorted by level (highest first)
+  const unequippedAuras = availableAuras
+    .filter(a => !a.equippedByCharacterId && !a.isFusing)
+    .sort((a, b) => (b.level || 0) - (a.level || 0));
   
   // Function to equip an aura to the character
   const equipAura = async () => {
@@ -74,9 +76,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
     
     setIsEquipping(true);
     try {
-      await apiRequest(`/api/characters/${character.id}/equip-aura/${selectedAuraId}`, {
-        method: 'POST'
-      });
+      await apiRequest(`/api/characters/${character.id}/equip-aura/${selectedAuraId}`, 'POST');
       
       // Invalidate character and aura queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
@@ -181,7 +181,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                     <SelectItem key={aura.id} value={aura.id.toString()}>
                       <div className="flex items-center">
                         {getElementIcon(aura.element)} 
-                        <span className="ml-2">{aura.name} (Lv.{aura.level} {aura.rarity})</span>
+                        <span className="ml-2">{aura.name} (Lv.{aura.level})</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -196,18 +196,56 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                   const selectedAura = unequippedAuras.find(a => a.id === selectedAuraId);
                   if (!selectedAura) return <div>No aura selected</div>;
                   
+                  // Parse stat multipliers if they exist
+                  const statMultipliers = selectedAura.statMultipliers ? 
+                    typeof selectedAura.statMultipliers === 'string' ? 
+                      JSON.parse(selectedAura.statMultipliers as string) : 
+                      selectedAura.statMultipliers : 
+                    {};
+                  
+                  // Parse skills if they exist
+                  const skills = selectedAura.skills ? 
+                    typeof selectedAura.skills === 'string' ? 
+                      JSON.parse(selectedAura.skills as string) : 
+                      selectedAura.skills : 
+                    [];
+                  
                   return (
                     <div className="text-sm">
                       <div className="flex items-center mb-1">
                         {getElementIcon(selectedAura.element)} 
                         <span className="ml-2 text-[#00B9AE]">{selectedAura.name}</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
                         <div>Element: {selectedAura.element}</div>
                         <div>Level: {selectedAura.level}</div>
-                        <div>Rarity: {selectedAura.rarity}</div>
                         <div>Tier: {selectedAura.tier}</div>
                       </div>
+                      
+                      {skills && skills.length > 0 && (
+                        <div className="mt-2">
+                          <h5 className="font-semibold text-xs mb-1">Skills:</h5>
+                          <ul className="list-disc pl-4 text-xs space-y-1">
+                            {skills.map((skill: any, index: number) => (
+                              <li key={index}>{skill.name} - {skill.description}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {statMultipliers && Object.keys(statMultipliers).length > 0 && (
+                        <div className="mt-2">
+                          <h5 className="font-semibold text-xs mb-1">Stat Multipliers:</h5>
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                            {Object.entries(statMultipliers).map(([stat, value]: [string, any]) => (
+                              <div key={stat} className="flex justify-between">
+                                <span className="capitalize">{stat}:</span>
+                                <span className="text-green-400">x{value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -417,7 +455,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             {aura ? `${aura.element} Aura` : 'Aura Equipped'}
                           </div>
                           <div className="text-xs text-[#C8B8DB]/60">
-                            {aura ? `Level ${aura.level} • ${aura.rarity}` : 'Loading...'}
+                            {aura ? `Level ${aura.level} • Tier ${aura.tier}` : 'Loading...'}
                           </div>
                         </div>
                       </div>
