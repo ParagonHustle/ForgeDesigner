@@ -115,29 +115,45 @@ const BlackMarketView = () => {
   };
 
   const getItemInfo = (listing: BlackMarketListing) => {
+    const itemData = listing.itemData as any;
+    
     switch (listing.itemType) {
       case 'character':
         return {
-          title: 'Premium Character',
-          description: 'A rare and powerful hero to add to your roster',
-          image: 'https://images.unsplash.com/photo-1577095972620-2f389ca3abcd?w=150&h=150&fit=crop'
+          title: itemData?.name || 'Mystery Character',
+          description: `${itemData?.rarity || 'Unknown'} ${itemData?.class || 'Character'} - Level ${itemData?.level || '?'}`,
+          detailLines: [
+            itemData?.stats ? `STR: ${itemData.stats.strength || 0} | AGI: ${itemData.stats.agility || 0}` : '',
+            itemData?.stats ? `INT: ${itemData.stats.intelligence || 0} | VIT: ${itemData.stats.vitality || 0}` : '',
+            itemData?.passiveSkills?.length > 0 ? `Skills: ${itemData.passiveSkills.map((s: any) => s.name).join(', ')}` : 'No special skills'
+          ],
+          image: itemData?.avatarUrl || 'https://images.unsplash.com/photo-1577095972620-2f389ca3abcd?w=150&h=150&fit=crop'
         };
       case 'aura':
         return {
-          title: 'Elemental Aura',
-          description: 'A powerful aura to enhance your characters',
+          title: itemData?.name || 'Mystery Aura',
+          description: `${itemData?.element || 'Unknown'} Element - Level ${itemData?.level || '?'}`,
+          detailLines: [
+            itemData?.statMultipliers ? `Multipliers: STR ×${itemData.statMultipliers.strength?.toFixed(1) || '1.0'}, AGI ×${itemData.statMultipliers.agility?.toFixed(1) || '1.0'}` : '',
+            itemData?.statMultipliers ? `INT ×${itemData.statMultipliers.intelligence?.toFixed(1) || '1.0'}, VIT ×${itemData.statMultipliers.vitality?.toFixed(1) || '1.0'}` : '',
+            itemData?.skills?.length > 0 ? `Skills: ${itemData.skills.map((s: any) => s.name).join(', ')}` : 'No skills'
+          ],
           image: 'https://images.unsplash.com/photo-1618325500063-14cd8117369c?w=150&h=150&fit=crop'
         };
       case 'resource':
         return {
-          title: 'Rare Materials',
-          description: 'Valuable crafting resources',
-          image: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
+          title: itemData?.name || 'Rare Materials',
+          description: `${itemData?.quantity || '?'} ${itemData?.type || 'material'} units`,
+          detailLines: [
+            itemData?.description || 'Valuable crafting resource'
+          ],
+          image: itemData?.iconUrl || 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
         };
       default:
         return {
           title: 'Market Item',
           description: 'A valuable item for your collection',
+          detailLines: ['Unknown item details'],
           image: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
         };
     }

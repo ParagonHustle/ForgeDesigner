@@ -842,6 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const createPremiumListing = (type, data, price, featured = false) => ({
           userId: systemId,
           itemType: type,
+          itemId: Math.floor(Math.random() * 1000000) + 1, // Generate a placeholder ID
           itemData: data,
           price,
           currencyType: 'forgeTokens',
@@ -855,6 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const createStandardListing = (type, data, price) => ({
           userId: systemId,
           itemType: type,
+          itemId: Math.floor(Math.random() * 1000000) + 1, // Generate a placeholder ID
           itemData: data,
           price,
           currencyType: 'rogueCredits', 
