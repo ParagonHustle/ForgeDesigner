@@ -24,11 +24,22 @@ import {
   Skull,
   Shield,
   Scroll,
-  Package
+  Package,
+  ChevronDown,
+  ChevronRight,
+  Settings
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import type { BountyQuest } from '@shared/schema';
+import type { BountyQuest, BuildingUpgrade } from '@shared/schema';
+import BountyBoardSkillTree from './BountyBoardSkillTree';
 
 // Sample quest templates for demonstrations
 const questTemplates = [
