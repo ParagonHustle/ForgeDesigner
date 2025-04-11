@@ -890,6 +890,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch buildings' });
     }
   });
+
+  app.post('/api/buildings/upgrade', authenticateUser, async (req, res) => {
+    try {
+      const { buildingType } = req.body;
+      
+      if (!buildingType) {
+        return res.status(400).json({ message: 'Building type is required' });
+      }
+      
+      // Get the existing building
+      const existingBuilding = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
+      
+      if (!existingBuilding) {
+        // Create a new building upgrade if it doesn't exist
+        const newBuilding = await storage.createBuildingUpgrade({
+          userId: req.session.userId!,
+          buildingType,
+          currentLevel: 1,
+          upgradeInProgress: true,
+          upgradeStartTime: new Date(),
+          upgradeEndTime: new Date(Date.now() + (60 * 60 * 1000)) // 1 hour upgrade time
+        });
+        
+        return res.status(201).json(newBuilding);
+      }
+      
+      // Check if already upgrading
+      if (existingBuilding.upgradeInProgress) {
+        return res.status(400).json({ message: 'Building is already being upgraded' });
+      }
+      
+      // Check if max level
+      const buildingConfigs = {
+        townhall: { maxLevel: 5, upgradeTime: 60 },
+        forge: { maxLevel: 5, upgradeTime: 45 },
+        blackmarket: { maxLevel: 5, upgradeTime: 30 },
+        barracks: { maxLevel: 5, upgradeTime: 45 },
+        library: { maxLevel: 5, upgradeTime: 30 },
+        guild: { maxLevel: 5, upgradeTime: 90 }
+      };
+      
+      const config = buildingConfigs[buildingType as keyof typeof buildingConfigs];
+      
+      if (existingBuilding.currentLevel >= (config?.maxLevel || 5)) {
+        return res.status(400).json({ message: 'Building is already at max level' });
+      }
+      
+      // Get user to check resources
+      const user = await storage.getUserById(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Calculate cost
+      const baseCosts = {
+        townhall: { rogueCredits: 1000, forgeTokens: 100 },
+        forge: { rogueCredits: 800, forgeTokens: 80 },
+        blackmarket: { rogueCredits: 600, forgeTokens: 60 },
+        barracks: { rogueCredits: 800, forgeTokens: 80 },
+        library: { rogueCredits: 600, forgeTokens: 60 },
+        guild: { rogueCredits: 1200, forgeTokens: 120 }
+      };
+      
+      const baseCost = baseCosts[buildingType as keyof typeof baseCosts] || { rogueCredits: 500, forgeTokens: 50 };
+      const levelMultiplier = existingBuilding.currentLevel;
+      const cost = {
+        rogueCredits: baseCost.rogueCredits * levelMultiplier,
+        forgeTokens: baseCost.forgeTokens * levelMultiplier
+      };
+      
+      // Check if user can afford upgrade
+      if (user.rogueCredits! < cost.rogueCredits || user.forgeTokens! < cost.forgeTokens) {
+        return res.status(400).json({ 
+          message: 'Insufficient resources for upgrade',
+          required: cost,
+          current: {
+            rogueCredits: user.rogueCredits,
+            forgeTokens: user.forgeTokens
+          }
+        });
+      }
+      
+      // Deduct costs
+      await storage.updateUser(user.id, {
+        rogueCredits: user.rogueCredits! - cost.rogueCredits,
+        forgeTokens: user.forgeTokens! - cost.forgeTokens
+      });
+      
+      // Set upgrade in progress
+      const upgradeTime = (config?.upgradeTime || 30) * 60 * 1000; // minutes to milliseconds
+      const updatedBuilding = await storage.updateBuildingUpgrade(existingBuilding.id, {
+        upgradeInProgress: true,
+        upgradeStartTime: new Date(),
+        upgradeEndTime: new Date(Date.now() + upgradeTime)
+      });
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: req.session.userId!,
+        activityType: 'building_upgrade_started',
+        description: `Started upgrading ${buildingType} to level ${existingBuilding.currentLevel + 1}`,
+        relatedIds: { buildingId: existingBuilding.id }
+      });
+      
+      res.json(updatedBuilding);
+    } catch (error) {
+      console.error('Error starting building upgrade:', error);
+      res.status(500).json({ message: 'Failed to start building upgrade' });
+    }
+  });
+  
+  app.post('/api/buildings/complete/:buildingType', authenticateUser, async (req, res) => {
+    try {
+      const { buildingType } = req.params;
+      
+      // Get the building
+      const building = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
+      
+      if (!building) {
+        return res.status(404).json({ message: 'Building not found' });
+      }
+      
+      if (!building.upgradeInProgress) {
+        return res.status(400).json({ message: 'Building is not being upgraded' });
+      }
+      
+      if (building.upgradeEndTime && new Date(building.upgradeEndTime) > new Date()) {
+        return res.status(400).json({ 
+          message: 'Upgrade not complete yet',
+          remainingTime: new Date(building.upgradeEndTime).getTime() - Date.now()
+        });
+      }
+      
+      // Complete upgrade
+      const updatedBuilding = await storage.updateBuildingUpgrade(building.id, {
+        currentLevel: building.currentLevel + 1,
+        upgradeInProgress: false,
+        upgradeStartTime: null,
+        upgradeEndTime: null
+      });
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: req.session.userId!,
+        activityType: 'building_upgrade_completed',
+        description: `Completed upgrading ${buildingType} to level ${building.currentLevel + 1}`,
+        relatedIds: { buildingId: building.id }
+      });
+      
+      res.json(updatedBuilding);
+    } catch (error) {
+      console.error('Error completing building upgrade:', error);
+      res.status(500).json({ message: 'Failed to complete building upgrade' });
+    }
+  });
   
   // Activity log routes
   app.get('/api/activity', authenticateUser, async (req, res) => {

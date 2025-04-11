@@ -227,13 +227,15 @@ const BuildingsView = () => {
     setIsSubmitting(true);
     
     try {
-      // Calculate upgrade time
-      const upgradeTimeInMs = selectedBuilding.upgradeTimeInMinutes * 60 * 1000;
-      const upgradeEndTime = new Date(Date.now() + upgradeTimeInMs);
+      // Call the API to start the upgrade
+      const response = await apiRequest('POST', '/api/buildings/upgrade', {
+        buildingType: selectedBuilding.id
+      });
       
-      // Mock API call for upgrading building
-      // In a real implementation, this would be an actual API call to start the upgrade
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to start upgrade');
+      }
       
       toast({
         title: "Upgrade Started",
@@ -264,9 +266,13 @@ const BuildingsView = () => {
     setIsSubmitting(true);
     
     try {
-      // Mock API call for completing the upgrade
-      // In a real implementation, this would be an actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call API to complete upgrade
+      const response = await apiRequest('POST', `/api/buildings/complete/${buildingType}`, {});
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to complete upgrade');
+      }
       
       const building = buildings.find(b => b.id === buildingType);
       
