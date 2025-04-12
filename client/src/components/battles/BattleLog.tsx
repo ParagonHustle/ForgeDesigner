@@ -100,6 +100,24 @@ interface BattleSummary {
   toughestEnemy: string | null;
 }
 
+// Helper function to get skill icon based on icon name
+const getSkillIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'sword':
+      return <Swords className="h-3 w-3" />;
+    case 'shield':
+      return <Shield className="h-3 w-3" />;
+    case 'slash':
+      return <Swords className="h-3 w-3" />;
+    case 'potion':
+      return <Beaker className="h-3 w-3" />;
+    case 'claw':
+      return <Scissors className="h-3 w-3" />;
+    default:
+      return <Circle className="h-3 w-3" />;
+  }
+};
+
 const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => {
   const [activeTab, setActiveTab] = useState('log');
   const [isReplaying, setIsReplaying] = useState(false);
