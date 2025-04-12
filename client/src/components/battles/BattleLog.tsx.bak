@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ScrollText, 
@@ -29,6 +28,7 @@ import {
   Clock,
   BookOpen
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface BattleLogProps {
   isOpen: boolean;
@@ -36,6 +36,7 @@ interface BattleLogProps {
   battleLog: any[];
 }
 
+// Types for battle visualization
 interface BattleSkill {
   id: string;
   name: string;
@@ -74,6 +75,7 @@ interface BattleState {
   actionLog: any[];
 }
 
+// Types for battle summary
 interface CombatStats {
   damageDealt: number;
   damageReceived: number;
@@ -611,31 +613,37 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
         }
       });
       
-      // If we still have no actions, we can't replay
-      if (actions.length === 0) {
+      if (actions.length > 0) {
+        console.log(`Initialized ${actions.length} replay actions on start`);
+        replayActionsRef.current = actions;
+      } else {
+        console.error("Failed to create replay actions");
         return;
       }
-      
-      replayActionsRef.current = actions;
     }
     
-    // Start or resume replay
-    setIsReplaying(true);
-    console.log("Starting replay with", replayActionsRef.current.length, "actions");
-    
-    // If we're at the end, start from the beginning
+    // If we're at the end, restart from beginning
     if (currentReplayStep >= replayActionsRef.current.length) {
+      console.log("Restarting replay from beginning");
       setCurrentReplayStep(0);
     }
     
-    advanceReplay();
+    console.log(`Starting replay with ${replayActionsRef.current.length} actions`);
+    
+    // Set replaying state and start animation
+    setIsReplaying(true);
+    
+    // Start or resume animation with a small delay to ensure state updates
+    setTimeout(() => {
+      advanceReplay();
+    }, 100);
   };
   
   // Stop replay animation
   const stopReplay = () => {
     setIsReplaying(false);
-    if (replayTimerRef.current) {
-      clearTimeout(replayTimerRef.current);
+    if (replayTimerRef.current !== null) {
+      window.clearTimeout(replayTimerRef.current);
       replayTimerRef.current = null;
     }
   };
@@ -646,48 +654,469 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     setCurrentReplayStep(0);
   };
   
-  // Advance to next step in replay
+  // Advance replay to next step
   const advanceReplay = () => {
-    // Only advance if we're replaying and there are actions left
-    if (isReplaying && currentReplayStep < replayActionsRef.current.length) {
-      // Schedule next step
-      const currentAction = replayActionsRef.current[currentReplayStep];
-      const delay = Math.max(500, (currentAction.displayDelay || 1000) / replaySpeed);
-      
-      replayTimerRef.current = window.setTimeout(() => {
-        // Advance to next step
-        setCurrentReplayStep(prev => {
-          const next = prev + 1;
-          
-          // If we've reached the end, stop replaying
-          if (next >= replayActionsRef.current.length) {
-            setIsReplaying(false);
-            return prev;
-          }
-          
-          // Continue replay
-          advanceReplay();
-          return next;
-        });
-      }, delay);
+    if (!isReplaying) return;
+    
+    console.log("Advancing replay", currentReplayStep, "of", replayActionsRef.current.length);
+    
+    // If we've reached the end of the replay
+    if (currentReplayStep >= replayActionsRef.current.length) {
+      console.log("Reached end of replay");
+      setIsReplaying(false);
+      return;
     }
+    
+    // Get current action for delay calculation
+    const action = replayActionsRef.current[currentReplayStep];
+    console.log("Current action:", action);
+    
+    // Calculate appropriate delay
+    const delay = action?.displayDelay ? action.displayDelay / replaySpeed : 1500 / replaySpeed;
+    console.log("Delay:", delay, "ms at speed", replaySpeed);
+    
+    // Update current step
+    setCurrentReplayStep(prev => prev + 1);
+    
+    // Schedule next step with appropriate delay
+    replayTimerRef.current = window.setTimeout(() => {
+      // Check if we're still supposed to be replaying
+      if (isReplaying) {
+        advanceReplay();
+      }
+    }, delay);
   };
   
-  // Continue replay when speed changes
-  useEffect(() => {
-    if (isReplaying) {
-      stopReplay();
-      startReplay();
-    }
-  }, [replaySpeed]);
+  // Fast forward - increase replay speed
+  const fastForward = () => {
+    setReplaySpeed(prev => Math.min(prev * 2, 8));
+  };
   
-  // Render the replay tab content
-  const renderReplayTab = () => {
-    // Show replay controls
+  // Render an action for the replay view
+  const renderReplayAction = (action: any) => {
+    if (action.type === 'stage-header') {
+      return (
+        <div className="py-3 px-4 bg-[#432874]/30 rounded-lg mb-3">
+          <h3 className="text-lg font-cinzel font-bold text-[#FF9D00] flex items-center">
+            <Sparkles className="mr-2 h-5 w-5" />
+            Stage {action.stage} {action.isBossStage ? '- Boss Stage!' : ''}
+          </h3>
+        </div>
+      );
+    }
+    
+    if (action.type === 'enemies-intro') {
+      return (
+        <div className="py-2 px-3 bg-[#DC143C]/10 rounded-lg mb-3">
+          <p className="text-sm mb-2">Encountered enemies:</p>
+          <div className="flex flex-wrap gap-2">
+            {action.enemies.map((enemy: any, idx: number) => (
+              <Badge key={idx} className="bg-[#DC143C]/20 text-[#DC143C] border-[#DC143C]/30">
+                {enemy.name} (Lvl {enemy.level || '?'})
+              </Badge>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    
+    if (action.type === 'round-header') {
+      return (
+        <div className="py-2 px-3 bg-[#1F1D36]/80 rounded-lg mb-3">
+          <h4 className="text-md font-semibold text-[#C8B8DB]">Round {action.round}</h4>
+        </div>
+      );
+    }
+    
+    if (action.type === 'action') {
+      // Customize action display based on type
+      let icon = <Swords className="h-5 w-5 inline mr-2" />;
+      let textColor = action.actor.includes('Enemy') 
+        ? "text-[#DC143C]"
+        : "text-[#00B9AE]";
+        
+      if (action.action === 'defend') icon = <Shield className="h-5 w-5 inline mr-2" />;
+      if (action.action === 'special') icon = <Zap className="h-5 w-5 inline mr-2" />;
+      if (action.action === 'heal') icon = <Heart className="h-5 w-5 inline mr-2 text-green-400" />;
+      
+      // Determine skill name based on action properties
+      let skillName = '';
+      if (action.skillName) {
+        skillName = action.skillName;
+      } else if (action.action === 'attack') {
+        skillName = action.isCritical ? 'Critical Strike' : 'Basic Attack';
+      } else if (action.action === 'defend') {
+        skillName = 'Defensive Stance';
+      } else if (action.action === 'special') {
+        skillName = 'Special Ability';
+      } else if (action.action === 'heal') {
+        skillName = 'Healing';
+      }
+      
+      return (
+        <div className={`py-2 px-3 ${action.isCritical ? 'bg-[#FFD700]/10' : 'bg-[#1F1D36]/50'} rounded-lg mb-2 ${textColor}`}>
+          <div className="flex flex-col">
+            <p className="flex items-center">
+              {icon}
+              <span className="font-semibold">{action.actor}</span>
+              <span className="mx-1">uses</span>
+              <Badge className={`${action.isCritical ? 'bg-[#FFD700]/20 text-[#FFD700]' : 'bg-[#432874]/20 text-[#C8B8DB]'} border-0`}>
+                {skillName}
+              </Badge>
+            </p>
+            
+            {action.action === 'attack' && (
+              <div className="ml-7 mt-1">
+                <span>Deals </span>
+                <span className="font-bold">{action.damage}</span>
+                <span> damage to </span>
+                <span className="font-semibold">{action.target}</span>
+                {action.elementalEffect && (
+                  <Badge className="ml-2 bg-purple-500/20 text-purple-300 border-0">
+                    {action.elementalEffect} Effect
+                  </Badge>
+                )}
+                {action.targetRemainingHp && (
+                  <div className="mt-1">
+                    <Progress 
+                      value={(action.targetRemainingHp / action.targetMaxHp) * 100} 
+                      className="h-2 bg-[#432874]/30"
+                    />
+                    <span className="text-xs">
+                      {action.targetRemainingHp}/{action.targetMaxHp} HP
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    if (action.type === 'stage-outcome') {
+      return (
+        <div className={`py-2 px-3 ${action.outcome === 'victory' ? 'bg-green-700/10' : 'bg-red-700/10'} rounded-lg mb-3`}>
+          <p className={action.outcome === 'victory' ? 'text-green-400' : 'text-red-400'}>
+            {action.summary || `Stage ${action.outcome === 'victory' ? 'cleared' : 'failed'}!`}
+          </p>
+        </div>
+      );
+    }
+    
+    if (action.type === 'recovery') {
+      return (
+        <div className="py-2 px-3 bg-[#00B9AE]/10 rounded-lg mb-3">
+          <p className="text-[#00B9AE]/90 mb-1">{action.message}</p>
+          <div className="flex flex-wrap gap-2">
+            {action.characters?.map((char: any) => (
+              <Badge key={char.id} className="bg-[#00B9AE]/20 text-[#00B9AE] border-[#00B9AE]/30">
+                {char.name}: {char.hp}/{char.maxHp} HP
+              </Badge>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    
+    if (action.type === 'final-result') {
+      return (
+        <div className={`py-3 px-4 ${action.success ? 'bg-green-700/10' : 'bg-red-700/10'} rounded-lg mb-3`}>
+          <h3 className={`text-lg font-cinzel font-bold ${action.success ? 'text-green-400' : 'text-red-400'}`}>
+            {action.success ? 'Victory!' : 'Defeat'}
+          </h3>
+          <p className="mt-1">{action.finalSummary}</p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="py-2 px-3 bg-[#1F1D36]/50 rounded-lg mb-2">
+        <p>{JSON.stringify(action)}</p>
+      </div>
+    );
+  };
+  if (!battleLog || !Array.isArray(battleLog)) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">Battle Log</DialogTitle>
+            <DialogDescription className="text-[#C8B8DB]/70">
+              No battle log data available
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 text-center">
+            <p>The battle log data is unavailable or in an unexpected format.</p>
+          </div>
+          <DialogFooter>
+            <Button onClick={onClose} className="bg-[#432874]/50 hover:bg-[#432874]/70">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  
+  // Check if it's a final result
+  const finalResult = battleLog.find(entry => 'finalSummary' in entry);
+  
+  // Render the classic battle log tab
+  const renderBattleLog = () => {
+    return (
+      <div className="py-4 space-y-4">
+        {battleLog.map((entry, index) => {
+          // Skip the final result since we already used it in the header
+          if ('finalSummary' in entry) return null;
+          
+          // Handle stage entry
+          if ('stage' in entry) {
+            return (
+              <div key={`stage-${index}`} className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-cinzel font-bold text-[#00B9AE]">
+                    Stage {entry.stage} {entry.isBossStage ? '- Boss Stage' : ''}
+                  </h3>
+                  <Badge 
+                    className={entry.outcome === 'victory' 
+                      ? "bg-green-700/20 text-green-400 border-green-700/30" 
+                      : "bg-red-700/20 text-red-400 border-red-700/30"
+                    }
+                  >
+                    {entry.outcome === 'victory' ? 'Victory' : 'Defeat'}
+                  </Badge>
+                </div>
+                
+                {/* Enemy info */}
+                <div className="bg-[#432874]/10 p-3 rounded-md mb-3">
+                  <p className="text-sm mb-2 font-semibold text-[#C8B8DB]">Enemies:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {entry.enemies?.map((enemy: any, enemyIdx: number) => (
+                      <Badge key={enemyIdx} className="bg-[#DC143C]/20 text-[#DC143C] border-[#DC143C]/30">
+                        {enemy.name} (Lvl {enemy.level})
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Combat rounds */}
+                <div className="space-y-3">
+                  {entry.rounds?.map((round: any, roundIdx: number) => (
+                    <div key={`round-${roundIdx}`} className="bg-[#1F1D36]/50 p-3 rounded-md">
+                      <p className="text-sm font-semibold mb-2">Round {round.number}:</p>
+                      <div className="space-y-1 text-sm">
+                        {round.actions?.map((action: any, actionIdx: number) => {
+                          // Customize action display based on type
+                          let icon = <Swords className="h-4 w-4 inline mr-1" />;
+                          if (action.action === 'defend') icon = <Shield className="h-4 w-4 inline mr-1" />;
+                          if (action.action === 'special') icon = <Zap className="h-4 w-4 inline mr-1" />;
+                          
+                          let textColor = action.actor.includes('Enemy') 
+                            ? "text-[#DC143C]/90"
+                            : "text-[#00B9AE]/90";
+                            
+                          // Get skill name if available
+                          let skillName = action.skillName || (
+                            action.action === 'attack' 
+                              ? (action.isCritical ? 'Critical Strike' : 'Basic Attack')
+                              : action.action === 'defend' ? 'Defensive Stance' : 'Special Ability'
+                          );
+                          
+                          return (
+                            <p key={`action-${actionIdx}`} className={`${textColor} flex items-start`}>
+                              <span className="inline-block mt-1">{icon}</span>
+                              <span>
+                                <span className="font-semibold">{action.actor}</span>
+                                {' uses '}
+                                <Badge className={
+                                  action.isCritical 
+                                    ? 'bg-yellow-900/30 text-yellow-500 border-0 mx-1'
+                                    : 'bg-[#432874]/20 text-[#C8B8DB] border-0 mx-1'
+                                }>
+                                  {skillName}
+                                </Badge>
+                                {action.action === 'attack' && (
+                                  <>
+                                    {' on '}
+                                    <span className="font-semibold">{action.target}</span>
+                                    {' for '}
+                                    <span className="font-bold">{action.damage}</span>
+                                    {' damage'}
+                                    {action.elementalEffect && (
+                                      <Badge className="ml-1 bg-purple-500/20 text-purple-300 border-0">
+                                        {action.elementalEffect}
+                                      </Badge>
+                                    )}
+                                  </>
+                                )}
+                              </span>
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Stage summary */}
+                {entry.summary && (
+                  <div className="mt-3 p-2 bg-[#432874]/20 rounded-md text-sm">
+                    {entry.summary}
+                  </div>
+                )}
+                
+                {/* Recovery info */}
+                {entry.recovery && (
+                  <div className="mt-3 p-2 bg-[#00B9AE]/10 rounded-md text-sm">
+                    <p className="text-[#00B9AE]/90">{entry.recovery.message}</p>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {entry.recovery.characters?.map((char: any) => (
+                        <Badge key={char.id} className="bg-[#00B9AE]/20 text-[#00B9AE] border-[#00B9AE]/30">
+                          {char.name}: {char.hp}/{char.maxHp} HP
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
+          
+          // Handle simple round-based entries (older format)
+          if ('round' in entry) {
+            return (
+              <div key={`round-${index}`} className="bg-[#1F1D36]/50 p-3 rounded-md mb-4">
+                <p className="text-md font-semibold font-cinzel text-[#FF9D00] mb-2">Round {entry.round}</p>
+                <div className="space-y-2">
+                  {entry.actions?.map((action: any, actionIdx: number) => {
+                    // Customize action display based on type
+                    let icon = <Swords className="h-4 w-4 mr-2" />;
+                    let textColor = action.actor.includes('Enemy') 
+                      ? "text-[#DC143C]"
+                      : "text-[#00B9AE]";
+                      
+                    // Get skill name if available
+                    let skillName = action.skillName || (
+                      action.action === 'attack' 
+                        ? (action.isCritical ? 'Critical Strike' : 'Basic Attack')
+                        : action.action === 'defend' ? 'Defensive Stance' : 'Special Ability'
+                    );
+                      
+                    return (
+                      <div key={`action-${actionIdx}`} className={`p-2 ${action.isCritical ? 'bg-[#FFD700]/10' : 'bg-[#1F1D36]/80'} rounded-md ${textColor}`}>
+                        <div className="flex items-center">
+                          {icon}
+                          <span className="font-semibold">{action.actor}</span>
+                          <span className="mx-1">uses</span>
+                          <Badge className={`${action.isCritical ? 'bg-[#FFD700]/20 text-[#FFD700]' : 'bg-[#432874]/20 text-[#C8B8DB]'} border-0`}>
+                            {skillName}
+                          </Badge>
+                        </div>
+                        {action.action === 'attack' && (
+                          <div className="ml-8 mt-1 text-sm">
+                            <span>Deals </span>
+                            <span className="font-bold">{action.damage}</span>
+                            <span> damage to </span>
+                            <span className="font-semibold">{action.target}</span>
+                            {action.elementalEffect && (
+                              <Badge className="ml-2 bg-purple-500/20 text-purple-300 border-0">
+                                {action.elementalEffect} Effect
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+          
+          // Handle other types of entries
+          return (
+            <div key={`entry-${index}`} className="p-3 bg-[#432874]/20 rounded-md text-sm mb-3">
+              {JSON.stringify(entry)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+  
+  // Initialize the replay actions if they're not already set
+  useEffect(() => {
+    if (isOpen && battleLog && Array.isArray(battleLog) && (!replayActionsRef.current || replayActionsRef.current.length === 0)) {
+      console.log("Initializing replay actions on open");
+      
+      // Process the battle log entries into replay actions
+      const actions: any[] = [];
+      
+      // Go through each round-based entry and add a round header followed by its actions
+      battleLog.forEach(entry => {
+        if ('round' in entry) {
+          // Add round header
+          actions.push({
+            type: 'round-header',
+            round: entry.round,
+            displayDelay: 1000
+          });
+          
+          // Add all actions from this round
+          if (entry.actions && Array.isArray(entry.actions)) {
+            entry.actions.forEach(action => {
+              actions.push({
+                type: 'action',
+                ...action,
+                displayDelay: 1500
+              });
+            });
+          }
+          
+          // Add round summary if available
+          if (entry.outcome) {
+            actions.push({
+              type: 'stage-outcome',
+              outcome: entry.outcome,
+              summary: entry.summary,
+              displayDelay: 2000
+            });
+          }
+        }
+      });
+      
+      // If actions were found, store them
+      if (actions.length > 0) {
+        console.log(`Created ${actions.length} replay actions`, actions);
+        replayActionsRef.current = actions;
+      }
+    }
+  }, [isOpen, battleLog]);
+  
+  // Render the current step for replay mode
+  const renderCurrentReplayStep = () => {
     if (replayActionsRef.current.length === 0) {
       return (
-        <div className="py-8 text-center">
-          <p className="text-[#C8B8DB]/70">No replay data available</p>
+        <div className="flex flex-col items-center justify-center py-10">
+          <p className="text-[#C8B8DB]/70 mb-4">
+            No replay data available
+          </p>
+        </div>
+      );
+    }
+    
+    if (currentReplayStep === 0 || currentReplayStep > replayActionsRef.current.length) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10">
+          <p className="text-[#C8B8DB]/70 mb-4">
+            Press play to start the battle replay
+          </p>
+          <div className="mb-3">
+            <p className="text-xs text-[#C8B8DB]/50">
+              {replayActionsRef.current.length} actions available for replay
+            </p>
+          </div>
         </div>
       );
     }
@@ -728,376 +1157,6 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     );
   };
   
-  // Render visual battle replay showing all combatants
-  const renderVisualBattleReplay = (currentAction: any) => {
-    const { characters, enemies } = battleState;
-    
-    return (
-      <div className="bg-[#1F1D36]/80 rounded-lg p-4">
-        {/* Battle arena with both sides */}
-        <div className="flex flex-col space-y-8">
-          {/* Top info bar */}
-          <div className="flex justify-between items-center px-2 py-1 bg-[#432874]/30 rounded">
-            <span className="text-sm font-medium">
-              {currentAction?.type === 'round-header' ? `Round ${currentAction.round}` : ''}
-            </span>
-            <span className="text-xs text-[#C8B8DB]/70">
-              Action {currentReplayStep} of {replayActionsRef.current.length}
-            </span>
-          </div>
-          
-          {/* Characters side */}
-          <div className="flex flex-col space-y-1">
-            <h3 className="text-md font-semibold text-[#00B9AE] mb-2">Your Party</h3>
-            
-            {characters.map((character: BattleCombatant, index: number) => (
-              <div 
-                key={character.id} 
-                className={`bg-[#1F1D36]/70 rounded-lg p-3 ${
-                  currentAction?.actor === character.name ? 'ring-2 ring-[#00B9AE]' : ''
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  {/* Character info */}
-                  <div className="flex-1">
-                    <div className="flex items-center mb-1">
-                      <span className="font-semibold text-[#00B9AE]">{character.name}</span>
-                      <div className="ml-2 px-2 py-0.5 bg-[#00B9AE]/10 rounded text-xs">
-                        HP: {character.hp}/{character.maxHp}
-                      </div>
-                    </div>
-                    
-                    {/* HP Bar */}
-                    <Progress 
-                      value={(character.hp / character.maxHp) * 100} 
-                      className="h-2 bg-[#1F1D36] mb-2"
-                    />
-                    
-                    {/* Attack timer */}
-                    <div className="flex items-center text-xs mb-3">
-                      <Clock className="h-3 w-3 mr-1 text-[#C8B8DB]/70" />
-                      <span className="text-[#C8B8DB]/70 mr-2">Attack Speed:</span>
-                      <div className="w-20 bg-[#1F1D36] h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-[#00B9AE] h-full rounded-full" 
-                          style={{ width: `${(1 - character.attackTimer / character.attackSpeed) * 100}%` }}
-                        />
-                      </div>
-                      <span className="ml-2 text-[#C8B8DB]/70">
-                        {Math.max(0, character.attackSpeed - character.attackTimer).toFixed(1)}s
-                      </span>
-                    </div>
-                    
-                    {/* Skills */}
-                    <div className="flex gap-2 flex-wrap">
-                      {character.skills.map((skill: BattleSkill) => (
-                        <div 
-                          key={skill.id}
-                          className={`
-                            px-2 py-1 rounded text-xs flex items-center 
-                            ${skill.currentCooldown ? 'bg-[#1F1D36]/80 text-[#C8B8DB]/40' : 'bg-[#432874]/50 text-[#C8B8DB]'}
-                            ${currentAction?.skillName === skill.name ? 'ring-1 ring-yellow-400' : ''}
-                          `}
-                        >
-                          {getSkillIcon(skill.icon)}
-                          <span className="ml-1">{skill.name}</span>
-                          {skill.currentCooldown > 0 && (
-                            <span className="ml-1 bg-[#1F1D36] px-1 rounded">{skill.currentCooldown}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Character stats */}
-                  <div className="ml-4 p-2 bg-[#1F1D36]/60 rounded text-xs flex flex-col space-y-1 w-20 text-[#C8B8DB]/80">
-                    <div className="flex justify-between">
-                      <span>ATK:</span>
-                      <span>{character.stats.attack}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>DEF:</span>
-                      <span>{character.stats.defense}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>ACC:</span>
-                      <span>{character.stats.accuracy}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>SPD:</span>
-                      <span>{character.stats.speed}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Battle event display */}
-          {currentAction && (
-            <div className="py-3 px-4 bg-[#432874]/20 rounded-lg border border-[#432874]/40">
-              {renderReplayAction(currentAction)}
-            </div>
-          )}
-          
-          {/* Enemies side */}
-          <div className="flex flex-col space-y-1">
-            <h3 className="text-md font-semibold text-[#DC143C] mb-2">Enemies</h3>
-            
-            {enemies.map((enemy: BattleCombatant, index: number) => (
-              <div 
-                key={enemy.id} 
-                className={`bg-[#1F1D36]/70 rounded-lg p-3 ${
-                  currentAction?.actor === enemy.name ? 'ring-2 ring-[#DC143C]' : ''
-                } ${
-                  currentAction?.target === enemy.name ? 'ring-2 ring-yellow-500' : ''
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  {/* Enemy info */}
-                  <div className="flex-1">
-                    <div className="flex items-center mb-1">
-                      <span className="font-semibold text-[#DC143C]">{enemy.name}</span>
-                      <div className="ml-2 px-2 py-0.5 bg-[#DC143C]/10 rounded text-xs">
-                        HP: {enemy.hp}/{enemy.maxHp}
-                      </div>
-                    </div>
-                    
-                    {/* HP Bar */}
-                    <Progress 
-                      value={(enemy.hp / enemy.maxHp) * 100} 
-                      className="h-2 bg-[#1F1D36] mb-2"
-                    />
-                    
-                    {/* Attack timer */}
-                    <div className="flex items-center text-xs mb-3">
-                      <Clock className="h-3 w-3 mr-1 text-[#C8B8DB]/70" />
-                      <span className="text-[#C8B8DB]/70 mr-2">Attack Speed:</span>
-                      <div className="w-20 bg-[#1F1D36] h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-[#DC143C] h-full rounded-full" 
-                          style={{ width: `${(1 - enemy.attackTimer / enemy.attackSpeed) * 100}%` }}
-                        />
-                      </div>
-                      <span className="ml-2 text-[#C8B8DB]/70">
-                        {Math.max(0, enemy.attackSpeed - enemy.attackTimer).toFixed(1)}s
-                      </span>
-                    </div>
-                    
-                    {/* Skills */}
-                    <div className="flex gap-2 flex-wrap">
-                      {enemy.skills.map((skill: BattleSkill) => (
-                        <div 
-                          key={skill.id}
-                          className={`
-                            px-2 py-1 rounded text-xs flex items-center 
-                            ${skill.currentCooldown ? 'bg-[#1F1D36]/80 text-[#C8B8DB]/40' : 'bg-[#1F1D36]/60 text-[#C8B8DB]'}
-                            ${currentAction?.skillName === skill.name ? 'ring-1 ring-yellow-400' : ''}
-                          `}
-                        >
-                          {getSkillIcon(skill.icon)}
-                          <span className="ml-1">{skill.name}</span>
-                          {skill.currentCooldown > 0 && (
-                            <span className="ml-1 bg-[#1F1D36] px-1 rounded">{skill.currentCooldown}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Enemy stats */}
-                  <div className="ml-4 p-2 bg-[#1F1D36]/60 rounded text-xs flex flex-col space-y-1 w-20 text-[#C8B8DB]/80">
-                    <div className="flex justify-between">
-                      <span>ATK:</span>
-                      <span>{enemy.stats.attack}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>DEF:</span>
-                      <span>{enemy.stats.defense}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>ACC:</span>
-                      <span>{enemy.stats.accuracy}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>SPD:</span>
-                      <span>{enemy.stats.speed}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  // Render the replay action descriptions
-  const renderReplayAction = (action: any) => {
-    if (!action) return null;
-    
-    switch (action.type) {
-      case 'stage-header':
-        return (
-          <div className="flex items-center justify-between">
-            <span className="font-cinzel font-semibold text-[#FF9D00]">
-              Stage {action.stage} {action.isBossStage ? '- Boss Stage' : ''}
-            </span>
-            <Badge className="bg-[#432874]/40 text-[#C8B8DB] border-[#432874]/30">
-              Prepare for battle!
-            </Badge>
-          </div>
-        );
-      
-      case 'enemies-intro':
-        return (
-          <div>
-            <span className="text-[#DC143C]">Enemies appeared:</span>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {action.enemies.map((enemy: any, i: number) => (
-                <Badge 
-                  key={i} 
-                  className="bg-[#1F1D36] border-[#DC143C]/30 text-[#DC143C]"
-                >
-                  {enemy.name} (Lvl {enemy.level || '?'})
-                </Badge>
-              ))}
-            </div>
-          </div>
-        );
-      
-      case 'round-header':
-        return (
-          <div className="font-cinzel font-medium text-[#C8B8DB]/80">
-            Round {action.round}
-          </div>
-        );
-      
-      case 'action':
-        let iconComponent = <Swords className="h-4 w-4 inline mr-1" />;
-        if (action.action === 'defend') iconComponent = <Shield className="h-4 w-4 inline mr-1" />;
-        if (action.action === 'special') iconComponent = <Zap className="h-4 w-4 inline mr-1" />;
-        if (action.action === 'heal') iconComponent = <Heart className="h-4 w-4 inline mr-1" />;
-        
-        const isCharacter = !action.actor.includes('Enemy');
-        const actorColor = isCharacter ? 'text-[#00B9AE]' : 'text-[#DC143C]';
-        
-        // Get skill name if available
-        const skillName = action.skillName || (
-          action.action === 'attack' 
-            ? (action.isCritical ? 'Critical Strike' : 'Basic Attack')
-            : action.action === 'defend' ? 'Defensive Stance' 
-            : action.action === 'heal' ? 'Healing' 
-            : 'Special Ability'
-        );
-        
-        return (
-          <div className="flex items-start">
-            <span className="mt-1">{iconComponent}</span>
-            <div>
-              <span className={`font-semibold ${actorColor}`}>{action.actor}</span>
-              {' uses '}
-              <Badge className={
-                action.isCritical 
-                  ? 'bg-yellow-900/30 text-yellow-500 border-0 mx-1'
-                  : 'bg-[#432874]/20 text-[#C8B8DB] border-0 mx-1'
-              }>
-                {skillName}
-              </Badge>
-              
-              {action.action === 'attack' && (
-                <>
-                  {' on '}
-                  <span className={isCharacter ? 'text-[#DC143C] font-semibold' : 'text-[#00B9AE] font-semibold'}>
-                    {action.target}
-                  </span>
-                  {' for '}
-                  <span className="font-bold">{action.damage}</span>
-                  {' damage'}
-                  {action.elementalEffect && (
-                    <Badge className="ml-1 bg-purple-500/20 text-purple-300 border-0">
-                      {action.elementalEffect}
-                    </Badge>
-                  )}
-                </>
-              )}
-              
-              {action.action === 'heal' && (
-                <>
-                  {' restoring '}
-                  <span className="text-green-400 font-bold">{action.amount}</span>
-                  {' HP'}
-                </>
-              )}
-              
-              {action.targetRemainingHp !== undefined && (
-                <span className="text-xs block mt-1 opacity-80">
-                  {action.target} HP: {action.targetRemainingHp}/{action.targetMaxHp}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      
-      case 'stage-outcome':
-        return (
-          <div>
-            <Badge 
-              className={
-                action.outcome === 'victory' 
-                  ? "bg-green-700/20 text-green-400 border-green-700/30" 
-                  : "bg-red-700/20 text-red-400 border-red-700/30"
-              }
-            >
-              {action.outcome === 'victory' ? 'Victory!' : 'Defeat'}
-            </Badge>
-            {action.summary && (
-              <p className="mt-1 text-[#C8B8DB]/80">{action.summary}</p>
-            )}
-          </div>
-        );
-      
-      case 'final-result':
-        return (
-          <div>
-            <Badge 
-              className={
-                action.success 
-                  ? "bg-green-700/20 text-green-400 border-green-700/30" 
-                  : "bg-red-700/20 text-red-400 border-red-700/30"
-              }
-            >
-              {action.success ? 'Dungeon Cleared!' : 'Dungeon Failed'}
-            </Badge>
-            <p className="mt-1 text-[#C8B8DB]/80">{action.finalSummary}</p>
-          </div>
-        );
-        
-      case 'recovery':
-        return (
-          <div>
-            <span className="text-[#00B9AE]">{action.message}</span>
-            {action.characters && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {action.characters.map((char: any, i: number) => (
-                  <Badge 
-                    key={i} 
-                    className="bg-[#1F1D36] border-[#00B9AE]/30 text-[#00B9AE]"
-                  >
-                    {char.name}: {char.hp}/{char.maxHp} HP
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      
-      default:
-        return <div>Unknown action type</div>;
-    }
-  };
-  
   // Render the battle summary tab
   const renderBattleSummary = () => {
     if (!battleSummary) {
@@ -1107,8 +1166,6 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
         </div>
       );
     }
-    
-    const finalResult = battleLog.find((entry: any) => 'finalSummary' in entry);
     
     return (
       <div className="space-y-6 py-4">
@@ -1390,253 +1447,200 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
                   );
                 }
                 
-                // Handle round-based format
+                // Handle simple round-based entries (older format)
                 if ('round' in entry) {
                   return (
                     <div key={`round-${index}`} className="bg-[#1F1D36]/50 p-3 rounded-md mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-md font-cinzel font-bold text-[#C8B8DB]">
-                          Round {entry.round}
-                        </h3>
-                        {entry.outcome && (
-                          <Badge 
-                            className={entry.outcome === 'victory' 
-                              ? "bg-green-700/20 text-green-400 border-green-700/30" 
-                              : "bg-red-700/20 text-red-400 border-red-700/30"
-                            }
-                          >
-                            {entry.outcome === 'victory' ? 'Victory' : 'Defeat'}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-1 text-sm">
+                      <p className="text-md font-semibold font-cinzel text-[#FF9D00] mb-2">Round {entry.round}</p>
+                      <div className="space-y-2">
                         {entry.actions?.map((action: any, actionIdx: number) => {
                           // Customize action display based on type
-                          let icon = <Swords className="h-4 w-4 inline mr-1" />;
-                          if (action.action === 'defend') icon = <Shield className="h-4 w-4 inline mr-1" />;
-                          if (action.action === 'special') icon = <Zap className="h-4 w-4 inline mr-1" />;
-                          
+                          let icon = <Swords className="h-4 w-4 mr-2" />;
                           let textColor = action.actor.includes('Enemy') 
-                            ? "text-[#DC143C]/90"
-                            : "text-[#00B9AE]/90";
-                          
+                            ? "text-[#DC143C]"
+                            : "text-[#00B9AE]";
+                            
+                          // Get skill name if available
+                          let skillName = action.skillName || (
+                            action.action === 'attack' 
+                              ? (action.isCritical ? 'Critical Strike' : 'Basic Attack')
+                              : action.action === 'defend' ? 'Defensive Stance' : 'Special Ability'
+                          );
+                            
                           return (
-                            <p key={`action-${actionIdx}`} className={`${textColor}`}>
-                              {icon} <span className="font-semibold">{action.actor}</span>
+                            <div key={`action-${actionIdx}`} className={`p-2 ${action.isCritical ? 'bg-[#FFD700]/10' : 'bg-[#1F1D36]/80'} rounded-md ${textColor}`}>
+                              <div className="flex items-center">
+                                {icon}
+                                <span className="font-semibold">{action.actor}</span>
+                                <span className="mx-1">uses</span>
+                                <Badge className={`${action.isCritical ? 'bg-[#FFD700]/20 text-[#FFD700]' : 'bg-[#432874]/20 text-[#C8B8DB]'} border-0`}>
+                                  {skillName}
+                                </Badge>
+                              </div>
                               {action.action === 'attack' && (
-                                <>
-                                  {' attacks '}
-                                  <span className="font-semibold">{action.target}</span>
-                                  {' for '}
+                                <div className="ml-8 mt-1 text-sm">
+                                  <span>Deals </span>
                                   <span className="font-bold">{action.damage}</span>
-                                  {' damage'}
-                                  {action.isCritical && (
-                                    <Badge className="ml-1 bg-yellow-900/20 text-yellow-500 border-0">
-                                      Critical!
+                                  <span> damage to </span>
+                                  <span className="font-semibold">{action.target}</span>
+                                  {action.elementalEffect && (
+                                    <Badge className="ml-2 bg-purple-500/20 text-purple-300 border-0">
+                                      {action.elementalEffect} Effect
                                     </Badge>
                                   )}
-                                </>
+                                </div>
                               )}
-                            </p>
+                            </div>
                           );
                         })}
                       </div>
-                      
-                      {/* Round summary */}
-                      {entry.summary && (
-                        <div className="mt-3 p-2 bg-[#432874]/20 rounded-md text-sm">
-                          {entry.summary}
-                        </div>
-                      )}
                     </div>
                   );
                 }
                 
-                return null;
+                // Handle other types of entries
+                return (
+                  <div key={`entry-${index}`} className="p-3 bg-[#432874]/20 rounded-md text-sm mb-3">
+                    {JSON.stringify(entry)}
+                  </div>
+                );
               })}
             </div>
           </TabsContent>
           
           <TabsContent value="replay" className="border-none p-0">
-            <div className="py-4">
-              {/* Replay controls */}
-              <div className="flex items-center justify-between bg-[#1F1D36]/50 p-3 rounded-md mb-4">
+            <div className="mb-4 bg-[#1F1D36]/70 p-3 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex space-x-2">
-                  {isReplaying ? (
+                  {!isReplaying ? (
                     <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="bg-[#1F1D36] hover:bg-[#432874]/30"
-                      onClick={stopReplay}
+                      onClick={startReplay} 
+                      className="bg-[#432874] hover:bg-[#432874]/80"
+                      disabled={replayActionsRef.current.length === 0}
                     >
-                      <Pause className="h-4 w-4 mr-1" /> Pause
+                      <Play className="h-4 w-4 mr-1" />
+                      {currentReplayStep === 0 ? 'Start Replay' : 'Resume'}
                     </Button>
                   ) : (
                     <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="bg-[#1F1D36] hover:bg-[#432874]/30"
-                      onClick={startReplay}
+                      onClick={stopReplay} 
+                      className="bg-[#432874] hover:bg-[#432874]/80"
                     >
-                      <Play className="h-4 w-4 mr-1" /> Play
+                      <Pause className="h-4 w-4 mr-1" />
+                      Pause
                     </Button>
                   )}
-                  
                   <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="bg-[#1F1D36] hover:bg-[#432874]/30"
-                    onClick={() => {
-                      stopReplay();
-                      if (currentReplayStep < replayActionsRef.current.length) {
-                        setCurrentReplayStep(currentReplayStep + 1);
-                      }
-                    }}
+                    onClick={resetReplay} 
+                    className="bg-[#1F1D36] hover:bg-[#1F1D36]/80"
                   >
-                    <Forward className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="bg-[#1F1D36] hover:bg-[#432874]/30"
-                    onClick={resetReplay}
-                  >
-                    <RotateCcw className="h-4 w-4" />
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Reset
                   </Button>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm">Speed:</span>
+                <div className="flex items-center">
+                  <span className="text-sm mr-2">Speed: {replaySpeed}x</span>
                   <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`px-2 ${replaySpeed === 0.5 ? 'bg-[#432874]/30' : ''}`}
-                    onClick={() => setReplaySpeed(0.5)}
+                    onClick={fastForward} 
+                    className="bg-[#1F1D36] hover:bg-[#1F1D36]/80"
+                    disabled={replaySpeed >= 8}
                   >
-                    0.5x
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`px-2 ${replaySpeed === 1 ? 'bg-[#432874]/30' : ''}`}
-                    onClick={() => setReplaySpeed(1)}
-                  >
-                    1x
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`px-2 ${replaySpeed === 2 ? 'bg-[#432874]/30' : ''}`}
-                    onClick={() => setReplaySpeed(2)}
-                  >
-                    2x
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`px-2 ${replaySpeed === 4 ? 'bg-[#432874]/30' : ''}`}
-                    onClick={() => setReplaySpeed(4)}
-                  >
-                    4x
+                    <Forward className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
               
-              {/* Render replay content based on current step */}
-              {renderReplayTab()}
+              {/* Status indicator */}
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className={`h-2 w-2 rounded-full mr-2 ${isReplaying ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
+                  <span className="text-sm font-medium">
+                    {isReplaying ? 'Replay in progress...' : 'Replay ready'}
+                  </span>
+                </div>
+                <div className="text-xs text-[#C8B8DB]/80">
+                  {replayActionsRef.current.length > 0 ? 
+                    `${currentReplayStep} of ${replayActionsRef.current.length} actions` :
+                    'No replay data available'}
+                </div>
+              </div>
+              
+              <p className="text-xs text-[#C8B8DB]/60">
+                Watch the battle unfold with timed animations. The replay shows detailed combat events including skill usage and damage indicators.
+              </p>
+            </div>
+            
+            {/* Replay visualization area */}
+            <div className={`transition-all duration-200 ${isReplaying ? 'border-2 border-green-500/20 rounded-lg p-2' : ''}`}>
+              {renderCurrentReplayStep()}
             </div>
           </TabsContent>
           
           <TabsContent value="visual" className="border-none p-0">
-            <div className="py-4">
-              {/* Replay controls */}
-              <div className="flex items-center justify-between bg-[#1F1D36]/50 p-3 rounded-md mb-4">
+            <div className="mb-4 bg-[#1F1D36]/70 p-3 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex space-x-2">
-                  {isReplaying ? (
+                  {!isReplaying ? (
                     <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="bg-[#1F1D36] hover:bg-[#432874]/30"
-                      onClick={stopReplay}
+                      onClick={startReplay} 
+                      className="bg-[#432874] hover:bg-[#432874]/80"
+                      disabled={replayActionsRef.current.length === 0}
                     >
-                      <Pause className="h-4 w-4 mr-1" /> Pause
+                      <Play className="h-4 w-4 mr-1" />
+                      {currentReplayStep === 0 ? 'Start Battle' : 'Resume'}
                     </Button>
                   ) : (
                     <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="bg-[#1F1D36] hover:bg-[#432874]/30"
-                      onClick={startReplay}
+                      onClick={stopReplay} 
+                      className="bg-[#432874] hover:bg-[#432874]/80"
                     >
-                      <Play className="h-4 w-4 mr-1" /> Play
+                      <Pause className="h-4 w-4 mr-1" />
+                      Pause
                     </Button>
                   )}
-                  
                   <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="bg-[#1F1D36] hover:bg-[#432874]/30"
-                    onClick={() => {
-                      stopReplay();
-                      if (currentReplayStep < replayActionsRef.current.length) {
-                        setCurrentReplayStep(currentReplayStep + 1);
-                      }
-                    }}
+                    onClick={resetReplay} 
+                    className="bg-[#1F1D36] hover:bg-[#1F1D36]/80"
                   >
-                    <Forward className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="bg-[#1F1D36] hover:bg-[#432874]/30"
-                    onClick={resetReplay}
-                  >
-                    <RotateCcw className="h-4 w-4" />
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Reset
                   </Button>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm">Speed:</span>
+                <div className="flex items-center">
+                  <span className="text-sm mr-2">Speed: {replaySpeed}x</span>
                   <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`px-2 ${replaySpeed === 0.5 ? 'bg-[#432874]/30' : ''}`}
-                    onClick={() => setReplaySpeed(0.5)}
+                    onClick={fastForward} 
+                    className="bg-[#1F1D36] hover:bg-[#1F1D36]/80"
+                    disabled={replaySpeed >= 8}
                   >
-                    0.5x
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`px-2 ${replaySpeed === 1 ? 'bg-[#432874]/30' : ''}`}
-                    onClick={() => setReplaySpeed(1)}
-                  >
-                    1x
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`px-2 ${replaySpeed === 2 ? 'bg-[#432874]/30' : ''}`}
-                    onClick={() => setReplaySpeed(2)}
-                  >
-                    2x
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className={`px-2 ${replaySpeed === 4 ? 'bg-[#432874]/30' : ''}`}
-                    onClick={() => setReplaySpeed(4)}
-                  >
-                    4x
+                    <Forward className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
               
-              {/* Render visual battle replay */}
-              {renderReplayTab()}
+              {/* Visual battle status indicator */}
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className={`h-2 w-2 rounded-full mr-2 ${isReplaying ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
+                  <span className="text-sm font-medium">
+                    {isReplaying ? 'Battle in progress...' : 'Battle ready'}
+                  </span>
+                </div>
+                <div className="text-xs text-[#C8B8DB]/80">
+                  {replayActionsRef.current.length > 0 ? 
+                    `Action ${currentReplayStep} of ${replayActionsRef.current.length}` :
+                    'No battle data available'}
+                </div>
+              </div>
+              
+              <p className="text-xs text-[#C8B8DB]/60">
+                Watch the battle unfold with detailed visuals. See all combatants, their skills, and attack timers in real-time.
+              </p>
+            </div>
+            
+            {/* Visual battle arena */}
+            <div className={`transition-all duration-200 ${isReplaying ? 'border-2 border-green-500/20 rounded-lg p-2' : ''}`}>
+              {renderCurrentReplayStep()}
             </div>
           </TabsContent>
           
@@ -1645,18 +1649,8 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
           </TabsContent>
         </Tabs>
         
-        <DialogFooter className="flex items-center justify-between pt-4 border-t border-[#432874]/50">
-          <div>
-            <span className="text-xs text-[#C8B8DB]/50">
-              Type: {activeTab === 'log' ? 'Full Log' : activeTab === 'replay' ? 'Action Replay' : activeTab === 'visual' ? 'Visual Battle' : 'Battle Summary'}
-            </span>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            className="bg-[#1F1D36] hover:bg-[#432874]/30 border-[#432874]/50"
-          >
+        <DialogFooter>
+          <Button onClick={onClose} className="bg-[#432874] hover:bg-[#432874]/70">
             Close
           </Button>
         </DialogFooter>
@@ -1664,5 +1658,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     </Dialog>
   );
 };
+
+
 
 export default BattleLog;
