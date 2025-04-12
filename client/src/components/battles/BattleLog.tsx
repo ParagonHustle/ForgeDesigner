@@ -1226,12 +1226,12 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
         )}
         
         {/* Final Result */}
-        {finalResult && (
-          <div className={`bg-${finalResult.success ? 'green' : 'red'}-900/20 rounded-lg p-4`}>
-            <h3 className={`text-${finalResult.success ? 'green' : 'red'}-400 font-cinzel text-lg mb-2`}>
-              {finalResult.success ? 'Victory!' : 'Defeat'}
+        {battleLog.find((entry: any) => 'finalSummary' in entry) && (
+          <div className={`bg-${battleLog.find((entry: any) => 'finalSummary' in entry)?.success ? 'green' : 'red'}-900/20 rounded-lg p-4`}>
+            <h3 className={`text-${battleLog.find((entry: any) => 'finalSummary' in entry)?.success ? 'green' : 'red'}-400 font-cinzel text-lg mb-2`}>
+              {battleLog.find((entry: any) => 'finalSummary' in entry)?.success ? 'Victory!' : 'Defeat'}
             </h3>
-            <p>{finalResult.finalSummary}</p>
+            <p>{battleLog.find((entry: any) => 'finalSummary' in entry)?.finalSummary}</p>
           </div>
         )}
       </div>
@@ -1247,7 +1247,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
             Battle Log
           </DialogTitle>
           <DialogDescription className="text-[#C8B8DB]/70">
-            {finalResult?.finalSummary || 'A record of your dungeon adventure'}
+            {battleLog.find((entry: any) => 'finalSummary' in entry)?.finalSummary || 'A record of your dungeon adventure'}
           </DialogDescription>
         </DialogHeader>
         
