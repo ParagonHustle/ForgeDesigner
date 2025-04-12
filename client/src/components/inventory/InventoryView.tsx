@@ -541,7 +541,7 @@ const InventoryView = () => {
                                   <span>Attack</span>
                                 </div>
                                 <span className={`${selectedAura.attack && selectedAura.attack > 0 ? 'text-green-400' : selectedAura.attack && selectedAura.attack < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
-                                  {typeof selectedAura.attack === 'number' ? `${selectedAura.attack > 0 ? '+' : ''}${selectedAura.attack}%` : '0%'}
+                                  {typeof selectedAura.attack === 'number' ? `${selectedAura.attack}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -550,7 +550,7 @@ const InventoryView = () => {
                                   <span>Accuracy</span>
                                 </div>
                                 <span className={`${selectedAura.accuracy && selectedAura.accuracy > 0 ? 'text-green-400' : selectedAura.accuracy && selectedAura.accuracy < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
-                                  {typeof selectedAura.accuracy === 'number' ? `${selectedAura.accuracy > 0 ? '+' : ''}${selectedAura.accuracy}%` : '0%'}
+                                  {typeof selectedAura.accuracy === 'number' ? `${selectedAura.accuracy}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -559,7 +559,7 @@ const InventoryView = () => {
                                   <span>Defense</span>
                                 </div>
                                 <span className={`${selectedAura.defense && selectedAura.defense > 0 ? 'text-green-400' : selectedAura.defense && selectedAura.defense < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
-                                  {typeof selectedAura.defense === 'number' ? `${selectedAura.defense > 0 ? '+' : ''}${selectedAura.defense}%` : '0%'}
+                                  {typeof selectedAura.defense === 'number' ? `${selectedAura.defense}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -568,7 +568,7 @@ const InventoryView = () => {
                                   <span>Vitality</span>
                                 </div>
                                 <span className={`${selectedAura.vitality && selectedAura.vitality > 0 ? 'text-green-400' : selectedAura.vitality && selectedAura.vitality < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
-                                  {typeof selectedAura.vitality === 'number' ? `${selectedAura.vitality > 0 ? '+' : ''}${selectedAura.vitality}%` : '0%'}
+                                  {typeof selectedAura.vitality === 'number' ? `${selectedAura.vitality}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -577,7 +577,7 @@ const InventoryView = () => {
                                   <span>Speed</span>
                                 </div>
                                 <span className={`${selectedAura.speed && selectedAura.speed > 0 ? 'text-green-400' : selectedAura.speed && selectedAura.speed < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
-                                  {typeof selectedAura.speed === 'number' ? `${selectedAura.speed > 0 ? '+' : ''}${selectedAura.speed}%` : '0%'}
+                                  {typeof selectedAura.speed === 'number' ? `${selectedAura.speed}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -586,7 +586,7 @@ const InventoryView = () => {
                                   <span>Focus</span>
                                 </div>
                                 <span className={`${selectedAura.focus && selectedAura.focus > 0 ? 'text-green-400' : selectedAura.focus && selectedAura.focus < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
-                                  {typeof selectedAura.focus === 'number' ? `${selectedAura.focus > 0 ? '+' : ''}${selectedAura.focus}%` : '0%'}
+                                  {typeof selectedAura.focus === 'number' ? `${selectedAura.focus}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -595,7 +595,7 @@ const InventoryView = () => {
                                   <span>Resilience</span>
                                 </div>
                                 <span className={`${selectedAura.resilience && selectedAura.resilience > 0 ? 'text-green-400' : selectedAura.resilience && selectedAura.resilience < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
-                                  {typeof selectedAura.resilience === 'number' ? `${selectedAura.resilience > 0 ? '+' : ''}${selectedAura.resilience}%` : '0%'}
+                                  {typeof selectedAura.resilience === 'number' ? `${selectedAura.resilience}%` : '0%'}
                                 </span>
                               </div>
                             </div>
@@ -748,7 +748,7 @@ const InventoryView = () => {
                             <span>Attack</span>
                           </div>
                           <span className="text-[#00B9AE]">
-                            {typeof aura.attack === 'number' ? `+${aura.attack}` : '0'}
+                            {typeof aura.attack === 'number' ? `${aura.attack}%` : '0%'}
                           </span>
                         </div>
                         <div className="flex justify-between">
