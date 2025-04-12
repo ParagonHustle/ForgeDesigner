@@ -17,7 +17,9 @@ import {
   ArrowUp, 
   CheckCircle, 
   Lock, 
-  Shield
+  Shield,
+  Loader2,
+  Plus
 } from 'lucide-react';
 import { 
   Card, 
@@ -36,7 +38,8 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from '@/components/ui/dialog';
 import CountdownTimer from '../common/CountdownTimer';
 
@@ -206,7 +209,48 @@ const BuildingsView = () => {
   };
 
   // Start building upgrade
-  const startUpgrade = async () => {
+  // Fetch building skill tree data
+  const { data: skillTreeData } = useQuery({
+    queryKey: selectedBuilding ? [`/api/buildings/skills/${selectedBuilding.id}`] : [],
+    enabled: !!selectedBuilding && skillTreeDialog
+  });
+
+  // Allocate skill point
+  const allocateSkill = async (skillId: string) => {
+    if (!selectedBuilding) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await apiRequest('POST', `/api/buildings/skills/${selectedBuilding.id}`, {
+        skillId: skillId
+      });
+      
+      const data = await response.json();
+      
+      toast({
+        title: "Skill Allocated",
+        description: `You've allocated a skill point for ${selectedBuilding.name}.`,
+      });
+      
+      setSelectedSkill(skillId);
+      setSkillTreeDialog(false);
+      
+      // Continue with upgrade after skill allocation
+      startUpgrade(skillId);
+    } catch (error: any) {
+      console.error('Error allocating skill:', error);
+      toast({
+        title: "Failed to Allocate Skill",
+        description: error.message || "There was an error allocating the skill point.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+    }
+  };
+
+  // Start building upgrade
+  const startUpgrade = async (allocatedSkill?: string) => {
     if (!selectedBuilding) return;
     
     const buildingData = getBuildingByType(selectedBuilding.id);
@@ -220,6 +264,7 @@ const BuildingsView = () => {
         description: `${selectedBuilding.name} is already at maximum level.`,
         variant: "destructive"
       });
+      setIsSubmitting(false);
       return;
     }
     
@@ -229,6 +274,7 @@ const BuildingsView = () => {
         description: `${selectedBuilding.name} is already being upgraded.`,
         variant: "destructive"
       });
+      setIsSubmitting(false);
       return;
     }
     
@@ -238,18 +284,24 @@ const BuildingsView = () => {
         description: "You don't have enough resources for this upgrade.",
         variant: "destructive"
       });
+      setIsSubmitting(false);
       return;
     }
-    
-    setIsSubmitting(true);
     
     try {
       console.log("Starting upgrade for building:", selectedBuilding.id);
       
+      // If user has selected a skill to allocate, include it in the upgrade request
+      const requestData: any = {
+        buildingType: selectedBuilding.id,
+      };
+      
+      if (allocatedSkill) {
+        requestData.allocatedSkill = allocatedSkill;
+      }
+      
       // Use apiRequest instead of fetch for better error handling
-      const response = await apiRequest('POST', '/api/buildings/upgrade', {
-        buildingType: selectedBuilding.id
-      });
+      const response = await apiRequest('POST', '/api/buildings/upgrade', requestData);
       
       const data = await response.json();
       console.log("Upgrade response:", data);
@@ -262,6 +314,7 @@ const BuildingsView = () => {
       // Reset selections and close dialog
       setSelectedBuilding(null);
       setUpgradeDialog(false);
+      setSelectedSkill(null);
       
       // Refresh buildings and user data
       refetchBuildings();
@@ -338,6 +391,19 @@ const BuildingsView = () => {
     );
   }
 
+  // Check if there are any available skill points for a building
+  const hasAvailableSkillPoints = (building: any) => {
+    if (!building) return false;
+    const buildingData = getBuildingByType(building.id);
+    if (!buildingData) return false;
+    
+    // Calculate available skill points based on building level and already allocated skills
+    const totalSkillPoints = Math.max(0, buildingData.currentLevel - 1);
+    const allocatedPoints = (buildingData.unlockedSkills?.length || 0);
+    
+    return totalSkillPoints > allocatedPoints;
+  };
+
   return (
     <>
       <div className="mb-6">
@@ -346,6 +412,97 @@ const BuildingsView = () => {
           Upgrade your buildings to unlock new features and increase your capabilities.
         </p>
       </div>
+      
+      {/* Skill Tree Dialog */}
+      <Dialog open={skillTreeDialog} onOpenChange={(open) => {
+        setSkillTreeDialog(open);
+        if (!open) setSelectedSkill(null);
+      }}>
+        <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-2xl overflow-y-auto max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">
+              {selectedBuilding?.name} Skill Tree
+            </DialogTitle>
+            <DialogDescription>
+              Allocate skill points to enhance your building's capabilities. You gain skill points each time you level up your building.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {skillTreeData ? (
+            <div className="py-4">
+              <div className="mb-6 bg-[#432874]/20 p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Available Skill Points:</span>
+                  <Badge className="bg-[#FF9D00] text-[#1A1A2E]">
+                    {skillTreeData.currentLevel - (skillTreeData.unlockedSkills?.length || 0)}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="grid gap-4">
+                {skillTreeData.availableSkillTree?.map((skill: any) => {
+                  const isUnlocked = skillTreeData.unlockedSkills?.includes(skill.id);
+                  
+                  return (
+                    <div 
+                      key={skill.id}
+                      className={`border p-4 rounded-lg ${isUnlocked ? 'border-[#00B9AE] bg-[#00B9AE]/10' : 'border-[#432874]/30 bg-[#432874]/5'}`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className={`font-semibold ${isUnlocked ? 'text-[#00B9AE]' : 'text-[#FF9D00]'}`}>{skill.name}</h3>
+                          <p className="text-sm mt-1">{skill.description}</p>
+                        </div>
+                        {isUnlocked ? (
+                          <Badge className="bg-[#00B9AE]/20 text-[#00B9AE] border-[#00B9AE]/50">
+                            <CheckCircle className="h-4 w-4 mr-1" /> Unlocked
+                          </Badge>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+                            onClick={() => allocateSkill(skill.id)}
+                            disabled={!hasAvailableSkillPoints(selectedBuilding) || isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Allocating...</>
+                            ) : (
+                              <><Plus className="h-4 w-4 mr-1" /> Allocate Point</>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                      {skill.maxLevel > 1 && (
+                        <div className="mt-3 flex items-center">
+                          <span className="text-xs mr-2">Level: 1/{skill.maxLevel}</span>
+                          <Progress 
+                            value={(1 / skill.maxLevel) * 100} 
+                            className="h-1 flex-1 bg-[#1F1D36]" 
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <Loader2 className="h-8 w-8 mx-auto animate-spin text-[#FF9D00]" />
+              <p className="mt-4">Loading skill tree data...</p>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              className="bg-[#432874] hover:bg-[#432874]/80"
+              onClick={() => setSkillTreeDialog(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Buildings Grid */}
       <motion.div
@@ -559,13 +716,24 @@ const BuildingsView = () => {
                               ? 'bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]'
                               : 'bg-[#432874]/50 text-[#C8B8DB]/50 cursor-not-allowed'
                           }`}
-                          onClick={startUpgrade}
+                          onClick={() => {
+                            if (hasAvailableSkillPoints(building)) {
+                              // Close the upgrade dialog and open the skill tree dialog
+                              setUpgradeDialog(false);
+                              setSkillTreeDialog(true);
+                            } else {
+                              // If no available skill points, start upgrade directly
+                              startUpgrade();
+                            }
+                          }}
                           disabled={!canAffordUpgrade(building, currentLevel) || isSubmitting}
                         >
                           {isSubmitting 
                             ? 'Starting Upgrade...' 
                             : canAffordUpgrade(building, currentLevel)
-                              ? 'Start Upgrade'
+                              ? hasAvailableSkillPoints(building)
+                                ? 'Choose Skill Upgrade'
+                                : 'Start Upgrade'
                               : 'Not Enough Resources'
                           }
                         </Button>
