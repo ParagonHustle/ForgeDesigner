@@ -229,7 +229,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               <div className="flex justify-between">
                                 <span>Attack:</span>
                                 <span className={selectedAura.attack > 0 ? "text-green-400" : "text-red-400"}>
-                                  {selectedAura.attack > 0 ? "+" : ""}{selectedAura.attack}%
+                                  {selectedAura.attack}%
                                 </span>
                               </div>
                             )}
@@ -237,7 +237,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               <div className="flex justify-between">
                                 <span>Accuracy:</span>
                                 <span className={selectedAura.accuracy > 0 ? "text-green-400" : "text-red-400"}>
-                                  {selectedAura.accuracy > 0 ? "+" : ""}{selectedAura.accuracy}%
+                                  {selectedAura.accuracy}%
                                 </span>
                               </div>
                             )}

@@ -757,7 +757,7 @@ const InventoryView = () => {
                             <span>Accuracy</span>
                           </div>
                           <span className="text-[#00B9AE]">
-                            {typeof aura.accuracy === 'number' ? `+${aura.accuracy}` : '0'}
+                            {typeof aura.accuracy === 'number' ? `${aura.accuracy}%` : '0%'}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -766,7 +766,7 @@ const InventoryView = () => {
                             <span>Defense</span>
                           </div>
                           <span className="text-[#00B9AE]">
-                            {typeof aura.defense === 'number' ? `+${aura.defense}` : '0'}
+                            {typeof aura.defense === 'number' ? `${aura.defense}%` : '0%'}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -775,7 +775,7 @@ const InventoryView = () => {
                             <span>Vitality</span>
                           </div>
                           <span className="text-[#00B9AE]">
-                            {typeof aura.vitality === 'number' ? `+${aura.vitality}` : '0'}
+                            {typeof aura.vitality === 'number' ? `${aura.vitality}%` : '0%'}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -784,7 +784,7 @@ const InventoryView = () => {
                             <span>Speed</span>
                           </div>
                           <span className="text-[#00B9AE]">
-                            {typeof aura.speed === 'number' ? `+${aura.speed}` : '0'}
+                            {typeof aura.speed === 'number' ? `${aura.speed}%` : '0%'}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -793,7 +793,7 @@ const InventoryView = () => {
                             <span>Focus</span>
                           </div>
                           <span className="text-[#00B9AE]">
-                            {typeof aura.focus === 'number' ? `+${aura.focus}` : '0'}
+                            {typeof aura.focus === 'number' ? `${aura.focus}%` : '0%'}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -802,7 +802,7 @@ const InventoryView = () => {
                             <span>Resilience</span>
                           </div>
                           <span className="text-[#00B9AE]">
-                            {typeof aura.resilience === 'number' ? `+${aura.resilience}` : '0'}
+                            {typeof aura.resilience === 'number' ? `${aura.resilience}%` : '0%'}
                           </span>
                         </div>
                       </div>
