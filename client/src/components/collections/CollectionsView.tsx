@@ -238,6 +238,37 @@ const CollectionsView = () => {
       description: "Your account-wide bonus has been increased.",
     });
   };
+  
+  const handleClaimReward = (collectionType: string) => {
+    // In a real implementation, this would make an API call to claim the collection reward
+    
+    // Mock rewards based on collection type
+    let rewardTitle = "";
+    let rewardDescription = "";
+    
+    if (collectionType === "basic") {
+      rewardTitle = "Basic Collection Reward Claimed!";
+      rewardDescription = "You received 5 Basic Kleos Shards for completing the Basic Element collection.";
+    } else if (collectionType === "rare") {
+      rewardTitle = "Rare Collection Reward Claimed!";
+      rewardDescription = "You received 10 Rare Kleos Shards and 500 Forge Tokens for completing the Rare collection.";
+    }
+    
+    toast({
+      title: rewardTitle,
+      description: rewardDescription,
+    });
+  };
+  
+  const handleEquipTitle = (titleId: number) => {
+    // API call to equip a title would go here
+    const title = titles.find(t => t.id === titleId);
+    
+    toast({
+      title: "Title Equipped",
+      description: `You are now known as ${title?.name}.`,
+    });
+  };
 
   return (
     <>
@@ -308,6 +339,7 @@ const CollectionsView = () => {
               <Button 
                 className="bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
                 size="sm"
+                onClick={() => handleClaimReward('basic')}
               >
                 <Star className="h-4 w-4 mr-2" />
                 Claim Reward
@@ -691,6 +723,7 @@ const CollectionsView = () => {
                     {title.status === 'Unlocked' ? (
                       <Button
                         className="w-full bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
+                        onClick={() => handleEquipTitle(title.id)}
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
                         Equip Title
