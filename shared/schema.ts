@@ -41,7 +41,7 @@ export const characters = pgTable("characters", {
   health: integer("health").default(100),
   intelligence: integer("intelligence").default(100),
   luck: integer("luck").default(100),
-  passiveSkill: text("passive_skill"),
+  passiveSkills: jsonb("passive_skills").array(), // Array of passive skills with name and description
   isActive: boolean("is_active").default(false),
   activityType: text("activity_type"), // 'farming', 'dungeon', null
   activityEndTime: timestamp("activity_end_time"),
@@ -56,7 +56,14 @@ export const auras = pgTable("auras", {
   element: text("element").notNull(), // fire, water, earth, air, light, dark
   rarity: text("rarity").notNull(), // common, rare, epic, legendary
   tier: integer("tier").default(1),
-  statMultipliers: jsonb("stat_multipliers").notNull(), // attack, defense, health, etc.
+  attack: integer("attack").default(0),
+  accuracy: integer("accuracy").default(0),
+  defense: integer("defense").default(0),
+  vitality: integer("vitality").default(0),
+  speed: integer("speed").default(0),
+  focus: integer("focus").default(0),
+  resilience: integer("resilience").default(0),
+  statMultipliers: jsonb("stat_multipliers").notNull(), // For backward compatibility
   skills: jsonb("skills").array(),
   equippedByCharacterId: integer("equipped_by_character_id"),
   isFusing: boolean("is_fusing").default(false),
