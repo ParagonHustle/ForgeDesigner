@@ -426,6 +426,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Apply speed boost to farming task duration
+      if (processedBody.endTime) {
+        const farmStartTime = new Date();
+        const farmDuration = new Date(processedBody.endTime).getTime() - farmStartTime.getTime();
+        const boostedDuration = applySpeedBoost(farmDuration);
+        const boostedEndTime = new Date(farmStartTime.getTime() + boostedDuration);
+        console.log(`Applied speed boost: Original farm duration ${farmDuration}ms, boosted ${boostedDuration}ms`);
+        processedBody.endTime = boostedEndTime;
+      }
+      
       const taskData = insertFarmingTaskSchema.parse({
         ...processedBody,
         userId: req.session.userId
@@ -564,6 +574,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endTimeData = new Date(endTimeData);
         console.log('Converted dungeon endTime to Date object');
       }
+      
+      // Apply speed boost to dungeon run time if needed
+      // We need to preserve the original end time from client but boost it server-side
+      const dungeonEndTime = new Date();
+      const duration = new Date(endTimeData).getTime() - dungeonEndTime.getTime();
+      const boostedDuration = applySpeedBoost(duration);
+      const boostedEndTime = new Date(dungeonEndTime.getTime() + boostedDuration);
+      console.log(`Applied speed boost: Original duration ${duration}ms, boosted ${boostedDuration}ms`);
+      endTimeData = boostedEndTime;
       
       const runData = insertDungeonRunSchema.parse({
         ...req.body,
@@ -760,6 +779,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (e) {
           console.error('Failed to convert endTime string to Date:', e);
         }
+      }
+      
+      // Apply speed boost to crafting duration
+      if (processedBody.endTime) {
+        const craftStartTime = new Date();
+        const craftDuration = new Date(processedBody.endTime).getTime() - craftStartTime.getTime();
+        const boostedDuration = applySpeedBoost(craftDuration);
+        const boostedEndTime = new Date(craftStartTime.getTime() + boostedDuration);
+        console.log(`Applied speed boost: Original craft duration ${craftDuration}ms, boosted ${boostedDuration}ms`);
+        processedBody.endTime = boostedEndTime;
       }
       
       const taskData = insertForgingTaskSchema.parse({
