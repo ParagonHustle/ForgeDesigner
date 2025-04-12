@@ -58,9 +58,13 @@ const DashboardView = () => {
           />
         </div>
         
-        {/* Right Column - Resources & Chat */}
+        {/* Right Column - Resources */}
         <div className="md:col-span-4 space-y-6">
           <ResourcesOverview />
+        </div>
+        
+        {/* Discord Chat - Can be expanded to full width */}
+        <div className="md:col-span-12">
           <DiscordChat />
         </div>
       </div>

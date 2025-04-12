@@ -45,23 +45,37 @@ const DiscordChat = () => {
 
   return (
     <motion.div 
-      className="bg-[#1A1A2E] rounded-xl p-6"
+      className={`bg-[#1A1A2E] rounded-xl p-6 ${expanded ? 'col-span-12' : ''}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
+      layout
     >
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-cinzel font-bold">Discord</h2>
-        <div className="bg-[#FF9D00]/20 rounded-full px-2 py-0.5 text-xs text-[#FF9D00]">
-          {Math.floor(Math.random() * 10) + 5} Online
+        <div className="flex items-center space-x-3">
+          <div className="bg-[#FF9D00]/20 rounded-full px-2 py-0.5 text-xs text-[#FF9D00]">
+            {Math.floor(Math.random() * 10) + 5} Online
+          </div>
+          <button 
+            onClick={() => setExpanded(!expanded)} 
+            className="p-1 rounded-full hover:bg-[#432874]/20 transition-colors"
+            title={expanded ? "Minimize" : "Expand"}
+          >
+            {expanded ? 
+              <Minimize2 className="h-4 w-4 text-[#C8B8DB]/70" /> : 
+              <Maximize2 className="h-4 w-4 text-[#C8B8DB]/70" />
+            }
+          </button>
         </div>
       </div>
       
       <motion.div 
-        className="h-32 overflow-y-auto bg-[#1F1D36]/50 rounded-lg p-3 mb-3 text-sm"
+        className={`${expanded ? 'h-64' : 'h-32'} overflow-y-auto bg-[#1F1D36]/50 rounded-lg p-3 mb-3 text-sm transition-all duration-300`}
         variants={container}
         initial="hidden"
         animate="show"
+        layout
       >
         {discordMessages.map((msg, index) => (
           <motion.div key={msg.id} className="mb-2" variants={item}>
