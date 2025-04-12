@@ -31,6 +31,45 @@ interface BattleLogProps {
   battleLog: any[];
 }
 
+// Types for battle visualization
+interface BattleSkill {
+  id: string;
+  name: string;
+  damage?: number;
+  cooldown: number;
+  currentCooldown?: number;
+  icon: string;
+  description: string;
+  type: 'attack' | 'heal' | 'buff' | 'debuff' | 'special';
+  targetType: 'enemy' | 'ally' | 'self' | 'all';
+}
+
+interface BattleCombatant {
+  id: string | number;
+  name: string;
+  hp: number;
+  maxHp: number;
+  attackSpeed: number; // Lower is faster
+  attackTimer: number; // Current timer countdown
+  skills: BattleSkill[];
+  position: number; // 0-based index in formation
+  type: 'character' | 'enemy';
+  stats: {
+    attack: number;
+    defense: number;
+    accuracy: number;
+    speed: number;
+  };
+}
+
+interface BattleState {
+  characters: BattleCombatant[];
+  enemies: BattleCombatant[];
+  currentTurn: number;
+  isActive: boolean;
+  actionLog: any[];
+}
+
 // Types for battle summary
 interface CombatStats {
   damageDealt: number;
@@ -63,6 +102,17 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
   const [replaySpeed, setReplaySpeed] = useState(1);
   const [battleSummary, setBattleSummary] = useState<BattleSummary | null>(null);
   
+  // State for visual battle replay
+  const [battleState, setBattleState] = useState<BattleState>({
+    characters: [],
+    enemies: [],
+    currentTurn: 0,
+    isActive: false,
+    actionLog: []
+  });
+  const [selectedSkill, setSelectedSkill] = useState<BattleSkill | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
+  
   const replayTimerRef = useRef<number | null>(null);
   const replayActionsRef = useRef<any[]>([]);
   
@@ -71,6 +121,8 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     if (isOpen) {
       // Generate battle summary when dialog opens
       generateBattleSummary();
+      // Initialize battle visualization with characters and enemies
+      initializeBattleState();
     } else {
       stopReplay();
       setCurrentReplayStep(0);
@@ -84,6 +136,174 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
       }
     };
   }, [isOpen, battleLog]);
+  
+  // Initialize battle state with characters and enemies from battle log
+  const initializeBattleState = () => {
+    if (!battleLog || !Array.isArray(battleLog)) return;
+    
+    console.log("Initializing battle state from log:", battleLog);
+    
+    // Maps to track unique characters and enemies
+    const characterMap = new Map<string, BattleCombatant>();
+    const enemyMap = new Map<string, BattleCombatant>();
+    
+    // Find all unique characters and enemies in the battle log
+    battleLog.forEach(entry => {
+      if ('actions' in entry && Array.isArray(entry.actions)) {
+        entry.actions.forEach((action: any) => {
+          // Process actor (attacker)
+          const isCharacter = !action.actor.includes('Enemy');
+          const actorMap = isCharacter ? characterMap : enemyMap;
+          
+          if (!actorMap.has(action.actor)) {
+            // Create a default combatant
+            const combatant: BattleCombatant = {
+              id: action.actor,
+              name: action.actor,
+              hp: 100, // Default starting HP
+              maxHp: 100,
+              attackSpeed: isCharacter ? 4 : 5, // Characters attack slightly faster
+              attackTimer: 0,
+              position: actorMap.size, // Position based on order found
+              type: isCharacter ? 'character' : 'enemy',
+              skills: generateDefaultSkills(isCharacter),
+              stats: {
+                attack: isCharacter ? 20 : 15,
+                defense: isCharacter ? 15 : 10,
+                accuracy: 90,
+                speed: isCharacter ? 10 : 8
+              }
+            };
+            
+            actorMap.set(action.actor, combatant);
+          }
+          
+          // Process target (if it's an attack action)
+          if (action.action === 'attack' && action.target) {
+            const isTargetCharacter = !action.target.includes('Enemy');
+            const targetMap = isTargetCharacter ? characterMap : enemyMap;
+            
+            if (!targetMap.has(action.target)) {
+              // Create a default target
+              const target: BattleCombatant = {
+                id: action.target,
+                name: action.target,
+                hp: 100, // Default starting HP
+                maxHp: 100,
+                attackSpeed: isTargetCharacter ? 4 : 5,
+                attackTimer: 0,
+                position: targetMap.size, // Position based on order found
+                type: isTargetCharacter ? 'character' : 'enemy',
+                skills: generateDefaultSkills(isTargetCharacter),
+                stats: {
+                  attack: isTargetCharacter ? 20 : 15,
+                  defense: isTargetCharacter ? 15 : 10,
+                  accuracy: 90,
+                  speed: isTargetCharacter ? 10 : 8
+                }
+              };
+              
+              targetMap.set(action.target, target);
+            }
+            
+            // Update target HP if available in the action
+            if (action.targetRemainingHp !== undefined && action.targetMaxHp !== undefined) {
+              const target = targetMap.get(action.target);
+              if (target) {
+                target.hp = action.targetRemainingHp;
+                target.maxHp = action.targetMaxHp;
+              }
+            }
+          }
+        });
+      }
+    });
+    
+    // Convert maps to arrays
+    const characters = Array.from(characterMap.values());
+    const enemies = Array.from(enemyMap.values());
+    
+    // Update battle state
+    setBattleState({
+      characters,
+      enemies,
+      currentTurn: 0,
+      isActive: false,
+      actionLog: []
+    });
+    
+    console.log("Battle state initialized with", characters.length, "characters and", enemies.length, "enemies");
+  };
+  
+  // Generate default skills for a combatant
+  const generateDefaultSkills = (isCharacter: boolean): BattleSkill[] => {
+    // Basic skills that all combatants have
+    const commonSkills: BattleSkill[] = [
+      {
+        id: 'basic-attack',
+        name: 'Basic Attack',
+        damage: isCharacter ? 20 : 15,
+        cooldown: 0, // No cooldown for basic attack
+        currentCooldown: 0,
+        icon: 'sword',
+        description: 'A basic attack dealing physical damage',
+        type: 'attack',
+        targetType: 'enemy'
+      },
+      {
+        id: 'defensive-stance',
+        name: 'Defensive Stance',
+        cooldown: 3,
+        currentCooldown: 0,
+        icon: 'shield',
+        description: 'Increase defense for 1 turn',
+        type: 'buff',
+        targetType: 'self'
+      }
+    ];
+    
+    // Character-specific skills
+    if (isCharacter) {
+      commonSkills.push({
+        id: 'power-strike',
+        name: 'Power Strike',
+        damage: 35,
+        cooldown: 2,
+        currentCooldown: 0,
+        icon: 'slash',
+        description: 'A powerful strike with a chance to critical hit',
+        type: 'attack',
+        targetType: 'enemy'
+      });
+      
+      commonSkills.push({
+        id: 'healing-potion',
+        name: 'Healing Potion',
+        cooldown: 4,
+        currentCooldown: 0,
+        icon: 'potion',
+        description: 'Restore 30% of max HP',
+        type: 'heal',
+        targetType: 'self'
+      });
+    } 
+    // Enemy-specific skills
+    else {
+      commonSkills.push({
+        id: 'savage-blow',
+        name: 'Savage Blow',
+        damage: 25,
+        cooldown: 3,
+        currentCooldown: 0,
+        icon: 'claw',
+        description: 'A savage attack that ignores some defense',
+        type: 'attack',
+        targetType: 'enemy'
+      });
+    }
+    
+    return commonSkills;
+  };
   
   // Process the battle log to extract all actions for replay
   useEffect(() => {
