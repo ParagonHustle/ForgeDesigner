@@ -151,11 +151,11 @@ const FarmingView = () => {
       
       // Refresh farming tasks
       fetchFarmingTasks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting farming task:', error);
       toast({
         title: "Error",
-        description: "Failed to start farming task.",
+        description: error.message || "Failed to start farming task.",
         variant: "destructive"
       });
     } finally {
