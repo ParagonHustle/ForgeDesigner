@@ -171,9 +171,13 @@ const BuildingsView = () => {
       userId: 1,
       buildingType: buildingType,
       currentLevel: 1,
+      upgradeStartTime: null,
+      upgradeEndTime: null,
       upgradeInProgress: false,
       unlockedSkills: [],
-    } as BuildingUpgrade;
+      availableSkillPoints: 1, // For testing, ensure we always have a skill point
+      skillDistribution: {}
+    } as unknown as BuildingUpgrade;
   };
 
   // Calculate upgrade cost based on current level
@@ -662,6 +666,17 @@ const BuildingsView = () => {
                     <Shield className="h-4 w-4 mr-2" />
                     Maximum Level Reached
                   </div>
+                ) : hasAvailableSkillPoints(building) ? (
+                  <Button
+                    className="w-full bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+                    onClick={() => {
+                      setSelectedBuilding(building);
+                      setSkillTreeDialog(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Choose Skill Upgrade
+                  </Button>
                 ) : (
                   <Dialog open={upgradeDialog && selectedBuilding?.id === building.id} onOpenChange={(open) => {
                     setUpgradeDialog(open);
