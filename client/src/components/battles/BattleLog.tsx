@@ -1107,6 +1107,11 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     const actionsToRender = replayActionsRef.current.slice(0, currentReplayStep);
     const lastAction = actionsToRender[actionsToRender.length - 1];
     
+    // If we're in visual battle view mode
+    if (activeTab === 'visual') {
+      return renderVisualBattleReplay(lastAction);
+    }
+    
     return (
       <div className="py-4 space-y-2">
         {/* Visual indicator for latest action */}
@@ -1635,5 +1640,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     </Dialog>
   );
 };
+
+
 
 export default BattleLog;
