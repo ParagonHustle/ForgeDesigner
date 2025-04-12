@@ -434,8 +434,21 @@ const BuildingsView = () => {
     setIsSubmitting(true);
     
     try {
+      // Map building IDs to the correct buildingType for the server
+      const buildingTypeMap: Record<string, string> = {
+        'townhall': 'townhall',
+        'forge': 'forge', 
+        'blackmarket': 'blackmarket',
+        'bountyboard': 'bountyBoard',
+        'tavern': 'tavern',
+        'farming': 'farming'
+      };
+      
+      const normalizedType = buildingTypeMap[buildingType] || buildingType;
+      console.log(`Completing upgrade for building type: ${buildingType} -> ${normalizedType}`);
+      
       // Call API to complete upgrade
-      await apiRequest('POST', `/api/buildings/complete/${buildingType}`, {});
+      await apiRequest('POST', `/api/buildings/complete/${normalizedType}`, {});
       
       const building = buildings.find(b => b.id === buildingType);
       
