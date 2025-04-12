@@ -124,16 +124,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
     return classColors[characterClass.toLowerCase()] || 'bg-gray-700/30 text-gray-400';
   };
 
-  const getRarityColor = (rarity: string) => {
-    const rarityColors: Record<string, string> = {
-      'common': 'text-gray-400',
-      'rare': 'text-blue-400',
-      'epic': 'text-purple-400',
-      'legendary': 'text-yellow-400',
-    };
-    
-    return rarityColors[rarity.toLowerCase()] || 'text-gray-400';
-  };
+  // Removed rarity-related function as per new requirements
 
   const getActivityText = () => {
     if (!character.isActive) return null;
@@ -307,8 +298,8 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                 <Badge className={`font-normal ${getClassColor(character.class)}`}>
                   {character.class}
                 </Badge>
-                <span className={`text-xs ${getRarityColor(character.rarity)}`}>
-                  {character.rarity.charAt(0).toUpperCase() + character.rarity.slice(1)}
+                <span className="text-xs text-[#C8B8DB]/80">
+                  Level {character.level || 1}
                 </span>
               </div>
             </div>
@@ -389,8 +380,8 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                 <div className="py-4">
                   <div className="flex justify-between mb-4">
                     <Badge className={`${getClassColor(character.class)}`}>{character.class}</Badge>
-                    <div className={`text-sm ${getRarityColor(character.rarity)}`}>
-                      {character.rarity.charAt(0).toUpperCase() + character.rarity.slice(1)} • Level {character.level}
+                    <div className="text-sm text-[#C8B8DB]/80">
+                      Level {character.level || 1}
                     </div>
                   </div>
                   
