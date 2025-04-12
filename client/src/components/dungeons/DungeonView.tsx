@@ -130,7 +130,9 @@ const DungeonView = () => {
         dungeonName: selectedDungeon.name,
         dungeonLevel: selectedDungeon.level,
         characterIds: selectedCharacters,
-        endTime: endTime.toISOString() // Convert to ISO string
+        endTime: endTime.toISOString(), // Convert to ISO string
+        dungeonTypeId: selectedDungeon.id,
+        elementalType: selectedDungeon.elementalType || 'fire'  // Default to fire if not specified
       });
 
       if (!response.ok) {
