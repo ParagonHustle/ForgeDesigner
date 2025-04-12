@@ -91,7 +91,7 @@ const ForgeView = () => {
     
     // Check if user has enough materials (essence)
     const essence = resources.find(r => r.name === 'Essence');
-    if (!essence || essence.quantity < 500) {
+    if (!essence || (essence.quantity || 0) < 500) {
       toast({
         title: "Insufficient Materials",
         description: `You need 500 Essence to craft a new aura. You have ${essence?.quantity || 0}.`,

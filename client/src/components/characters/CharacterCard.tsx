@@ -448,7 +448,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-gradient-to-r from-blue-500 to-blue-400" 
-                              style={{ width: `${Math.min(100, (character.defense / 100) * 100)}%` }}
+                              style={{ width: `${Math.min(100, ((character.defense || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
                           {character.passiveSkill && character.passiveSkill.toLowerCase().includes('defense') && (
@@ -469,7 +469,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-gradient-to-r from-red-500 to-red-300" 
-                              style={{ width: `${Math.min(100, (character.vitality / 100) * 100)}%` }}
+                              style={{ width: `${Math.min(100, ((character.vitality || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
                           {character.passiveSkill && character.passiveSkill.toLowerCase().includes('vitality') && (
@@ -488,7 +488,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400" 
-                              style={{ width: `${Math.min(100, (character.speed / 100) * 100)}%` }}
+                              style={{ width: `${Math.min(100, ((character.speed || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
                           {character.passiveSkill && character.passiveSkill.toLowerCase().includes('speed') && (
@@ -544,7 +544,8 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <span className="text-sm text-[#00B9AE]">Aura Bonuses</span>
                         </div>
                         <div className="text-xs text-[#C8B8DB]/80 space-y-1">
-                          {aura.statMultipliers && Object.entries(aura.statMultipliers).map(([stat, value]) => (
+                          {aura.statMultipliers && typeof aura.statMultipliers === 'object' && 
+                           Object.entries(aura.statMultipliers as Record<string, unknown>).map(([stat, value]) => (
                             <div key={stat} className="flex items-center">
                               <span className="text-[#00B9AE]">+</span>
                               <span className="ml-1">{typeof value === 'number' ? (value * 100).toFixed(0) : '0'}% {stat.charAt(0).toUpperCase() + stat.slice(1)}</span>

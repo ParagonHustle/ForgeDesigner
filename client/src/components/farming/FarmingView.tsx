@@ -119,7 +119,7 @@ const FarmingView = () => {
       }
       
       // Adjust time based on character's level (higher level = faster farming)
-      const levelMultiplier = Math.max(0.6, 1 - character.level * 0.02); // 2% reduction per level, min 40% reduction
+      const levelMultiplier = Math.max(0.6, 1 - (character.level || 1) * 0.02); // 2% reduction per level, min 40% reduction
       const farmingDuration = selectedResource.baseTime * levelMultiplier;
       
       // Calculate end time
@@ -395,7 +395,7 @@ const FarmingView = () => {
                                 </div>
                                 <div className="text-xs text-[#C8B8DB]/70">
                                   {/* Character can farm faster based on level */}
-                                  Farming Efficiency: +{Math.min(40, character.level * 2)}%
+                                  Farming Efficiency: +{Math.min(40, (character.level || 1) * 2)}%
                                 </div>
                               </div>
                             </div>
