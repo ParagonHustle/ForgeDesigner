@@ -24,6 +24,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Skull, Swords, Shield, Zap, Heart, Plus, Clock, ScrollText } from 'lucide-react';
 import type { Character, DungeonRun } from '@shared/schema';
+import BattleLog from '@/components/battles/BattleLog';
 
 const dungeons = [
   {
@@ -67,6 +68,8 @@ const DungeonView = () => {
   const [selectedDungeon, setSelectedDungeon] = useState<any>(null);
   const [selectedCharacters, setSelectedCharacters] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showBattleLog, setShowBattleLog] = useState(false);
+  const [currentBattleLog, setCurrentBattleLog] = useState<any[]>([]);
   
   // Get active characters (not assigned to other tasks)
   const availableCharacters = characters.filter(char => !char.isActive);
