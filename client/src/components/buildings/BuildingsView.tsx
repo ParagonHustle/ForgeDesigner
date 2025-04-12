@@ -209,8 +209,24 @@ const BuildingsView = () => {
   };
 
   // Start building upgrade
-  // Fetch building skill tree data
-  const { data: skillTreeData } = useQuery({
+  // Define the SkillTreeData type
+  type SkillTreeData = {
+    currentLevel: number;
+    unlockedSkills: string[];
+    availableSkillTree: Array<{
+      id: string;
+      name: string;
+      description: string;
+      maxLevel: number;
+    }>;
+  };
+
+  // Fetch building skill tree data with proper typing
+  const { data: skillTreeData = { 
+    currentLevel: 1, 
+    unlockedSkills: [], 
+    availableSkillTree: [] 
+  } as SkillTreeData } = useQuery<SkillTreeData>({
     queryKey: selectedBuilding ? [`/api/buildings/skills/${selectedBuilding.id}`] : [],
     enabled: !!selectedBuilding && skillTreeDialog
   });
@@ -717,11 +733,18 @@ const BuildingsView = () => {
                               : 'bg-[#432874]/50 text-[#C8B8DB]/50 cursor-not-allowed'
                           }`}
                           onClick={() => {
+                            // Set the selected building first
+                            setSelectedBuilding(building);
+                            
                             if (hasAvailableSkillPoints(building)) {
+                              console.log("Opening skill tree for:", building.id);
                               // Close the upgrade dialog and open the skill tree dialog
                               setUpgradeDialog(false);
-                              setSkillTreeDialog(true);
+                              setTimeout(() => {
+                                setSkillTreeDialog(true);
+                              }, 100);
                             } else {
+                              console.log("Starting upgrade directly for:", building.id);
                               // If no available skill points, start upgrade directly
                               startUpgrade();
                             }
