@@ -586,9 +586,13 @@ const ForgeView = () => {
                             </div>
                           </div>
                           <p className="text-sm text-[#C8B8DB]/70 mt-1">
-                            {Object.entries(aura.statMultipliers || {}).map(([stat, value]) => (
-                              `${stat.charAt(0).toUpperCase() + stat.slice(1)}: ${typeof value === 'number' ? value.toFixed(2) : '0.00'}x`
-                            )).join(', ')}
+                            {aura.attack ? `Attack: ${aura.attack > 0 ? '+' : ''}${aura.attack}% ` : ''}
+                            {aura.accuracy ? `Accuracy: ${aura.accuracy > 0 ? '+' : ''}${aura.accuracy}% ` : ''}
+                            {aura.defense ? `Defense: ${aura.defense > 0 ? '+' : ''}${aura.defense}% ` : ''}
+                            {aura.vitality ? `Vitality: ${aura.vitality > 0 ? '+' : ''}${aura.vitality}% ` : ''}
+                            {aura.speed ? `Speed: ${aura.speed > 0 ? '+' : ''}${aura.speed}% ` : ''}
+                            {aura.focus ? `Focus: ${aura.focus > 0 ? '+' : ''}${aura.focus}% ` : ''}
+                            {aura.resilience ? `Resilience: ${aura.resilience > 0 ? '+' : ''}${aura.resilience}% ` : ''}
                           </p>
                         </div>
                       ))
@@ -638,9 +642,13 @@ const ForgeView = () => {
                               </div>
                             </div>
                             <p className="text-sm text-[#C8B8DB]/70 mt-1">
-                              {Object.entries(aura.statMultipliers || {}).map(([stat, value]) => (
-                                `${stat.charAt(0).toUpperCase() + stat.slice(1)}: ${typeof value === 'number' ? value.toFixed(2) : '0.00'}x`
-                              )).join(', ')}
+                              {aura.attack ? `Attack: ${aura.attack > 0 ? '+' : ''}${aura.attack}% ` : ''}
+                              {aura.accuracy ? `Accuracy: ${aura.accuracy > 0 ? '+' : ''}${aura.accuracy}% ` : ''}
+                              {aura.defense ? `Defense: ${aura.defense > 0 ? '+' : ''}${aura.defense}% ` : ''}
+                              {aura.vitality ? `Vitality: ${aura.vitality > 0 ? '+' : ''}${aura.vitality}% ` : ''}
+                              {aura.speed ? `Speed: ${aura.speed > 0 ? '+' : ''}${aura.speed}% ` : ''}
+                              {aura.focus ? `Focus: ${aura.focus > 0 ? '+' : ''}${aura.focus}% ` : ''}
+                              {aura.resilience ? `Resilience: ${aura.resilience > 0 ? '+' : ''}${aura.resilience}% ` : ''}
                             </p>
                           </div>
                         ))

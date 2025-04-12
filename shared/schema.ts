@@ -62,7 +62,6 @@ export const auras = pgTable("auras", {
   speed: integer("speed").default(0),
   focus: integer("focus").default(0),
   resilience: integer("resilience").default(0),
-  statMultipliers: jsonb("stat_multipliers").default({}),
   skills: jsonb("skills").array(),
   equippedByCharacterId: integer("equipped_by_character_id"),
   isFusing: boolean("is_fusing").default(false),
