@@ -546,10 +546,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post('/api/dungeons/start', authenticateUser, async (req, res) => {
     try {
+      // Convert the endTime string to a Date object if it's a string
+      let endTimeData = req.body.endTime;
+      if (typeof endTimeData === 'string') {
+        endTimeData = new Date(endTimeData);
+        console.log('Converted dungeon endTime to Date object');
+      }
+      
       const runData = insertDungeonRunSchema.parse({
         ...req.body,
         userId: req.session.userId,
         startTime: new Date(),
+        endTime: endTimeData,
         completed: false
       });
       
