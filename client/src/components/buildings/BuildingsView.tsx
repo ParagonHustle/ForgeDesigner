@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useGameStore } from '@/lib/zustandStore';
@@ -264,19 +264,19 @@ const BuildingsView = () => {
     availableSkillTree: [] 
   } as SkillTreeData } = useQuery<SkillTreeData>({
     queryKey: selectedBuilding ? [`/api/buildings/skills/${selectedBuilding.buildingType}`] : [],
-    enabled: !!selectedBuilding && skillTreeDialog,
-    onError: (error) => {
-      console.error("Error fetching skill tree:", error, "Selected building:", selectedBuilding);
-    }
+    enabled: !!selectedBuilding && skillTreeDialog
   });
 
-  // Debug log for skill tree query
-  useEffect(() => {
-    if (selectedBuilding && skillTreeDialog) {
-      console.log("Skill tree query for building:", selectedBuilding);
-      console.log("Building type for skill tree:", selectedBuilding.buildingType);
+  // Debug log for skill tree query with console logs
+  if (selectedBuilding && skillTreeDialog) {
+    console.log("Skill tree query for building:", selectedBuilding);
+    console.log("Building type for skill tree:", selectedBuilding.buildingType);
+    
+    // Log error if undefined
+    if (!selectedBuilding.buildingType) {
+      console.error("Building type is undefined for:", selectedBuilding);
     }
-  }, [selectedBuilding, skillTreeDialog]);
+  }
 
   // Allocate skill point
   const allocateSkill = async (skillId: string) => {
@@ -315,6 +315,20 @@ const BuildingsView = () => {
   // Start building upgrade
   const startUpgrade = async (allocatedSkill?: string) => {
     if (!selectedBuilding) return;
+    
+    // Make sure we're using the correct building type mapping
+    const buildingTypeMap: Record<string, string> = {
+      'townhall': 'townhall',
+      'forge': 'forge',
+      'blackmarket': 'blackmarket',
+      'bountyboard': 'bountyBoard',
+      'tavern': 'tavern'
+    };
+    const normalizedType = buildingTypeMap[selectedBuilding.id] || selectedBuilding.id;
+    
+    // Always use the normalized type for consistency
+    selectedBuilding.buildingType = normalizedType;
+    console.log("Upgrade using buildingType:", selectedBuilding.buildingType);
     
     const buildingData = getBuildingByType(selectedBuilding.id);
     if (!buildingData) return;
@@ -695,10 +709,20 @@ const BuildingsView = () => {
                   <Button
                     className="w-full bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
                     onClick={() => {
-                      // Ensure buildingType is set correctly
+                      // Ensure buildingType is set correctly with proper mapping
+                      const buildingTypeMap: Record<string, string> = {
+                        'townhall': 'townhall',
+                        'forge': 'forge',
+                        'blackmarket': 'blackmarket',
+                        'bountyboard': 'bountyBoard',
+                        'tavern': 'tavern'
+                      };
+                      const normalizedType = buildingTypeMap[building.id] || building.id;
+                      console.log(`Opening skill tree for ${building.name}, type: ${normalizedType}`);
+                      
                       setSelectedBuilding({
                         ...building,
-                        buildingType: building.id  // Map the UI ID to the backend buildingType
+                        buildingType: normalizedType  // Map the UI ID to the backend buildingType
                       });
                       setSkillTreeDialog(true);
                     }}
@@ -812,10 +836,20 @@ const BuildingsView = () => {
                               : 'bg-[#432874]/50 text-[#C8B8DB]/50 cursor-not-allowed'
                           }`}
                           onClick={() => {
-                            // Set the selected building first with the correct buildingType
+                            // Set the selected building first with the correct mapped buildingType
+                            const buildingTypeMap: Record<string, string> = {
+                              'townhall': 'townhall',
+                              'forge': 'forge',
+                              'blackmarket': 'blackmarket',
+                              'bountyboard': 'bountyBoard',
+                              'tavern': 'tavern'
+                            };
+                            const normalizedType = buildingTypeMap[building.id] || building.id;
+                            console.log(`Setting building for upgrade: ${building.name}, type: ${normalizedType}`);
+                            
                             setSelectedBuilding({
                               ...building,
-                              buildingType: building.id
+                              buildingType: normalizedType
                             });
                             
                             if (hasAvailableSkillPoints(building)) {

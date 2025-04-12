@@ -1482,6 +1482,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { buildingType } = req.params;
       
+      console.log("GET /api/buildings/skills/:buildingType", { buildingType, userId: req.session.userId });
+      
       // Get the building
       const building = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
       
