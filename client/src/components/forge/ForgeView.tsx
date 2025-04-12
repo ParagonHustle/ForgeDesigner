@@ -102,14 +102,10 @@ const ForgeView = () => {
     
     setIsSubmitting(true);
     try {
-      // Calculate completion time (5 minutes for crafting)
-      const endTime = new Date();
-      endTime.setMinutes(endTime.getMinutes() + 5);
-      
       // Create task with required materials
+      // Let the server handle the start/end times
       const response = await apiRequest('POST', '/api/forge/craft', {
         targetElement: selectedElement,
-        endTime: endTime,
         requiredMaterials: {
           'Essence': 500
         }
