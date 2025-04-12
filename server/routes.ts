@@ -83,6 +83,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect('/api/auth/discord/callback?code=mock_code');
   });
   
+  // Direct login route for development
+  app.get('/api/auth/dev-login', async (req, res) => {
+    try {
+      console.log('Starting dev login process');
+      // Create a fixed user for development purposes
+      const mockUser = {
+        discordId: 'dev123456',
+        username: 'DevUser',
+        avatarUrl: 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
+        roles: ['member'],
+        forgeTokens: 5000,
+        rogueCredits: 2000,
+        soulShards: 25,
+        lastLogin: new Date(),
+        isAdmin: true
+      };
+      
+      // Check if user exists
+      let user = await storage.getUserByDiscordId(mockUser.discordId);
+      console.log('User exists check result:', user ? 'Found existing user' : 'No user found, creating new one');
+      
+      if (!user) {
+        try {
+          // Create new dev user
+          user = await storage.createUser(mockUser);
+          console.log('Created new dev user with ID:', user.id);
+          
+          // Create initial resources
+          const initialResource = await storage.createResource({
+            userId: user.id,
+            name: 'Celestial Ore',
+            type: 'material',
+            quantity: 100,
+            description: 'A rare material used in crafting Auras',
+            iconUrl: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
+          });
+          console.log('Created initial resource:', initialResource.id);
+        } catch (createError) {
+          console.error('Error creating dev user:', createError);
+          throw createError;
+        }
+      } else {
+        console.log('Using existing dev user with ID:', user.id);
+      }
+      
+      if (!user || !user.id) {
+        throw new Error('Failed to get a valid user');
+      }
+      
+      // Set session
+      req.session.userId = user.id;
+      console.log('Set session userId to:', user.id);
+      
+      // Redirect to client
+      res.redirect('/?dev=true');
+    } catch (error) {
+      console.error('Dev login error:', error);
+      res.status(500).json({ message: 'Dev login failed', error: error.toString() });
+    }
+  });
+  
   app.get('/api/auth/discord/callback', async (req, res) => {
     try {
       // Simulate getting user from Discord
@@ -93,35 +154,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         roles: ['member']
       };
       
-      // Check if user exists
-      let user = await storage.getUserByDiscordId(mockDiscordUser.id);
+      console.log('In Discord callback route with mock user:', mockDiscordUser);
       
-      if (!user) {
-        // Create new user
-        user = await storage.createUser({
+      try {
+        // Check if user exists
+        let user = await storage.getUserByDiscordId(mockDiscordUser.id);
+        console.log('Retrieved user from database:', user ? 'User found' : 'User not found');
+        
+        if (!user) {
+          // Create new user
+          console.log('Creating new user');
+          user = await storage.createUser({
+            discordId: mockDiscordUser.id,
+            username: mockDiscordUser.username,
+            avatarUrl: mockDiscordUser.avatar,
+            roles: mockDiscordUser.roles,
+            forgeTokens: 6200,
+            rogueCredits: 2450,
+            soulShards: 34,
+            lastLogin: new Date(),
+            isAdmin: false // Explicitly set isAdmin field for new users
+          });
+          console.log('New user created with ID:', user.id);
+          
+          // Create initial resources for new user
+          await storage.createResource({
+            userId: user.id,
+            name: 'Celestial Ore',
+            type: 'material',
+            quantity: 156,
+            description: 'A rare material used in crafting Auras',
+            iconUrl: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
+          });
+          console.log('Initial resources created for new user');
+        } else {
+          // Update existing user's login time
+          console.log('Updating existing user login time, ID:', user.id);
+          user = await storage.updateUser(user.id, { lastLogin: new Date() }) as typeof user;
+        }
+      } catch (dbError) {
+        console.error('Database error during user lookup/creation:', dbError);
+        // Create a temporary user to continue with the auth flow for debugging
+        const tempUser = {
+          id: 1,
           discordId: mockDiscordUser.id,
           username: mockDiscordUser.username,
           avatarUrl: mockDiscordUser.avatar,
           roles: mockDiscordUser.roles,
-          forgeTokens: 6200,
-          rogueCredits: 2450,
-          soulShards: 34,
           lastLogin: new Date(),
-          isAdmin: false // Explicitly set isAdmin field for new users
-        });
-        
-        // Create initial resources for new user
-        await storage.createResource({
-          userId: user.id,
-          name: 'Celestial Ore',
-          type: 'material',
-          quantity: 156,
-          description: 'A rare material used in crafting Auras',
-          iconUrl: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
-        });
-      } else {
-        // Update existing user's login time
-        user = await storage.updateUser(user.id, { lastLogin: new Date() }) as typeof user;
+          forgeTokens: 1000,
+          rogueCredits: 500,
+          soulShards: 10,
+          isAdmin: true
+        };
+        console.log('Created temporary user for debugging:', tempUser);
+        return res.redirect('/?debug=true');
       }
       
       // Set session
