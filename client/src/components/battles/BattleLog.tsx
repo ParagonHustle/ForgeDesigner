@@ -113,6 +113,40 @@ const getSkillIcon = (iconName: string) => {
 const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => {
   const [activeTab, setActiveTab] = useState('visual');
   const [battleSummary, setBattleSummary] = useState<BattleSummary | null>(null);
+  const [isAutoplaying, setIsAutoplaying] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isAutoplaying) {
+      interval = setInterval(() => {
+        setBattleState(prevState => {
+          const updatedCharacters = prevState.characters.map(char => ({
+            ...char,
+            attackTimer: Math.max(0, char.attackTimer - 1),
+            hp: char.hp > 0 ? char.hp : 0
+          }));
+          
+          const updatedEnemies = prevState.enemies.map(enemy => ({
+            ...enemy,
+            attackTimer: Math.max(0, enemy.attackTimer - 1),
+            hp: enemy.hp > 0 ? enemy.hp : 0
+          }));
+
+          return {
+            ...prevState,
+            characters: updatedCharacters,
+            enemies: updatedEnemies,
+            currentTurn: prevState.currentTurn + 1
+          };
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAutoplaying]);
 
   const [battleState, setBattleState] = useState<BattleState>({
     characters: [],
@@ -605,13 +639,22 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
         </Tabs>
 
         <DialogFooter className="flex items-center justify-between pt-4 border-t border-[#432874]/50">
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            className="bg-[#1F1D36] hover:bg-[#432874]/30 border-[#432874]/50"
-          >
-            Close
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => setIsAutoplaying(!isAutoplaying)}
+              className={`${isAutoplaying ? 'bg-[#432874]' : 'bg-[#1F1D36]'} hover:bg-[#432874]/30 border-[#432874]/50`}
+            >
+              {isAutoplaying ? 'Pause' : 'Play'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className="bg-[#1F1D36] hover:bg-[#432874]/30 border-[#432874]/50"
+            >
+              Close
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
