@@ -525,25 +525,25 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h3 className="text-md font-semibold text-[#00B9AE] mb-2">Your Party</h3>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {battleState.characters.map((character: BattleCombatant) => (
-                    <div key={character.id} className="bg-[#1F1D36]/70 rounded-lg p-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-[#00B9AE]">{character.name}</span>
-                        <div className="flex items-center gap-2">
+                    <div key={character.id} className="bg-[#1F1D36]/70 rounded p-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-[#00B9AE] text-sm">{character.name}</span>
+                        <div className="flex items-center gap-1">
                           <div className="text-xs flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
+                            <Clock className="h-2 w-2" />
                             {Math.max(0, Math.ceil(character.attackTimer))}s
                           </div>
                           <div className="text-xs">HP: {character.hp}/{character.maxHp}</div>
                         </div>
                       </div>
-                      <Progress value={(character.hp / character.maxHp) * 100} className="h-2 mb-1" />
+                      <Progress value={(character.hp / character.maxHp) * 100} className="h-1.5" />
                       <Progress 
                         value={((character.attackSpeed - character.attackTimer) / character.attackSpeed) * 100} 
                         className="h-1 bg-[#432874]/20"
                       />
-                      <div className="flex flex-wrap gap-1 mt-1">
+                      <div className="flex flex-wrap gap-0.5">
                         {character.skills.map((skill: BattleSkill) => (
                           <Badge key={skill.id} className="text-xs bg-[#432874]/50">
                             {getSkillIcon(skill.icon)}
@@ -558,25 +558,25 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
 
               <div>
                 <h3 className="text-md font-semibold text-[#DC143C] mb-2">Enemies</h3>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {battleState.enemies.map((enemy: BattleCombatant) => (
-                    <div key={enemy.id} className="bg-[#1F1D36]/70 rounded-lg p-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-[#DC143C]">{enemy.name}</span>
-                        <div className="flex items-center gap-2">
+                    <div key={enemy.id} className="bg-[#1F1D36]/70 rounded p-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-[#DC143C] text-sm">{enemy.name}</span>
+                        <div className="flex items-center gap-1">
                           <div className="text-xs flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
+                            <Clock className="h-2 w-2" />
                             {Math.max(0, Math.ceil(enemy.attackTimer))}s
                           </div>
                           <div className="text-xs">HP: {enemy.hp}/{enemy.maxHp}</div>
                         </div>
                       </div>
-                      <Progress value={(enemy.hp / enemy.maxHp) * 100} className="h-2 mb-1" />
+                      <Progress value={(enemy.hp / enemy.maxHp) * 100} className="h-1.5" />
                       <Progress 
                         value={((enemy.attackSpeed - enemy.attackTimer) / enemy.attackSpeed) * 100} 
                         className="h-1 bg-[#1F1D36]/60"
                       />
-                      <div className="flex flex-wrap gap-1 mt-1">
+                      <div className="flex flex-wrap gap-0.5">
                         {enemy.skills.map((skill: BattleSkill) => (
                           <Badge key={skill.id} className="text-xs bg-[#1F1D36]/60">
                             {getSkillIcon(skill.icon)}
