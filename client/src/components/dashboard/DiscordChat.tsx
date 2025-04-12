@@ -71,7 +71,7 @@ const DiscordChat = () => {
       </div>
       
       <motion.div 
-        className={`${expanded ? 'h-64' : 'h-24'} overflow-y-auto bg-[#1F1D36]/50 rounded-lg p-3 mb-3 text-sm transition-all duration-300`}
+        className={`${expanded ? 'h-64' : 'h-16'} overflow-y-auto bg-[#1F1D36]/50 rounded-lg p-3 mb-3 text-sm transition-all duration-300`}
         variants={container}
         initial="hidden"
         animate="show"
