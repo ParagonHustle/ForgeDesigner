@@ -1498,11 +1498,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { id: 'th_building_1', name: 'Construction Speed', description: 'Reduces building upgrade time by 5% per level', maxLevel: 5 },
         ],
         forge: [
-          { id: 'forge_speed_1', name: 'Forge Speed', description: 'Reduces crafting time by 5% per level', maxLevel: 5 },
-          { id: 'forge_slots_1', name: 'Forge Slots', description: 'Unlocks additional forging slot', maxLevel: 3 },
-          { id: 'forge_quality_1', name: 'Forge Quality', description: 'Increases stat multiplier bonuses by 5% per level', maxLevel: 5 },
-          { id: 'forge_crit_1', name: 'Critical Forge', description: 'Increases chance for random stat boost by 2% per level', maxLevel: 5 },
-          { id: 'forge_skill_1', name: 'Skill Boost', description: 'Increases chance for skills to level up during fusion by 5% per level', maxLevel: 5 },
+          // Path A: Speed & Efficiency
+          { id: 'forge_speed_a', name: 'Crafting Speed', description: 'Increases crafting speed by 3% per level', maxLevel: 10, path: 'a' },
+          { id: 'forge_double_a', name: 'Double Forge Chance', description: 'Increases chance to craft twice by 1.5% per level', maxLevel: 10, path: 'a' },
+          { id: 'forge_slots_a', name: 'Additional Crafting Slots', description: 'Unlocks crafting slot #2 at level 5, slot #3 at level 10', maxLevel: 10, path: 'a' },
+          { id: 'forge_adv_speed_a', name: 'Advanced Crafting Speed', description: 'Further increases crafting speed by 2% per level', maxLevel: 10, path: 'a', requires: { forge_speed_a: 10 } },
+          
+          // Path B: Quality & Power
+          { id: 'forge_quality_b', name: 'Forge Quality', description: 'Increases item quality by 2% per level', maxLevel: 10, path: 'b' },
+          { id: 'forge_crit_b', name: 'Forge Critical Chance', description: 'Increases chance for critical crafting by 1% per level', maxLevel: 10, path: 'b' },
+          { id: 'forge_slots_b', name: 'Quality Crafting Slot', description: 'Unlocks crafting slot #4 at level 10', maxLevel: 10, path: 'b' },
+          { id: 'forge_enh_quality_b', name: 'Enhanced Quality', description: 'Further increases item quality by 1.5% per level', maxLevel: 10, path: 'b', requires: { forge_quality_b: 10 } },
+          
+          // Path C: Skill Mastery
+          { id: 'forge_skill_c', name: 'Skill Boost', description: 'Increases skill boost by 2% per level', maxLevel: 10, path: 'c' },
+          { id: 'forge_crit_c', name: 'Skill Critical Chance', description: 'Increases chance for critical skill bonus by 1% per level', maxLevel: 10, path: 'c' },
+          { id: 'forge_slots_c', name: 'Mastery Crafting Slot', description: 'Unlocks crafting slot #5 at level 10', maxLevel: 10, path: 'c' },
+          { id: 'forge_enh_skill_c', name: 'Enhanced Skill Boost', description: 'Further increases skill boost by 1.5% per level', maxLevel: 10, path: 'c', requires: { forge_skill_c: 10 } },
+          
+          // Cross-Path Specializations: A + B (Efficient Quality)
+          { id: 'forge_quick_precision', name: 'Quick Precision', description: 'Increases quality by 1% and speed by 2% per level', maxLevel: 3, path: 'ab', requires: { points_a: 10, points_b: 10 } },
+          { id: 'forge_crit_efficiency', name: 'Critical Efficiency', description: 'Increases double forge by 1% and critical chance by 1% per level', maxLevel: 3, path: 'ab', requires: { forge_quick_precision: 3 } },
+          { id: 'forge_sixth_slot', name: '6th Crafting Slot', description: 'Unlocks crafting slot #6', maxLevel: 3, path: 'ab', requires: { forge_crit_efficiency: 3 } },
+          
+          // Cross-Path Specializations: B + C (Skillful Quality)
+          { id: 'forge_refined_techniques', name: 'Refined Techniques', description: 'Increases skill boost and quality by 1.5% per level', maxLevel: 3, path: 'bc', requires: { points_b: 10, points_c: 10 } },
+          { id: 'forge_enh_critical', name: 'Enhanced Critical', description: 'Increases forge critical chance by 2% per level', maxLevel: 3, path: 'bc', requires: { forge_refined_techniques: 3 } },
+          { id: 'forge_master_artisan', name: 'Master Artisan', description: 'Increases stat multiplier and skill boost by 3% per level', maxLevel: 3, path: 'bc', requires: { forge_enh_critical: 3 } },
+          
+          // Cross-Path Specializations: A + C (Efficient Mastery)
+          { id: 'forge_swift_learning', name: 'Swift Learning', description: 'Increases speed and skill boost by 2% per level', maxLevel: 3, path: 'ac', requires: { points_a: 10, points_c: 10 } },
+          { id: 'forge_dual_crafting', name: 'Dual Crafting', description: 'Increases double forge by 2% and skill boost by 1.5% per level', maxLevel: 3, path: 'ac', requires: { forge_swift_learning: 3 } },
+          { id: 'forge_twin_mastery', name: 'Twin Forge Mastery', description: 'Increases double forge and speed by 5% at level 3', maxLevel: 3, path: 'ac', requires: { forge_dual_crafting: 3 } },
         ],
         blackmarket: [
           { id: 'bm_slots_1', name: 'Listing Slots', description: 'Unlocks additional personal listing slot', maxLevel: 5 },
@@ -1551,8 +1578,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Building not found' });
       }
       
-      // Check if there are unallocated skill points (building level - allocated skills)
+      // Get the skill tree for this building type
+      const skillTrees = {
+        townhall: [
+          { id: 'th_slot_1', name: 'Extra Farming Slot', description: 'Unlocks an additional farming slot', maxLevel: 5 },
+          { id: 'th_resource_1', name: 'Resource Production', description: 'Increases resource gain by 5% per level', maxLevel: 5 },
+          { id: 'th_exp_1', name: 'Experience Boost', description: 'Increases XP gain by 5% per level', maxLevel: 5 },
+          { id: 'th_building_1', name: 'Construction Speed', description: 'Reduces building upgrade time by 5% per level', maxLevel: 5 },
+        ],
+        forge: [
+          // Path A: Speed & Efficiency
+          { id: 'forge_speed_a', name: 'Crafting Speed', description: 'Increases crafting speed by 3% per level', maxLevel: 10, path: 'a' },
+          { id: 'forge_double_a', name: 'Double Forge Chance', description: 'Increases chance to craft twice by 1.5% per level', maxLevel: 10, path: 'a' },
+          { id: 'forge_slots_a', name: 'Additional Crafting Slots', description: 'Unlocks crafting slot #2 at level 5, slot #3 at level 10', maxLevel: 10, path: 'a' },
+          { id: 'forge_adv_speed_a', name: 'Advanced Crafting Speed', description: 'Further increases crafting speed by 2% per level', maxLevel: 10, path: 'a', requires: { forge_speed_a: 10 } },
+          
+          // Path B: Quality & Power
+          { id: 'forge_quality_b', name: 'Forge Quality', description: 'Increases item quality by 2% per level', maxLevel: 10, path: 'b' },
+          { id: 'forge_crit_b', name: 'Forge Critical Chance', description: 'Increases chance for critical crafting by 1% per level', maxLevel: 10, path: 'b' },
+          { id: 'forge_slots_b', name: 'Quality Crafting Slot', description: 'Unlocks crafting slot #4 at level 10', maxLevel: 10, path: 'b' },
+          { id: 'forge_enh_quality_b', name: 'Enhanced Quality', description: 'Further increases item quality by 1.5% per level', maxLevel: 10, path: 'b', requires: { forge_quality_b: 10 } },
+          
+          // Path C: Skill Mastery
+          { id: 'forge_skill_c', name: 'Skill Boost', description: 'Increases skill boost by 2% per level', maxLevel: 10, path: 'c' },
+          { id: 'forge_crit_c', name: 'Skill Critical Chance', description: 'Increases chance for critical skill bonus by 1% per level', maxLevel: 10, path: 'c' },
+          { id: 'forge_slots_c', name: 'Mastery Crafting Slot', description: 'Unlocks crafting slot #5 at level 10', maxLevel: 10, path: 'c' },
+          { id: 'forge_enh_skill_c', name: 'Enhanced Skill Boost', description: 'Further increases skill boost by 1.5% per level', maxLevel: 10, path: 'c', requires: { forge_skill_c: 10 } },
+          
+          // Cross-Path Specializations
+          { id: 'forge_quick_precision', name: 'Quick Precision', description: 'Increases quality by 1% and speed by 2% per level', maxLevel: 3, path: 'ab', requires: { points_a: 10, points_b: 10 } },
+          { id: 'forge_crit_efficiency', name: 'Critical Efficiency', description: 'Increases double forge by 1% and critical chance by 1% per level', maxLevel: 3, path: 'ab', requires: { forge_quick_precision: 3 } },
+          { id: 'forge_sixth_slot', name: '6th Crafting Slot', description: 'Unlocks crafting slot #6', maxLevel: 3, path: 'ab', requires: { forge_crit_efficiency: 3 } },
+          { id: 'forge_refined_techniques', name: 'Refined Techniques', description: 'Increases skill boost and quality by 1.5% per level', maxLevel: 3, path: 'bc', requires: { points_b: 10, points_c: 10 } },
+          { id: 'forge_enh_critical', name: 'Enhanced Critical', description: 'Increases forge critical chance by 2% per level', maxLevel: 3, path: 'bc', requires: { forge_refined_techniques: 3 } },
+          { id: 'forge_master_artisan', name: 'Master Artisan', description: 'Increases stat multiplier and skill boost by 3% per level', maxLevel: 3, path: 'bc', requires: { forge_enh_critical: 3 } },
+          { id: 'forge_swift_learning', name: 'Swift Learning', description: 'Increases speed and skill boost by 2% per level', maxLevel: 3, path: 'ac', requires: { points_a: 10, points_c: 10 } },
+          { id: 'forge_dual_crafting', name: 'Dual Crafting', description: 'Increases double forge by 2% and skill boost by 1.5% per level', maxLevel: 3, path: 'ac', requires: { forge_swift_learning: 3 } },
+          { id: 'forge_twin_mastery', name: 'Twin Forge Mastery', description: 'Increases double forge and speed by 5% at level 3', maxLevel: 3, path: 'ac', requires: { forge_dual_crafting: 3 } },
+        ],
+        blackmarket: [
+          { id: 'bm_slots_1', name: 'Listing Slots', description: 'Unlocks additional personal listing slot', maxLevel: 5 },
+          { id: 'bm_premium_1', name: 'Premium Offers', description: 'Increases premium item offers available', maxLevel: 3 },
+          { id: 'bm_standard_1', name: 'Standard Offers', description: 'Increases standard item offers available', maxLevel: 3 },
+          { id: 'bm_fee_1', name: 'Reduced Fees', description: 'Reduces market listing fees by 5% per level', maxLevel: 5 },
+        ],
+        bountyBoard: [
+          { id: 'bb_daily_1', name: 'Daily Quest Slots', description: 'Increases available daily quests by 1', maxLevel: 4 },
+          { id: 'bb_weekly_1', name: 'Weekly Quest Slots', description: 'Increases available weekly quests by 1', maxLevel: 2 },
+          { id: 'bb_rewards_1', name: 'Enhanced Rewards', description: 'Increases quest rewards by 10% per level', maxLevel: 5 },
+          { id: 'bb_refresh_1', name: 'Quick Refresh', description: 'Reduces quest refresh timer by 1 hour per level', maxLevel: 3 },
+        ],
+      };
+      
+      const skillTree = skillTrees[buildingType as keyof typeof skillTrees] || [];
+      const selectedSkill = skillTree.find(skill => skill.id === skillId);
+      
+      if (!selectedSkill) {
+        return res.status(404).json({ message: 'Skill not found in tree' });
+      }
+      
+      // Check if the skill already has the maximum level
       const unlockedSkills = building.unlockedSkills || [];
+      const skillCount = unlockedSkills.filter(id => id === skillId).length;
+      
+      if (skillCount >= selectedSkill.maxLevel) {
+        return res.status(400).json({ message: 'This skill is already at maximum level' });
+      }
+      
+      // Calculate path allocations
+      const skillDistribution = building.skillDistribution || {};
+      const pathCounts: Record<string, number> = {
+        a: 0,
+        b: 0,
+        c: 0,
+        ab: 0,
+        bc: 0,
+        ac: 0
+      };
+      
+      // Count allocated points per path
+      unlockedSkills.forEach(id => {
+        const skill = skillTree.find(s => s.id === id);
+        if (skill && skill.path) {
+          pathCounts[skill.path] = (pathCounts[skill.path] || 0) + 1;
+        }
+      });
+      
+      // Check requirements for the selected skill
+      if (selectedSkill.requires) {
+        const meetsRequirements = Object.entries(selectedSkill.requires).every(([reqId, reqLevel]) => {
+          // Special handling for path point requirements
+          if (reqId.startsWith('points_')) {
+            const path = reqId.split('_')[1];
+            return pathCounts[path] >= reqLevel;
+          }
+          
+          // Regular skill prerequisite check
+          const prereqCount = unlockedSkills.filter(id => id === reqId).length;
+          return prereqCount >= reqLevel;
+        });
+        
+        if (!meetsRequirements) {
+          return res.status(400).json({ 
+            message: 'Skill requirements not met',
+            requires: selectedSkill.requires
+          });
+        }
+      }
+      
+      // Check if there are unallocated skill points (building level - allocated skills)
       const allocatedPoints = unlockedSkills.length;
       const availablePoints = building.currentLevel - allocatedPoints;
       
@@ -1560,9 +1694,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No skill points available' });
       }
       
+      // Update skill distribution for path tracking
+      const updatedDistribution = { ...skillDistribution };
+      if (selectedSkill.path) {
+        updatedDistribution[selectedSkill.path] = (updatedDistribution[selectedSkill.path] || 0) + 1;
+      }
+      
       // Add the skill to unlocked skills
       const updatedBuilding = await storage.updateBuildingUpgrade(building.id, {
-        unlockedSkills: [...unlockedSkills, skillId]
+        unlockedSkills: [...unlockedSkills, skillId],
+        skillDistribution: updatedDistribution
       });
       
       res.json(updatedBuilding);

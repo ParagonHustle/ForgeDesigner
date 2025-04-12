@@ -1,0 +1,83 @@
+Corrected Skill Tree Structure (49 points max):
+Key Constraints:
+Total Maximum Points: 49
+
+Points per Individual Path: 30 max
+
+Cross-path upgrades: Require investment from two paths
+
+Players realistically will invest 20 points in two paths (40 points total) to unlock high-tier cross-path bonuses
+
+Remaining points (9) are spent on Cross-path (Special) upgrades
+
+Balanced Paths (Each path = 30 total possible upgrades):
+Path A: Speed & Efficiency
+
+Crafting Speed: (10 Levels, 3% each = 30%)
+
+Double Forge Chance: (10 Levels, 1.5% each = 15%)
+
+Crafting Slots: Slot #2 at Level 5, Slot #3 at Level 10
+
+Advanced Crafting Speed: (10 Levels, +2% each = 20%)
+
+Path B: Quality & Power
+
+Forge Quality: (10 Levels, 2% each = 20%)
+
+Forge Critical Chance: (10 Levels, 1% each = 10%)
+
+Crafting Slot: Slot #4 unlocked at Level 10
+
+Enhanced Quality: (10 Levels, +1.5% each = 15%)
+
+Path C: Skill Mastery
+
+Skill Boost: (10 Levels, 2% each = 20%)
+
+Forge Critical Chance: (10 Levels, 1% each = 10%)
+
+Crafting Slot: Slot #5 unlocked at Level 10
+
+Enhanced Skill Boost: (10 Levels, +1.5% each = 15%)
+
+Special Cross-Path Upgrades (Each Combination = 9 Levels max):
+Players unlock these after investing at least 20 points total (10 in each chosen path).
+
+Each cross-path has 3 tiers, 3 levels each, totaling 9 points maximum per combination.
+
+Players invest in two paths (20 points each = 40), then 9 points in the cross-path upgrades, totaling exactly 49 points.
+
+Cross-Path Specializations:
+
+Path A + Path B (Efficient Quality):
+Tier 1 (Level 1-3): Quick Precision (+1% Quality & +2% Speed per level)
+
+Tier 2 (Level 4-6): Critical Efficiency (+1% Double Forge & +1% Critical per level)
+
+Tier 3 (Level 7-9): 6th Crafting Slot unlocked at 9th cross-path level
+
+Path B + Path C (Skillful Quality):
+Tier 1 (Level 1-3): Refined Techniques (+1.5% Skill Boost & +1.5% Quality per level)
+
+Tier 2 (Level 4-6): Enhanced Critical (+2% Forge Critical per level)
+
+Tier 3 (Level 7-9): Master Artisan (+3% Stat Multiplier & +3% Skill Boost per level)
+
+Path A + Path C (Efficient Mastery):
+Tier 1 (Level 1-3): Swift Learning (+2% Speed & +2% Skill Boost per level)
+
+Tier 2 (Level 4-6): Dual Crafting (+2% Double Forge & +1.5% Skill Boost per level)
+
+Tier 3 (Level 7-9): Twin Forge Mastery (+5% Double Forge & +5% Speed at level 9)
+
+Example Player Scenario (Optimal Spending - 49 points):
+Player focuses Path A + Path B:
+
+Path A: 20 Points (e.g., Crafting Speed 10, Double Forge Chance 10)
+
+Path B: 20 Points (e.g., Forge Quality 10, Critical Chance 10)
+
+Cross-path A+B: 9 Points total (Unlocking 6th Crafting Slot at Level 9 special upgrade)
+
+Total Spent = 49 points exactly.
