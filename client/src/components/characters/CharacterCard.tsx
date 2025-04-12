@@ -242,7 +242,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             {Object.entries(statMultipliers).map(([stat, value]: [string, any]) => (
                               <div key={stat} className="flex justify-between">
                                 <span className="capitalize">{stat}:</span>
-                                <span className="text-green-400">x{value}</span>
+                                <span className="text-green-400">x{typeof value === 'number' ? value.toFixed(2) : '0.00'}</span>
                               </div>
                             ))}
                           </div>
@@ -627,7 +627,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                                 {Object.entries(aura.statMultipliers as Record<string, unknown>).map(([stat, value]) => (
                                   <div key={stat} className="flex items-center">
                                     <span className="text-[#00B9AE]">+</span>
-                                    <span className="ml-1">{typeof value === 'number' ? (value * 100).toFixed(0) : '0'}% {stat.charAt(0).toUpperCase() + stat.slice(1)}</span>
+                                    <span className="ml-1">{typeof value === 'number' ? (value * 100).toFixed(2) : '0.00'}% {stat.charAt(0).toUpperCase() + stat.slice(1)}</span>
                                   </div>
                                 ))}
                               </div>
