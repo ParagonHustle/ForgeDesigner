@@ -19,7 +19,8 @@ import {
   Lock, 
   Shield,
   Loader2,
-  Plus
+  Plus,
+  Wheat
 } from 'lucide-react';
 import { 
   Card, 

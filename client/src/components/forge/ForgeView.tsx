@@ -390,9 +390,7 @@ const ForgeView = () => {
                   disabled={
                     isSubmitting || 
                     !selectedElement || 
-                    activeForgingTasks.length >= maxCraftingSlots ||
-                    !resources.find(r => r.name === 'Essence')?.quantity || 
-                    (resources.find(r => r.name === 'Essence')?.quantity || 0) < 500
+                    activeForgingTasks.length >= maxCraftingSlots
                   }
                 >
                   <Hammer className="h-4 w-4 mr-2" />
