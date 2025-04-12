@@ -117,7 +117,6 @@ export const forgingTasks = pgTable("forging_tasks", {
   primaryAuraId: integer("primary_aura_id"),
   secondaryAuraId: integer("secondary_aura_id"),
   targetElement: text("target_element"),
-  targetRarity: text("target_rarity"),
   requiredMaterials: jsonb("required_materials"),
   startTime: timestamp("start_time").defaultNow(),
   endTime: timestamp("end_time").notNull(),
