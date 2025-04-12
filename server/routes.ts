@@ -18,6 +18,18 @@ import {
   insertActivityLogSchema
 } from "@shared/schema";
 
+// Global speed boost settings for faster gameplay
+const SPEED_BOOST_ACTIVE = true;
+const SPEED_BOOST_MULTIPLIER = 10; // 10x speed
+
+// Helper function to apply speed boost to durations
+function applySpeedBoost(durationMs: number): number {
+  if (SPEED_BOOST_ACTIVE) {
+    return Math.floor(durationMs / SPEED_BOOST_MULTIPLIER);
+  }
+  return durationMs;
+}
+
 // Configure session middleware for authentication
 const configureSession = (app: Express) => {
   app.use(session({
@@ -816,7 +828,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Mark auras as fusing
-      const fusionEndTime = new Date(Date.now() + 60 * 1000); // 1 minute for demo
+      const fusionDuration = 60 * 1000; // 1 minute for demo
+      const fusionEndTime = new Date(Date.now() + applySpeedBoost(fusionDuration)); // Apply speed boost
       await storage.updateAura(primaryAuraId, {
         isFusing: true,
         fusionEndTime
@@ -1080,7 +1093,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currencyType: 'forgeTokens',
           sold: false,
           listedAt: new Date(),
-          expiresAt: new Date(Date.now() + 86400000),
+          expiresAt: new Date(Date.now() + applySpeedBoost(86400000)), // Apply speed boost
           featured
         });
         
@@ -1094,7 +1107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currencyType: 'rogueCredits', 
           sold: false,
           listedAt: new Date(),
-          expiresAt: new Date(Date.now() + 86400000)
+          expiresAt: new Date(Date.now() + applySpeedBoost(86400000)) // Apply speed boost
         });
         
         // Sample premium character listings (forge tokens)
