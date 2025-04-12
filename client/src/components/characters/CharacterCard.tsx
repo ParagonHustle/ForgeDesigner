@@ -18,7 +18,9 @@ import {
   Droplet,
   Leaf,
   Wind,
-  Check
+  Check,
+  Target,
+  CircleOff
 } from 'lucide-react';
 import { 
   Dialog, 

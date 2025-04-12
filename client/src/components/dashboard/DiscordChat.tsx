@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/lib/zustandStore';
-import { Send } from 'lucide-react';
+import { Send, Maximize2, Minimize2 } from 'lucide-react';
 import { useDiscordAuth } from '@/lib/discordAuth';
 
 const DiscordChat = () => {
   const { discordMessages, addDiscordMessage } = useGameStore();
   const { user } = useDiscordAuth();
   const [message, setMessage] = useState('');
+  const [expanded, setExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Auto-scroll to bottom when new messages arrive

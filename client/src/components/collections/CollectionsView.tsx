@@ -413,7 +413,7 @@ const CollectionsView = () => {
                             <>
                               <Sparkles className="h-4 w-4 text-[#FF9D00] mr-2 flex-shrink-0" />
                               <p className="text-sm text-[#C8B8DB]/90">
-                                Unlock Method: {aura.unlockMethod}
+                                Complete specific in-game challenges to unlock this aura
                               </p>
                             </>
                           )}

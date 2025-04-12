@@ -1,7 +1,6 @@
 import WelcomeSection from './WelcomeSection';
 import ActiveTasks from './ActiveTasks';
 import ResourcesOverview from './ResourcesOverview';
-import RecentActivity from './RecentActivity';
 import DiscordChat from './DiscordChat';
 import OfferBanner from '../ui/OfferBanner';
 import { useDiscordAuth } from '@/lib/discordAuth';
@@ -59,10 +58,9 @@ const DashboardView = () => {
           />
         </div>
         
-        {/* Right Column - Resources & Activities */}
+        {/* Right Column - Resources & Chat */}
         <div className="md:col-span-4 space-y-6">
           <ResourcesOverview />
-          <RecentActivity />
           <DiscordChat />
         </div>
       </div>
