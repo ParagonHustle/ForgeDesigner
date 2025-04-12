@@ -352,10 +352,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post('/api/farming/tasks', authenticateUser, async (req, res) => {
     try {
+      console.log('Farming task request body:', JSON.stringify(req.body));
+      
+      // If endTime is provided as an ISO string, convert it to Date
+      let processedBody = {...req.body};
+      if (typeof processedBody.endTime === 'string') {
+        try {
+          processedBody.endTime = new Date(processedBody.endTime);
+          console.log('Converted farming endTime to Date object');
+        } catch (e) {
+          console.error('Failed to convert farming endTime string to Date:', e);
+        }
+      }
+      
       const taskData = insertFarmingTaskSchema.parse({
-        ...req.body,
+        ...processedBody,
         userId: req.session.userId
       });
+      
+      console.log('Parsed farming task data:', JSON.stringify(taskData));
       
       // Check if character is available
       const character = await storage.getCharacterById(taskData.characterId);
@@ -389,8 +404,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         relatedIds: { characterId: character.id, taskId: task.id }
       });
       
+      console.log('Farming task created successfully:', task.id);
       res.status(201).json(task);
     } catch (error) {
+      console.error('Error starting farming task:', error);
       handleErrors(error, req, res, () => {});
     }
   });

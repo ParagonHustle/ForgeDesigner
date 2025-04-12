@@ -123,7 +123,10 @@ const FarmingView = () => {
       const farmingDuration = selectedResource.baseTime * levelMultiplier;
       
       // Calculate end time
-      const endTime = new Date(new Date().getTime() + farmingDuration * 1000);
+      const now = new Date();
+      const endTime = new Date(now.getTime() + farmingDuration * 1000);
+      
+      console.log('Sending farming request with endTime:', endTime.toISOString());
       
       // Send request to start farming task
       const response = await apiRequest('POST', '/api/farming/tasks', {
