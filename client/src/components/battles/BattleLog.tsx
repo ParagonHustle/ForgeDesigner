@@ -844,7 +844,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
   
   // Render visual battle replay showing all combatants
   const renderVisualBattleReplay = (currentAction: any) => {
-    const { characters, enemies } = battleState;
+    const { characters, enemies, isActive, battleLogs } = battleState;
     
     return (
       <div className="bg-[#1F1D36]/80 rounded-lg p-4">
@@ -853,12 +853,40 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
           {/* Top info bar */}
           <div className="flex justify-between items-center px-2 py-1 bg-[#432874]/30 rounded">
             <span className="text-sm font-medium">
-              {currentAction?.type === 'round-header' ? `Round ${currentAction.round}` : ''}
+              {isActive ? 'Live Battle' : currentAction?.type === 'round-header' ? `Round ${currentAction.round}` : ''}
             </span>
-            <span className="text-xs text-[#C8B8DB]/70">
-              Action {currentReplayStep} of {replayActionsRef.current.length}
-            </span>
+            <div className="flex items-center gap-2">
+              {!isReplaying && (
+                <button 
+                  onClick={autoPlayActive ? stopAutoPlay : startAutoPlay}
+                  className={`px-2 py-0.5 rounded text-xs ${autoPlayActive ? 'bg-red-600' : 'bg-green-600'}`}
+                >
+                  {autoPlayActive ? 'Stop Auto-Play' : 'Start Auto-Play'}
+                </button>
+              )}
+              <span className="text-xs text-[#C8B8DB]/70">
+                {isActive ? `Turn: ${battleState.currentTurn}` : `Action ${currentReplayStep} of ${replayActionsRef.current.length}`}
+              </span>
+            </div>
           </div>
+          
+          {/* Live battle log */}
+          {isActive && (
+            <div className="bg-[#1F1D36]/90 border border-[#432874]/50 rounded-lg p-3 max-h-[120px] overflow-y-auto">
+              <h4 className="text-sm font-semibold text-[#C8B8DB] mb-2">Battle Log</h4>
+              <div className="space-y-1 text-xs">
+                {battleLogs.length === 0 ? (
+                  <p className="text-[#C8B8DB]/50 italic">Battle will begin soon...</p>
+                ) : (
+                  battleLogs.map((log, index) => (
+                    <div key={index} className="text-[#C8B8DB]">
+                      {log}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
           
           {/* Characters side */}
           <div className="flex flex-col space-y-1">
