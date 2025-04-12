@@ -1,0 +1,187 @@
+Feature: Dungeon Building
+Brief Explainer Summary:
+Dungeons in The Forge are combat-based missions where players send their characters to engage in auto-battles across multiple stages. The mission’s outcome is determined by the characters' stats, Aura multipliers, and battle mechanics. Each dungeon features a reward curve based on the number of stages completed, with specific loot drops tied to difficulty and elemental themes.
+
+Comprehensive Description:
+The Dungeon Building allows players to form a team of up to 4 characters to participate in auto-battle dungeons. Each dungeon is composed of 8 stages, with a mini-boss at stage 4 and a final boss at stage 8. The difficulty increases progressively as players advance through the dungeon stages.
+Key Dungeon Features:
+Auto-battle Mechanics:
+
+
+Attack Frequency is determined by Speed.
+
+
+Attack Damage is calculated using:
+ Attack Damage = Attack Stat * Aura Multiplier * Skill Damage
+
+
+Hitpoints (HP) are calculated using:
+ Hitpoints = Vitality * 8 (adjustable multiplier for future fine-tuning)
+
+
+Server-Side Tuning: Ability to adjust stat multipliers for each character’s NFT, ensuring balance flexibility (e.g., Kleos may have a 150% Attack multiplier, while Brawler Frank has a 180% multiplier).
+
+
+Dungeon Mechanics:
+
+
+Characters continue in the dungeon until all stages are completed or the team is defeated.
+
+
+Timers for each stage are required in case of extended battles (e.g., due to healing mechanics).
+
+
+Healing Mechanics: Characters with healing skills may prolong fights, resulting in a timer that counts down until one team defeats the other.
+
+
+Reward System:
+Dungeon rewards are determined by the number of stages completed:
+
+
+Tier-based loot rolls depend on the total stages completed:
+
+
+0 Stages = Roll 0 to 0
+
+
+1 Stage = Roll 1 to 20
+
+
+2 Stages = Roll 10 to 30
+
+
+3 Stages = Roll 15 to 40
+
+
+4 Stages = Roll 25 to 60
+
+
+5 Stages = Roll 30 to 70
+
+
+6 Stages = Roll 35 to 80
+
+
+7 Stages = Roll 40 to 90
+
+
+8 Stages = Roll 50 to 100
+
+
+Rewards are tiered based on the final roll:
+
+
+Tier 1: Roll a 1+
+
+
+Tier 2: Roll a 15+
+
+
+Tier 3: Roll a 25+
+
+
+Tier 4: Roll a 35+
+
+
+Tier 5: Roll a 45+
+
+
+Tier 6: Roll a 55+
+
+
+Tier 7: Roll a 65+
+
+
+Tier 8: Roll a 75+
+
+
+Tier 9: Roll a 85+
+
+
+Tier 10: Roll a 95+
+
+
+Dungeon Lootcrate Rewards:
+
+
+Lootcrate rewards will be added based on tier, difficulty, and elemental themes.
+
+
+Elemental Dungeon Themes:
+
+
+Dungeons will have elemental themes: Fire, Water, Wind, Earth.
+
+
+Each theme offers different crafting materials and potentially Auras linked to those themes.
+
+
+Team Rest Period:
+
+
+Characters require a rest period after completing a dungeon.
+
+
+If characters are defeated, they require longer rest times.
+
+
+Forge Tokens or special items can speed up the rest period.
+
+
+Dungeon Missions:
+Dungeons refresh every 15 minutes.
+
+
+Players can participate in a maximum of one dungeon mission of each difficulty at any given time (e.g., two Hard difficulty dungeons cannot run concurrently).
+
+
+Dungeon Building Level:
+
+
+Higher levels of the Dungeon Building unlock additional dungeon missions.
+
+
+The Dungeon Building Level determines the maximum number of active missions and the available difficulty tiers.
+
+
+Battle Summary & Log:
+Upon completing a dungeon, players receive:
+
+
+Summary: Total damage dealt, damage received, healing done, and contributions of each team member.
+
+
+Possible Rewards: A breakdown of the rewards the player could have earned had they completed all stages or gotten luckier with the rolls.
+
+
+Battle Log: A detailed text-based log showing each attack, healing, buffs, debuffs, status effects, etc., for full transparency.
+
+
+
+Technical Requirements:
+Frontend:
+Dungeon Screen Layout:
+
+
+Dungeon mission list with available difficulties and required level
+
+
+Team setup interface (4-member party)
+
+
+Dungeon progress bar and timer for each stage
+
+
+Display of rewards and missed rewards at the end
+
+
+Battle log viewer with interactive links to damage/healing events
+
+
+Resting UI:
+
+
+Progress bar for rest time with option to speed up using Forge Tokens or special items
+
+
+Indicators for available characters and rest state

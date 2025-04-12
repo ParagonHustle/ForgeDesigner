@@ -94,17 +94,36 @@ export const farmingTasks = pgTable("farming_tasks", {
 });
 
 // Dungeon run model
+export const dungeonTypes = pgTable("dungeon_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  elementalType: text("elemental_type").notNull(), // fire, water, wind, earth
+  difficulty: text("difficulty").notNull(), // easy, medium, hard, elite, legendary
+  recommendedLevel: integer("recommended_level").notNull(),
+  stages: integer("stages").default(8).notNull(),
+  imageUrl: text("image_url"),
+  rewardTiers: jsonb("reward_tiers"),
+  specificDrops: jsonb("specific_drops"),
+});
+
 export const dungeonRuns = pgTable("dungeon_runs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
+  dungeonTypeId: integer("dungeon_type_id").notNull(),
   dungeonName: text("dungeon_name").notNull(),
   dungeonLevel: integer("dungeon_level").notNull(),
+  elementalType: text("elemental_type").notNull(),
   characterIds: integer("character_ids").array().notNull(),
   startTime: timestamp("start_time").defaultNow(),
   endTime: timestamp("end_time").notNull(),
   completed: boolean("completed").default(false),
   success: boolean("success"),
+  completedStages: integer("completed_stages").default(0),
+  totalStages: integer("total_stages").default(8),
   rewards: jsonb("rewards"),
+  rollValue: integer("roll_value"),
+  rewardTier: integer("reward_tier"),
   battleLog: jsonb("battle_log"),
 });
 
