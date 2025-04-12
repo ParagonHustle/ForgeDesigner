@@ -207,12 +207,11 @@ const InventoryView = () => {
   };
 
   // Handle recruiting a new character
-  const handleRecruitCharacter = async (characterClass?: string, rarity?: string) => {
+  const handleRecruitCharacter = async (characterClass?: string) => {
     try {
       // Generate a random character for demonstration
       const randomNames = ["Eldrin", "Lyra", "Thorne", "Seraphina", "Gideon", "Isolde"];
       const randomClasses = ["Warrior", "Mage", "Rogue", "Cleric"];
-      const randomRarities = ["common", "rare", "epic"];
       const randomAvatars = [
         "https://images.unsplash.com/photo-1577095972620-2f389ca3abcd?w=150&h=150&fit=crop",
         "https://images.unsplash.com/photo-1613477564751-fc2a7c5bbb7a?w=150&h=150&fit=crop",
@@ -221,8 +220,7 @@ const InventoryView = () => {
       
       const newCharacter = {
         name: randomNames[Math.floor(Math.random() * randomNames.length)],
-        class: randomClasses[Math.floor(Math.random() * randomClasses.length)],
-        rarity: randomRarities[Math.floor(Math.random() * randomRarities.length)],
+        class: characterClass || randomClasses[Math.floor(Math.random() * randomClasses.length)],
         level: 1,
         avatarUrl: randomAvatars[Math.floor(Math.random() * randomAvatars.length)],
         attack: 10 + Math.floor(Math.random() * 5),
@@ -230,8 +228,9 @@ const InventoryView = () => {
         health: 100 + Math.floor(Math.random() * 20),
         speed: 10 + Math.floor(Math.random() * 5),
         vitality: 10 + Math.floor(Math.random() * 5),
-        intelligence: 10 + Math.floor(Math.random() * 5),
-        luck: 10 + Math.floor(Math.random() * 5)
+        accuracy: 10 + Math.floor(Math.random() * 5),
+        focus: 10 + Math.floor(Math.random() * 5),
+        resilience: 10 + Math.floor(Math.random() * 5)
       };
       
       const response = await apiRequest('POST', '/api/characters', newCharacter);
