@@ -792,68 +792,82 @@ const BuildingsView = () => {
                         </DialogTitle>
                       </DialogHeader>
                       
-                      <div className="py-4">
-                        <div className="mb-4">
-                          <h3 className="font-semibold mb-2">Upgrade to Level {currentLevel + 1}</h3>
-                          <div className="bg-[#432874]/20 p-4 rounded-lg">
-                            <p className="text-sm mb-3">
-                              This upgrade will unlock:
-                            </p>
-                            <div className="flex items-center text-[#FF9D00] mb-4">
-                              <ArrowUp className="h-4 w-4 mr-2 flex-shrink-0" />
-                              <p className="text-sm">
-                                {building.benefits[currentLevel]?.text || 'Advanced functionality'}
+                      {building.id === 'townhall' ? (
+                        <div className="py-4">
+                          <React.Suspense fallback={<div className="py-4 text-center">Loading Townhall upgrades...</div>}>
+                            <TownhallSkillTree 
+                              building={buildingData} 
+                              currentLevel={currentLevel}
+                              onUpgrade={(skillId) => {
+                                allocateSkill(skillId);
+                              }} 
+                            />
+                          </React.Suspense>
+                        </div>
+                      ) : (
+                        <div className="py-4">
+                          <div className="mb-4">
+                            <h3 className="font-semibold mb-2">Upgrade to Level {currentLevel + 1}</h3>
+                            <div className="bg-[#432874]/20 p-4 rounded-lg">
+                              <p className="text-sm mb-3">
+                                This upgrade will unlock:
                               </p>
-                            </div>
+                              <div className="flex items-center text-[#FF9D00] mb-4">
+                                <ArrowUp className="h-4 w-4 mr-2 flex-shrink-0" />
+                                <p className="text-sm">
+                                  {building.benefits[currentLevel]?.text || 'Advanced functionality'}
+                                </p>
+                              </div>
                             
-                            <div className="border-t border-[#432874]/30 pt-3">
-                              <h4 className="text-sm font-semibold mb-2">Cost:</h4>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="flex items-center">
-                                  <img 
-                                    src="https://images.unsplash.com/photo-1543486958-d783bfbf7f8e?w=250&h=250&fit=crop" 
-                                    alt="Rogue Credits" 
-                                    className="w-5 h-5 rounded-full mr-2"
-                                  />
-                                  <div>
-                                    <div className="text-sm">
-                                      {calculateUpgradeCost(building, currentLevel).rogueCredits} Rogue Credits
-                                    </div>
-                                    <div className={`text-xs ${user && (user.rogueCredits || 0) >= calculateUpgradeCost(building, currentLevel).rogueCredits ? 'text-green-400' : 'text-red-400'}`}>
-                                      You have: {user?.rogueCredits || 0}
+                              <div className="border-t border-[#432874]/30 pt-3">
+                                <h4 className="text-sm font-semibold mb-2">Cost:</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="flex items-center">
+                                    <img 
+                                      src="https://images.unsplash.com/photo-1543486958-d783bfbf7f8e?w=250&h=250&fit=crop" 
+                                      alt="Rogue Credits" 
+                                      className="w-5 h-5 rounded-full mr-2"
+                                    />
+                                    <div>
+                                      <div className="text-sm">
+                                        {calculateUpgradeCost(building, currentLevel).rogueCredits} Rogue Credits
+                                      </div>
+                                      <div className={`text-xs ${user && (user.rogueCredits || 0) >= calculateUpgradeCost(building, currentLevel).rogueCredits ? 'text-green-400' : 'text-red-400'}`}>
+                                        You have: {user?.rogueCredits || 0}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                                
-                                <div className="flex items-center">
-                                  <img 
-                                    src="https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=250&h=250&fit=crop" 
-                                    alt="Forge Tokens" 
-                                    className="w-5 h-5 rounded-full mr-2"
-                                  />
-                                  <div>
-                                    <div className="text-sm">
-                                      {calculateUpgradeCost(building, currentLevel).forgeTokens} Forge Tokens
-                                    </div>
-                                    <div className={`text-xs ${user && (user.forgeTokens || 0) >= calculateUpgradeCost(building, currentLevel).forgeTokens ? 'text-green-400' : 'text-red-400'}`}>
-                                      You have: {user?.forgeTokens || 0}
+                                  
+                                  <div className="flex items-center">
+                                    <img 
+                                      src="https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=250&h=250&fit=crop" 
+                                      alt="Forge Tokens" 
+                                      className="w-5 h-5 rounded-full mr-2"
+                                    />
+                                    <div>
+                                      <div className="text-sm">
+                                        {calculateUpgradeCost(building, currentLevel).forgeTokens} Forge Tokens
+                                      </div>
+                                      <div className={`text-xs ${user && (user.forgeTokens || 0) >= calculateUpgradeCost(building, currentLevel).forgeTokens ? 'text-green-400' : 'text-red-400'}`}>
+                                        You have: {user?.forgeTokens || 0}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                            
-                            <div className="border-t border-[#432874]/30 pt-3 mt-3">
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-2 text-[#C8B8DB]/70" />
-                                <span className="text-sm">
-                                  Upgrade Time: {building.upgradeTimeInMinutes} minutes
-                                </span>
+                              
+                              <div className="border-t border-[#432874]/30 pt-3 mt-3">
+                                <div className="flex items-center">
+                                  <Clock className="h-4 w-4 mr-2 text-[#C8B8DB]/70" />
+                                  <span className="text-sm">
+                                    Upgrade Time: {building.upgradeTimeInMinutes} minutes
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                       
                       <DialogFooter className="flex justify-end space-x-2">
                         <Button 
@@ -881,7 +895,7 @@ const BuildingsView = () => {
                               'blackmarket': 'blackmarket',
                               'bountyboard': 'bountyBoard',
                               'tavern': 'tavern',
-      'farming': 'farming'
+                              'farming': 'farming'
                             };
                             const normalizedType = buildingTypeMap[building.id] || building.id;
                             console.log(`Setting building for upgrade: ${building.name}, type: ${normalizedType}`);

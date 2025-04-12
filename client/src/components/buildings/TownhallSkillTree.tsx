@@ -32,14 +32,16 @@ const TownhallSkillTree = ({
     const checkForBuildingPlans = async () => {
       try {
         const resources = await apiRequest('GET', '/api/resources');
-        const buildingPlans = resources.find((r: any) => r.name === 'Building Plans');
-        setResourceChecked(true);
-        if (!buildingPlans || buildingPlans.quantity < 1) {
-          toast({
-            title: "Building Plans Required",
-            description: "You need Building Plans to upgrade your Townhall",
-            variant: "destructive"
-          });
+        if (Array.isArray(resources)) {
+          const buildingPlans = resources.find((r: any) => r.name === 'Building Plans');
+          setResourceChecked(true);
+          if (!buildingPlans || buildingPlans.quantity < 1) {
+            toast({
+              title: "Building Plans Required",
+              description: "You need Building Plans to upgrade your Townhall",
+              variant: "destructive"
+            });
+          }
         }
       } catch (error) {
         console.error("Error checking for Building Plans:", error);
@@ -50,19 +52,28 @@ const TownhallSkillTree = ({
   }, []);
 
   const availableUpgrades = React.useMemo(() => {
-    if (!skillTreeData) return { farmPlots: [], forgeSlots: [], specialUpgrades: [] };
+    if (!skillTreeData || !skillTreeData.availableSkillTree || !Array.isArray(skillTreeData.availableSkillTree) || !skillTreeData.unlockedSkills) {
+      return { farmPlots: [], forgeSlots: [], specialUpgrades: [] };
+    }
+    
+    const unlockedSkills = Array.isArray(skillTreeData.unlockedSkills) ? skillTreeData.unlockedSkills : [];
     
     return {
       farmPlots: skillTreeData.availableSkillTree.filter((skill: any) => 
-        skill.id.startsWith('th_farm_plot_') && !skillTreeData.unlockedSkills.includes(skill.id)
+        skill.id && typeof skill.id === 'string' && 
+        skill.id.startsWith('th_farm_plot_') && 
+        !unlockedSkills.includes(skill.id)
       ),
       forgeSlots: skillTreeData.availableSkillTree.filter((skill: any) => 
-        skill.id.startsWith('th_forge_slot_') && !skillTreeData.unlockedSkills.includes(skill.id)
+        skill.id && typeof skill.id === 'string' && 
+        skill.id.startsWith('th_forge_slot_') && 
+        !unlockedSkills.includes(skill.id)
       ),
       specialUpgrades: skillTreeData.availableSkillTree.filter((skill: any) => 
+        skill.id && typeof skill.id === 'string' && 
         (skill.id.startsWith('th_crafting_station_') || skill.id.startsWith('th_farm_expansion_')) &&
-        !skillTreeData.unlockedSkills.includes(skill.id) &&
-        (!skill.requires || skill.requires.townhall_level <= currentLevel)
+        !unlockedSkills.includes(skill.id) &&
+        (!skill.requires || (skill.requires.townhall_level && skill.requires.townhall_level <= currentLevel))
       )
     };
   }, [skillTreeData, currentLevel]);
