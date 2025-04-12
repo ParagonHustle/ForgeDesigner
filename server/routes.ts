@@ -304,6 +304,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Update resource - administrative endpoint
+  app.post('/api/resources/update', authenticateUser, async (req, res) => {
+    try {
+      const { resourceName, amount } = req.body;
+      
+      if (!resourceName || typeof amount !== 'number') {
+        return res.status(400).json({ message: 'Resource name and amount are required' });
+      }
+      
+      // Find the resource
+      let resource = await storage.getResourceByNameAndUserId(resourceName, req.session.userId!);
+      
+      // If resource doesn't exist, create it
+      if (!resource) {
+        resource = await storage.createResource({
+          userId: req.session.userId!,
+          name: resourceName,
+          description: `${resourceName} resource`,
+          quantity: amount,
+          type: 'material'
+        });
+      } else {
+        // Update existing resource
+        resource = await storage.updateResource(resource.id, {
+          quantity: resource.quantity + amount
+        });
+      }
+      
+      res.json(resource);
+    } catch (error) {
+      console.error('Error updating resource:', error);
+      res.status(500).json({ message: 'Failed to update resource' });
+    }
+  });
+  
   // Farming routes
   app.get('/api/farming/tasks', authenticateUser, async (req, res) => {
     try {
