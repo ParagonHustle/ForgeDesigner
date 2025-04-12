@@ -87,31 +87,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/dev-login', async (req, res) => {
     try {
       console.log('Starting dev login process');
-      // Create a fixed user for development purposes
-      const mockUser = {
-        discordId: 'dev123456',
-        username: 'DevUser',
-        avatarUrl: 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
-        roles: ['member'],
-        forgeTokens: 5000,
-        rogueCredits: 2000,
-        soulShards: 25,
-        lastLogin: new Date(),
-        isAdmin: true
-      };
       
-      // Check if user exists
-      let user = await storage.getUserByDiscordId(mockUser.discordId);
-      console.log('User exists check result:', user ? 'Found existing user' : 'No user found, creating new one');
+      // Define a default dev user
+      const devUserId = 'dev123456';
+      
+      let user;
+      
+      // First try to find an existing user
+      try {
+        user = await storage.getUserByDiscordId(devUserId);
+        console.log('User exists check result:', user ? 'Found existing user' : 'No user found, creating new one');
+      } catch (findError) {
+        console.error('Error checking for existing user:', findError);
+        user = null;
+      }
       
       if (!user) {
         try {
+          // Create new dev user with fixed details
+          const mockUser = {
+            discordId: devUserId,
+            username: 'DevUser',
+            avatarUrl: 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
+            roles: ['member'],
+            forgeTokens: 5000,
+            rogueCredits: 2000,
+            soulShards: 25,
+            lastLogin: new Date(),
+            isAdmin: true
+          };
+          
           // Create new dev user
           user = await storage.createUser(mockUser);
           console.log('Created new dev user with ID:', user.id);
           
           // Create initial resources
-          const initialResource = await storage.createResource({
+          await storage.createResource({
             userId: user.id,
             name: 'Celestial Ore',
             type: 'material',
@@ -119,17 +130,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
             description: 'A rare material used in crafting Auras',
             iconUrl: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
           });
-          console.log('Created initial resource:', initialResource.id);
+          
+          // Add more starter resources
+          await storage.createResource({
+            userId: user.id,
+            name: 'Abyssal Pearl',
+            type: 'material',
+            quantity: 50,
+            description: 'A rare material from the ocean depths',
+            iconUrl: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=150&h=150&fit=crop'
+          });
+          
+          // Create a starter character
+          await storage.createCharacter({
+            userId: user.id,
+            name: 'Dragonslayer',
+            class: 'Warrior',
+            level: 15,
+            attack: 25,
+            defense: 30,
+            vitality: 150,
+            speed: 20,
+            focus: 15,
+            accuracy: 22,
+            resilience: 28,
+            avatarUrl: 'https://images.unsplash.com/photo-1580519542036-c47de6d5f458?w=250&h=250&fit=crop'
+          });
+          
+          console.log('Created initial resources and starter character');
         } catch (createError) {
-          console.error('Error creating dev user:', createError);
-          throw createError;
+          console.error('Error creating dev user or starter content:', createError);
+          return res.status(500).json({ 
+            message: 'Dev login failed - Could not create user', 
+            error: String(createError) 
+          });
         }
       } else {
         console.log('Using existing dev user with ID:', user.id);
+        
+        // Update login time
+        try {
+          user = await storage.updateUser(user.id, { lastLogin: new Date() });
+          console.log('Updated user login time');
+        } catch (updateError) {
+          console.error('Failed to update login time:', updateError);
+          // Continue anyway as this is not critical
+        }
       }
       
       if (!user || !user.id) {
-        throw new Error('Failed to get a valid user');
+        throw new Error('Failed to get a valid user object');
       }
       
       // Set session
@@ -140,7 +190,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.redirect('/?dev=true');
     } catch (error) {
       console.error('Dev login error:', error);
-      res.status(500).json({ message: 'Dev login failed', error: error.toString() });
+      res.status(500).json({ 
+        message: 'Dev login failed', 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   
@@ -156,15 +209,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('In Discord callback route with mock user:', mockDiscordUser);
       
+      // Declare the user variable outside the try/catch block so it's accessible throughout the function
+      let userData = null;
+      
       try {
         // Check if user exists
-        let user = await storage.getUserByDiscordId(mockDiscordUser.id);
-        console.log('Retrieved user from database:', user ? 'User found' : 'User not found');
+        userData = await storage.getUserByDiscordId(mockDiscordUser.id);
+        console.log('Retrieved user from database:', userData ? 'User found' : 'User not found');
         
-        if (!user) {
+        if (!userData) {
           // Create new user
           console.log('Creating new user');
-          user = await storage.createUser({
+          userData = await storage.createUser({
             discordId: mockDiscordUser.id,
             username: mockDiscordUser.username,
             avatarUrl: mockDiscordUser.avatar,
@@ -175,11 +231,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastLogin: new Date(),
             isAdmin: false // Explicitly set isAdmin field for new users
           });
-          console.log('New user created with ID:', user.id);
+          console.log('New user created with ID:', userData.id);
           
           // Create initial resources for new user
           await storage.createResource({
-            userId: user.id,
+            userId: userData.id,
             name: 'Celestial Ore',
             type: 'material',
             quantity: 156,
@@ -189,8 +245,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('Initial resources created for new user');
         } else {
           // Update existing user's login time
-          console.log('Updating existing user login time, ID:', user.id);
-          user = await storage.updateUser(user.id, { lastLogin: new Date() }) as typeof user;
+          console.log('Updating existing user login time, ID:', userData.id);
+          userData = await storage.updateUser(userData.id, { lastLogin: new Date() });
         }
       } catch (dbError) {
         console.error('Database error during user lookup/creation:', dbError);
@@ -208,11 +264,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAdmin: true
         };
         console.log('Created temporary user for debugging:', tempUser);
+        
+        // Set session with temp user
+        req.session.userId = tempUser.id;
         return res.redirect('/?debug=true');
       }
       
+      // If we get here, we should check the userData object
+      if (!userData || !userData.id) {
+        return res.status(500).json({ message: 'Failed to create or retrieve user' });
+      }
+      
       // Set session
-      req.session.userId = user.id;
+      req.session.userId = userData.id;
+      console.log('Setting session userId to:', userData.id);
       
       // Redirect to client
       res.redirect('/');
