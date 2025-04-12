@@ -1470,6 +1470,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/buildings', authenticateUser, async (req, res) => {
     try {
       const buildings = await storage.getBuildingUpgrades(req.session.userId!);
+      
+      // Define the default building types
+      const defaultBuildingTypes = ['townhall', 'forge', 'blackmarket', 'bountyBoard', 'tavern'];
+      
+      // Check if all default building types exist
+      const existingTypes = buildings.map(b => b.buildingType);
+      
+      // Create missing buildings
+      const createdBuildings = [];
+      for (const type of defaultBuildingTypes) {
+        if (!existingTypes.includes(type)) {
+          console.log(`Creating default building for type: ${type}`);
+          const newBuilding = await storage.createBuildingUpgrade({
+            userId: req.session.userId!,
+            buildingType: type,
+            currentLevel: 1,
+            upgradeInProgress: false,
+            unlockedSkills: [],
+            availableSkillPoints: 0,
+            skillDistribution: {}
+          });
+          if (newBuilding) {
+            createdBuildings.push(newBuilding);
+          }
+        }
+      }
+      
+      // If any buildings were created, return all buildings including the new ones
+      if (createdBuildings.length > 0) {
+        const allBuildings = await storage.getBuildingUpgrades(req.session.userId!);
+        return res.json(allBuildings);
+      }
+      
       res.json(buildings);
     } catch (error) {
       console.error('Error fetching buildings:', error);
@@ -1485,10 +1518,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("GET /api/buildings/skills/:buildingType", { buildingType, userId: req.session.userId });
       
       // Get the building
-      const building = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
+      let building = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
       
+      // If building doesn't exist, create a default one
       if (!building) {
-        return res.status(404).json({ message: 'Building not found' });
+        console.log(`Creating default building for type: ${buildingType}`);
+        building = await storage.createBuildingUpgrade({
+          userId: req.session.userId!,
+          buildingType: buildingType,
+          currentLevel: 1,
+          upgradeInProgress: false,
+          unlockedSkills: [],
+          availableSkillPoints: 0,
+          skillDistribution: {}
+        });
+        
+        if (!building) {
+          return res.status(500).json({ message: 'Failed to create building record' });
+        }
       }
       
       // Define skill trees for each building type
@@ -1574,10 +1621,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get the building
-      const building = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
+      let building = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
       
+      // If building doesn't exist, create a default one
       if (!building) {
-        return res.status(404).json({ message: 'Building not found' });
+        console.log(`Creating default building for type: ${buildingType}`);
+        building = await storage.createBuildingUpgrade({
+          userId: req.session.userId!,
+          buildingType: buildingType,
+          currentLevel: 1,
+          upgradeInProgress: false,
+          unlockedSkills: [],
+          availableSkillPoints: 0,
+          skillDistribution: {}
+        });
+        
+        if (!building) {
+          return res.status(500).json({ message: 'Failed to create building record' });
+        }
       }
       
       // Get the skill tree for this building type
