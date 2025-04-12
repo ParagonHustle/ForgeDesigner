@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { townhallSkillTree, hasBuildingPlans, consumeBuildingPlan } from './townhallSkills';
 import {
   insertUserSchema,
   insertCharacterSchema,
@@ -1904,12 +1905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the skill tree for this building type
       const skillTrees = {
-        townhall: [
-          { id: 'th_slot_1', name: 'Extra Farming Slot', description: 'Unlocks an additional farming slot', maxLevel: 5 },
-          { id: 'th_resource_1', name: 'Resource Production', description: 'Increases resource gain by 5% per level', maxLevel: 5 },
-          { id: 'th_exp_1', name: 'Experience Boost', description: 'Increases XP gain by 5% per level', maxLevel: 5 },
-          { id: 'th_building_1', name: 'Construction Speed', description: 'Reduces building upgrade time by 5% per level', maxLevel: 5 },
-        ],
+        townhall: townhallSkillTree,
         forge: [
           // Path A: Speed & Efficiency
           { id: 'forge_speed_a', name: 'Crafting Speed', description: 'Increases crafting speed by 3% per level', maxLevel: 10, path: 'a' },
