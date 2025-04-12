@@ -7,8 +7,14 @@ import { apiRequest } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, Filter, ShoppingBag, User, Sparkles, Gem, Box, Plus } from 'lucide-react';
+import { 
+  Search, Filter, ShoppingBag, User, Sparkles, Gem, Box, Plus,
+  Info, Users, Zap, ArrowUpToLine, Activity, Sword, Droplets, Shield, 
+  Heart, Footprints, Eye, CircleOff, Target
+} from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import CharacterCard from '../characters/CharacterCard';
 import type { Character, Aura, Resource } from '@shared/schema';
 
@@ -391,7 +397,7 @@ const InventoryView = () => {
                           {aura.name || `${aura.element || 'Mysterious'} Aura`}
                         </h3>
                         <div className="text-sm text-[#C8B8DB]/80">
-                          {aura.rarity} • Level {aura.level || 1}
+                          Level {aura.level || 1}
                         </div>
                       </div>
                     </div>
@@ -399,21 +405,163 @@ const InventoryView = () => {
                     <div className="mt-2 bg-[#1F1D36]/80 p-3 rounded-lg text-sm">
                       <h4 className="font-semibold mb-1">Stat Multipliers:</h4>
                       <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-                        {aura.statMultipliers && Object.entries(aura.statMultipliers as Record<string, number>).map(([stat, value]) => (
-                          <div key={stat} className="flex justify-between">
-                            <span className="capitalize">{stat}</span>
-                            <span className="text-[#00B9AE]">
-                              {typeof value === 'number' ? `${value.toFixed(2)}x` : '1.00x'}
-                            </span>
+                        {/* Show all stats - show 0 if not present */}
+                        <div className="flex justify-between">
+                          <div className="flex items-center">
+                            <Sword className="h-3 w-3 mr-1 text-red-400" />
+                            <span>Attack</span>
                           </div>
-                        ))}
+                          <span className="text-[#00B9AE]">
+                            {typeof aura.attack === 'number' ? `+${aura.attack}` : '0'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <div className="flex items-center">
+                            <Target className="h-3 w-3 mr-1 text-blue-400" />
+                            <span>Accuracy</span>
+                          </div>
+                          <span className="text-[#00B9AE]">
+                            {typeof aura.accuracy === 'number' ? `+${aura.accuracy}` : '0'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <div className="flex items-center">
+                            <Shield className="h-3 w-3 mr-1 text-amber-400" />
+                            <span>Defense</span>
+                          </div>
+                          <span className="text-[#00B9AE]">
+                            {typeof aura.defense === 'number' ? `+${aura.defense}` : '0'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <div className="flex items-center">
+                            <Heart className="h-3 w-3 mr-1 text-green-400" />
+                            <span>Vitality</span>
+                          </div>
+                          <span className="text-[#00B9AE]">
+                            {typeof aura.vitality === 'number' ? `+${aura.vitality}` : '0'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <div className="flex items-center">
+                            <Footprints className="h-3 w-3 mr-1 text-cyan-400" />
+                            <span>Speed</span>
+                          </div>
+                          <span className="text-[#00B9AE]">
+                            {typeof aura.speed === 'number' ? `+${aura.speed}` : '0'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <div className="flex items-center">
+                            <Eye className="h-3 w-3 mr-1 text-yellow-400" />
+                            <span>Focus</span>
+                          </div>
+                          <span className="text-[#00B9AE]">
+                            {typeof aura.focus === 'number' ? `+${aura.focus}` : '0'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <div className="flex items-center">
+                            <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                            <span>Resilience</span>
+                          </div>
+                          <span className="text-[#00B9AE]">
+                            {typeof aura.resilience === 'number' ? `+${aura.resilience}` : '0'}
+                          </span>
+                        </div>
                       </div>
+                      
+                      {/* Display stat multipliers */}
+                      {aura.statMultipliers && typeof aura.statMultipliers === 'object' && 
+                       Object.entries(aura.statMultipliers as Record<string, number>).length > 0 && (
+                        <>
+                          <div className="text-[#00B9AE] text-xs mt-3 mb-1">Stat Multipliers:</div>
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                            {Object.entries(aura.statMultipliers as Record<string, number>).map(([stat, value]) => (
+                              <div key={stat} className="flex justify-between">
+                                <span className="capitalize">{stat}</span>
+                                <span className="text-[#00B9AE]">
+                                  {typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : '0.00%'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Forge information - showing which character classes were used */}
+                      {(() => {
+                        // Use safer type checking for sourceCharacterIds
+                        const sourceIds = aura.sourceCharacterIds as number[] | undefined;
+                        
+                        if (!sourceIds || !Array.isArray(sourceIds) || sourceIds.length === 0) {
+                          return (
+                            <div className="mt-3 pt-3 border-t border-[#432874]/30">
+                              <h4 className="text-xs font-semibold mb-1 text-[#00B9AE]">Power Source:</h4>
+                              <div className="text-xs text-[#C8B8DB]/80">
+                                Crafted with elemental essence
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        // Find the source characters
+                        const sourceChars = characters.filter(c => sourceIds.includes(c.id));
+                        
+                        return (
+                          <div className="mt-3 pt-3 border-t border-[#432874]/30">
+                            <h4 className="text-xs font-semibold mb-1 text-[#00B9AE]">Forged Using:</h4>
+                            <div className="text-xs text-[#C8B8DB]/80">
+                              {sourceChars.length === 0 
+                                ? 'Unknown characters' 
+                                : sourceChars.map(char => `${char.name} (${char.class})`).join(', ')
+                              }
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      
+                      {/* Skills list */}
+                      {aura.skills && (typeof aura.skills === 'object' || typeof aura.skills === 'string') && (
+                        <div className="mt-3 pt-3 border-t border-[#432874]/30">
+                          <h4 className="text-xs font-semibold mb-1 text-[#00B9AE]">Active Skills:</h4>
+                          <div className="text-xs">
+                            {(() => {
+                              let skills = [];
+                              try {
+                                skills = typeof aura.skills === 'string' 
+                                  ? JSON.parse(aura.skills) 
+                                  : aura.skills;
+                              } catch (e) {
+                                return 'No active skills';
+                              }
+                              
+                              if (!Array.isArray(skills) || skills.length === 0) {
+                                return 'No active skills';
+                              }
+                              
+                              return (
+                                <ul className="list-disc list-inside">
+                                  {skills.map((skill, idx) => (
+                                    <li key={idx}>
+                                      <span className="font-semibold">{skill.name}</span>: {skill.description}
+                                    </li>
+                                  ))}
+                                </ul>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="mt-3 text-center">
                       {aura.equippedByCharacterId ? (
                         <div className="bg-[#00B9AE]/20 text-[#00B9AE] py-1 px-2 rounded text-sm">
-                          Equipped
+                          Equipped by {(() => {
+                            const char = characters.find(c => c.id === aura.equippedByCharacterId);
+                            return char ? char.name : 'a character';
+                          })()}
                         </div>
                       ) : (
                         <Button 
