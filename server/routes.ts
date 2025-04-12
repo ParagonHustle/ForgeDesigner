@@ -664,6 +664,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Forge craft request body:', JSON.stringify(req.body));
       
+      // Validate character selection
+      const characterId = req.body.characterId;
+      if (!characterId) {
+        return res.status(400).json({ message: 'Character ID is required for crafting' });
+      }
+      
+      // Check if character exists and belongs to the user
+      const character = await storage.getCharacterById(characterId);
+      if (!character || character.userId !== req.session.userId) {
+        return res.status(404).json({ message: 'Character not found or not owned by you' });
+      }
+      
+      // Check if character is available (not assigned to another task)
+      const activeCharacterTasks = await storage.getActiveCharacterTasks(characterId);
+      if (activeCharacterTasks.length > 0) {
+        return res.status(400).json({ message: 'Character is already assigned to another task' });
+      }
+      
       // If endTime is provided as an ISO string, convert it to Date
       let processedBody = {...req.body};
       if (typeof processedBody.endTime === 'string') {
@@ -753,8 +771,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Create fusion task
+      const characterId = req.body.characterId;
+      if (!characterId) {
+        return res.status(400).json({ message: 'Character ID is required for fusion' });
+      }
+      
+      // Check if character exists and belongs to the user
+      const character = await storage.getCharacterById(characterId);
+      if (!character || character.userId !== req.session.userId) {
+        return res.status(404).json({ message: 'Character not found or not owned by you' });
+      }
+      
+      // Check if character is available (not assigned to another task)
+      const activeCharacterTasks = await storage.getActiveCharacterTasks(characterId);
+      if (activeCharacterTasks.length > 0) {
+        return res.status(400).json({ message: 'Character is already assigned to another task' });
+      }
+      
       const taskData = {
         userId: req.session.userId!,
+        characterId: characterId,
         taskType: 'fusion',
         primaryAuraId,
         secondaryAuraId,
@@ -834,6 +870,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           resultAuraId: newAura.id
         });
         
+        // Add activity log about the character completing the task
+        if (task.characterId) {
+          const character = await storage.getCharacterById(task.characterId);
+          if (character) {
+            await storage.createActivityLog({
+              userId: req.session.userId!,
+              activityType: 'character_task_completed',
+              description: `${character.name} has completed crafting a new aura`,
+              relatedIds: { characterId: character.id, auraId: newAura.id }
+            });
+          }
+        }
+        
         // Log activity
         await storage.createActivityLog({
           userId: req.session.userId!,
@@ -911,6 +960,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           completed: true,
           resultAuraId: resultAura.id
         });
+        
+        // Add activity log about the character completing the task
+        if (task.characterId) {
+          const character = await storage.getCharacterById(task.characterId);
+          if (character) {
+            await storage.createActivityLog({
+              userId: req.session.userId!,
+              activityType: 'character_task_completed',
+              description: `${character.name} has completed fusing auras to create a stronger one`,
+              relatedIds: { characterId: character.id, auraId: resultAura.id }
+            });
+          }
+        }
         
         // Log activity
         await storage.createActivityLog({

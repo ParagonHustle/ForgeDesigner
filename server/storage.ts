@@ -24,6 +24,7 @@ export interface IStorage {
   createCharacter(character: InsertCharacter): Promise<Character>;
   updateCharacter(id: number, updates: Partial<Character>): Promise<Character | undefined>;
   deleteCharacter(id: number): Promise<boolean>;
+  getActiveCharacterTasks(characterId: number): Promise<(FarmingTask | ForgingTask)[]>;
   
   // Aura methods
   getAuras(userId: number): Promise<Aura[]>;
@@ -130,6 +131,31 @@ export class DatabaseStorage implements IStorage {
   async deleteCharacter(id: number): Promise<boolean> {
     const result = await db.delete(characters).where(eq(characters.id, id));
     return !!result.rowCount;
+  }
+  
+  async getActiveCharacterTasks(characterId: number): Promise<(FarmingTask | ForgingTask)[]> {
+    // Get active farming tasks
+    const activeFarmingTasks = await db.select()
+      .from(farmingTasks)
+      .where(
+        and(
+          eq(farmingTasks.characterId, characterId),
+          eq(farmingTasks.completed, false)
+        )
+      );
+    
+    // Get active forging tasks
+    const activeForgingTasks = await db.select()
+      .from(forgingTasks)
+      .where(
+        and(
+          eq(forgingTasks.characterId, characterId),
+          eq(forgingTasks.completed, false)
+        )
+      );
+    
+    // Combine both task types
+    return [...activeFarmingTasks, ...activeForgingTasks];
   }
 
   async getAuras(userId: number): Promise<Aura[]> {
