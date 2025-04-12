@@ -132,13 +132,15 @@ const CollectionsView = () => {
 
   // Mock aura collection data
   const auraCollection = [
+    // Basic Collection - Fire, Water, Earth, Wind
     {
       id: 1,
       type: "Fire",
       discovered: true,
       icon: <Flame className="h-12 w-12 text-[#FF4500]" />,
       description: "Fiery auras enhance attack power and focus.",
-      unlockMethod: "Automatically unlocked"
+      unlockMethod: "Automatically unlocked",
+      collection: "basic"
     },
     {
       id: 2,
@@ -146,7 +148,8 @@ const CollectionsView = () => {
       discovered: true,
       icon: <Droplets className="h-12 w-12 text-[#1E90FF]" />,
       description: "Water auras enhance defense and resilience.",
-      unlockMethod: "Automatically unlocked"
+      unlockMethod: "Automatically unlocked",
+      collection: "basic"
     },
     {
       id: 3,
@@ -154,7 +157,8 @@ const CollectionsView = () => {
       discovered: true,
       icon: <Mountain className="h-12 w-12 text-[#8B4513]" />,
       description: "Earth auras enhance vitality and defense.",
-      unlockMethod: "Automatically unlocked"
+      unlockMethod: "Automatically unlocked",
+      collection: "basic"
     },
     {
       id: 4,
@@ -162,23 +166,37 @@ const CollectionsView = () => {
       discovered: true,
       icon: <Wind className="h-12 w-12 text-[#32CD32]" />,
       description: "Wind auras enhance speed and accuracy.",
-      unlockMethod: "Automatically unlocked"
+      unlockMethod: "Automatically unlocked",
+      collection: "basic"
     },
+    
+    // Rare Collection - Mystery Auras
     {
       id: 5,
       type: "Aura of Growth",
       discovered: false,
       icon: <Sparkles className="h-12 w-12 text-[#9C27B0]" />,
-      description: "A mysterious aura that enhances growth and resource collection.",
-      unlockMethod: "Complete 20 farming tasks with Level 5+ Characters"
+      description: "A mysterious aura that enhances growth and resource collection. 'From earth and sky, abundance flows, when patient hands plant what they know.'",
+      unlockMethod: "Complete 20 farming tasks with Level 5+ Characters",
+      collection: "rare"
     },
     {
       id: 6,
-      type: "Nature's Wrath",
+      type: "Wrath of Nature",
       discovered: false,
       icon: <Activity className="h-12 w-12 text-[#8BC34A]" />,
-      description: "A powerful nature-based aura with devastating effects.",
-      unlockMethod: "Clear 10 Elite Dungeons with Earth Aura-equipped Characters"
+      description: "A powerful nature-based aura with devastating effects. 'When mountains tremble and waters part, nature's fury finds its mark.'",
+      unlockMethod: "Clear 10 Elite Dungeons with Earth Aura-equipped Characters",
+      collection: "rare"
+    },
+    {
+      id: 7,
+      type: "Ethereal Whisper",
+      discovered: false,
+      icon: <BrainCircuit className="h-12 w-12 text-[#7B68EE]" />,
+      description: "A mystical aura that enhances magical abilities. 'Secrets whispered on ancient winds, heard only by the enlightened mind.'",
+      unlockMethod: "Collect all basic elemental auras and reach Account Power 5000+",
+      collection: "rare"
     }
   ];
 
@@ -282,56 +300,127 @@ const CollectionsView = () => {
             </p>
           </div>
           
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="grid gap-6 md:grid-cols-2"
-          >
-            {auraCollection.map(aura => (
-              <motion.div
-                key={aura.id}
-                variants={item}
-                className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
+          {/* Basic Collection Section */}
+          <div className="mb-10">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">Basic Collection</h4>
+              
+              <Button 
+                className="bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
+                size="sm"
               >
-                <div className="flex items-stretch">
-                  <div className="bg-[#1F1D36] p-6 flex items-center justify-center">
-                    <div className="bg-[#432874]/30 p-4 rounded-full">
-                      {aura.icon}
+                <Star className="h-4 w-4 mr-2" />
+                Claim Reward
+              </Button>
+            </div>
+            
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid gap-6 md:grid-cols-2"
+            >
+              {auraCollection.filter(aura => aura.collection === "basic").map(aura => (
+                <motion.div
+                  key={aura.id}
+                  variants={item}
+                  className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
+                >
+                  <div className="flex items-stretch">
+                    <div className="bg-[#1F1D36] p-6 flex items-center justify-center">
+                      <div className="bg-[#432874]/30 p-4 rounded-full">
+                        {aura.icon}
+                      </div>
+                    </div>
+                    
+                    <div className="p-6 flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">{aura.type} Aura</h4>
+                        <Badge className={`${aura.discovered ? 'bg-[#432874]/30 text-[#C8B8DB]' : 'bg-[#FF9D00]/30 text-[#FF9D00]'} border-[#432874]/50`}>
+                          {aura.discovered ? 'Discovered' : 'Locked'}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-[#C8B8DB]/80 mb-4 text-sm">
+                        {aura.description}
+                      </p>
+                      
+                      {aura.discovered && (
+                        <div className="bg-[#432874]/20 p-3 rounded-lg">
+                          <div className="flex items-center">
+                            <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
+                            <p className="text-sm text-[#C8B8DB]/90">
+                              Collection Reward: Collect all 4 elemental auras to earn 5 Basic Kleos Shards
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="p-6 flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">{aura.type} Aura</h4>
-                      <Badge className={`${aura.discovered ? 'bg-[#432874]/30 text-[#C8B8DB]' : 'bg-[#FF9D00]/30 text-[#FF9D00]'} border-[#432874]/50`}>
-                        {aura.discovered ? 'Discovered' : 'Locked'}
-                      </Badge>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+          
+          {/* Rare Collection Section */}
+          <div>
+            <h4 className="text-lg font-cinzel font-bold text-[#FF9D00] mb-4">Rare Collection</h4>
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid gap-6 md:grid-cols-2"
+            >
+              {auraCollection.filter(aura => aura.collection === "rare").map(aura => (
+                <motion.div
+                  key={aura.id}
+                  variants={item}
+                  className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
+                >
+                  <div className="flex items-stretch">
+                    <div className="bg-[#1F1D36] p-6 flex items-center justify-center">
+                      <div className="bg-[#432874]/30 p-4 rounded-full">
+                        {aura.icon}
+                      </div>
                     </div>
                     
-                    <p className="text-[#C8B8DB]/80 mb-4 text-sm">
-                      {aura.description}
-                    </p>
-                    
-                    {aura.discovered && (
+                    <div className="p-6 flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">{aura.type} Aura</h4>
+                        <Badge className={`${aura.discovered ? 'bg-[#432874]/30 text-[#C8B8DB]' : 'bg-[#FF9D00]/30 text-[#FF9D00]'} border-[#432874]/50`}>
+                          {aura.discovered ? 'Discovered' : 'Locked'}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-[#C8B8DB]/80 mb-4 text-sm">
+                        {aura.description}
+                      </p>
+                      
                       <div className="bg-[#432874]/20 p-3 rounded-lg">
                         <div className="flex items-center">
-                          <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
-                          <p className="text-sm text-[#C8B8DB]/90">
-                            {aura.type === "Fire" || aura.type === "Water" || aura.type === "Earth" || aura.type === "Wind" ? (
-                              "Collection Reward: Collect all 4 elemental auras to earn 5 Basic Kleos Shards"
-                            ) : (
-                              `Special Aura with unique abilities`
-                            )}
-                          </p>
+                          {aura.discovered ? (
+                            <>
+                              <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
+                              <p className="text-sm text-[#C8B8DB]/90">
+                                Special Aura with unique abilities
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 text-[#FF9D00] mr-2 flex-shrink-0" />
+                              <p className="text-sm text-[#C8B8DB]/90">
+                                Unlock Method: {aura.unlockMethod}
+                              </p>
+                            </>
+                          )}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
         </TabsContent>
         
         {/* Account Perks Tab - Skill Tree */}
