@@ -181,7 +181,8 @@ const BuildingsView = () => {
       'forge': 'forge',
       'blackmarket': 'blackmarket',
       'bountyboard': 'bountyBoard',
-      'tavern': 'tavern'
+      'tavern': 'tavern',
+      'farming': 'farming'
     };
     
     const normalizedType = buildingTypeMap[buildingType] || buildingType;
@@ -340,7 +341,8 @@ const BuildingsView = () => {
       'forge': 'forge',
       'blackmarket': 'blackmarket',
       'bountyboard': 'bountyBoard',
-      'tavern': 'tavern'
+      'tavern': 'tavern',
+      'farming': 'farming'
     };
     const normalizedType = buildingTypeMap[selectedBuilding.id] || selectedBuilding.id;
     
@@ -734,7 +736,8 @@ const BuildingsView = () => {
                         'forge': 'forge',
                         'blackmarket': 'blackmarket',
                         'bountyboard': 'bountyBoard',
-                        'tavern': 'tavern'
+                        'tavern': 'tavern',
+      'farming': 'farming'
                       };
                       const normalizedType = buildingTypeMap[building.id] || building.id;
                       console.log(`Opening skill tree for ${building.name}, type: ${normalizedType}`);
@@ -861,7 +864,8 @@ const BuildingsView = () => {
                               'forge': 'forge',
                               'blackmarket': 'blackmarket',
                               'bountyboard': 'bountyBoard',
-                              'tavern': 'tavern'
+                              'tavern': 'tavern',
+      'farming': 'farming'
                             };
                             const normalizedType = buildingTypeMap[building.id] || building.id;
                             console.log(`Setting building for upgrade: ${building.name}, type: ${normalizedType}`);
