@@ -121,23 +121,59 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     if (isAutoplaying) {
       interval = setInterval(() => {
         setBattleState(prevState => {
-          const updatedCharacters = prevState.characters.map(char => ({
-            ...char,
-            attackTimer: Math.max(0, char.attackTimer - 1),
-            hp: char.hp > 0 ? char.hp : 0
-          }));
+          const updatedCharacters = prevState.characters.map(char => {
+            let updatedChar = {
+              ...char,
+              attackTimer: Math.max(0, char.attackTimer - 1),
+              hp: char.hp > 0 ? char.hp : 0
+            };
+            
+            // Attack when timer reaches 0
+            if (updatedChar.attackTimer === 0 && updatedChar.hp > 0) {
+              const target = prevState.enemies.find(e => e.hp > 0);
+              if (target) {
+                const damage = Math.floor(updatedChar.stats.attack * (Math.random() * 0.3 + 0.85));
+                prevState.battleLogs.push(`${updatedChar.name} attacks ${target.name} for ${damage} damage!`);
+                target.hp = Math.max(0, target.hp - damage);
+                updatedChar.attackTimer = updatedChar.attackSpeed;
+              }
+            }
+            
+            return updatedChar;
+          });
           
-          const updatedEnemies = prevState.enemies.map(enemy => ({
-            ...enemy,
-            attackTimer: Math.max(0, enemy.attackTimer - 1),
-            hp: enemy.hp > 0 ? enemy.hp : 0
-          }));
+          const updatedEnemies = prevState.enemies.map(enemy => {
+            let updatedEnemy = {
+              ...enemy,
+              attackTimer: Math.max(0, enemy.attackTimer - 1),
+              hp: enemy.hp > 0 ? enemy.hp : 0
+            };
+            
+            // Enemy attacks when timer reaches 0
+            if (updatedEnemy.attackTimer === 0 && updatedEnemy.hp > 0) {
+              const target = prevState.characters.find(c => c.hp > 0);
+              if (target) {
+                const damage = Math.floor(updatedEnemy.stats.attack * (Math.random() * 0.3 + 0.85));
+                prevState.battleLogs.push(`${updatedEnemy.name} attacks ${target.name} for ${damage} damage!`);
+                target.hp = Math.max(0, target.hp - damage);
+                updatedEnemy.attackTimer = updatedEnemy.attackSpeed;
+              }
+            }
+            
+            return updatedEnemy;
+          });
+
+          // Keep only last 5 logs
+          if (prevState.battleLogs.length > 5) {
+            prevState.battleLogs = prevState.battleLogs.slice(-5);
+          }
 
           return {
             ...prevState,
             characters: updatedCharacters,
             enemies: updatedEnemies,
-            currentTurn: prevState.currentTurn + 1
+            currentTurn: prevState.currentTurn + 1,
+            battleLogs: [...prevState.battleLogs]
           };
         });
       }, 1000);
