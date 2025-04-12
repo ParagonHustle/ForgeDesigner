@@ -180,6 +180,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Character level-up route
+  app.post('/api/characters/:id/level-up', authenticateUser, async (req, res) => {
+    try {
+      const characterId = parseInt(req.params.id);
+      const { levelIncrease = 1 } = req.body;
+      
+      // Get the character
+      const character = await storage.getCharacterById(characterId);
+      
+      if (!character) {
+        return res.status(404).json({ message: 'Character not found' });
+      }
+      
+      if (character.userId !== req.session.userId) {
+        return res.status(403).json({ message: 'Not authorized to level up this character' });
+      }
+      
+      // Calculate new level
+      const currentLevel = character.level || 1;
+      const newLevel = currentLevel + levelIncrease;
+      
+      // Update character level and stats
+      const updatedCharacter = await storage.updateCharacter(characterId, {
+        level: newLevel,
+        // Increase stats proportionally (approximately 3-5% per level)
+        attack: Math.floor((character.attack || 10) * (1 + 0.04 * levelIncrease)),
+        defense: Math.floor((character.defense || 10) * (1 + 0.04 * levelIncrease)),
+        vitality: Math.floor((character.vitality || 100) * (1 + 0.03 * levelIncrease)),
+        speed: Math.floor((character.speed || 10) * (1 + 0.05 * levelIncrease)),
+        focus: Math.floor((character.focus || 10) * (1 + 0.04 * levelIncrease)),
+        accuracy: Math.floor((character.accuracy || 10) * (1 + 0.03 * levelIncrease)),
+        resilience: Math.floor((character.resilience || 10) * (1 + 0.03 * levelIncrease))
+      });
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: req.session.userId!,
+        activityType: 'character_leveled',
+        description: `${character.name} reached level ${newLevel}`,
+        relatedIds: { characterId }
+      });
+      
+      res.json(updatedCharacter);
+    } catch (error) {
+      console.error('Error leveling up character:', error);
+      res.status(500).json({ message: 'Failed to level up character' });
+    }
+  });
+  
   // Aura routes
   app.get('/api/auras', authenticateUser, async (req, res) => {
     try {
@@ -867,8 +916,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           resultAuraId: newAura.id
         });
         
-        // Add activity log about the character completing the task
+        // Free up the character
         if (task.characterId) {
+          await storage.updateCharacter(task.characterId, {
+            isActive: false,
+            activityType: null,
+            activityEndTime: null
+          });
+          
           const character = await storage.getCharacterById(task.characterId);
           if (character) {
             await storage.createActivityLog({
@@ -957,8 +1012,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           resultAuraId: resultAura.id
         });
         
-        // Add activity log about the character completing the task
+        // Free up the character
         if (task.characterId) {
+          await storage.updateCharacter(task.characterId, {
+            isActive: false,
+            activityType: null,
+            activityEndTime: null
+          });
+          
           const character = await storage.getCharacterById(task.characterId);
           if (character) {
             await storage.createActivityLog({
