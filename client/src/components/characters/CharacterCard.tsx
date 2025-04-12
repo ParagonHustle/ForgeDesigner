@@ -314,10 +314,14 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
             </div>
           </div>
           
-          <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+          <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
             <div className="flex items-center">
               <Swords className="h-3 w-3 mr-1 text-red-400" />
               <span>ATK: {character.attack}</span>
+            </div>
+            <div className="flex items-center">
+              <Target className="h-3 w-3 mr-1 text-yellow-400" />
+              <span>ACC: {character.accuracy}</span>
             </div>
             <div className="flex items-center">
               <Shield className="h-3 w-3 mr-1 text-blue-400" />
@@ -325,20 +329,26 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
             </div>
             <div className="flex items-center">
               <Heart className="h-3 w-3 mr-1 text-red-500" />
-              <span>HP: {character.vitality}</span>
-            </div>
-            <div className="flex items-center">
-              <Zap className="h-3 w-3 mr-1 text-yellow-400" />
-              <span>SPD: {character.speed}</span>
-            </div>
-            <div className="flex items-center">
-              <Flower2 className="h-3 w-3 mr-1 text-green-400" />
               <span>VIT: {character.vitality}</span>
             </div>
             <div className="flex items-center">
-              <Brain className="h-3 w-3 mr-1 text-purple-400" />
-              <span>INT: {character.accuracy}</span>
+              <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+              <span>SPD: {character.speed}</span>
             </div>
+            <div className="flex items-center">
+              <Brain className="h-3 w-3 mr-1 text-purple-400" />
+              <span>FOC: {character.focus || 0}</span>
+            </div>
+            <div className="flex items-center">
+              <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+              <span>RES: {character.resilience || 0}</span>
+            </div>
+            {character.passiveSkill && (
+              <div className="flex items-center">
+                <Check className="h-3 w-3 mr-1 text-green-400" />
+                <span className="text-green-400">Passive</span>
+              </div>
+            )}
           </div>
           
           <div className="mt-4 pt-3 border-t border-[#432874]/30 flex justify-between items-center">
@@ -400,7 +410,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-gradient-to-r from-red-500 to-red-400" 
-                              style={{ width: `${Math.min(100, (character.attack / 100) * 100)}%` }}
+                              style={{ width: `${Math.min(100, ((character.attack || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
                           {character.passiveSkill && character.passiveSkill.toLowerCase().includes('attack') && (
@@ -419,7 +429,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400" 
-                              style={{ width: `${Math.min(100, (character.accuracy / 100) * 100)}%` }}
+                              style={{ width: `${Math.min(100, ((character.accuracy || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
                           {character.passiveSkill && character.passiveSkill.toLowerCase().includes('accuracy') && (
@@ -501,6 +511,25 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             ></div>
                           </div>
                           {character.passiveSkill && character.passiveSkill.toLowerCase().includes('resilience') && (
+                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
+                          )}
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <div className="flex items-center">
+                              <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                              <span>Focus</span>
+                            </div>
+                            <span>{character.focus || 0}</span>
+                          </div>
+                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-purple-500 to-indigo-400" 
+                              style={{ width: `${Math.min(100, ((character.focus || 0) / 100) * 100)}%` }}
+                            ></div>
+                          </div>
+                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('focus') && (
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
