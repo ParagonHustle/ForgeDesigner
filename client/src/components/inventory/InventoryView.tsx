@@ -50,18 +50,38 @@ const InventoryView = () => {
     loadData();
   }, [fetchCharacters, fetchAuras, fetchResources]);
 
-  // Define character shards - now specific to each character
-  const characterShards = characters.map(character => ({
-    id: character.id,
-    name: `${character.name} Shard`,
-    quantity: Math.floor(Math.random() * 80) + 10, // Random quantity for demonstration
-    required: 100,
-    characterClass: character.class,
-    characterName: character.name,
-    rarity: character.rarity || "rare",
-    avatarUrl: character.avatarUrl
-  }));
+  // Define character shards - now specific to each character and persistent
+  const [characterShards, setCharacterShards] = useState<Array<{
+    id: number,
+    name: string,
+    quantity: number,
+    required: number,
+    characterClass: string,
+    characterName: string,
+    rarity: string,
+    avatarUrl?: string
+  }>>([]);
+  
+  // Generate persistent shards based on characters
+  useEffect(() => {
+    if (characters.length > 0 && characterShards.length === 0) {
+      const shards = characters.map(character => ({
+        id: character.id,
+        name: `${character.name} Shard`,
+        quantity: Math.floor(Math.random() * 80) + 10, // Random but persistent quantity
+        required: 100,
+        characterClass: character.class,
+        characterName: character.name,
+        rarity: character.rarity || "rare",
+        avatarUrl: character.avatarUrl
+      }));
+      setCharacterShards(shards);
+    }
+  }, [characters, characterShards.length]);
 
+  // State for selected aura detail
+  const [selectedAura, setSelectedAura] = useState<Aura | null>(null);
+  
   // Filter functions for each tab
   const filteredCharacters = characters.filter(character => {
     const matchesSearch = character.name.toLowerCase().includes(searchTerm.toLowerCase());

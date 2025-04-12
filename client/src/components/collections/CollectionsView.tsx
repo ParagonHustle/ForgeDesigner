@@ -25,13 +25,98 @@ import {
 
 const CollectionsView = () => {
   const [selectedTab, setSelectedTab] = useState('collections');
+  const [basicRewardClaimed, setBasicRewardClaimed] = useState(false);
+  const [rareRewardClaimed, setRareRewardClaimed] = useState(false);
+  const [equippedTitle, setEquippedTitle] = useState<number | null>(1); // Default to first title
+  
   const gameStore = useGameStore();
   const { user } = useDiscordAuth();
   const { toast } = useToast();
   
+  // Mock perks data (for skill tree)
+  const [perks, setPerks] = useState([
+    {
+      id: 1,
+      name: "Essence Harvester",
+      description: "Increases Essence gain by 10%",
+      level: 2,
+      maxLevel: 5,
+      icon: <Zap className="h-8 w-8 text-[#4CAF50]" />,
+      effect: "+10% Essence per level",
+      cost: 1,
+      position: { x: 1, y: 1 }
+    },
+    {
+      id: 2,
+      name: "Combat Specialist",
+      description: "Increases all character stats by 5%",
+      level: 1,
+      maxLevel: 5,
+      icon: <Swords className="h-8 w-8 text-[#DC143C]" />,
+      effect: "+5% Character Stats per level",
+      cost: 1, 
+      position: { x: 2, y: 1 }
+    },
+    {
+      id: 3,
+      name: "Forge Master",
+      description: "Reduces Aura forging time by 10%",
+      level: 0,
+      maxLevel: 3,
+      icon: <Flame className="h-8 w-8 text-[#FF9D00]" />,
+      effect: "-10% Forging Time per level",
+      cost: 1,
+      position: { x: 3, y: 1 }
+    },
+    {
+      id: 4,
+      name: "Resilient Mind",
+      description: "Increases Focus stat by 15%",
+      level: 0,
+      maxLevel: 3,
+      icon: <BrainCircuit className="h-8 w-8 text-[#9C27B0]" />,
+      effect: "+15% Focus per level",
+      cost: 1,
+      position: { x: 2, y: 2 }
+    },
+    {
+      id: 5,
+      name: "Vital Energies",
+      description: "Increases Vitality stat by 15%",
+      level: 0,
+      maxLevel: 3,
+      icon: <Activity className="h-8 w-8 text-[#F44336]" />,
+      effect: "+15% Vitality per level",
+      cost: 1,
+      position: { x: 1, y: 2 }
+    },
+    {
+      id: 6,
+      name: "Strategic Mind",
+      description: "Increases Defense stat by 15%",
+      level: 0,
+      maxLevel: 3,
+      icon: <Shield className="h-8 w-8 text-[#2196F3]" />,
+      effect: "+15% Defense per level",
+      cost: 1,
+      position: { x: 3, y: 2 }
+    },
+    {
+      id: 7,
+      name: "Enlightened Spirit",
+      description: "Increases all resource gathering by 20%",
+      level: 0,
+      maxLevel: 2,
+      icon: <Lightbulb className="h-8 w-8 text-[#FFD700]" />,
+      effect: "+20% Resource Gathering per level",
+      cost: 2,
+      position: { x: 2, y: 3 }
+    }
+  ]);
+  
   // Mock account power calculation
   const accountPower = 8750; // This would be calculated based on characters, auras and buildings
-  const skillPoints = Math.floor(accountPower / 1000);
+  const skillPoints = Math.floor(accountPower / 1000) - perks.reduce((total, perk) => total + perk.level, 0);
   
   // Animation variants
   const container = {
@@ -48,87 +133,6 @@ const CollectionsView = () => {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
   };
-
-  // Mock perks data (for skill tree)
-  const perks = [
-    {
-      id: 1,
-      name: "Essence Harvester",
-      description: "Increases Essence gain by 10%",
-      level: 2,
-      maxLevel: 5,
-      icon: <Zap className="h-8 w-8 text-[#4CAF50]" />,
-      effect: "+10% Essence per level",
-      cost: "1 Skill Point",
-      position: { x: 1, y: 1 }
-    },
-    {
-      id: 2,
-      name: "Combat Specialist",
-      description: "Increases all character stats by 5%",
-      level: 1,
-      maxLevel: 5,
-      icon: <Swords className="h-8 w-8 text-[#DC143C]" />,
-      effect: "+5% Character Stats per level",
-      cost: "1 Skill Point",
-      position: { x: 2, y: 1 }
-    },
-    {
-      id: 3,
-      name: "Forge Master",
-      description: "Reduces Aura forging time by 10%",
-      level: 0,
-      maxLevel: 3,
-      icon: <Flame className="h-8 w-8 text-[#FF9D00]" />,
-      effect: "-10% Forging Time per level",
-      cost: "1 Skill Point",
-      position: { x: 3, y: 1 }
-    },
-    {
-      id: 4,
-      name: "Resilient Mind",
-      description: "Increases Focus stat by 15%",
-      level: 0,
-      maxLevel: 3,
-      icon: <BrainCircuit className="h-8 w-8 text-[#9C27B0]" />,
-      effect: "+15% Focus per level",
-      cost: "1 Skill Point",
-      position: { x: 2, y: 2 }
-    },
-    {
-      id: 5,
-      name: "Vital Energies",
-      description: "Increases Vitality stat by 15%",
-      level: 0,
-      maxLevel: 3,
-      icon: <Activity className="h-8 w-8 text-[#F44336]" />,
-      effect: "+15% Vitality per level",
-      cost: "1 Skill Point",
-      position: { x: 1, y: 2 }
-    },
-    {
-      id: 6,
-      name: "Strategic Mind",
-      description: "Increases Defense stat by 15%",
-      level: 0,
-      maxLevel: 3,
-      icon: <Shield className="h-8 w-8 text-[#2196F3]" />,
-      effect: "+15% Defense per level",
-      cost: "1 Skill Point",
-      position: { x: 3, y: 2 }
-    },
-    {
-      id: 7,
-      name: "Enlightened Spirit",
-      description: "Increases all resource gathering by 20%",
-      level: 0,
-      maxLevel: 2,
-      icon: <Lightbulb className="h-8 w-8 text-[#FFD700]" />,
-      effect: "+20% Resource Gathering per level",
-      cost: "2 Skill Points",
-      position: { x: 2, y: 3 }
-    }
-  ];
 
   // Mock aura collection data
   const auraCollection = [
@@ -233,6 +237,13 @@ const CollectionsView = () => {
 
   const handleUpgradePerk = (perkId: number) => {
     // API call to upgrade a perk would go here
+    setPerks(perks.map(perk => {
+      if (perk.id === perkId && perk.level < perk.maxLevel) {
+        return { ...perk, level: perk.level + 1 };
+      }
+      return perk;
+    }));
+    
     toast({
       title: "Skill Allocated",
       description: "Your account-wide bonus has been increased.",
@@ -249,9 +260,11 @@ const CollectionsView = () => {
     if (collectionType === "basic") {
       rewardTitle = "Basic Collection Reward Claimed!";
       rewardDescription = "You received 5 Basic Kleos Shards for completing the Basic Element collection.";
+      setBasicRewardClaimed(true);
     } else if (collectionType === "rare") {
       rewardTitle = "Rare Collection Reward Claimed!";
       rewardDescription = "You received 10 Rare Kleos Shards and 500 Forge Tokens for completing the Rare collection.";
+      setRareRewardClaimed(true);
     }
     
     toast({
@@ -262,6 +275,7 @@ const CollectionsView = () => {
   
   const handleEquipTitle = (titleId: number) => {
     // API call to equip a title would go here
+    setEquippedTitle(titleId);
     const title = titles.find(t => t.id === titleId);
     
     toast({
@@ -336,14 +350,23 @@ const CollectionsView = () => {
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">Basic Collection</h4>
               
-              <Button 
-                className="bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
-                size="sm"
-                onClick={() => handleClaimReward('basic')}
-              >
-                <Star className="h-4 w-4 mr-2" />
-                Claim Reward
-              </Button>
+              {!basicRewardClaimed && (
+                <Button 
+                  className="bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
+                  size="sm"
+                  onClick={() => handleClaimReward('basic')}
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Claim Reward
+                </Button>
+              )}
+              
+              {basicRewardClaimed && (
+                <Badge className="bg-[#00B9AE]/20 text-[#00B9AE]">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Reward Claimed
+                </Badge>
+              )}
             </div>
             
             <motion.div
@@ -396,7 +419,28 @@ const CollectionsView = () => {
           
           {/* Rare Collection Section */}
           <div>
-            <h4 className="text-lg font-cinzel font-bold text-[#FF9D00] mb-4">Rare Collection</h4>
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">Rare Collection</h4>
+              
+              {!rareRewardClaimed && auraCollection.filter(a => a.collection === "rare" && a.discovered).length === auraCollection.filter(a => a.collection === "rare").length && (
+                <Button 
+                  className="bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
+                  size="sm"
+                  onClick={() => handleClaimReward('rare')}
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Claim Reward
+                </Button>
+              )}
+              
+              {rareRewardClaimed && (
+                <Badge className="bg-[#00B9AE]/20 text-[#00B9AE]">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Reward Claimed
+                </Badge>
+              )}
+            </div>
+            
             <motion.div
               variants={container}
               initial="hidden"
@@ -531,7 +575,7 @@ const CollectionsView = () => {
                             size="sm"
                             className="w-full bg-[#432874] hover:bg-[#432874]/80 text-xs"
                             onClick={() => handleUpgradePerk(perk.id)}
-                            disabled={skillPoints < 1}
+                            disabled={skillPoints < perk.cost}
                           >
                             <Star className="h-3 w-3 mr-1" />
                             Upgrade ({perk.cost})
@@ -586,7 +630,7 @@ const CollectionsView = () => {
                             size="sm"
                             className="w-full bg-[#432874] hover:bg-[#432874]/80 text-xs"
                             onClick={() => handleUpgradePerk(perk.id)}
-                            disabled={skillPoints < 1}
+                            disabled={skillPoints < perk.cost}
                           >
                             <Star className="h-3 w-3 mr-1" />
                             Upgrade ({perk.cost})
@@ -641,7 +685,7 @@ const CollectionsView = () => {
                             size="sm"
                             className="w-full bg-[#432874] hover:bg-[#432874]/80 text-xs"
                             onClick={() => handleUpgradePerk(perk.id)}
-                            disabled={skillPoints < 2}
+                            disabled={skillPoints < perk.cost}
                           >
                             <Star className="h-3 w-3 mr-1" />
                             Upgrade ({perk.cost})
@@ -660,11 +704,6 @@ const CollectionsView = () => {
             </div>
           </div>
           
-          <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-4">
-            <p className="text-[#C8B8DB]/80 text-sm">
-              <span className="text-[#FF9D00] font-semibold">Note:</span> Account Perks apply to all characters and activities in your account. Higher tier perks require investing points in prerequisite perks.
-            </p>
-          </div>
         </TabsContent>
         
         {/* Titles Tab */}
@@ -679,11 +718,21 @@ const CollectionsView = () => {
               <motion.div
                 key={title.id}
                 variants={item}
-                className={`bg-[#1A1A2E] border ${title.status === 'Unlocked' ? 'border-[#FFD700]/50' : 'border-[#432874]/30'} rounded-xl overflow-hidden`}
+                className={`bg-[#1A1A2E] border ${
+                  title.status === 'Unlocked' 
+                    ? equippedTitle === title.id 
+                      ? 'border-[#00B9AE]/50' 
+                      : 'border-[#FFD700]/50' 
+                    : 'border-[#432874]/30'
+                } rounded-xl overflow-hidden`}
               >
                 <div className="flex flex-col md:flex-row">
                   <div className="p-6 flex items-center justify-center md:w-1/4 bg-[#1F1D36]">
-                    <div className="bg-[#432874]/30 p-4 rounded-full">
+                    <div className={`${
+                      equippedTitle === title.id 
+                        ? 'bg-[#00B9AE]/30' 
+                        : 'bg-[#432874]/30'
+                    } p-4 rounded-full`}>
                       {title.icon}
                     </div>
                   </div>
@@ -691,9 +740,15 @@ const CollectionsView = () => {
                   <div className="flex-1 p-6">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-xl font-cinzel font-bold text-[#FF9D00]">{title.name}</h3>
-                      <Badge className={`${title.status === 'Unlocked' ? 'bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/30' : 'bg-[#432874]/30 text-[#C8B8DB] border-[#432874]/50'}`}>
-                        {title.status}
-                      </Badge>
+                      {equippedTitle === title.id ? (
+                        <Badge className="bg-[#00B9AE]/20 text-[#00B9AE] border-[#00B9AE]/30">
+                          Equipped
+                        </Badge>
+                      ) : (
+                        <Badge className={`${title.status === 'Unlocked' ? 'bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/30' : 'bg-[#432874]/30 text-[#C8B8DB] border-[#432874]/50'}`}>
+                          {title.status}
+                        </Badge>
+                      )}
                     </div>
                     
                     <p className="text-[#C8B8DB]/80 mb-4">{title.description}</p>
@@ -722,11 +777,16 @@ const CollectionsView = () => {
                   <div className="p-6 flex items-center justify-center md:w-1/5">
                     {title.status === 'Unlocked' ? (
                       <Button
-                        className="w-full bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
+                        className={`w-full ${
+                          equippedTitle === title.id
+                            ? 'bg-[#00B9AE]/20 hover:bg-[#00B9AE]/30 text-[#00B9AE] border border-[#00B9AE]/30'
+                            : 'bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30'
+                        }`}
+                        disabled={equippedTitle === title.id}
                         onClick={() => handleEquipTitle(title.id)}
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
-                        Equip Title
+                        {equippedTitle === title.id ? 'Equipped' : 'Equip Title'}
                       </Button>
                     ) : (
                       <div className="w-full text-center text-[#C8B8DB]/60">
