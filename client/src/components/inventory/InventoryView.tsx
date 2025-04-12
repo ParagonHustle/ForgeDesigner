@@ -182,7 +182,7 @@ const InventoryView = () => {
       localStorage.setItem('characterShards', JSON.stringify(updatedShards));
       
       // Create the character (in a real implementation, this would call the API)
-      handleRecruitCharacter(shard.characterClass, shard.rarity);
+      handleRecruitCharacter(shard.characterClass, shard.type);
     } else {
       // Collect more shards
       const randomAmount = Math.floor(Math.random() * 5) + 1;
@@ -207,7 +207,7 @@ const InventoryView = () => {
   };
 
   // Handle recruiting a new character
-  const handleRecruitCharacter = async (characterClass?: string) => {
+  const handleRecruitCharacter = async (characterClass?: string, type?: string) => {
     try {
       // Generate a random character for demonstration
       const randomNames = ["Eldrin", "Lyra", "Thorne", "Seraphina", "Gideon", "Isolde"];
@@ -941,27 +941,27 @@ const InventoryView = () => {
               >
                 <div className="flex items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3
-                    ${shard.rarity === 'common' ? 'bg-gray-600/30' : 
-                      shard.rarity === 'rare' ? 'bg-blue-600/30' : 
-                      shard.rarity === 'epic' ? 'bg-purple-600/30' : 
+                    ${shard.type === 'common' ? 'bg-gray-600/30' : 
+                      shard.type === 'rare' ? 'bg-blue-600/30' : 
+                      shard.type === 'epic' ? 'bg-purple-600/30' : 
                       'bg-yellow-600/30'}`
                   }>
                     <ShoppingBag className={`h-5 w-5 
-                      ${shard.rarity === 'common' ? 'text-gray-300' : 
-                        shard.rarity === 'rare' ? 'text-blue-300' : 
-                        shard.rarity === 'epic' ? 'text-purple-300' : 
+                      ${shard.type === 'common' ? 'text-gray-300' : 
+                        shard.type === 'rare' ? 'text-blue-300' : 
+                        shard.type === 'epic' ? 'text-purple-300' : 
                         'text-yellow-300'}`
                     } />
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#FF9D00]">{shard.name}</h3>
                     <div className={`text-sm capitalize
-                      ${shard.rarity === 'common' ? 'text-gray-300' : 
-                        shard.rarity === 'rare' ? 'text-blue-300' : 
-                        shard.rarity === 'epic' ? 'text-purple-300' : 
+                      ${shard.type === 'common' ? 'text-gray-300' : 
+                        shard.type === 'rare' ? 'text-blue-300' : 
+                        shard.type === 'epic' ? 'text-purple-300' : 
                         'text-yellow-300'}`
                     }>
-                      {shard.rarity} • {shard.characterClass}
+                      {shard.type} • {shard.characterClass}
                     </div>
                   </div>
                 </div>
@@ -973,9 +973,9 @@ const InventoryView = () => {
                   </div>
                   <div className="h-2 bg-[#1F1D36] rounded-full overflow-hidden">
                     <div 
-                      className={`h-full ${shard.rarity === 'common' ? 'bg-gray-600' : 
-                        shard.rarity === 'rare' ? 'bg-blue-600' : 
-                        shard.rarity === 'epic' ? 'bg-purple-600' : 
+                      className={`h-full ${shard.type === 'common' ? 'bg-gray-600' : 
+                        shard.type === 'rare' ? 'bg-blue-600' : 
+                        shard.type === 'epic' ? 'bg-purple-600' : 
                         'bg-yellow-600'}`
                       } 
                       style={{ width: `${(shard.quantity / shard.required) * 100}%` }}
@@ -984,7 +984,7 @@ const InventoryView = () => {
                 </div>
                 
                 <div className="mt-3 text-sm text-[#C8B8DB]/70">
-                  Collect {shard.required} shards to summon a {shard.rarity} {shard.characterClass} character.
+                  Collect {shard.required} shards to summon a {shard.type} {shard.characterClass} character.
                 </div>
                 
                 <Button 
