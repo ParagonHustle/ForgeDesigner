@@ -62,13 +62,20 @@ const InventoryView = () => {
     avatarUrl?: string
   }>>([]);
   
-  // Generate persistent shards based on characters
+  // Generate persistent shards based on characters with localStorage persistence
   useEffect(() => {
-    if (characters.length > 0 && characterShards.length === 0) {
+    // Try to load saved shards from localStorage
+    const savedShards = localStorage.getItem('characterShards');
+    
+    if (savedShards) {
+      // Use saved shards if available
+      setCharacterShards(JSON.parse(savedShards));
+    } else if (characters.length > 0 && characterShards.length === 0) {
+      // Generate new shards if none are saved
       const shards = characters.map(character => ({
         id: character.id,
         name: `${character.name} Shard`,
-        quantity: Math.floor(Math.random() * 80) + 10, // Random but persistent quantity
+        quantity: Math.floor(Math.random() * 80) + 10, // Random quantity, but will be saved
         required: 100,
         characterClass: character.class,
         characterName: character.name,
@@ -76,6 +83,9 @@ const InventoryView = () => {
         avatarUrl: character.avatarUrl
       }));
       setCharacterShards(shards);
+      
+      // Save to localStorage
+      localStorage.setItem('characterShards', JSON.stringify(shards));
     }
   }, [characters, characterShards.length]);
 
