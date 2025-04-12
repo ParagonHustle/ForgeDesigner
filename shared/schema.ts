@@ -27,8 +27,7 @@ export const characters = pgTable("characters", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   level: integer("level").default(1),
-  class: text("class").notNull(), 
-  rarity: text("rarity").notNull(),
+  class: text("class").notNull(),
   avatarUrl: text("avatar_url").notNull(),
   equippedAuraId: integer("equipped_aura_id"),
   attack: integer("attack").default(100),
@@ -63,7 +62,7 @@ export const auras = pgTable("auras", {
   speed: integer("speed").default(0),
   focus: integer("focus").default(0),
   resilience: integer("resilience").default(0),
-  statMultipliers: jsonb("stat_multipliers").notNull(), // For backward compatibility, now usually empty
+  statMultipliers: jsonb("stat_multipliers").default({}),
   skills: jsonb("skills").array(),
   equippedByCharacterId: integer("equipped_by_character_id"),
   isFusing: boolean("is_fusing").default(false),

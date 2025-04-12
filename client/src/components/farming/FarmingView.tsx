@@ -82,7 +82,8 @@ const FarmingView = () => {
   // Get farming tasks
   const { data: farmingTasks = [], isLoading, refetch: refetchFarmingTasks } = useQuery<FarmingTask[]>({ 
     queryKey: ['/api/farming/tasks'],
-    refetchInterval: 10000 // Refresh more frequently (every 10 seconds)
+    refetchInterval: 5000, // Refresh even more frequently (every 5 seconds)
+    staleTime: 1000, // Mark data as stale after 1 second
   });
   
   // Get truly available characters (not assigned to any active tasks)
