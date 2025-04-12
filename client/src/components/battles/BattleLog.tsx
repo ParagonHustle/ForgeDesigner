@@ -661,9 +661,36 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     }
   };
   
+  // Check if battle is still active (has at least one character and one enemy alive)
+  const isBattleActive = () => {
+    const aliveCharacters = battleState.characters.filter(c => c.hp > 0);
+    const aliveEnemies = battleState.enemies.filter(e => e.hp > 0);
+    return aliveCharacters.length > 0 && aliveEnemies.length > 0;
+  };
+  
   // Update the battle state by advancing attack timers and triggering attacks
   const updateBattleState = () => {
     if (!autoPlayActive) return;
+    
+    // Check if battle should end
+    if (!isBattleActive()) {
+      // Determine outcome
+      const aliveCharacters = battleState.characters.filter(c => c.hp > 0);
+      const outcome = aliveCharacters.length > 0 ? 'victory' : 'defeat';
+      
+      // Add a battle completion log entry
+      const logEntry = outcome === 'victory' 
+        ? 'Victory! Your party has defeated all enemies!' 
+        : 'Defeat! Your party has been defeated.';
+        
+      setBattleState(prev => ({
+        ...prev,
+        battleLogs: [...prev.battleLogs, logEntry].slice(-20)
+      }));
+      
+      stopAutoPlay();
+      return;
+    }
     
     setBattleState(prev => {
       // Create a copy of the current state
@@ -712,25 +739,40 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
           const targetIndex = Math.floor(Math.random() * aliveTargets.length);
           const target = aliveTargets[targetIndex];
           
-          // Calculate damage
+          // Calculate damage (add some randomness to damage)
           const baseDamage = combatant.stats.attack;
           const damageReduction = target.stats.defense / 100; // Convert defense to percentage
-          const damage = Math.max(1, Math.floor(baseDamage * (1 - damageReduction)));
+          const randomFactor = 0.8 + Math.random() * 0.4; // Random factor between 0.8 and 1.2
+          const damage = Math.max(1, Math.floor(baseDamage * randomFactor * (1 - damageReduction)));
+          
+          // Determine if critical hit (5% chance)
+          const isCritical = Math.random() < 0.05;
+          const criticalMultiplier = isCritical ? 1.5 : 1;
+          const finalDamage = Math.floor(damage * criticalMultiplier);
           
           // Generate a battle log entry
-          const logEntry = `${combatant.name} attacks ${target.name} for ${damage} damage!`;
+          const logEntry = isCritical
+            ? `${combatant.name} lands a CRITICAL HIT on ${target.name} for ${finalDamage} damage!`
+            : `${combatant.name} attacks ${target.name} for ${finalDamage} damage!`;
           newLogs.push(logEntry);
           
           // Apply damage to target
-          target.hp = Math.max(0, target.hp - damage);
+          target.hp = Math.max(0, target.hp - finalDamage);
+          
+          // Check if target was defeated
+          if (target.hp <= 0) {
+            newLogs.push(`${target.name} has been defeated!`);
+          }
           
           // Add attack action to log
           newState.actionLog.push({
             actor: combatant.name,
             action: 'attack',
             target: target.name,
-            damage,
-            isCritical: false
+            damage: finalDamage,
+            isCritical,
+            targetRemainingHp: target.hp,
+            targetMaxHp: target.maxHp
           });
           
           anyAttacksTriggered = true;
@@ -750,8 +792,9 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
       return newState;
     });
     
-    // Schedule next update
-    battleTimerRef.current = window.setTimeout(updateBattleState, 100);
+    // Schedule next update (delay based on battle speed)
+    const updateInterval = 100; // 100ms for standard real-time battle speed
+    battleTimerRef.current = window.setTimeout(updateBattleState, updateInterval);
   };
   
   // Reset replay to beginning
