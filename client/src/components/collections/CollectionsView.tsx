@@ -386,14 +386,18 @@ const CollectionsView = () => {
                     
                     <div className="p-6 flex-1">
                       <div className="flex justify-between items-start mb-2">
-                        <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">{aura.type} Aura</h4>
+                        <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">
+                          {aura.discovered ? `${aura.type} Aura` : "Mystery Aura"}
+                        </h4>
                         <Badge className={`${aura.discovered ? 'bg-[#432874]/30 text-[#C8B8DB]' : 'bg-[#FF9D00]/30 text-[#FF9D00]'} border-[#432874]/50`}>
                           {aura.discovered ? 'Discovered' : 'Locked'}
                         </Badge>
                       </div>
                       
                       <p className="text-[#C8B8DB]/80 mb-4 text-sm">
-                        {aura.description}
+                        {aura.discovered 
+                          ? aura.description 
+                          : aura.description.match(/'([^']+)'/)?.[1] + "..." || "A mysterious aura waiting to be discovered..."}
                       </p>
                       
                       <div className="bg-[#432874]/20 p-3 rounded-lg">
