@@ -42,7 +42,7 @@ const farmingResources = [
     name: "Celestial Ore", 
     description: "A rare material used in forging and crafting high-level Auras.",
     image: "https://images.unsplash.com/photo-1518709594023-6ebd2b555f4e?w=150&h=150&fit=crop",
-    rarity: "rare",
+    type: "rare",
     baseTime: 60 * 45 // 45 minutes in seconds
   },
   { 
@@ -50,7 +50,7 @@ const farmingResources = [
     name: "Moonsilver", 
     description: "A shimmering metallic material that enhances the power of water Auras.",
     image: "https://images.unsplash.com/photo-1505356822725-08ad25f3ffe4?w=150&h=150&fit=crop",
-    rarity: "common",
+    type: "common",
     baseTime: 60 * 30 // 30 minutes in seconds
   },
   { 
@@ -58,7 +58,7 @@ const farmingResources = [
     name: "Dragon Scale", 
     description: "Tough scales from fallen dragons, essential for crafting fire Auras.",
     image: "https://images.unsplash.com/photo-1563589425059-d2524a5a1dfc?w=150&h=150&fit=crop",
-    rarity: "rare",
+    type: "rare",
     baseTime: 60 * 45 // 45 minutes in seconds
   },
   { 
@@ -66,7 +66,7 @@ const farmingResources = [
     name: "Phoenix Feather", 
     description: "Brilliant feathers from phoenixes, used in creating powerful Auras.",
     image: "https://images.unsplash.com/photo-1592364395653-83e648b22fa4?w=150&h=150&fit=crop",
-    rarity: "epic",
+    type: "epic",
     baseTime: 60 * 60 // 60 minutes in seconds
   }
 ];
@@ -220,8 +220,8 @@ const FarmingView = () => {
     }
   };
 
-  const getRarityStyles = (rarity: string) => {
-    switch (rarity) {
+  const getTypeStyles = (type: string) => {
+    switch (type) {
       case 'common':
         return 'bg-slate-700/30 text-slate-300 border-slate-600/30';
       case 'rare':
@@ -299,7 +299,7 @@ const FarmingView = () => {
                         <div className="ml-2">
                           <div className="text-sm font-semibold">{task.resourceName}</div>
                           <div className="text-xs text-[#C8B8DB]/70">
-                            {farmingResources.find(r => r.name === task.resourceName)?.rarity || "common"}
+                            {farmingResources.find(r => r.name === task.resourceName)?.type || "common"}
                           </div>
                         </div>
                       </div>
@@ -368,8 +368,8 @@ const FarmingView = () => {
                             />
                             <div className="ml-2">
                               <div className="text-sm font-semibold">{resource.name}</div>
-                              <Badge className={`text-xs ${getRarityStyles(resource.rarity)}`}>
-                                {resource.rarity}
+                              <Badge className={`text-xs ${getTypeStyles(resource.type)}`}>
+                                {resource.type}
                               </Badge>
                             </div>
                           </div>
