@@ -378,17 +378,17 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     }
     const finalResult = battleLog.find((entry: any) => 'finalSummary' in entry);
     return (
-      <div className="space-y-6 py-4">
-        <div className="bg-[#1F1D36]/50 rounded-lg p-4">
-          <h3 className="text-[#FF9D00] font-cinzel text-lg mb-2">Battle Overview</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#1A1A2E] rounded p-3 flex flex-col items-center justify-center">
-              <p className="text-[#C8B8DB]/70 text-sm">Total Rounds</p>
-              <p className="text-2xl font-cinzel text-[#FF9D00]">{battleSummary.totalRounds}</p>
+      <div className="space-y-3 py-2">
+        <div className="bg-[#1F1D36]/50 rounded-lg p-3">
+          <h3 className="text-[#FF9D00] font-cinzel text-base mb-2">Battle Overview</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-[#1A1A2E] rounded p-2 flex flex-col items-center justify-center">
+              <p className="text-[#C8B8DB]/70 text-xs">Total Rounds</p>
+              <p className="text-xl font-cinzel text-[#FF9D00]">{battleSummary.totalRounds}</p>
             </div>
-            <div className="bg-[#1A1A2E] rounded p-3 flex flex-col items-center justify-center">
-              <p className="text-[#C8B8DB]/70 text-sm">Battle Duration</p>
-              <p className="text-2xl font-cinzel text-[#00B9AE]">
+            <div className="bg-[#1A1A2E] rounded p-2 flex flex-col items-center justify-center">
+              <p className="text-[#C8B8DB]/70 text-xs">Duration</p>
+              <p className="text-xl font-cinzel text-[#00B9AE]">
                 {Math.floor(battleSummary.totalDuration / 60)}:{(battleSummary.totalDuration % 60).toString().padStart(2, '0')}
               </p>
             </div>
@@ -469,13 +469,13 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
                       </Badge>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <p className="text-xs text-[#C8B8DB]/70">Damage Dealt</p>
+                      <p className="text-[#C8B8DB]/70">Damage Out</p>
                       <p className="font-semibold text-[#DC143C]">{enemy.stats.damageDealt}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#C8B8DB]/70">Damage Received</p>
+                      <p className="text-[#C8B8DB]/70">Damage In</p>
                       <p className="font-semibold text-[#00B9AE]">{enemy.stats.damageReceived}</p>
                     </div>
                   </div>
