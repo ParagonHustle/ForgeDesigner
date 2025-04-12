@@ -839,8 +839,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Generate a value between -10 and +10 for each stat
         const generateStatBonus = () => Math.floor(Math.random() * 21) - 10; // -10 to +10
         
-        // Default element if not specified
-        const elementType = task.targetElement || 'fire';
+        // Default element if not specified (fire, water, earth, air)
+        const elementType = task.targetElement || ['fire', 'water', 'earth', 'air'][Math.floor(Math.random() * 4)];
         
         const newAura = await storage.createAura({
           userId: req.session.userId!,
