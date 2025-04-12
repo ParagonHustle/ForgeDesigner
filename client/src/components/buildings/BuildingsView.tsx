@@ -242,10 +242,26 @@ const BuildingsView = () => {
     setIsSubmitting(true);
     
     try {
-      // Call the API to start the upgrade
-      await apiRequest('POST', '/api/buildings/upgrade', {
-        buildingType: selectedBuilding.id
+      console.log("Starting upgrade for building:", selectedBuilding.id);
+      
+      // Call the API to start the upgrade with a short timeout
+      const response = await fetch('/api/buildings/upgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          buildingType: selectedBuilding.id
+        }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to start upgrade');
+      }
+      
+      const data = await response.json();
+      console.log("Upgrade response:", data);
       
       toast({
         title: "Upgrade Started",
@@ -257,13 +273,15 @@ const BuildingsView = () => {
       setUpgradeDialog(false);
       
       // Refresh buildings and user data
-      refetchBuildings();
-      fetchUser();
-    } catch (error) {
+      setTimeout(() => {
+        refetchBuildings();
+        fetchUser();
+      }, 500); // Small delay to ensure server processes the upgrade
+    } catch (error: any) {
       console.error('Error starting upgrade:', error);
       toast({
         title: "Upgrade Failed",
-        description: "There was an error starting the upgrade.",
+        description: error.message || "There was an error starting the upgrade.",
         variant: "destructive"
       });
     } finally {
