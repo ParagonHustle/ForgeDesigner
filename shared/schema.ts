@@ -55,6 +55,7 @@ export const auras = pgTable("auras", {
   level: integer("level").default(1),
   element: text("element").notNull(), // fire, water, earth, air, light, dark
   tier: integer("tier").default(1),
+  // Stat bonuses range from -10 to +10 (representing percentage)
   attack: integer("attack").default(0),
   accuracy: integer("accuracy").default(0),
   defense: integer("defense").default(0),
@@ -62,11 +63,13 @@ export const auras = pgTable("auras", {
   speed: integer("speed").default(0),
   focus: integer("focus").default(0),
   resilience: integer("resilience").default(0),
-  statMultipliers: jsonb("stat_multipliers").notNull(), // For backward compatibility
+  statMultipliers: jsonb("stat_multipliers").notNull(), // For backward compatibility, now usually empty
   skills: jsonb("skills").array(),
   equippedByCharacterId: integer("equipped_by_character_id"),
   isFusing: boolean("is_fusing").default(false),
   fusionEndTime: timestamp("fusion_end_time"),
+  fusionSource: boolean("fusion_source").default(false), // Whether this aura was created via fusion
+  creatorCharacterId: integer("creator_character_id"), // Character that created this aura
 });
 
 // Resource model
@@ -214,6 +217,10 @@ export const aurasRelations = relations(auras, ({ one }) => ({
   }),
   equippedByCharacter: one(characters, {
     fields: [auras.equippedByCharacterId],
+    references: [characters.id],
+  }),
+  creatorCharacter: one(characters, {
+    fields: [auras.creatorCharacterId],
     references: [characters.id],
   }),
 }));

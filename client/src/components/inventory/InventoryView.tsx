@@ -426,8 +426,8 @@ const InventoryView = () => {
                                   <Sword className="h-3 w-3 mr-1 text-red-400" />
                                   <span>Attack</span>
                                 </div>
-                                <span className="text-[#00B9AE]">
-                                  {typeof selectedAura.attack === 'number' ? `+${selectedAura.attack}` : '0'}
+                                <span className={`${selectedAura.attack && selectedAura.attack > 0 ? 'text-green-400' : selectedAura.attack && selectedAura.attack < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
+                                  {typeof selectedAura.attack === 'number' ? `${selectedAura.attack > 0 ? '+' : ''}${selectedAura.attack}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -435,8 +435,8 @@ const InventoryView = () => {
                                   <Target className="h-3 w-3 mr-1 text-blue-400" />
                                   <span>Accuracy</span>
                                 </div>
-                                <span className="text-[#00B9AE]">
-                                  {typeof selectedAura.accuracy === 'number' ? `+${selectedAura.accuracy}` : '0'}
+                                <span className={`${selectedAura.accuracy && selectedAura.accuracy > 0 ? 'text-green-400' : selectedAura.accuracy && selectedAura.accuracy < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
+                                  {typeof selectedAura.accuracy === 'number' ? `${selectedAura.accuracy > 0 ? '+' : ''}${selectedAura.accuracy}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -444,8 +444,8 @@ const InventoryView = () => {
                                   <Shield className="h-3 w-3 mr-1 text-amber-400" />
                                   <span>Defense</span>
                                 </div>
-                                <span className="text-[#00B9AE]">
-                                  {typeof selectedAura.defense === 'number' ? `+${selectedAura.defense}` : '0'}
+                                <span className={`${selectedAura.defense && selectedAura.defense > 0 ? 'text-green-400' : selectedAura.defense && selectedAura.defense < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
+                                  {typeof selectedAura.defense === 'number' ? `${selectedAura.defense > 0 ? '+' : ''}${selectedAura.defense}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -453,8 +453,8 @@ const InventoryView = () => {
                                   <Heart className="h-3 w-3 mr-1 text-green-400" />
                                   <span>Vitality</span>
                                 </div>
-                                <span className="text-[#00B9AE]">
-                                  {typeof selectedAura.vitality === 'number' ? `+${selectedAura.vitality}` : '0'}
+                                <span className={`${selectedAura.vitality && selectedAura.vitality > 0 ? 'text-green-400' : selectedAura.vitality && selectedAura.vitality < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
+                                  {typeof selectedAura.vitality === 'number' ? `${selectedAura.vitality > 0 ? '+' : ''}${selectedAura.vitality}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -462,8 +462,8 @@ const InventoryView = () => {
                                   <Footprints className="h-3 w-3 mr-1 text-cyan-400" />
                                   <span>Speed</span>
                                 </div>
-                                <span className="text-[#00B9AE]">
-                                  {typeof selectedAura.speed === 'number' ? `+${selectedAura.speed}` : '0'}
+                                <span className={`${selectedAura.speed && selectedAura.speed > 0 ? 'text-green-400' : selectedAura.speed && selectedAura.speed < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
+                                  {typeof selectedAura.speed === 'number' ? `${selectedAura.speed > 0 ? '+' : ''}${selectedAura.speed}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -471,8 +471,8 @@ const InventoryView = () => {
                                   <Eye className="h-3 w-3 mr-1 text-yellow-400" />
                                   <span>Focus</span>
                                 </div>
-                                <span className="text-[#00B9AE]">
-                                  {typeof selectedAura.focus === 'number' ? `+${selectedAura.focus}` : '0'}
+                                <span className={`${selectedAura.focus && selectedAura.focus > 0 ? 'text-green-400' : selectedAura.focus && selectedAura.focus < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
+                                  {typeof selectedAura.focus === 'number' ? `${selectedAura.focus > 0 ? '+' : ''}${selectedAura.focus}%` : '0%'}
                                 </span>
                               </div>
                               <div className="flex justify-between">
@@ -480,24 +480,39 @@ const InventoryView = () => {
                                   <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
                                   <span>Resilience</span>
                                 </div>
-                                <span className="text-[#00B9AE]">
-                                  {typeof selectedAura.resilience === 'number' ? `+${selectedAura.resilience}` : '0'}
+                                <span className={`${selectedAura.resilience && selectedAura.resilience > 0 ? 'text-green-400' : selectedAura.resilience && selectedAura.resilience < 0 ? 'text-red-400' : 'text-[#00B9AE]'}`}>
+                                  {typeof selectedAura.resilience === 'number' ? `${selectedAura.resilience > 0 ? '+' : ''}${selectedAura.resilience}%` : '0%'}
                                 </span>
                               </div>
                             </div>
                             
-                            {/* Display stat multipliers */}
-                            {selectedAura.statMultipliers && typeof selectedAura.statMultipliers === 'object' && 
-                            Object.entries(selectedAura.statMultipliers as Record<string, number>).length > 0 && (
+                            {/* Display Skills if any */}
+                            {selectedAura.skills && Array.isArray(selectedAura.skills) && selectedAura.skills.length > 0 && (
                               <>
-                                <div className="text-[#00B9AE] text-xs mt-4 mb-1">Stat Multipliers:</div>
-                                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                                  {Object.entries(selectedAura.statMultipliers as Record<string, number>).map(([stat, value]) => (
-                                    <div key={stat} className="flex justify-between">
-                                      <span className="capitalize">{stat}</span>
-                                      <span className="text-[#00B9AE]">
-                                        {typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : '0.00%'}
-                                      </span>
+                                <div className="text-[#00B9AE] text-xs mt-4 mb-1">Skills:</div>
+                                <div className="mt-1 space-y-2">
+                                  {selectedAura.skills.map((skill: any, index: number) => (
+                                    <div key={index} className="bg-[#432874]/20 p-2 rounded-lg">
+                                      <div className="flex items-center">
+                                        <Sparkles className="h-3 w-3 mr-1 text-yellow-400 flex-shrink-0" />
+                                        <span className="font-semibold text-xs">{skill.name}</span>
+                                      </div>
+                                      {skill.description && (
+                                        <div className="ml-4 mt-1 text-xs text-[#C8B8DB]/80">
+                                          {skill.description}
+                                        </div>
+                                      )}
+                                      {skill.tier && (
+                                        <div className="ml-4 mt-1 text-xs">
+                                          <Badge className={`
+                                            ${skill.tier === 'Ultimate' ? 'bg-[#FF9D00]/20 text-[#FF9D00]' : 
+                                              skill.tier === 'Advanced' ? 'bg-[#00B9AE]/20 text-[#00B9AE]' : 
+                                              'bg-[#C8B8DB]/20 text-[#C8B8DB]'}
+                                          `}>
+                                            {skill.tier}
+                                          </Badge>
+                                        </div>
+                                      )}
                                     </div>
                                   ))}
                                 </div>

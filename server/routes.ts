@@ -835,32 +835,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Different logic based on task type
       if (task.taskType === 'craft') {
-        // Create new aura with individual stat values
+        // Create new aura with stat bonuses ranging from -10% to +10%
+        // Generate a value between -10 and +10 for each stat
+        const generateStatBonus = () => Math.floor(Math.random() * 21) - 10; // -10 to +10
+        
         const newAura = await storage.createAura({
           userId: req.session.userId!,
           name: `${task.targetElement} Aura`,
           level: 1,
           element: task.targetElement!,
-          rarity: task.targetRarity!,
           tier: 1,
-          // Add individual stat values
-          attack: Math.floor(Math.random() * 10) + 5,
-          defense: Math.floor(Math.random() * 10) + 5,
-          vitality: Math.floor(Math.random() * 10) + 5,
-          speed: Math.floor(Math.random() * 10) + 5,
-          focus: Math.floor(Math.random() * 10) + 5,
-          resilience: Math.floor(Math.random() * 10) + 5,
-          accuracy: Math.floor(Math.random() * 10) + 5,
-          // Keep the stat multipliers for backward compatibility
-          statMultipliers: {
-            attack: Math.random() * 0.2 + 1.1,
-            defense: Math.random() * 0.2 + 1.1,
-            vitality: Math.random() * 0.2 + 1.1,
-            speed: Math.random() * 0.2 + 1.1,
-            focus: Math.random() * 0.2 + 1.1,
-            resilience: Math.random() * 0.2 + 1.1,
-            accuracy: Math.random() * 0.2 + 1.1
-          },
+          // Add stat bonuses in the range of -10% to +10%
+          attack: generateStatBonus(),
+          defense: generateStatBonus(),
+          vitality: generateStatBonus(),
+          speed: generateStatBonus(),
+          focus: generateStatBonus(),
+          resilience: generateStatBonus(), 
+          accuracy: generateStatBonus(),
+          // Keep empty stat multipliers for backward compatibility
+          statMultipliers: {},
           skills: []
         });
         
@@ -907,40 +901,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create upgraded aura (level + 1)
         const newLevel = Math.min(primaryAura.level !== null ? primaryAura.level + 1 : 2, 5);
         
-        // Calculate new individual stat values
-        const baseAttack = primaryAura.attack !== null ? primaryAura.attack : 5;
-        const baseDefense = primaryAura.defense !== null ? primaryAura.defense : 5;
-        const baseVitality = primaryAura.vitality !== null ? primaryAura.vitality : 5;
-        const baseSpeed = primaryAura.speed !== null ? primaryAura.speed : 5;
-        const baseFocus = primaryAura.focus !== null ? primaryAura.focus : 5;
-        const baseResilience = primaryAura.resilience !== null ? primaryAura.resilience : 5;
-        const baseAccuracy = primaryAura.accuracy !== null ? primaryAura.accuracy : 5;
+        // Enhance stat bonuses by 1-2 points, capping at +10
+        const enhanceStat = (baseStat: number | null) => {
+          if (baseStat === null) return Math.floor(Math.random() * 5); // Random 0-4 if null
+          
+          // Add 1-2 points, but cap at 10
+          const enhancement = Math.floor(Math.random() * 2) + 1;
+          return Math.min(baseStat + enhancement, 10);
+        };
+        
+        // Apply secondary aura's best stat if it's higher
+        const combineBestStat = (primaryStat: number | null, secondaryStat: number | null) => {
+          const pStat = primaryStat !== null ? primaryStat : -5;
+          const sStat = secondaryStat !== null ? secondaryStat : -5;
+          return Math.max(pStat, sStat);
+        };
         
         const resultAura = await storage.createAura({
           userId: req.session.userId!,
           name: `Enhanced ${primaryAura.element} Aura`,
           level: newLevel,
           element: primaryAura.element,
-          rarity: primaryAura.rarity,
-          tier: primaryAura.tier,
-          // Add individual stat values with 20% increase
-          attack: Math.floor(baseAttack * 1.2),
-          defense: Math.floor(baseDefense * 1.2),
-          vitality: Math.floor(baseVitality * 1.2),
-          speed: Math.floor(baseSpeed * 1.2),
-          focus: Math.floor(baseFocus * 1.2),
-          resilience: Math.floor(baseResilience * 1.2),
-          accuracy: Math.floor(baseAccuracy * 1.2),
-          // Keep the stat multipliers for backward compatibility
-          statMultipliers: {
-            attack: ((primaryAura.statMultipliers as any)?.attack || 1) * 1.2,
-            defense: ((primaryAura.statMultipliers as any)?.defense || 1) * 1.2,
-            vitality: ((primaryAura.statMultipliers as any)?.vitality || 1) * 1.2,
-            speed: ((primaryAura.statMultipliers as any)?.speed || 1) * 1.2,
-            focus: ((primaryAura.statMultipliers as any)?.focus || 1) * 1.2,
-            resilience: ((primaryAura.statMultipliers as any)?.resilience || 1) * 1.2,
-            accuracy: ((primaryAura.statMultipliers as any)?.accuracy || 1) * 1.2
-          },
+          tier: primaryAura.tier !== null ? primaryAura.tier + 1 : 2,
+          // Enhance stat bonuses, capping at +10%
+          attack: combineBestStat(enhanceStat(primaryAura.attack), secondaryAura.attack),
+          defense: combineBestStat(enhanceStat(primaryAura.defense), secondaryAura.defense),
+          vitality: combineBestStat(enhanceStat(primaryAura.vitality), secondaryAura.vitality),
+          speed: combineBestStat(enhanceStat(primaryAura.speed), secondaryAura.speed),
+          focus: combineBestStat(enhanceStat(primaryAura.focus), secondaryAura.focus),
+          resilience: combineBestStat(enhanceStat(primaryAura.resilience), secondaryAura.resilience),
+          accuracy: combineBestStat(enhanceStat(primaryAura.accuracy), secondaryAura.accuracy),
+          // Keep empty stat multipliers for backward compatibility
+          statMultipliers: {},
+          // Record fusion source for display in aura details
+          fusionSource: true,
+          creatorCharacterId: task.characterId,
           skills: [...(primaryAura.skills || [])]
         });
         
