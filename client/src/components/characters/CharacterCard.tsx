@@ -662,21 +662,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             )}
                           </div>
                           
-                          {/* Display stat multipliers */}
-                          {aura.statMultipliers && typeof aura.statMultipliers === 'object' && 
-                           Object.entries(aura.statMultipliers as Record<string, unknown>).length > 0 && (
-                            <>
-                              <div className="text-[#00B9AE] text-xs mb-1">Stat Multipliers:</div>
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                                {Object.entries(aura.statMultipliers as Record<string, unknown>).map(([stat, value]) => (
-                                  <div key={stat} className="flex items-center">
-                                    <span className="text-[#00B9AE]">+</span>
-                                    <span className="ml-1">{typeof value === 'number' ? (value * 100).toFixed(2) : '0.00'}% {stat.charAt(0).toUpperCase() + stat.slice(1)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </>
-                          )}
+                          {/* Note: Stat bonuses are now displayed directly in the attributes above */}
                         </div>
                       </div>
                     )}

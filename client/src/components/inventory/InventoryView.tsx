@@ -79,7 +79,7 @@ const InventoryView = () => {
         required: 100,
         characterClass: character.class,
         characterName: character.name,
-        rarity: character.rarity || "rare",
+        rarity: "rare", // Default to rare since rarity is removed from characters
         avatarUrl: character.avatarUrl
       }));
       setCharacterShards(shards);
@@ -757,23 +757,7 @@ const InventoryView = () => {
                         </div>
                       </div>
                       
-                      {/* Display stat multipliers */}
-                      {aura.statMultipliers && typeof aura.statMultipliers === 'object' && 
-                       Object.entries(aura.statMultipliers as Record<string, number>).length > 0 && (
-                        <>
-                          <div className="text-[#00B9AE] text-xs mt-3 mb-1">Stat Multipliers:</div>
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                            {Object.entries(aura.statMultipliers as Record<string, number>).map(([stat, value]) => (
-                              <div key={stat} className="flex justify-between">
-                                <span className="capitalize">{stat}</span>
-                                <span className="text-[#00B9AE]">
-                                  {typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : '0.00%'}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
+                      {/* Note: Stat bonuses are now displayed directly in the attributes above */}
                       
                       {/* Forge information - showing which character classes were used */}
                       {(() => {
