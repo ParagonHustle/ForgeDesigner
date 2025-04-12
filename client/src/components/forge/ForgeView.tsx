@@ -110,7 +110,7 @@ const ForgeView = () => {
       const response = await apiRequest('POST', '/api/forge/craft', {
         taskType: 'craft',
         targetElement: selectedElement,
-        startTime: new Date(),
+        startTime: new Date().toISOString(),
         endTime: endTime.toISOString(),
         requiredMaterials: {
           'Essence': 500
