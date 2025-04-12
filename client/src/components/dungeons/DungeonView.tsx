@@ -116,12 +116,24 @@ const DungeonView = () => {
         throw new Error(`${unequippedChars.map(c => c.name).join(', ')} ${unequippedChars.length === 1 ? 'needs' : 'need'} an aura equipped to enter dungeons`);
       }
       
-      const response = await apiRequest('POST', '/api/dungeons/start', {
+      console.log("Sending dungeon request:", {
         dungeonName: selectedDungeon.name,
         dungeonLevel: selectedDungeon.level,
         characterIds: selectedCharacters,
         endTime: endTime
       });
+      
+      const response = await apiRequest('POST', '/api/dungeons/start', {
+        dungeonName: selectedDungeon.name,
+        dungeonLevel: selectedDungeon.level,
+        characterIds: selectedCharacters,
+        endTime: endTime.toISOString() // Convert to ISO string
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to start dungeon run");
+      }
       
       toast({
         title: "Dungeon Run Started!",
@@ -130,6 +142,7 @@ const DungeonView = () => {
       
       // Refresh dungeon runs
       fetchDungeonRuns();
+      activeDungeons.refetch();
       
       // Reset selections
       setSelectedCharacters([]);
@@ -137,8 +150,8 @@ const DungeonView = () => {
     } catch (error: any) {
       console.error('Error starting dungeon run:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to start dungeon run.",
+        title: "Failed to Start Dungeon Run",
+        description: error.message || "There was an error starting the dungeon run.",
         variant: "destructive"
       });
     } finally {
