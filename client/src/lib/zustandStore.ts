@@ -37,6 +37,7 @@ interface GameState {
   discordMessages: { id: string; username: string; content: string; timestamp: Date }[];
   
   // Functions
+  updateCurrencies: (forgeTokens: number, rogueCredits: number, soulShards: number) => void;
   fetchResources: () => Promise<void>;
   fetchCharacters: () => Promise<void>;
   fetchAuras: () => Promise<void>;
@@ -75,6 +76,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (res.ok) {
         const user = await res.json();
         set({ user, isAuthenticated: true, isLoading: false });
+        
+        // Update game store with user's currencies
+        const gameStore = useGameStore.getState();
+        gameStore.updateCurrencies(user.forgeTokens || 0, user.rogueCredits || 0, user.soulShards || 0);
+        
         return user;
       } else {
         set({ user: null, isAuthenticated: false, isLoading: false });
@@ -117,6 +123,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     { id: '2', username: 'AuraCollector', content: 'I got a rare Fire Aura from fusion!', timestamp: new Date() },
     { id: '3', username: 'ForgeHero', content: "I'll join the dungeon run in 5", timestamp: new Date() }
   ],
+  
+  // Update currencies
+  updateCurrencies: (forgeTokens, rogueCredits, soulShards) => {
+    set({ forgeTokens, rogueCredits, soulShards });
+  },
   
   // Functions
   fetchResources: async () => {
