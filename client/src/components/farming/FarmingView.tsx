@@ -80,9 +80,9 @@ const FarmingView = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Get farming tasks
-  const { data: farmingTasks = [], isLoading } = useQuery<FarmingTask[]>({ 
+  const { data: farmingTasks = [], isLoading, refetch: refetchFarmingTasks } = useQuery<FarmingTask[]>({ 
     queryKey: ['/api/farming/tasks'],
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 10000 // Refresh more frequently (every 10 seconds)
   });
   
   // Get truly available characters (not assigned to any active tasks)
@@ -170,8 +170,10 @@ const FarmingView = () => {
       setSelectedResource(null);
       setSelectedCharacter(null);
       
-      // Refresh farming tasks
+      // Refresh farming tasks immediately
       fetchFarmingTasks();
+      // Also update the query cache immediately
+      refetchFarmingTasks();
     } catch (error: any) {
       console.error('Error starting farming task:', error);
       toast({
@@ -201,8 +203,10 @@ const FarmingView = () => {
         description: `Gained ${data.amount} ${data.resource}.`,
       });
       
-      // Refresh farming tasks
+      // Refresh farming tasks immediately
       fetchFarmingTasks();
+      // Also update the query cache immediately
+      refetchFarmingTasks();
     } catch (error) {
       console.error('Error collecting resources:', error);
       toast({
