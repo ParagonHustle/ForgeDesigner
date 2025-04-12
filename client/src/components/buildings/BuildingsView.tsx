@@ -264,8 +264,19 @@ const BuildingsView = () => {
     availableSkillTree: [] 
   } as SkillTreeData } = useQuery<SkillTreeData>({
     queryKey: selectedBuilding ? [`/api/buildings/skills/${selectedBuilding.buildingType}`] : [],
-    enabled: !!selectedBuilding && skillTreeDialog
+    enabled: !!selectedBuilding && skillTreeDialog,
+    onError: (error) => {
+      console.error("Error fetching skill tree:", error, "Selected building:", selectedBuilding);
+    }
   });
+
+  // Debug log for skill tree query
+  useEffect(() => {
+    if (selectedBuilding && skillTreeDialog) {
+      console.log("Skill tree query for building:", selectedBuilding);
+      console.log("Building type for skill tree:", selectedBuilding.buildingType);
+    }
+  }, [selectedBuilding, skillTreeDialog]);
 
   // Allocate skill point
   const allocateSkill = async (skillId: string) => {
