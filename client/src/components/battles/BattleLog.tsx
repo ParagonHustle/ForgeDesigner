@@ -72,6 +72,7 @@ interface BattleState {
   currentTurn: number;
   isActive: boolean;
   actionLog: any[];
+  battleLogs: string[];
 }
 
 interface CombatStats {
@@ -129,8 +130,11 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     enemies: [],
     currentTurn: 0,
     isActive: false,
-    actionLog: []
+    actionLog: [],
+    battleLogs: []
   });
+  const [autoPlayActive, setAutoPlayActive] = useState(false);
+  const battleTimerRef = useRef<number | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<BattleSkill | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   
@@ -146,6 +150,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
       initializeBattleState();
     } else {
       stopReplay();
+      stopAutoPlay();
       setCurrentReplayStep(0);
       setIsReplaying(false);
       setActiveTab('log');
@@ -154,6 +159,9 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     return () => {
       if (replayTimerRef.current) {
         clearTimeout(replayTimerRef.current);
+      }
+      if (battleTimerRef.current) {
+        clearTimeout(battleTimerRef.current);
       }
     };
   }, [isOpen, battleLog]);
@@ -250,7 +258,8 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
       enemies,
       currentTurn: 0,
       isActive: false,
-      actionLog: []
+      actionLog: [],
+      battleLogs: []
     });
     
     console.log("Battle state initialized with", characters.length, "characters and", enemies.length, "enemies");
@@ -270,16 +279,6 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
         description: 'A basic attack dealing physical damage',
         type: 'attack',
         targetType: 'enemy'
-      },
-      {
-        id: 'defensive-stance',
-        name: 'Defensive Stance',
-        cooldown: 3,
-        currentCooldown: 0,
-        icon: 'shield',
-        description: 'Increase defense for 1 turn',
-        type: 'buff',
-        targetType: 'self'
       }
     ];
     
@@ -638,6 +637,121 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
       clearTimeout(replayTimerRef.current);
       replayTimerRef.current = null;
     }
+  };
+  
+  // Start auto-play battle simulation
+  const startAutoPlay = () => {
+    if (autoPlayActive) return;
+    
+    setAutoPlayActive(true);
+    setBattleState(prev => ({...prev, isActive: true}));
+    
+    // Start the timer to update the battle state
+    updateBattleState();
+  };
+  
+  // Stop auto-play battle simulation
+  const stopAutoPlay = () => {
+    setAutoPlayActive(false);
+    setBattleState(prev => ({...prev, isActive: false}));
+    
+    if (battleTimerRef.current) {
+      clearTimeout(battleTimerRef.current);
+      battleTimerRef.current = null;
+    }
+  };
+  
+  // Update the battle state by advancing attack timers and triggering attacks
+  const updateBattleState = () => {
+    if (!autoPlayActive) return;
+    
+    setBattleState(prev => {
+      // Create a copy of the current state
+      const newState = {...prev};
+      
+      // Advance attack timers for all combatants
+      const allCombatants = [...newState.characters, ...newState.enemies];
+      let anyAttacksTriggered = false;
+      const newLogs: string[] = [];
+      
+      // First, decrement cooldowns for all skills
+      allCombatants.forEach(combatant => {
+        combatant.skills.forEach(skill => {
+          if (skill.currentCooldown && skill.currentCooldown > 0) {
+            skill.currentCooldown -= 0.1;
+            if (skill.currentCooldown < 0) skill.currentCooldown = 0;
+          }
+        });
+      });
+      
+      // Then, update attack timers and trigger attacks
+      allCombatants.forEach(combatant => {
+        // Only process if combatant has HP
+        if (combatant.hp <= 0) return;
+        
+        // Advance attack timer
+        combatant.attackTimer += 0.1;
+        
+        // Check if it's time to attack
+        if (combatant.attackTimer >= combatant.attackSpeed) {
+          // Reset timer
+          combatant.attackTimer = 0;
+          
+          // Determine targets based on combatant type
+          const targets = combatant.type === 'character' ? newState.enemies : newState.characters;
+          
+          // Filter for alive targets
+          const aliveTargets = targets.filter(t => t.hp > 0);
+          
+          // If no alive targets, battle is over
+          if (aliveTargets.length === 0) {
+            return;
+          }
+          
+          // Pick a target randomly
+          const targetIndex = Math.floor(Math.random() * aliveTargets.length);
+          const target = aliveTargets[targetIndex];
+          
+          // Calculate damage
+          const baseDamage = combatant.stats.attack;
+          const damageReduction = target.stats.defense / 100; // Convert defense to percentage
+          const damage = Math.max(1, Math.floor(baseDamage * (1 - damageReduction)));
+          
+          // Generate a battle log entry
+          const logEntry = `${combatant.name} attacks ${target.name} for ${damage} damage!`;
+          newLogs.push(logEntry);
+          
+          // Apply damage to target
+          target.hp = Math.max(0, target.hp - damage);
+          
+          // Add attack action to log
+          newState.actionLog.push({
+            actor: combatant.name,
+            action: 'attack',
+            target: target.name,
+            damage,
+            isCritical: false
+          });
+          
+          anyAttacksTriggered = true;
+        }
+      });
+      
+      // Add new logs to the battle logs
+      if (newLogs.length > 0) {
+        newState.battleLogs = [...newState.battleLogs, ...newLogs].slice(-20);
+      }
+      
+      // Increment current turn if any attacks happened
+      if (anyAttacksTriggered) {
+        newState.currentTurn += 1;
+      }
+      
+      return newState;
+    });
+    
+    // Schedule next update
+    battleTimerRef.current = window.setTimeout(updateBattleState, 100);
   };
   
   // Reset replay to beginning
