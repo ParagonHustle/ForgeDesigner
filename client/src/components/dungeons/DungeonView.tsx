@@ -190,8 +190,10 @@ const DungeonView = () => {
   };
 
   const viewBattleLog = (battleLog: any) => {
-    // Implement battle log viewer
+    // Display battle log in dialog
     console.log(battleLog);
+    setCurrentBattleLog(battleLog || []);
+    setShowBattleLog(true);
   };
 
   return (
@@ -531,6 +533,13 @@ const DungeonView = () => {
           ))}
         </div>
       </div>
+
+      {/* Battle Log Dialog */}
+      <BattleLog 
+        isOpen={showBattleLog}
+        onClose={() => setShowBattleLog(false)}
+        battleLog={currentBattleLog}
+      />
     </>
   );
 };
