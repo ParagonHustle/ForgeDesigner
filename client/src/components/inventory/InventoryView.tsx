@@ -151,8 +151,63 @@ const InventoryView = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  // Handle shard actions (collect more or summon character)
+  const handleShardAction = (shard: {
+    id: number,
+    name: string,
+    quantity: number,
+    required: number,
+    characterClass: string,
+    characterName: string,
+    rarity: string,
+    avatarUrl?: string
+  }) => {
+    if (shard.quantity >= shard.required) {
+      // Summon character
+      toast({
+        title: "Character Summoned!",
+        description: `You summoned a ${shard.rarity} ${shard.characterClass} using ${shard.characterName} shards!`
+      });
+      
+      // Update shard quantity (reset to 0)
+      const updatedShards = characterShards.map(s => {
+        if (s.id === shard.id) {
+          return { ...s, quantity: 0 };
+        }
+        return s;
+      });
+      
+      // Update state and save to localStorage
+      setCharacterShards(updatedShards);
+      localStorage.setItem('characterShards', JSON.stringify(updatedShards));
+      
+      // Create the character (in a real implementation, this would call the API)
+      handleRecruitCharacter(shard.characterClass, shard.rarity);
+    } else {
+      // Collect more shards
+      const randomAmount = Math.floor(Math.random() * 5) + 1;
+      
+      // Update shard quantity
+      const updatedShards = characterShards.map(s => {
+        if (s.id === shard.id) {
+          return { ...s, quantity: s.quantity + randomAmount };
+        }
+        return s;
+      });
+      
+      // Update state and save to localStorage
+      setCharacterShards(updatedShards);
+      localStorage.setItem('characterShards', JSON.stringify(updatedShards));
+      
+      toast({
+        title: "Shards Collected!",
+        description: `You collected ${randomAmount} ${shard.characterName} shards!`
+      });
+    }
+  };
+
   // Handle recruiting a new character
-  const handleRecruitCharacter = async () => {
+  const handleRecruitCharacter = async (characterClass?: string, rarity?: string) => {
     try {
       // Generate a random character for demonstration
       const randomNames = ["Eldrin", "Lyra", "Thorne", "Seraphina", "Gideon", "Isolde"];
@@ -335,7 +390,7 @@ const InventoryView = () => {
                   
                   <Button 
                     className="w-full bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
-                    onClick={handleRecruitCharacter}
+                    onClick={() => handleRecruitCharacter()}
                   >
                     Recruit Random Character
                   </Button>
@@ -951,10 +1006,12 @@ const InventoryView = () => {
                 
                 <Button 
                   size="sm" 
-                  className="w-full mt-3 bg-[#432874] hover:bg-[#432874]/80 text-xs"
-                  disabled={shard.quantity < shard.required}
+                  className={`w-full mt-3 text-xs ${shard.quantity >= shard.required ? 
+                    'bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]' : 
+                    'bg-[#432874] hover:bg-[#432874]/80'}`}
+                  onClick={() => handleShardAction(shard)}
                 >
-                  {shard.quantity >= shard.required ? 'Summon Character' : `Need ${shard.required - shard.quantity} more`}
+                  {shard.quantity >= shard.required ? 'Summon Character' : `Collect Shards (${shard.quantity}/${shard.required})`}
                 </Button>
               </motion.div>
             ))}
