@@ -61,7 +61,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   
   loginWithDiscord: () => {
-    window.location.href = '/api/auth/discord';
+    // In development mode, we can use the dev-login endpoint
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname.includes('replit');
+    
+    if (isLocal) {
+      console.log('Using dev login route for local/replit development');
+      window.location.href = '/api/auth/dev-login';
+    } else {
+      // Use real Discord auth in production
+      window.location.href = '/api/auth/discord';
+    }
   },
   
   logout: async () => {
