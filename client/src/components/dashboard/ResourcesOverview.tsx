@@ -119,16 +119,48 @@ const ResourcesOverview = () => {
         ))}
       </motion.div>
       
-      <Link href="/characters">
+      <div className="flex flex-col space-y-2 mt-4">
+        <Link href="/characters">
+          <motion.button 
+            className="w-full bg-[#432874]/40 hover:bg-[#432874]/60 transition-colors py-2 rounded-lg text-sm"
+            variants={item}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            View All Resources
+          </motion.button>
+        </Link>
+        
+        {/* Admin Button to Add 15,000 Essence */}
         <motion.button 
-          className="w-full mt-4 bg-[#432874]/40 hover:bg-[#432874]/60 transition-colors py-2 rounded-lg text-sm"
+          className="w-full bg-[#00B9AE]/30 hover:bg-[#00B9AE]/50 transition-colors py-2 rounded-lg text-sm text-[#00B9AE]"
           variants={item}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={async () => {
+            try {
+              const response = await fetch('/api/admin/add-essence', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              });
+              
+              if (response.ok) {
+                // Refresh resources after adding Essence
+                fetchResources();
+                alert('Added 15,000 Essence!');
+              } else {
+                console.error('Failed to add Essence:', await response.text());
+              }
+            } catch (error) {
+              console.error('Error adding Essence:', error);
+            }
+          }}
         >
-          View All Resources
+          Add 15,000 Essence (Admin)
         </motion.button>
-      </Link>
+      </div>
     </motion.div>
   );
 };
