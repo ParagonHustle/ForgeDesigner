@@ -21,7 +21,12 @@ import {
   RotateCcw, 
   BarChart4, 
   Heart,
-  Sparkles
+  Sparkles,
+  Circle,
+  Scissors,
+  Beaker,
+  Clock,
+  BookOpen
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -1281,7 +1286,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
         </DialogHeader>
         
         <Tabs defaultValue="log" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="log" className="data-[state=active]:bg-[#432874] data-[state=active]:text-white">
               <ScrollText className="h-4 w-4 mr-2" />
               Log
@@ -1289,6 +1294,10 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
             <TabsTrigger value="replay" className="data-[state=active]:bg-[#432874] data-[state=active]:text-white">
               <Play className="h-4 w-4 mr-2" />
               Replay
+            </TabsTrigger>
+            <TabsTrigger value="visual" className="data-[state=active]:bg-[#432874] data-[state=active]:text-white">
+              <Swords className="h-4 w-4 mr-2" />
+              Battle View
             </TabsTrigger>
             <TabsTrigger value="summary" className="data-[state=active]:bg-[#432874] data-[state=active]:text-white">
               <BarChart4 className="h-4 w-4 mr-2" />
