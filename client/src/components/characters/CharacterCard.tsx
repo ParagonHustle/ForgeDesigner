@@ -245,7 +245,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               <div className="flex justify-between">
                                 <span>Defense:</span>
                                 <span className={selectedAura.defense > 0 ? "text-green-400" : "text-red-400"}>
-                                  {selectedAura.defense > 0 ? "+" : ""}{selectedAura.defense}%
+                                  {selectedAura.defense}%
                                 </span>
                               </div>
                             )}
@@ -253,7 +253,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               <div className="flex justify-between">
                                 <span>Vitality:</span>
                                 <span className={selectedAura.vitality > 0 ? "text-green-400" : "text-red-400"}>
-                                  {selectedAura.vitality > 0 ? "+" : ""}{selectedAura.vitality}%
+                                  {selectedAura.vitality}%
                                 </span>
                               </div>
                             )}
@@ -261,7 +261,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               <div className="flex justify-between">
                                 <span>Speed:</span>
                                 <span className={selectedAura.speed > 0 ? "text-green-400" : "text-red-400"}>
-                                  {selectedAura.speed > 0 ? "+" : ""}{selectedAura.speed}%
+                                  {selectedAura.speed}%
                                 </span>
                               </div>
                             )}
@@ -269,7 +269,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               <div className="flex justify-between">
                                 <span>Focus:</span>
                                 <span className={selectedAura.focus > 0 ? "text-green-400" : "text-red-400"}>
-                                  {selectedAura.focus > 0 ? "+" : ""}{selectedAura.focus}%
+                                  {selectedAura.focus}%
                                 </span>
                               </div>
                             )}
@@ -277,7 +277,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               <div className="flex justify-between">
                                 <span>Resilience:</span>
                                 <span className={selectedAura.resilience > 0 ? "text-green-400" : "text-red-400"}>
-                                  {selectedAura.resilience > 0 ? "+" : ""}{selectedAura.resilience}%
+                                  {selectedAura.resilience}%
                                 </span>
                               </div>
                             )}
