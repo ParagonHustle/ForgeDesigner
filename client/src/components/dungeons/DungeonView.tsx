@@ -107,6 +107,15 @@ const DungeonView = () => {
       // Calculate end time based on dungeon duration
       const endTime = new Date(new Date().getTime() + selectedDungeon.duration * 1000);
       
+      // Get the selected character objects to check if they have auras equipped
+      const selectedChars = characters.filter(char => selectedCharacters.includes(char.id));
+      
+      // Check if all selected characters have auras equipped
+      const unequippedChars = selectedChars.filter(char => !char.equippedAuraId);
+      if (unequippedChars.length > 0) {
+        throw new Error(`${unequippedChars.map(c => c.name).join(', ')} ${unequippedChars.length === 1 ? 'needs' : 'need'} an aura equipped to enter dungeons`);
+      }
+      
       const response = await apiRequest('POST', '/api/dungeons/start', {
         dungeonName: selectedDungeon.name,
         dungeonLevel: selectedDungeon.level,
@@ -125,11 +134,11 @@ const DungeonView = () => {
       // Reset selections
       setSelectedCharacters([]);
       setSelectedDungeon(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting dungeon run:', error);
       toast({
         title: "Error",
-        description: "Failed to start dungeon run.",
+        description: error.message || "Failed to start dungeon run.",
         variant: "destructive"
       });
     } finally {
