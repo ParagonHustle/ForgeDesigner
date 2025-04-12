@@ -88,10 +88,16 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
   // Process the battle log to extract all actions for replay
   useEffect(() => {
     if (battleLog && Array.isArray(battleLog)) {
+      // Debug log to see what we're processing
+      console.log("Processing battle log for replay:", battleLog);
+      
       const actions: any[] = [];
       
       // Process each entry in the battle log
       battleLog.forEach(entry => {
+        // Debug the structure of each entry
+        console.log("Processing entry:", entry);
+        
         // Handle stage-based format
         if ('stage' in entry) {
           // Add stage header
@@ -99,6 +105,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
             type: 'stage-header',
             stage: entry.stage,
             isBossStage: entry.isBossStage,
+            displayDelay: 2000, // Give more time to read stage header
           });
           
           // Add enemies introduction
@@ -106,6 +113,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
             actions.push({
               type: 'enemies-intro',
               enemies: entry.enemies,
+              displayDelay: 1500,
             });
           }
           
@@ -324,50 +332,64 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
   // Start replay animation
   const startReplay = () => {
     setIsReplaying(true);
-    advanceReplay();
+    
+    // If we're at the end, restart from beginning
+    if (currentReplayStep >= replayActionsRef.current.length) {
+      setCurrentReplayStep(0);
+    }
+    
+    // Start or resume animation
+    setTimeout(() => {
+      advanceReplay();
+    }, 100); // Small delay to ensure state update happens first
   };
   
   // Stop replay animation
   const stopReplay = () => {
     setIsReplaying(false);
-    if (replayTimerRef.current) {
-      clearTimeout(replayTimerRef.current);
+    if (replayTimerRef.current !== null) {
+      window.clearTimeout(replayTimerRef.current);
       replayTimerRef.current = null;
     }
   };
   
   // Reset replay to beginning
   const resetReplay = () => {
+    stopReplay();
     setCurrentReplayStep(0);
-    setIsReplaying(false);
-    if (replayTimerRef.current) {
-      clearTimeout(replayTimerRef.current);
-      replayTimerRef.current = null;
-    }
   };
   
   // Advance replay to next step
   const advanceReplay = () => {
-    if (currentReplayStep < replayActionsRef.current.length) {
-      const action = replayActionsRef.current[currentReplayStep];
-      const delay = action?.displayDelay ? action.displayDelay / replaySpeed : 1500 / replaySpeed;
-      
-      setCurrentReplayStep(prev => prev + 1);
-      
-      // Schedule next step
-      if (currentReplayStep < replayActionsRef.current.length - 1) {
-        replayTimerRef.current = window.setTimeout(() => {
-          if (isReplaying) {
-            advanceReplay();
-          }
-        }, delay);
-      } else {
-        // End of replay
-        setIsReplaying(false);
-      }
-    } else {
+    if (!isReplaying) return;
+    
+    console.log("Advancing replay", currentReplayStep, "of", replayActionsRef.current.length);
+    
+    // If we've reached the end of the replay
+    if (currentReplayStep >= replayActionsRef.current.length) {
+      console.log("Reached end of replay");
       setIsReplaying(false);
+      return;
     }
+    
+    // Get current action for delay calculation
+    const action = replayActionsRef.current[currentReplayStep];
+    console.log("Current action:", action);
+    
+    // Calculate appropriate delay
+    const delay = action?.displayDelay ? action.displayDelay / replaySpeed : 1500 / replaySpeed;
+    console.log("Delay:", delay, "ms at speed", replaySpeed);
+    
+    // Update current step
+    setCurrentReplayStep(prev => prev + 1);
+    
+    // Schedule next step with appropriate delay
+    replayTimerRef.current = window.setTimeout(() => {
+      // Check if we're still supposed to be replaying
+      if (isReplaying) {
+        advanceReplay();
+      }
+    }, delay);
   };
   
   // Fast forward - increase replay speed
@@ -728,14 +750,78 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     );
   };
   
+  // Initialize the replay actions if they're not already set
+  useEffect(() => {
+    if (isOpen && battleLog && Array.isArray(battleLog) && (!replayActionsRef.current || replayActionsRef.current.length === 0)) {
+      console.log("Initializing replay actions on open");
+      
+      // Process the battle log entries into replay actions
+      const actions: any[] = [];
+      
+      // Go through each round-based entry and add a round header followed by its actions
+      battleLog.forEach(entry => {
+        if ('round' in entry) {
+          // Add round header
+          actions.push({
+            type: 'round-header',
+            round: entry.round,
+            displayDelay: 1000
+          });
+          
+          // Add all actions from this round
+          if (entry.actions && Array.isArray(entry.actions)) {
+            entry.actions.forEach(action => {
+              actions.push({
+                type: 'action',
+                ...action,
+                displayDelay: 1500
+              });
+            });
+          }
+          
+          // Add round summary if available
+          if (entry.outcome) {
+            actions.push({
+              type: 'stage-outcome',
+              outcome: entry.outcome,
+              summary: entry.summary,
+              displayDelay: 2000
+            });
+          }
+        }
+      });
+      
+      // If actions were found, store them
+      if (actions.length > 0) {
+        console.log(`Created ${actions.length} replay actions`, actions);
+        replayActionsRef.current = actions;
+      }
+    }
+  }, [isOpen, battleLog]);
+  
   // Render the current step for replay mode
   const renderCurrentReplayStep = () => {
+    if (replayActionsRef.current.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10">
+          <p className="text-[#C8B8DB]/70 mb-4">
+            No replay data available
+          </p>
+        </div>
+      );
+    }
+    
     if (currentReplayStep === 0 || currentReplayStep > replayActionsRef.current.length) {
       return (
         <div className="flex flex-col items-center justify-center py-10">
           <p className="text-[#C8B8DB]/70 mb-4">
             Press play to start the battle replay
           </p>
+          <div className="mb-3">
+            <p className="text-xs text-[#C8B8DB]/50">
+              {replayActionsRef.current.length} actions available for replay
+            </p>
+          </div>
         </div>
       );
     }
