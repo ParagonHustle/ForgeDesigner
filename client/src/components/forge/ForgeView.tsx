@@ -69,11 +69,12 @@ const ForgeView = () => {
   const availableAuras = auras.filter(aura => !aura.isFusing);
   const activeForgingTasks = forgingTasks.filter(task => !task.completed);
   
-  // Reset aura selections when changing tabs
+  // Reset selections when changing tabs
   useEffect(() => {
     setPrimaryAura(null);
     setSecondaryAura(null);
     setSelectedElement(null);
+    setSelectedCharacterId(null);
   }, [selectedTab]);
   
   // Start crafting a new aura
@@ -82,6 +83,15 @@ const ForgeView = () => {
       toast({
         title: "Element Required",
         description: "Please select an element for your new aura.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!selectedCharacterId) {
+      toast({
+        title: "Character Required",
+        description: "Please select a character to assist with crafting.",
         variant: "destructive"
       });
       return;
@@ -119,7 +129,7 @@ const ForgeView = () => {
       
       const response = await apiRequest('POST', '/api/forge/craft', {
         targetElement: selectedElement,
-        targetRarity: 'Common', // Default rarity since we're crafting a basic aura
+        characterId: selectedCharacterId, // Add the selected character ID
         endTime: endTime.toISOString(), // Server expects ISO string format
         requiredMaterials: {
           'Essence': 500
@@ -141,7 +151,9 @@ const ForgeView = () => {
       // Refresh resources and forging tasks
       fetchResources();
       fetchForgingTasks();
+      fetchCharacters(); // Refresh characters to update their activity status
       setSelectedElement(null);
+      setSelectedCharacterId(null);
     } catch (error: any) {
       console.error('Error starting craft:', error);
       toast({
@@ -172,9 +184,10 @@ const ForgeView = () => {
         description: `Successfully created a new Level ${data.aura.level} ${data.aura.element} Aura.`,
       });
       
-      // Refresh forging tasks and auras
+      // Refresh forging tasks, auras, and characters
       fetchForgingTasks();
       fetchAuras();
+      fetchCharacters(); // Refresh characters to update their activity status
     } catch (error: any) {
       console.error('Error completing forging task:', error);
       toast({
@@ -456,6 +469,7 @@ const ForgeView = () => {
                   disabled={
                     isSubmitting || 
                     !selectedElement || 
+                    !selectedCharacterId ||
                     activeForgingTasks.length >= maxCraftingSlots
                   }
                 >
@@ -469,9 +483,53 @@ const ForgeView = () => {
           {/* Fusion Interface */}
           <TabsContent value="fusion" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left side: Aura selection */}
+              {/* Left side: Character & Aura selection */}
               <div className="bg-[#15152C] rounded-lg border border-[#432874]/20 p-4">
                 <h3 className="text-lg font-semibold mb-4">Choose Auras to Fuse</h3>
+                
+                {/* Character Selection for Fusion */}
+                <div className="mb-6">
+                  <h4 className="text-md font-semibold mb-3 flex items-center">
+                    Assign Character
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="ml-2 cursor-help">
+                            <Info className="h-4 w-4 text-[#C8B8DB]/60" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm">
+                          <p>You must assign a character to perform the fusion process. This character will be unavailable for other tasks until fusion is complete.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </h4>
+                  
+                  {availableCharacters.length > 0 ? (
+                    <Select 
+                      value={selectedCharacterId ? String(selectedCharacterId) : ""} 
+                      onValueChange={(value) => setSelectedCharacterId(Number(value))}
+                    >
+                      <SelectTrigger className="bg-[#1A1A2E] border-[#432874]/30">
+                        <SelectValue placeholder="Select a character" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCharacters.map(character => (
+                          <SelectItem key={character.id} value={String(character.id)}>
+                            {character.name} (Lvl {character.level} {character.class})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-amber-400 py-2 px-4 bg-amber-950/20 border border-amber-900/30 rounded-md">
+                      <span className="flex items-center">
+                        <Info className="h-4 w-4 mr-2" />
+                        All characters are currently busy. Wait for them to complete their tasks.
+                      </span>
+                    </div>
+                  )}
+                </div>
                 
                 <div className="mb-6">
                   <h4 className="text-md font-semibold mb-3">Primary Aura:</h4>
@@ -643,13 +701,21 @@ const ForgeView = () => {
                     <Button 
                       className="w-full bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
                       onClick={() => {
+                        if (!selectedCharacterId) {
+                          toast({
+                            title: "Character Required",
+                            description: "Please select a character to assist with fusion.",
+                            variant: "destructive"
+                          });
+                          return;
+                        }
                         console.log("Fusion not yet implemented");
                         toast({
                           title: "Feature Coming Soon",
                           description: "Fusion functionality will be available in a future update.",
                         });
                       }}
-                      disabled={true}
+                      disabled={!selectedCharacterId || true} // Keep 'true' until fusion is implemented
                     >
                       <Flame className="h-4 w-4 mr-2" />
                       Fusion Coming Soon
