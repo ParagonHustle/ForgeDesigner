@@ -189,13 +189,6 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                   const selectedAura = unequippedAuras.find(a => a.id === selectedAuraId);
                   if (!selectedAura) return <div>No aura selected</div>;
                   
-                  // Parse stat multipliers if they exist
-                  const statMultipliers = selectedAura.statMultipliers ? 
-                    typeof selectedAura.statMultipliers === 'string' ? 
-                      JSON.parse(selectedAura.statMultipliers as string) : 
-                      selectedAura.statMultipliers : 
-                    {};
-                  
                   // Parse skills if they exist
                   const skills = selectedAura.skills ? 
                     typeof selectedAura.skills === 'string' ? 
@@ -226,16 +219,68 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                         </div>
                       )}
                       
-                      {statMultipliers && Object.keys(statMultipliers).length > 0 && (
+                      {(selectedAura.attack !== 0 || selectedAura.accuracy !== 0 || selectedAura.defense !== 0 || 
+                        selectedAura.vitality !== 0 || selectedAura.speed !== 0 || selectedAura.focus !== 0 || 
+                        selectedAura.resilience !== 0) && (
                         <div className="mt-2">
-                          <h5 className="font-semibold text-xs mb-1">Stat Multipliers:</h5>
+                          <h5 className="font-semibold text-xs mb-1">Stat Bonuses:</h5>
                           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                            {Object.entries(statMultipliers).map(([stat, value]: [string, any]) => (
-                              <div key={stat} className="flex justify-between">
-                                <span className="capitalize">{stat}:</span>
-                                <span className="text-green-400">x{typeof value === 'number' ? value.toFixed(2) : '0.00'}</span>
+                            {selectedAura.attack !== 0 && (
+                              <div className="flex justify-between">
+                                <span>Attack:</span>
+                                <span className={selectedAura.attack > 0 ? "text-green-400" : "text-red-400"}>
+                                  {selectedAura.attack > 0 ? "+" : ""}{selectedAura.attack}%
+                                </span>
                               </div>
-                            ))}
+                            )}
+                            {selectedAura.accuracy !== 0 && (
+                              <div className="flex justify-between">
+                                <span>Accuracy:</span>
+                                <span className={selectedAura.accuracy > 0 ? "text-green-400" : "text-red-400"}>
+                                  {selectedAura.accuracy > 0 ? "+" : ""}{selectedAura.accuracy}%
+                                </span>
+                              </div>
+                            )}
+                            {selectedAura.defense !== 0 && (
+                              <div className="flex justify-between">
+                                <span>Defense:</span>
+                                <span className={selectedAura.defense > 0 ? "text-green-400" : "text-red-400"}>
+                                  {selectedAura.defense > 0 ? "+" : ""}{selectedAura.defense}%
+                                </span>
+                              </div>
+                            )}
+                            {selectedAura.vitality !== 0 && (
+                              <div className="flex justify-between">
+                                <span>Vitality:</span>
+                                <span className={selectedAura.vitality > 0 ? "text-green-400" : "text-red-400"}>
+                                  {selectedAura.vitality > 0 ? "+" : ""}{selectedAura.vitality}%
+                                </span>
+                              </div>
+                            )}
+                            {selectedAura.speed !== 0 && (
+                              <div className="flex justify-between">
+                                <span>Speed:</span>
+                                <span className={selectedAura.speed > 0 ? "text-green-400" : "text-red-400"}>
+                                  {selectedAura.speed > 0 ? "+" : ""}{selectedAura.speed}%
+                                </span>
+                              </div>
+                            )}
+                            {selectedAura.focus !== 0 && (
+                              <div className="flex justify-between">
+                                <span>Focus:</span>
+                                <span className={selectedAura.focus > 0 ? "text-green-400" : "text-red-400"}>
+                                  {selectedAura.focus > 0 ? "+" : ""}{selectedAura.focus}%
+                                </span>
+                              </div>
+                            )}
+                            {selectedAura.resilience !== 0 && (
+                              <div className="flex justify-between">
+                                <span>Resilience:</span>
+                                <span className={selectedAura.resilience > 0 ? "text-green-400" : "text-red-400"}>
+                                  {selectedAura.resilience > 0 ? "+" : ""}{selectedAura.resilience}%
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -565,16 +610,24 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                         <div className="text-xs text-[#C8B8DB]/80 space-y-1">
                           {/* Display direct stat values */}
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
-                            {aura.attack !== null && aura.attack !== undefined && (
+                            {aura.attack !== null && aura.attack !== undefined && aura.attack !== 0 && (
                               <div className="flex items-center">
                                 <Swords className="h-3 w-3 mr-1 text-red-400" />
-                                <span>Attack: +{aura.attack}</span>
+                                <span>
+                                  Attack: <span className={aura.attack > 0 ? "text-green-400" : "text-red-400"}>
+                                    {aura.attack > 0 ? "+" : ""}{aura.attack}%
+                                  </span>
+                                </span>
                               </div>
                             )}
-                            {aura.accuracy !== null && aura.accuracy !== undefined && (
+                            {aura.accuracy !== null && aura.accuracy !== undefined && aura.accuracy !== 0 && (
                               <div className="flex items-center">
                                 <Target className="h-3 w-3 mr-1 text-yellow-400" />
-                                <span>Accuracy: +{aura.accuracy}</span>
+                                <span>
+                                  Accuracy: <span className={aura.accuracy > 0 ? "text-green-400" : "text-red-400"}>
+                                    {aura.accuracy > 0 ? "+" : ""}{aura.accuracy}%
+                                  </span>
+                                </span>
                               </div>
                             )}
                             {aura.defense !== null && aura.defense !== undefined && (
