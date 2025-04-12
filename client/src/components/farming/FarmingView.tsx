@@ -85,8 +85,26 @@ const FarmingView = () => {
     refetchInterval: 30000 // Refresh every 30 seconds
   });
   
-  // Get available/idle characters
-  const availableCharacters = characters.filter(char => !char.isActive);
+  // Get truly available characters (not assigned to any active tasks)
+  const availableCharacters = characters.filter(char => {
+    // Check if character is assigned to any active forging task
+    const isInForgingTask = useGameStore.getState().forgingTasks.some(task => 
+      !task.completed && task.characterId === char.id
+    );
+    
+    // Check if character is assigned to any active farming task
+    const isInFarmingTask = farmingTasks.some(task => 
+      !task.completed && task.characterId === char.id
+    );
+    
+    // Check if character is in a dungeon run
+    const isInDungeonRun = useGameStore.getState().dungeonRuns.some(run => 
+      !run.completed && run.characterIds && run.characterIds.includes(char.id)
+    );
+    
+    // Character is available if not assigned to any active task
+    return !isInForgingTask && !isInFarmingTask && !isInDungeonRun;
+  });
   
   // Calculate available farming slots based on townhall level (for MVP, we'll use 3)
   const maxFarmingSlots = 3;

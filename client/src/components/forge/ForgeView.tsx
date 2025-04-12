@@ -73,7 +73,7 @@ const ForgeView = () => {
     
     // Check if character is in a dungeon run
     const isInDungeonRun = useGameStore.getState().dungeonRuns.some(run => 
-      !run.completed && run.characterId === char.id
+      !run.completed && run.characterIds && run.characterIds.includes(char.id)
     );
     
     // Character is available if not assigned to any active task

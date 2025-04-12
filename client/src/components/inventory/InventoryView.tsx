@@ -44,13 +44,17 @@ const InventoryView = () => {
     loadData();
   }, [fetchCharacters, fetchAuras, fetchResources]);
 
-  // Define character shards (this would normally come from the API)
-  const characterShards = [
-    { id: 1, name: "Warrior Shard", quantity: 25, required: 100, characterClass: "Warrior", rarity: "epic" },
-    { id: 2, name: "Mage Shard", quantity: 15, required: 100, characterClass: "Mage", rarity: "rare" },
-    { id: 3, name: "Rogue Shard", quantity: 50, required: 100, characterClass: "Rogue", rarity: "epic" },
-    { id: 4, name: "Cleric Shard", quantity: 5, required: 100, characterClass: "Cleric", rarity: "legendary" },
-  ];
+  // Define character shards - now specific to each character
+  const characterShards = characters.map(character => ({
+    id: character.id,
+    name: `${character.name} Shard`,
+    quantity: Math.floor(Math.random() * 80) + 10, // Random quantity for demonstration
+    required: 100,
+    characterClass: character.class,
+    characterName: character.name,
+    rarity: character.rarity || "rare",
+    avatarUrl: character.avatarUrl
+  }));
 
   // Filter functions for each tab
   const filteredCharacters = characters.filter(character => {
