@@ -853,8 +853,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           focus: generateStatBonus(),
           resilience: generateStatBonus(), 
           accuracy: generateStatBonus(),
-          // Keep empty stat multipliers for backward compatibility
-          statMultipliers: {},
+          fusionSource: false,
+          creatorCharacterId: task.characterId,
           skills: []
         });
         
@@ -931,8 +931,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           focus: combineBestStat(enhanceStat(primaryAura.focus), secondaryAura.focus),
           resilience: combineBestStat(enhanceStat(primaryAura.resilience), secondaryAura.resilience),
           accuracy: combineBestStat(enhanceStat(primaryAura.accuracy), secondaryAura.accuracy),
-          // Keep empty stat multipliers for backward compatibility
-          statMultipliers: {},
           // Record fusion source for display in aura details
           fusionSource: true,
           creatorCharacterId: task.characterId,
@@ -1230,7 +1228,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: user.id,
           name: `Market Hero ${Math.floor(Math.random() * 1000)}`,
           class: ['Warrior', 'Mage', 'Rogue', 'Cleric'][Math.floor(Math.random() * 4)],
-          rarity: ['common', 'rare', 'epic'][Math.floor(Math.random() * 3)],
           level: Math.floor(Math.random() * 5) + 1,
           avatarUrl: [
             'https://images.unsplash.com/photo-1577095972620-2f389ca3abcd?w=150&h=150&fit=crop',
@@ -1259,7 +1256,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: `Market Aura ${Math.floor(Math.random() * 1000)}`,
           level: Math.floor(Math.random() * 3) + 1,
           element: ['fire', 'water', 'earth', 'air'][Math.floor(Math.random() * 4)],
-          rarity: ['common', 'rare', 'epic'][Math.floor(Math.random() * 3)],
           tier: 1,
           // Add individual stat values
           attack: Math.floor(Math.random() * 15) + 5,
@@ -1269,16 +1265,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           focus: Math.floor(Math.random() * 15) + 5,
           resilience: Math.floor(Math.random() * 15) + 5,
           accuracy: Math.floor(Math.random() * 15) + 5,
-          // Keep the stat multipliers for backward compatibility
-          statMultipliers: {
-            attack: Math.random() * 0.3 + 1.1,
-            defense: Math.random() * 0.3 + 1.1,
-            vitality: Math.random() * 0.3 + 1.1,
-            speed: Math.random() * 0.3 + 1.1,
-            focus: Math.random() * 0.3 + 1.1,
-            resilience: Math.random() * 0.3 + 1.1,
-            accuracy: Math.random() * 0.3 + 1.1
-          },
+          // Market purchased aura
+          fusionSource: false,
           skills: []
         });
       } else if (listing.itemType === 'resource') {
