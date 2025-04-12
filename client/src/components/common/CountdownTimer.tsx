@@ -20,7 +20,8 @@ const CountdownTimer = ({ endTime, onComplete, className = '' }: CountdownTimerP
       if (difference <= 0) {
         setTimeLeft('Complete');
         setIsComplete(true);
-        if (onComplete) onComplete();
+        // The following line has been commented out to prevent automatic task completion
+        // if (onComplete) onComplete();
         return;
       }
       
