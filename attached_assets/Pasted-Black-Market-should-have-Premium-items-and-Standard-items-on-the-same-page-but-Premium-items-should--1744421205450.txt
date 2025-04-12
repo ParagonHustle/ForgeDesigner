@@ -1,0 +1,27 @@
+Black Market should have Premium items and Standard items on the same page but Premium items should have their own highlighted section at the top of the page, they do not need separate tabs.
+
+The "Start Upgrade" button is non responsive when attempting to upgrade any building. This could be because the resources in the header menu are showing as though no Forge Tokens or Rogue Credits are available.
+
+Equipped Auras show as "undefined Aura"
+
+All Characters and Auras have the 7 main stats Attack, Accuracy, Defense, Vitality, Speed, Focus and Resilience. Characters also have a passive skill.
+
+Forge should have a skill tree based on the level of the forge. Upgrades include things like Forge speed, forge slots, forge quality (stat multiplier bonuses), critical forge (chance for a random stat boost), skill boost (increased chance for skills to level up during fusion).
+
+When I click "Start Crafting" I get an error that says "Failed to start crafting".
+
+Remove the "Unlock Method" for Collections and bundle each item within the same collection into the same element/section/frame.
+
+When attempting to farm I get the error "Failed to start farming task."
+
+The amount of daily and weekly quests available should be limited by the Bounty Board Skill Tree and Weekly Quests and Daily Quests should be visible on the same page.
+
+Make the Discord chat menu full width of the screen and add an option to expand for a larger view.
+
+Remove the "Recent Activity" window from the Dashboard.
+
+Farming should be a Building option that has its own level system and skill tree which provides upgrades such as unlocking farming slots, faster farming, chance for double rewards, chance for reward upgrades, chance for special items, unlock advanced farming techniques etc.
+
+When upgrading a building the user should select where they wish to allocate their skill point in the skill tree first before confirming the upgrade.
+
+You should continue to fix each of these features before stopping to ask for next steps.

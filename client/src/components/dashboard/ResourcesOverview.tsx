@@ -160,6 +160,36 @@ const ResourcesOverview = () => {
         >
           Add 15,000 Essence (Admin)
         </motion.button>
+        
+        {/* Admin Button to Add Currency */}
+        <motion.button 
+          className="w-full bg-[#FFD700]/30 hover:bg-[#FFD700]/50 transition-colors py-2 rounded-lg text-sm text-[#FFD700]"
+          variants={item}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={async () => {
+            try {
+              const response = await fetch('/api/admin/add-currency', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              });
+              
+              if (response.ok) {
+                // Refresh the user data to update the currencies
+                window.location.reload(); // Force a full reload to update currency display in header
+                alert('Added 5,000 Rogue Credits and 5,000 Forge Tokens!');
+              } else {
+                console.error('Failed to add Currency:', await response.text());
+              }
+            } catch (error) {
+              console.error('Error adding Currency:', error);
+            }
+          }}
+        >
+          Add 5,000 Credits & Tokens (Admin)
+        </motion.button>
       </div>
     </motion.div>
   );

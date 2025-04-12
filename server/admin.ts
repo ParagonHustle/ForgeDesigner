@@ -46,5 +46,40 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
   
+  // Admin endpoint to add 5,000 Rogue Credits and 5,000 Forge Tokens
+  app.post('/api/admin/add-currency', async (req: Request, res: Response) => {
+    try {
+      // Get user ID (using ID 1 for development)
+      const userId = 1;
+      
+      // Get the user
+      const user = await storage.getUserById(userId);
+      
+      if (user) {
+        // Update user with additional currency
+        const updatedUser = await storage.updateUser(userId, {
+          rogueCredits: (user.rogueCredits || 0) + 5000,
+          forgeTokens: (user.forgeTokens || 0) + 5000
+        });
+        
+        // Log activity
+        await storage.createActivityLog({
+          userId,
+          activityType: 'currency_added',
+          description: 'Added 5,000 Rogue Credits and 5,000 Forge Tokens',
+          relatedIds: {}
+        });
+        
+        console.log('Added currency to user account', updatedUser);
+        res.json({ success: true, user: updatedUser });
+      } else {
+        res.status(404).json({ message: 'User not found' });
+      }
+    } catch (error) {
+      console.error('Error adding currency:', error);
+      res.status(500).json({ message: 'Failed to add currency' });
+    }
+  });
+  
   // Add more admin routes here as needed
 }
