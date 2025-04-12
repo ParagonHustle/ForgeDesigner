@@ -117,6 +117,11 @@ const ForgeView = () => {
         }
       });
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to start crafting");
+      }
+      
       const data = await response.json();
       
       toast({
@@ -128,11 +133,11 @@ const ForgeView = () => {
       fetchResources();
       fetchForgingTasks();
       setSelectedElement(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting craft:', error);
       toast({
         title: "Error",
-        description: "Failed to start crafting.",
+        description: error.message || "Failed to start crafting.",
         variant: "destructive"
       });
     } finally {
@@ -145,6 +150,12 @@ const ForgeView = () => {
     setIsSubmitting(true);
     try {
       const response = await apiRequest('POST', `/api/forge/complete/${taskId}`, undefined);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to complete forging task");
+      }
+      
       const data = await response.json();
       
       toast({
@@ -155,11 +166,11 @@ const ForgeView = () => {
       // Refresh forging tasks and auras
       fetchForgingTasks();
       fetchAuras();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error completing forging task:', error);
       toast({
         title: "Error",
-        description: "Failed to complete forging task.",
+        description: error.message || "Failed to complete forging task.",
         variant: "destructive"
       });
     } finally {
