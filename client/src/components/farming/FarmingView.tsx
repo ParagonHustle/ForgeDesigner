@@ -126,12 +126,17 @@ const FarmingView = () => {
       const endTime = new Date(new Date().getTime() + farmingDuration * 1000);
       
       // Send request to start farming task
-      await apiRequest('POST', '/api/farming/tasks', {
+      const response = await apiRequest('POST', '/api/farming/tasks', {
         characterId: selectedCharacter,
         resourceName: selectedResource.name,
         endTime: endTime.toISOString(), // Convert Date to ISO string
         slotIndex: selectedSlot
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to start farming task");
+      }
       
       // Show success message
       toast({
@@ -161,7 +166,14 @@ const FarmingView = () => {
   const handleCollectResources = async (taskId: number) => {
     setIsSubmitting(true);
     try {
-      const data = await apiRequest('POST', `/api/farming/complete/${taskId}`, undefined);
+      const response = await apiRequest('POST', `/api/farming/complete/${taskId}`, undefined);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to collect resources");
+      }
+      
+      const data = await response.json();
       
       toast({
         title: "Resources Collected",
