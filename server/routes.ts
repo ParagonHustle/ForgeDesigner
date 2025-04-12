@@ -382,10 +382,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Character is already active in another task' });
       }
       
-      // Optional equipment check - skipping for now to allow farming without auras
-      // if (!character.equippedAuraId) {
-      //   return res.status(400).json({ message: 'Character must have an aura equipped to start farming' });
-      // }
+      // Characters must have an aura equipped to start farming
+      if (!character.equippedAuraId) {
+        return res.status(400).json({ message: 'Character must have an aura equipped to start farming' });
+      }
       
       // Mark character as active in farming
       await storage.updateCharacter(character.id, {
