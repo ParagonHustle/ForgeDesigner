@@ -130,7 +130,7 @@ const FarmingView = () => {
     setIsSubmitting(true);
     
     try {
-      // Calculate farming duration (based on character level and resource rarity)
+      // Calculate farming duration (based on character level and resource type)
       const character = characters.find(c => c.id === selectedCharacter);
       
       if (!character) {
@@ -486,7 +486,7 @@ const FarmingView = () => {
               <span className="text-[#FF9D00] font-bold">2</span>
             </div>
             <p className="text-[#C8B8DB]/80">
-              Rare resources take longer to farm but provide better materials for crafting higher-tier Auras.
+              Rare and epic resource types take longer to farm but provide better materials for crafting higher-quality Auras.
             </p>
           </div>
           <div className="flex">

@@ -58,7 +58,7 @@ const InventoryView = () => {
     required: number,
     characterClass: string,
     characterName: string,
-    rarity: string,
+    type: string,
     avatarUrl?: string
   }>>([]);
   
@@ -79,7 +79,7 @@ const InventoryView = () => {
         required: 100,
         characterClass: character.class,
         characterName: character.name,
-        rarity: "rare", // Default to rare since rarity is removed from characters
+        type: "rare", // Default type since we've removed rarity from characters
         avatarUrl: character.avatarUrl
       }));
       setCharacterShards(shards);
@@ -159,14 +159,14 @@ const InventoryView = () => {
     required: number,
     characterClass: string,
     characterName: string,
-    rarity: string,
+    type: string,
     avatarUrl?: string
   }) => {
     if (shard.quantity >= shard.required) {
       // Summon character
       toast({
         title: "Character Summoned!",
-        description: `You summoned a ${shard.rarity} ${shard.characterClass} using ${shard.characterName} shards!`
+        description: `You summoned a ${shard.type} ${shard.characterClass} using ${shard.characterName} shards!`
       });
       
       // Update shard quantity (reset to 0)
