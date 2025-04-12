@@ -539,7 +539,7 @@ const DungeonView = () => {
         isOpen={showBattleLog}
         onClose={() => setShowBattleLog(false)}
         battleLog={currentBattleLog}
-        runId={selectedRun?.id}
+        runId={null}
         onCompleteDungeon={handleCompleteDungeon}
       />
     </>
