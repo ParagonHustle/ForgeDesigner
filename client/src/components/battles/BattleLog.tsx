@@ -523,118 +523,65 @@ const [battleState, setBattleState] = useState<BattleState>({
     }
     const finalResult = battleLog.find((entry: any) => 'finalSummary' in entry);
     return (
-      <div className="space-y-3 py-2">
-        <div className="bg-[#1F1D36]/50 rounded-lg p-3">
-          <h3 className="text-[#FF9D00] font-cinzel text-base mb-2">Battle Overview</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-[#1A1A2E] rounded p-2 flex flex-col items-center justify-center">
-              <p className="text-[#C8B8DB]/70 text-xs">Total Rounds</p>
-              <p className="text-xl font-cinzel text-[#FF9D00]">{battleSummary.totalRounds}</p>
+      <div className="space-y-4 py-2 max-h-[75vh] overflow-y-auto px-2">
+        <div className="bg-[#1F1D36]/50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[#FF9D00] font-cinzel text-lg">Battle Summary</h3>
+            {battleSummary.mvpCharacter && (
+              <Badge className="bg-yellow-900/30 text-yellow-500 border-yellow-900/50 px-3">
+                MVP: {battleSummary.mvpCharacter}
+              </Badge>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-[#1A1A2E] rounded-lg p-3 text-center">
+              <p className="text-[#C8B8DB]/70 text-sm mb-1">Rounds</p>
+              <p className="text-2xl font-cinzel text-[#FF9D00]">{battleSummary.totalRounds}</p>
             </div>
-            <div className="bg-[#1A1A2E] rounded p-2 flex flex-col items-center justify-center">
-              <p className="text-[#C8B8DB]/70 text-xs">Duration</p>
-              <p className="text-xl font-cinzel text-[#00B9AE]">
+            <div className="bg-[#1A1A2E] rounded-lg p-3 text-center">
+              <p className="text-[#C8B8DB]/70 text-sm mb-1">Duration</p>
+              <p className="text-2xl font-cinzel text-[#00B9AE]">
                 {Math.floor(battleSummary.totalDuration / 60)}:{(battleSummary.totalDuration % 60).toString().padStart(2, '0')}
               </p>
             </div>
           </div>
-          {battleSummary.mvpCharacter && (
-            <div className="mt-3 bg-[#432874]/20 rounded-lg p-3">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-[#C8B8DB]/70 text-sm">MVP Character</p>
-                  <p className="text-[#FF9D00] font-semibold">{battleSummary.mvpCharacter}</p>
-                </div>
-                {battleSummary.toughestEnemy && (
-                  <div className="text-right">
-                    <p className="text-[#C8B8DB]/70 text-sm">Toughest Enemy</p>
-                    <p className="text-[#DC143C] font-semibold">{battleSummary.toughestEnemy}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
+
         {battleSummary.characters.length > 0 && (
-          <div className="bg-[#1F1D36]/50 rounded-lg p-3">
-            <h3 className="text-[#00B9AE] font-cinzel text-base mb-2">Character Performance</h3>
-            <div className="space-y-2 max-h-[40vh] overflow-y-auto">
-              {battleSummary.characters.map(char => (
-                <div key={char.id} className="bg-[#1A1A2E] rounded-lg p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="font-cinzel font-semibold text-[#00B9AE]">{char.name}</p>
-                    {char.name === battleSummary.mvpCharacter && (
-                      <Badge className="bg-yellow-900/30 text-yellow-500 border-yellow-900/50">
-                        MVP
-                      </Badge>
-                    )}
+          <div className="space-y-3">
+            {battleSummary.characters.map(char => (
+              <div key={char.id} className="bg-[#1F1D36]/50 rounded-lg p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-cinzel text-lg text-[#00B9AE]">{char.name}</h4>
+                  {char.name === battleSummary.mvpCharacter && (
+                    <Badge className="bg-yellow-900/30 text-yellow-500 border-yellow-900/50">MVP</Badge>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-[#1A1A2E] rounded p-2 text-center">
+                    <p className="text-[#C8B8DB]/70 text-xs mb-1">Damage</p>
+                    <p className="font-semibold text-[#FF9D00]">{char.stats.damageDealt}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs text-[#C8B8DB]/70">Damage Dealt</p>
-                      <p className="font-semibold text-[#FF9D00]">{char.stats.damageDealt}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#C8B8DB]/70">Damage Received</p>
-                      <p className="font-semibold text-[#DC143C]">{char.stats.damageReceived}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#C8B8DB]/70">Critical Hits</p>
-                      <p className="font-semibold text-yellow-500">{char.stats.criticalHits}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#C8B8DB]/70">Healing Received</p>
-                      <p className="font-semibold text-green-500">{char.stats.healingReceived}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#C8B8DB]/70">Special Abilities</p>
-                      <p className="font-semibold text-purple-400">{char.stats.specialAbilitiesUsed}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#C8B8DB]/70">Dodges</p>
-                      <p className="font-semibold text-blue-400">{char.stats.dodges}</p>
-                    </div>
+                  <div className="bg-[#1A1A2E] rounded p-2 text-center">
+                    <p className="text-[#C8B8DB]/70 text-xs mb-1">Critical Hits</p>
+                    <p className="font-semibold text-yellow-500">{char.stats.criticalHits}</p>
+                  </div>
+                  <div className="bg-[#1A1A2E] rounded p-2 text-center">
+                    <p className="text-[#C8B8DB]/70 text-xs mb-1">Healing</p>
+                    <p className="font-semibold text-green-500">{char.stats.healingReceived}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
-        {battleSummary.enemies.length > 0 && (
-          <div className="bg-[#1F1D36]/50 rounded-lg p-4">
-            <h3 className="text-[#DC143C] font-cinzel text-lg mb-3">Enemy Performance</h3>
-            <div className="space-y-3">
-              {battleSummary.enemies.map(enemy => (
-                <div key={enemy.id} className="bg-[#1A1A2E] rounded-lg p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="font-cinzel font-semibold text-[#DC143C]">{enemy.name}</p>
-                    {enemy.name === battleSummary.toughestEnemy && (
-                      <Badge className="bg-red-900/30 text-red-500 border-red-900/50">
-                        Toughest
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <p className="text-[#C8B8DB]/70">Damage Out</p>
-                      <p className="font-semibold text-[#DC143C]">{enemy.stats.damageDealt}</p>
-                    </div>
-                    <div>
-                      <p className="text-[#C8B8DB]/70">Damage In</p>
-                      <p className="font-semibold text-[#00B9AE]">{enemy.stats.damageReceived}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {battleLog.find((entry: any) => 'finalSummary' in entry) && (
-          <div className={`bg-${battleLog.find((entry: any) => 'finalSummary' in entry)?.success ? 'green' : 'red'}-900/20 rounded-lg p-4`}>
-            <h3 className={`text-${battleLog.find((entry: any) => 'finalSummary' in entry)?.success ? 'green' : 'red'}-400 font-cinzel text-lg mb-2`}>
-              {battleLog.find((entry: any) => 'finalSummary' in entry)?.success ? 'Victory!' : 'Defeat'}
+
+        {finalResult && (
+          <div className={`bg-${finalResult.success ? 'green' : 'red'}-900/20 rounded-lg p-4 mt-4`}>
+            <h3 className={`text-${finalResult.success ? 'green' : 'red'}-400 font-cinzel text-xl mb-2`}>
+              {finalResult.success ? 'Victory!' : 'Defeat'}
             </h3>
-            <p>{battleLog.find((entry: any) => 'finalSummary' in entry)?.finalSummary}</p>
+            <p className="text-[#C8B8DB]">{finalResult.finalSummary}</p>
           </div>
         )}
       </div>
