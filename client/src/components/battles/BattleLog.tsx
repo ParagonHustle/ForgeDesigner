@@ -121,6 +121,9 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     if (isAutoplaying) {
       interval = setInterval(() => {
         setBattleState(prevState => {
+          let newState = { ...prevState };
+          
+          // Process characters
           const updatedCharacters = prevState.characters.map(char => {
             let updatedChar = {
               ...char,
@@ -128,52 +131,92 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
               hp: char.hp > 0 ? char.hp : 0
             };
             
-            // Attack when timer reaches 0
             if (updatedChar.attackTimer === 0 && updatedChar.hp > 0) {
-              const target = prevState.enemies.find(e => e.hp > 0);
+              const target = newState.enemies.find(e => e.hp > 0);
               if (target) {
                 const damage = Math.floor(updatedChar.stats.attack * (Math.random() * 0.3 + 0.85));
-                prevState.battleLogs.push(`${updatedChar.name} attacks ${target.name} for ${damage} damage!`);
+                newState.battleLogs.push(`${updatedChar.name} attacks ${target.name} for ${damage} damage!`);
                 target.hp = Math.max(0, target.hp - damage);
                 updatedChar.attackTimer = updatedChar.attackSpeed;
+                
+                if (target.hp <= 0) {
+                  newState.battleLogs.push(`${target.name} has been defeated!`);
+                }
               }
             }
-            
             return updatedChar;
           });
           
-          const updatedEnemies = prevState.enemies.map(enemy => {
+          // Process enemies
+          const updatedEnemies = newState.enemies.map(enemy => {
             let updatedEnemy = {
               ...enemy,
               attackTimer: Math.max(0, enemy.attackTimer - 1),
               hp: enemy.hp > 0 ? enemy.hp : 0
             };
             
-            // Enemy attacks when timer reaches 0
             if (updatedEnemy.attackTimer === 0 && updatedEnemy.hp > 0) {
-              const target = prevState.characters.find(c => c.hp > 0);
-              if (target) {
+              const livingChars = updatedCharacters.filter(c => c.hp > 0);
+              if (livingChars.length > 0) {
+                const target = livingChars[Math.floor(Math.random() * livingChars.length)];
                 const damage = Math.floor(updatedEnemy.stats.attack * (Math.random() * 0.3 + 0.85));
-                prevState.battleLogs.push(`${updatedEnemy.name} attacks ${target.name} for ${damage} damage!`);
+                newState.battleLogs.push(`${updatedEnemy.name} attacks ${target.name} for ${damage} damage!`);
                 target.hp = Math.max(0, target.hp - damage);
                 updatedEnemy.attackTimer = updatedEnemy.attackSpeed;
+                
+                if (target.hp <= 0) {
+                  newState.battleLogs.push(`${target.name} has fallen!`);
+                }
               }
             }
-            
             return updatedEnemy;
           });
-
+          
+          // Check stage completion
+          const allEnemiesDefeated = updatedEnemies.every(e => e.hp <= 0);
+          const allCharactersDefeated = updatedCharacters.every(c => c.hp <= 0);
+          
+          if (allEnemiesDefeated && prevState.currentStage < 8) {
+            // Generate new enemies for next stage
+            newState.currentStage = prevState.currentStage + 1;
+            newState.battleLogs.push(`Stage ${prevState.currentStage} complete! Advancing to stage ${newState.currentStage}...`);
+            
+            // Heal characters between stages (30% of max HP)
+            updatedCharacters.forEach(char => {
+              if (char.hp > 0) {
+                const healAmount = Math.floor(char.maxHp * 0.3);
+                char.hp = Math.min(char.maxHp, char.hp + healAmount);
+                newState.battleLogs.push(`${char.name} recovers ${healAmount} HP!`);
+              }
+            });
+            
+            // Generate new enemies with scaled stats
+            const scalingFactor = 1 + (newState.currentStage * 0.2);
+            const newEnemies = generateEnemiesForStage(newState.currentStage, scalingFactor);
+            return {
+              ...newState,
+              characters: updatedCharacters,
+              enemies: newEnemies,
+              currentTurn: prevState.currentTurn + 1,
+              battleLogs: newState.battleLogs.slice(-5)
+            };
+          }
+          
+          if (allCharactersDefeated) {
+            setIsAutoplaying(false);
+            newState.battleLogs.push("Battle ended - Your party has been defeated!");
+          }
+          
           // Keep only last 5 logs
-          if (prevState.battleLogs.length > 5) {
-            prevState.battleLogs = prevState.battleLogs.slice(-5);
+          if (newState.battleLogs.length > 5) {
+            newState.battleLogs = newState.battleLogs.slice(-5);
           }
 
           return {
-            ...prevState,
+            ...newState,
             characters: updatedCharacters,
             enemies: updatedEnemies,
-            currentTurn: prevState.currentTurn + 1,
-            battleLogs: [...prevState.battleLogs]
+            currentTurn: prevState.currentTurn + 1
           };
         });
       }, 1000);
@@ -184,10 +227,42 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
     };
   }, [isAutoplaying]);
 
-  const [battleState, setBattleState] = useState<BattleState>({
+  const generateEnemiesForStage = (stage: number, scalingFactor: number) => {
+  const enemyTypes = [
+    { name: 'Goblin', baseHp: 80, baseAttack: 15 },
+    { name: 'Orc', baseHp: 100, baseAttack: 20 },
+    { name: 'Troll', baseHp: 150, baseAttack: 25 },
+    { name: 'Dark Elf', baseHp: 90, baseAttack: 22 }
+  ];
+  
+  const numEnemies = Math.min(3, 1 + Math.floor(stage / 3));
+  return Array.from({ length: numEnemies }, (_, i) => {
+    const enemyType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+    return {
+      id: `enemy-${stage}-${i}`,
+      name: `${enemyType.name} ${stage}-${i+1}`,
+      hp: Math.floor(enemyType.baseHp * scalingFactor),
+      maxHp: Math.floor(enemyType.baseHp * scalingFactor),
+      attackSpeed: 5,
+      attackTimer: 5,
+      position: i,
+      type: 'enemy' as const,
+      skills: generateDefaultSkills(false),
+      stats: {
+        attack: Math.floor(enemyType.baseAttack * scalingFactor),
+        defense: Math.floor(10 * scalingFactor),
+        accuracy: 90,
+        speed: 8
+      }
+    };
+  });
+};
+
+const [battleState, setBattleState] = useState<BattleState>({
     characters: [],
     enemies: [],
     currentTurn: 0,
+    currentStage: 1,
     isActive: false,
     actionLog: [],
     battleLogs: []
@@ -481,9 +556,9 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
           )}
         </div>
         {battleSummary.characters.length > 0 && (
-          <div className="bg-[#1F1D36]/50 rounded-lg p-4">
-            <h3 className="text-[#00B9AE] font-cinzel text-lg mb-3">Character Performance</h3>
-            <div className="space-y-4">
+          <div className="bg-[#1F1D36]/50 rounded-lg p-3">
+            <h3 className="text-[#00B9AE] font-cinzel text-base mb-2">Character Performance</h3>
+            <div className="space-y-2 max-h-[40vh] overflow-y-auto">
               {battleSummary.characters.map(char => (
                 <div key={char.id} className="bg-[#1A1A2E] rounded-lg p-3">
                   <div className="flex justify-between items-center mb-2">
