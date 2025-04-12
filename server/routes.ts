@@ -106,7 +106,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           forgeTokens: 6200,
           rogueCredits: 2450,
           soulShards: 34,
-          lastLogin: new Date()
+          lastLogin: new Date(),
+          isAdmin: false // Explicitly set isAdmin field for new users
         });
         
         // Create initial resources for new user
