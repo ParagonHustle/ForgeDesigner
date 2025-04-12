@@ -345,7 +345,7 @@ const BuildingsView = () => {
       
       // If user has selected a skill to allocate, include it in the upgrade request
       const requestData: any = {
-        buildingType: selectedBuilding.id,
+        buildingType: selectedBuilding.buildingType,
       };
       
       if (allocatedSkill) {
@@ -684,7 +684,11 @@ const BuildingsView = () => {
                   <Button
                     className="w-full bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
                     onClick={() => {
-                      setSelectedBuilding(building);
+                      // Ensure buildingType is set correctly
+                      setSelectedBuilding({
+                        ...building,
+                        buildingType: building.id  // Map the UI ID to the backend buildingType
+                      });
                       setSkillTreeDialog(true);
                     }}
                   >
@@ -699,7 +703,10 @@ const BuildingsView = () => {
                     <DialogTrigger asChild>
                       <Button
                         className="w-full bg-[#432874] hover:bg-[#432874]/80"
-                        onClick={() => setSelectedBuilding(building)}
+                        onClick={() => setSelectedBuilding({
+                          ...building,
+                          buildingType: building.id
+                        })}
                       >
                         <ArrowUp className="h-4 w-4 mr-2" />
                         Upgrade to Level {currentLevel + 1}
@@ -794,8 +801,11 @@ const BuildingsView = () => {
                               : 'bg-[#432874]/50 text-[#C8B8DB]/50 cursor-not-allowed'
                           }`}
                           onClick={() => {
-                            // Set the selected building first
-                            setSelectedBuilding(building);
+                            // Set the selected building first with the correct buildingType
+                            setSelectedBuilding({
+                              ...building,
+                              buildingType: building.id
+                            });
                             
                             if (hasAvailableSkillPoints(building)) {
                               console.log("Opening skill tree for:", building.id);
