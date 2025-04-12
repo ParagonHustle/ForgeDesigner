@@ -103,9 +103,13 @@ const ForgeView = () => {
     setIsSubmitting(true);
     try {
       // Create task with required materials
-      // Let the server handle the start/end times
+      // Calculate completion time (5 minutes for crafting)
+      const endTime = new Date();
+      endTime.setMinutes(endTime.getMinutes() + 5);
+      
       const response = await apiRequest('POST', '/api/forge/craft', {
         targetElement: selectedElement,
+        endTime: endTime.toISOString(), // Server expects ISO string format
         requiredMaterials: {
           'Essence': 500
         }
