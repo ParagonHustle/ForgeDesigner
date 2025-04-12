@@ -343,10 +343,10 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
               <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
               <span>RES: {character.resilience || 0}</span>
             </div>
-            {character.passiveSkill && (
+            {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
               <div className="flex items-center">
                 <Check className="h-3 w-3 mr-1 text-green-400" />
-                <span className="text-green-400">Passive</span>
+                <span className="text-green-400">Passive{character.passiveSkills.length > 1 ? 's' : ''}</span>
               </div>
             )}
           </div>
@@ -576,7 +576,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
                             {aura.attack !== null && aura.attack !== undefined && (
                               <div className="flex items-center">
-                                <Sword className="h-3 w-3 mr-1 text-red-400" />
+                                <Swords className="h-3 w-3 mr-1 text-red-400" />
                                 <span>Attack: +{aura.attack}</span>
                               </div>
                             )}
