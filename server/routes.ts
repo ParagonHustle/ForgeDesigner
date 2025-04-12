@@ -645,13 +645,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post('/api/forge/craft', authenticateUser, async (req, res) => {
     try {
+      console.log('Forge craft request body:', JSON.stringify(req.body));
+      
+      // If endTime is provided as an ISO string, convert it to Date
+      let processedBody = {...req.body};
+      if (typeof processedBody.endTime === 'string') {
+        try {
+          processedBody.endTime = new Date(processedBody.endTime);
+          console.log('Converted endTime to Date object');
+        } catch (e) {
+          console.error('Failed to convert endTime string to Date:', e);
+        }
+      }
+      
       const taskData = insertForgingTaskSchema.parse({
-        ...req.body,
+        ...processedBody,
         userId: req.session.userId,
         taskType: 'craft',
         startTime: new Date(),
         completed: false
       });
+      
+      console.log('Parsed task data:', JSON.stringify(taskData));
       
       // Verify user has the required materials
       if (taskData.requiredMaterials) {
@@ -680,8 +695,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         relatedIds: { taskId: task.id }
       });
       
+      console.log('Forge task created successfully:', task.id);
       res.status(201).json(task);
     } catch (error) {
+      console.error('Error in forge/craft endpoint:', error);
       handleErrors(error, req, res, () => {});
     }
   });

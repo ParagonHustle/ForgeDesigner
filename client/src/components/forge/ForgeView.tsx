@@ -104,11 +104,14 @@ const ForgeView = () => {
     try {
       // Create task with required materials
       // Calculate completion time (5 minutes for crafting)
-      const endTime = new Date();
-      endTime.setMinutes(endTime.getMinutes() + 5);
+      const now = new Date();
+      const endTime = new Date(now.getTime() + 5 * 60 * 1000); // Add 5 minutes in milliseconds
+      
+      console.log('Sending forge request with endTime:', endTime.toISOString());
       
       const response = await apiRequest('POST', '/api/forge/craft', {
         targetElement: selectedElement,
+        targetRarity: 'Common', // Default rarity since we're crafting a basic aura
         endTime: endTime.toISOString(), // Server expects ISO string format
         requiredMaterials: {
           'Essence': 500
