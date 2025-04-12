@@ -799,7 +799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Different logic based on task type
       if (task.taskType === 'craft') {
-        // Create new aura
+        // Create new aura with individual stat values
         const newAura = await storage.createAura({
           userId: req.session.userId!,
           name: `${task.targetElement} Aura`,
@@ -807,6 +807,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           element: task.targetElement!,
           rarity: task.targetRarity!,
           tier: 1,
+          // Add individual stat values
+          attack: Math.floor(Math.random() * 10) + 5,
+          defense: Math.floor(Math.random() * 10) + 5,
+          vitality: Math.floor(Math.random() * 10) + 5,
+          speed: Math.floor(Math.random() * 10) + 5,
+          focus: Math.floor(Math.random() * 10) + 5,
+          resilience: Math.floor(Math.random() * 10) + 5,
+          accuracy: Math.floor(Math.random() * 10) + 5,
+          // Keep the stat multipliers for backward compatibility
           statMultipliers: {
             attack: Math.random() * 0.2 + 1.1,
             defense: Math.random() * 0.2 + 1.1,
@@ -847,7 +856,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Create upgraded aura (level + 1)
-        const newLevel = Math.min(primaryAura.level + 1, 5);
+        const newLevel = Math.min(primaryAura.level !== null ? primaryAura.level + 1 : 2, 5);
+        
+        // Calculate new individual stat values
+        const baseAttack = primaryAura.attack !== null ? primaryAura.attack : 5;
+        const baseDefense = primaryAura.defense !== null ? primaryAura.defense : 5;
+        const baseVitality = primaryAura.vitality !== null ? primaryAura.vitality : 5;
+        const baseSpeed = primaryAura.speed !== null ? primaryAura.speed : 5;
+        const baseFocus = primaryAura.focus !== null ? primaryAura.focus : 5;
+        const baseResilience = primaryAura.resilience !== null ? primaryAura.resilience : 5;
+        const baseAccuracy = primaryAura.accuracy !== null ? primaryAura.accuracy : 5;
+        
         const resultAura = await storage.createAura({
           userId: req.session.userId!,
           name: `Enhanced ${primaryAura.element} Aura`,
@@ -855,14 +874,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           element: primaryAura.element,
           rarity: primaryAura.rarity,
           tier: primaryAura.tier,
+          // Add individual stat values with 20% increase
+          attack: Math.floor(baseAttack * 1.2),
+          defense: Math.floor(baseDefense * 1.2),
+          vitality: Math.floor(baseVitality * 1.2),
+          speed: Math.floor(baseSpeed * 1.2),
+          focus: Math.floor(baseFocus * 1.2),
+          resilience: Math.floor(baseResilience * 1.2),
+          accuracy: Math.floor(baseAccuracy * 1.2),
+          // Keep the stat multipliers for backward compatibility
           statMultipliers: {
-            attack: (primaryAura.statMultipliers?.attack || 1) * 1.2,
-            defense: (primaryAura.statMultipliers?.defense || 1) * 1.2,
-            vitality: (primaryAura.statMultipliers?.vitality || 1) * 1.2,
-            speed: (primaryAura.statMultipliers?.speed || 1) * 1.2,
-            focus: (primaryAura.statMultipliers?.focus || 1) * 1.2,
-            resilience: (primaryAura.statMultipliers?.resilience || 1) * 1.2,
-            accuracy: (primaryAura.statMultipliers?.accuracy || 1) * 1.2
+            attack: ((primaryAura.statMultipliers as any)?.attack || 1) * 1.2,
+            defense: ((primaryAura.statMultipliers as any)?.defense || 1) * 1.2,
+            vitality: ((primaryAura.statMultipliers as any)?.vitality || 1) * 1.2,
+            speed: ((primaryAura.statMultipliers as any)?.speed || 1) * 1.2,
+            focus: ((primaryAura.statMultipliers as any)?.focus || 1) * 1.2,
+            resilience: ((primaryAura.statMultipliers as any)?.resilience || 1) * 1.2,
+            accuracy: ((primaryAura.statMultipliers as any)?.accuracy || 1) * 1.2
           },
           skills: [...(primaryAura.skills || [])]
         });
@@ -1140,7 +1168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Transfer the item to the user
       let purchasedItem;
       if (listing.itemType === 'character') {
-        // Get character details (for MVP, generate a new character)
+        // Get character details (for MVP, generate a new character with passiveSkills)
         purchasedItem = await storage.createCharacter({
           userId: user.id,
           name: `Market Hero ${Math.floor(Math.random() * 1000)}`,
@@ -1158,10 +1186,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           speed: Math.floor(Math.random() * 10) + 10,
           vitality: Math.floor(Math.random() * 10) + 10,
           intelligence: Math.floor(Math.random() * 10) + 10,
-          luck: Math.floor(Math.random() * 10) + 10
+          luck: Math.floor(Math.random() * 10) + 10,
+          // Add passiveSkills array with random skills based on character class
+          passiveSkills: [
+            {
+              name: ['Strength Boost', 'Quick Reflexes', 'Magical Aptitude', 'Divine Grace'][Math.floor(Math.random() * 4)],
+              description: 'A special ability gained through market purchase'
+            }
+          ]
         });
       } else if (listing.itemType === 'aura') {
-        // Create a new aura
+        // Create a new aura with stat values
         purchasedItem = await storage.createAura({
           userId: user.id,
           name: `Market Aura ${Math.floor(Math.random() * 1000)}`,
@@ -1169,10 +1204,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           element: ['fire', 'water', 'earth', 'air'][Math.floor(Math.random() * 4)],
           rarity: ['common', 'rare', 'epic'][Math.floor(Math.random() * 3)],
           tier: 1,
+          // Add individual stat values
+          attack: Math.floor(Math.random() * 15) + 5,
+          defense: Math.floor(Math.random() * 15) + 5,
+          vitality: Math.floor(Math.random() * 15) + 5,
+          speed: Math.floor(Math.random() * 15) + 5,
+          focus: Math.floor(Math.random() * 15) + 5,
+          resilience: Math.floor(Math.random() * 15) + 5,
+          accuracy: Math.floor(Math.random() * 15) + 5,
+          // Keep the stat multipliers for backward compatibility
           statMultipliers: {
             attack: Math.random() * 0.3 + 1.1,
             defense: Math.random() * 0.3 + 1.1,
-            health: Math.random() * 0.3 + 1.1
+            vitality: Math.random() * 0.3 + 1.1,
+            speed: Math.random() * 0.3 + 1.1,
+            focus: Math.random() * 0.3 + 1.1,
+            resilience: Math.random() * 0.3 + 1.1,
+            accuracy: Math.random() * 0.3 + 1.1
           },
           skills: []
         });
