@@ -539,6 +539,7 @@ const DungeonView = () => {
         isOpen={showBattleLog}
         onClose={() => setShowBattleLog(false)}
         battleLog={currentBattleLog}
+        onCompleteDungeon={handleCompleteDungeon}
       />
     </>
   );

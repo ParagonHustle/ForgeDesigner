@@ -28,6 +28,7 @@ interface BattleLogProps {
   isOpen: boolean;
   onClose: () => void;
   battleLog: any[];
+  onCompleteDungeon: (runId: number) => void;
 }
 
 interface BattleSkill {
@@ -705,7 +706,7 @@ const [battleState, setBattleState] = useState<BattleState>({
             {!isAutoplaying && battleState.enemies.every(e => e.hp <= 0) ? (
               <Button 
                 variant="outline"
-                onClick={handleCompleteDungeon}
+                onClick={() => onCompleteDungeon(battleLog[0]?.runId)}
                 className="bg-[#2D8A60] hover:bg-[#2D8A60]/80 text-white"
               >
                 Collect Rewards
