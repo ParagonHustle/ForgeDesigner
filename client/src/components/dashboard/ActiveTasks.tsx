@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import CountdownTimer from '../common/CountdownTimer';
 import { Link } from 'wouter';
-import { Grid, Gem, Hammer } from 'lucide-react';
+import { Grid, Gem, Hammer, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useGameStore } from '@/lib/zustandStore';
 import { apiRequest } from '@/lib/queryClient';
-import { queryClient } from '@/lib/queryClient';
 import type { FarmingTask, DungeonRun, ForgingTask, Character } from '@shared/schema';
 
 interface ActiveTasksProps {
@@ -233,64 +232,85 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
         ))}
         
         {/* Farming Tasks */}
-        {activeFarmingTasks.map((task) => (
-          <motion.div 
-            key={`farming-${task.id}`}
-            className="bg-[#1F1D36]/50 p-4 rounded-lg border border-[#432874]/30"
-            variants={item}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Gem className="h-5 w-5 text-[#228B22]" />
-                <span className="ml-2 font-semibold">{task.resourceName} Farming</span>
-              </div>
-              <div className="flex items-center text-sm">
-                <div className="bg-[#228B22]/20 text-[#228B22] px-2 py-0.5 rounded">Active</div>
-                <CountdownTimer 
-                  endTime={task.endTime} 
-                  className="ml-2" 
-                  onComplete={() => handleCompleteFarmingTask(task.id)}
-                />
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="flex items-center">
-                <img 
-                  src={charactersById[task.characterId]?.avatarUrl || "https://via.placeholder.com/150"} 
-                  alt={charactersById[task.characterId]?.name || "Farming Character"} 
-                  className="w-10 h-10 rounded-full border border-[#228B22]/50"
-                />
-                <div className="ml-2">
-                  <div className="text-sm font-semibold">
-                    {charactersById[task.characterId]?.name || "Character"}, Lvl {charactersById[task.characterId]?.level || "?"}
-                  </div>
-                  <div className="text-xs text-[#C8B8DB]/70">+15% Farming Efficiency</div>
+        {activeFarmingTasks.map((task) => {
+          // Get the character name if there's a character assigned
+          const character = task.characterId ? charactersById[task.characterId] : null;
+          const characterName = character ? character.name : 'Unknown';
+          
+          return (
+            <motion.div 
+              key={`farming-${task.id}`}
+              className="bg-[#1F1D36]/50 p-4 rounded-lg border border-[#432874]/30"
+              variants={item}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Gem className="h-5 w-5 text-[#228B22]" />
+                  <span className="ml-2 font-semibold">{task.resourceName} Farming</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <div className="bg-[#228B22]/20 text-[#228B22] px-2 py-0.5 rounded">Active</div>
+                  <CountdownTimer 
+                    endTime={task.endTime} 
+                    className="ml-2" 
+                    onComplete={() => handleCompleteFarmingTask(task.id)}
+                  />
                 </div>
               </div>
-            </div>
-            {new Date(task.endTime) <= new Date() && (
-              <Button 
-                className="w-full mt-2 bg-[#228B22] hover:bg-[#228B22]/80 text-white"
-                onClick={() => handleCompleteFarmingTask(task.id)}
-                disabled={completingTask === task.id}
-              >
-                {completingTask === task.id ? "Collecting..." : "Collect Resources"}
-              </Button>
-            )}
-          </motion.div>
-        ))}
+              
+              {/* Display assigned character */}
+              <div className="mt-2 text-sm text-[#C8B8DB]/70 flex items-center">
+                <User className="h-3 w-3 mr-1" />
+                <span>Assigned: {characterName}</span>
+              </div>
+              
+              <div className="mt-2">
+                <div className="flex items-center">
+                  <img 
+                    src={charactersById[task.characterId]?.avatarUrl || "https://via.placeholder.com/150"} 
+                    alt={charactersById[task.characterId]?.name || "Farming Character"} 
+                    className="w-10 h-10 rounded-full border border-[#228B22]/50"
+                  />
+                  <div className="ml-2">
+                    <div className="text-sm font-semibold">
+                      {charactersById[task.characterId]?.name || "Character"}, Lvl {charactersById[task.characterId]?.level || "?"}
+                    </div>
+                    <div className="text-xs text-[#C8B8DB]/70">+15% Farming Efficiency</div>
+                  </div>
+                </div>
+              </div>
+              
+              {new Date(task.endTime) <= new Date() && (
+                <Button 
+                  className="w-full mt-2 bg-[#228B22] hover:bg-[#228B22]/80 text-white"
+                  onClick={() => handleCompleteFarmingTask(task.id)}
+                  disabled={completingTask === task.id}
+                >
+                  {completingTask === task.id ? "Collecting..." : "Collect Resources"}
+                </Button>
+              )}
+            </motion.div>
+          );
+        })}
         
         {/* Forge Tasks */}
         {activeForgingTasks.map((task) => {
+          const startTime = task.startTime ? new Date(task.startTime) : new Date();
+          const endTime = task.endTime ? new Date(task.endTime) : new Date();
+          
           const taskProgress = Math.min(
             100,
             Math.max(
               0,
-              ((new Date().getTime() - new Date(task.startTime).getTime()) /
-                (new Date(task.endTime).getTime() - new Date(task.startTime).getTime())) *
+              ((new Date().getTime() - startTime.getTime()) /
+                (endTime.getTime() - startTime.getTime())) *
                 100
             )
           );
+          
+          // Get the character name if there's a character assigned
+          const character = task.characterId ? charactersById[task.characterId] : null;
+          const characterName = character ? character.name : 'Unknown';
           
           return (
             <motion.div 
@@ -316,7 +336,14 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                   />
                 </div>
               </div>
-              <div className="mt-3">
+              
+              {/* Display assigned character */}
+              <div className="mt-2 text-sm text-[#C8B8DB]/70 flex items-center">
+                <User className="h-3 w-3 mr-1" />
+                <span>Assigned: {characterName}</span>
+              </div>
+              
+              <div className="mt-2">
                 <Progress value={taskProgress} className="h-2 bg-[#1F1D36] border-[#432874]/20" />
               </div>
               {new Date(task.endTime) <= new Date() && (
@@ -329,7 +356,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                 </Button>
               )}
             </motion.div>
-          )
+          );
         })}
       </motion.div>
     </motion.div>
