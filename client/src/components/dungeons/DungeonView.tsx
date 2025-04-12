@@ -70,7 +70,7 @@ const DungeonView = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBattleLog, setShowBattleLog] = useState(false);
   const [currentBattleLog, setCurrentBattleLog] = useState<any[]>([]);
-  
+
   // Get active characters (not assigned to other tasks)
   const availableCharacters = characters.filter(char => !char.isActive);
   const activeDungeons = useQuery<DungeonRun[]>({ 
@@ -101,52 +101,52 @@ const DungeonView = () => {
       });
       return;
     }
-    
+
     if (!selectedDungeon) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Calculate end time based on dungeon duration
       const endTime = new Date(new Date().getTime() + selectedDungeon.duration * 1000);
-      
+
       // Get the selected character objects to check if they have auras equipped
       const selectedChars = characters.filter(char => selectedCharacters.includes(char.id));
-      
+
       // Check if all selected characters have auras equipped
       const unequippedChars = selectedChars.filter(char => !char.equippedAuraId);
       if (unequippedChars.length > 0) {
         throw new Error(`${unequippedChars.map(c => c.name).join(', ')} ${unequippedChars.length === 1 ? 'needs' : 'need'} an aura equipped to enter dungeons`);
       }
-      
+
       console.log("Sending dungeon request:", {
         dungeonName: selectedDungeon.name,
         dungeonLevel: selectedDungeon.level,
         characterIds: selectedCharacters,
         endTime: endTime
       });
-      
+
       const response = await apiRequest('POST', '/api/dungeons/start', {
         dungeonName: selectedDungeon.name,
         dungeonLevel: selectedDungeon.level,
         characterIds: selectedCharacters,
         endTime: endTime.toISOString() // Convert to ISO string
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to start dungeon run");
       }
-      
+
       toast({
         title: "Dungeon Run Started!",
         description: `Your party has entered ${selectedDungeon.name}.`,
       });
-      
+
       // Refresh dungeon runs
       fetchDungeonRuns();
       activeDungeons.refetch();
-      
+
       // Reset selections
       setSelectedCharacters([]);
       setSelectedDungeon(null);
@@ -167,14 +167,14 @@ const DungeonView = () => {
     try {
       const res = await apiRequest('POST', `/api/dungeons/complete/${runId}`, undefined);
       const data = await res.json();
-      
+
       toast({
         title: data.success ? "Dungeon Conquered!" : "Dungeon Failed",
         description: data.success 
           ? `Your party successfully cleared the dungeon and collected rewards.`
           : `Your party was forced to retreat from the dungeon.`,
       });
-      
+
       // Refresh the list of dungeons
       activeDungeons.refetch();
     } catch (error) {
@@ -204,7 +204,7 @@ const DungeonView = () => {
           Send your heroes on dangerous dungeon runs to collect valuable rewards.
         </p>
       </div>
-      
+
       {/* Active Dungeon Runs */}
       {activeDungeons.data && activeDungeons.data.filter(run => !run.completed).length > 0 && (
         <div className="mb-8">
@@ -215,7 +215,7 @@ const DungeonView = () => {
               .map(run => {
                 const endTime = new Date(run.endTime);
                 const isCompleted = endTime <= new Date();
-                
+
                 return (
                   <Card key={run.id} className="bg-[#1A1A2E] border-[#432874]/30">
                     <CardHeader className="pb-2">
@@ -278,7 +278,7 @@ const DungeonView = () => {
           </div>
         </div>
       )}
-      
+
       {/* Completed Dungeon Runs */}
       {activeDungeons.data && activeDungeons.data.filter(run => run.completed).length > 0 && (
         <div className="mb-8">
@@ -350,7 +350,7 @@ const DungeonView = () => {
           </div>
         </div>
       )}
-      
+
       {/* Available Dungeons */}
       <div>
         <h2 className="text-xl font-cinzel font-bold mb-4">Available Dungeons</h2>
@@ -399,31 +399,31 @@ const DungeonView = () => {
                   </div>
                 </motion.div>
               </DialogTrigger>
-              
+
               <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-3xl">
                 <DialogHeader>
                   <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">
                     {dungeon.name} - Level {dungeon.level}
                   </DialogTitle>
                 </DialogHeader>
-                
+
                 <div className="grid gap-4 py-4 md:grid-cols-2">
                   <div>
                     <div className="rounded-lg overflow-hidden mb-4">
                       <img src={dungeon.image} alt={dungeon.name} className="w-full h-48 object-cover" />
                     </div>
-                    
+
                     <div className="space-y-3">
                       <div>
                         <h3 className="text-sm font-bold mb-1">Description</h3>
                         <p className="text-sm text-[#C8B8DB]/80">{dungeon.description}</p>
                       </div>
-                      
+
                       <div>
                         <h3 className="text-sm font-bold mb-1">Rewards</h3>
                         <p className="text-sm text-[#C8B8DB]/80">{dungeon.rewards}</p>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-[#432874]/20 rounded-md p-2">
                           <h3 className="text-xs font-bold mb-1 text-[#C8B8DB]/70">Difficulty</h3>
@@ -435,7 +435,7 @@ const DungeonView = () => {
                             {dungeon.difficulty}
                           </Badge>
                         </div>
-                        
+
                         <div className="bg-[#432874]/20 rounded-md p-2">
                           <h3 className="text-xs font-bold mb-1 text-[#C8B8DB]/70">Duration</h3>
                           <div className="flex items-center">
@@ -446,7 +446,7 @@ const DungeonView = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-sm font-bold mb-2">Select Party Members (Up to 4)</h3>
                     {availableCharacters.length === 0 ? (
@@ -493,7 +493,7 @@ const DungeonView = () => {
                         ))}
                       </div>
                     )}
-                    
+
                     <div className="mt-4">
                       <h3 className="text-sm font-bold mb-2">Selected Party ({selectedCharacters.length}/4)</h3>
                       <div className="flex flex-wrap gap-2">
@@ -518,7 +518,7 @@ const DungeonView = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <DialogFooter>
                   <Button
                     className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
