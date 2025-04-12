@@ -1033,7 +1033,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createPremiumListing('character', {
             name: 'Shadow Rogue',
             level: 25,
-            rarity: 'Epic',
             class: 'Rogue',
             stats: {
               strength: 52,
@@ -1051,7 +1050,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createPremiumListing('character', {
             name: 'Arcane Scholar',
             level: 20,
-            rarity: 'Rare',
             class: 'Mage',
             stats: {
               strength: 30,
@@ -1072,7 +1070,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createStandardListing('character', {
             name: 'Veteran Warrior',
             level: 15,
-            rarity: 'Uncommon',
             class: 'Warrior',
             stats: {
               strength: 70,
@@ -1091,10 +1088,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const premiumAuras = [
           createPremiumListing('aura', {
             name: 'Flame Emperor\'s Might',
-            rarity: 'Epic',
             element: 'Fire',
             level: 3,
-            statMultipliers: { strength: 1.2, agility: 1.1, intelligence: 1.0, vitality: 1.15 },
+            attack: 8,
+            defense: 6,
+            vitality: 7,
+            speed: 7,
+            focus: 8,
+            resilience: 5,
+            accuracy: 6,
             skills: [
               { name: 'Inferno', description: 'Deals massive fire damage to all enemies', tier: 'Ultimate' },
               { name: 'Burning Aura', description: 'Enemies take burn damage when attacking the wearer', tier: 'Advanced' },
@@ -1104,10 +1106,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           createPremiumListing('aura', {
             name: 'Tidal Mastery',
-            rarity: 'Rare',
             element: 'Water',
             level: 2,
-            statMultipliers: { strength: 1.0, agility: 1.15, intelligence: 1.2, vitality: 1.05 },
+            attack: 5,
+            defense: 7,
+            vitality: 6,
+            speed: 9,
+            focus: 8,
+            resilience: 4,
+            accuracy: 7,
             skills: [
               { name: 'Healing Tide', description: 'Restores health to all allies', tier: 'Advanced' },
               { name: 'Water Shield', description: 'Creates a barrier that absorbs damage', tier: 'Basic' }
@@ -1119,10 +1126,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const standardAuras = [
           createStandardListing('aura', {
             name: 'Earthen Protection',
-            rarity: 'Uncommon',
             element: 'Earth',
             level: 1,
-            statMultipliers: { strength: 1.1, agility: 0.9, intelligence: 1.0, vitality: 1.2 },
+            attack: 4,
+            defense: 9,
+            vitality: 7,
+            speed: 3,
+            focus: 5,
+            resilience: 8,
+            accuracy: 4,
             skills: [
               { name: 'Stone Skin', description: 'Reduces physical damage by 10%', tier: 'Basic' }
             ]
