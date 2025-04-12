@@ -365,27 +365,8 @@ const [battleState, setBattleState] = useState<BattleState>({
       }
     ];
     if (isCharacter) {
-      commonSkills.push({
-        id: 'power-strike',
-        name: 'Power Strike',
-        damage: 35,
-        cooldown: 2,
-        currentCooldown: 0,
-        icon: 'slash',
-        description: 'A powerful strike with a chance to critical hit',
-        type: 'attack',
-        targetType: 'enemy'
-      });
-      commonSkills.push({
-        id: 'healing-potion',
-        name: 'Healing Potion',
-        cooldown: 4,
-        currentCooldown: 0,
-        icon: 'potion',
-        description: 'Restore 30% of max HP',
-        type: 'heal',
-        targetType: 'self'
-      });
+      // Only aura-provided skills will be added during battle initialization
+      // This will be handled when processing the character data
     } else {
       commonSkills.push({
         id: 'savage-blow',
@@ -514,6 +495,29 @@ const [battleState, setBattleState] = useState<BattleState>({
   };
 
   const renderBattleSummary = () => {
+    // Show live battle summary if battle is in progress
+    if (isAutoplaying) {
+      return (
+        <div className="space-y-4 py-2">
+          <div className="bg-[#1F1D36]/50 rounded-lg p-4">
+            <h3 className="text-[#FF9D00] font-cinzel text-lg mb-4">Live Battle Stats</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {battleState.characters.map(char => (
+                <div key={char.id} className="bg-[#1A1A2E] rounded-lg p-3">
+                  <p className="text-[#00B9AE] text-sm mb-1">{char.name}</p>
+                  <div className="text-xs">
+                    <p>Damage Dealt: {char.stats.damageDealt || 0}</p>
+                    <p>Critical Hits: {char.stats.criticalHits || 0}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show battle completion summary
     if (!battleSummary) {
       return (
         <div className="py-8 text-center">
@@ -698,13 +702,23 @@ const [battleState, setBattleState] = useState<BattleState>({
 
         <DialogFooter className="flex items-center justify-between pt-4 border-t border-[#432874]/50">
           <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => setIsAutoplaying(!isAutoplaying)}
-              className={`${isAutoplaying ? 'bg-[#432874]' : 'bg-[#1F1D36]'} hover:bg-[#432874]/30 border-[#432874]/50`}
-            >
-              {isAutoplaying ? 'Pause' : 'Play'}
-            </Button>
+            {!isAutoplaying && battleState.enemies.every(e => e.hp <= 0) ? (
+              <Button 
+                variant="outline"
+                onClick={handleCompleteDungeon}
+                className="bg-[#2D8A60] hover:bg-[#2D8A60]/80 text-white"
+              >
+                Collect Rewards
+              </Button>
+            ) : (
+              <Button 
+                variant="outline"
+                onClick={() => setIsAutoplaying(!isAutoplaying)}
+                className={`${isAutoplaying ? 'bg-[#432874]' : 'bg-[#1F1D36]'} hover:bg-[#432874]/30 border-[#432874]/50`}
+              >
+                {isAutoplaying ? 'Pause' : 'Play'}
+              </Button>
+            )}
             <Button 
               variant="outline" 
               onClick={onClose}
