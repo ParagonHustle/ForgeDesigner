@@ -152,6 +152,44 @@ const InventoryView = () => {
   };
 
   // Handle shard actions (collect more or summon character)
+  // Handle leveling up a character
+  const handleLevelUpCharacter = async (characterId: number) => {
+    try {
+      // Find the character
+      const character = characters.find(c => c.id === characterId);
+      
+      if (!character) {
+        throw new Error('Character not found');
+      }
+      
+      // API call to level up character
+      const response = await apiRequest('POST', `/api/characters/${characterId}/level-up`, {
+        levelIncrease: 1
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to level up character');
+      }
+      
+      // Success message
+      toast({
+        title: "Character Leveled Up!",
+        description: `${character.name} has reached level ${character.level + 1}!`
+      });
+      
+      // Refresh character data
+      fetchCharacters();
+    } catch (error: any) {
+      console.error('Error leveling up character:', error);
+      toast({
+        title: "Level Up Failed",
+        description: error.message || "Unable to level up character at this time.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleShardAction = (shard: {
     id: number,
     name: string,
@@ -163,10 +201,22 @@ const InventoryView = () => {
     avatarUrl?: string
   }) => {
     if (shard.quantity >= shard.required) {
-      // Summon character
+      // Find the character
+      const character = characters.find(c => c.id === shard.id);
+      
+      if (!character) {
+        toast({
+          title: "Error",
+          description: "Character not found for these shards.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Level up character
       toast({
-        title: "Character Summoned!",
-        description: `You summoned a ${shard.type} ${shard.characterClass} using ${shard.characterName} shards!`
+        title: "Character Level Up!",
+        description: `Leveling up ${character.name} using ${shard.characterName} shards!`
       });
       
       // Update shard quantity (reset to 0)
@@ -181,8 +231,8 @@ const InventoryView = () => {
       setCharacterShards(updatedShards);
       localStorage.setItem('characterShards', JSON.stringify(updatedShards));
       
-      // Create the character (in a real implementation, this would call the API)
-      handleRecruitCharacter(shard.characterClass, shard.type);
+      // Level up the character
+      handleLevelUpCharacter(shard.id);
     } else {
       // Collect more shards
       const randomAmount = Math.floor(Math.random() * 5) + 1;
@@ -994,7 +1044,7 @@ const InventoryView = () => {
                     'bg-[#432874] hover:bg-[#432874]/80'}`}
                   onClick={() => handleShardAction(shard)}
                 >
-                  {shard.quantity >= shard.required ? 'Summon Character' : `Collect Shards (${shard.quantity}/${shard.required})`}
+                  {shard.quantity >= shard.required ? 'Level Up Character' : `Collect Shards (${shard.quantity}/${shard.required})`}
                 </Button>
               </motion.div>
             ))}
