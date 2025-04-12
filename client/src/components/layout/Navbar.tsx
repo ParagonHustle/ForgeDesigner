@@ -1,15 +1,23 @@
 import { useDiscordAuth } from '@/lib/discordAuth';
 import { useGameStore } from '@/lib/zustandStore';
+import { Zap } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useDiscordAuth();
-  const { forgeTokens, rogueCredits } = useGameStore();
+  const { forgeTokens, rogueCredits, speedBoostActive, speedBoostMultiplier } = useGameStore();
   
   return (
     <nav className="bg-[#1A1A2E] border-b border-[#432874]/50 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
       <div className="flex items-center">
         <div className="text-2xl font-cinzel font-bold text-[#FF9D00] mr-2">The Forge</div>
         <span className="bg-[#00B9AE]/20 text-[#00B9AE] text-xs px-2 py-0.5 rounded">Alpha v0.1</span>
+        
+        {speedBoostActive && (
+          <div className="ml-2 flex items-center bg-[#FF9D00]/20 text-[#FF9D00] text-xs px-2 py-0.5 rounded animate-pulse">
+            <Zap className="h-3 w-3 mr-1" />
+            <span>{speedBoostMultiplier}x Speed Boost</span>
+          </div>
+        )}
       </div>
       
       <div className="flex items-center space-x-4">

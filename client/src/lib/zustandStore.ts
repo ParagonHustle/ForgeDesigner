@@ -18,6 +18,10 @@ interface GameState {
   soulShards: number;
   resources: Resource[];
   
+  // Game Settings
+  speedBoostActive: boolean;
+  speedBoostMultiplier: number;
+  
   // Collections
   characters: Character[];
   auras: Aura[];
@@ -101,6 +105,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   rogueCredits: 0,
   soulShards: 0,
   resources: [],
+  
+  // Game Settings
+  speedBoostActive: true,
+  speedBoostMultiplier: 10,
   
   // Collections
   characters: [],
