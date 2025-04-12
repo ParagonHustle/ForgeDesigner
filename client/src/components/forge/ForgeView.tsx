@@ -59,11 +59,26 @@ const ForgeView = () => {
     refetchInterval: 10000 // Refresh every 10 seconds
   });
   
-  // Get currently available characters (not assigned to any activity)
-  const availableCharacters = characters.filter(char => 
-    !char.activityType || // Not doing any activity
-    (new Date(char.activityEndTime || 0) < new Date()) // Activity has ended
-  );
+  // Get currently available characters (not assigned to any active tasks)
+  const availableCharacters = characters.filter(char => {
+    // Check if character is assigned to any active forging task
+    const isInForgingTask = forgingTasks.some(task => 
+      !task.completed && task.characterId === char.id
+    );
+    
+    // Check if character is assigned to any active farming task
+    const isInFarmingTask = useGameStore.getState().farmingTasks.some(task => 
+      !task.completed && task.characterId === char.id
+    );
+    
+    // Check if character is in a dungeon run
+    const isInDungeonRun = useGameStore.getState().dungeonRuns.some(run => 
+      !run.completed && run.characterId === char.id
+    );
+    
+    // Character is available if not assigned to any active task
+    return !isInForgingTask && !isInFarmingTask && !isInDungeonRun;
+  });
 
   // Filter auras that are not currently being used in fusion
   const availableAuras = auras.filter(aura => !aura.isFusing);
