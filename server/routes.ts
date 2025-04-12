@@ -776,7 +776,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           statMultipliers: {
             attack: Math.random() * 0.2 + 1.1,
             defense: Math.random() * 0.2 + 1.1,
-            health: Math.random() * 0.2 + 1.1
+            vitality: Math.random() * 0.2 + 1.1,
+            speed: Math.random() * 0.2 + 1.1,
+            focus: Math.random() * 0.2 + 1.1,
+            resilience: Math.random() * 0.2 + 1.1,
+            accuracy: Math.random() * 0.2 + 1.1
           },
           skills: []
         });
@@ -818,9 +822,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           rarity: primaryAura.rarity,
           tier: primaryAura.tier,
           statMultipliers: {
-            attack: primaryAura.statMultipliers.attack * 1.2,
-            defense: primaryAura.statMultipliers.defense * 1.2,
-            health: primaryAura.statMultipliers.health * 1.2
+            attack: (primaryAura.statMultipliers?.attack || 1) * 1.2,
+            defense: (primaryAura.statMultipliers?.defense || 1) * 1.2,
+            vitality: (primaryAura.statMultipliers?.vitality || 1) * 1.2,
+            speed: (primaryAura.statMultipliers?.speed || 1) * 1.2,
+            focus: (primaryAura.statMultipliers?.focus || 1) * 1.2,
+            resilience: (primaryAura.statMultipliers?.resilience || 1) * 1.2,
+            accuracy: (primaryAura.statMultipliers?.accuracy || 1) * 1.2
           },
           skills: [...(primaryAura.skills || [])]
         });
