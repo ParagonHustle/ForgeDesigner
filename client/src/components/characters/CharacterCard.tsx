@@ -413,7 +413,11 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               style={{ width: `${Math.min(100, ((character.attack || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
-                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('attack') && (
+                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
+                           character.passiveSkills.some(skill => 
+                             typeof skill === 'object' && skill && 'name' in skill && 
+                             String(skill.name).toLowerCase().includes('attack')
+                           ) && (
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
@@ -432,7 +436,11 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               style={{ width: `${Math.min(100, ((character.accuracy || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
-                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('accuracy') && (
+                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
+                           character.passiveSkills.some(skill => 
+                             typeof skill === 'object' && skill && 'name' in skill && 
+                             String(skill.name).toLowerCase().includes('accuracy')
+                           ) && (
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
@@ -451,7 +459,11 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               style={{ width: `${Math.min(100, ((character.defense || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
-                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('defense') && (
+                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
+                           character.passiveSkills.some(skill => 
+                             typeof skill === 'object' && skill && 'name' in skill && 
+                             String(skill.name).toLowerCase().includes('defense')
+                           ) && (
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
@@ -472,7 +484,11 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               style={{ width: `${Math.min(100, ((character.vitality || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
-                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('vitality') && (
+                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
+                           character.passiveSkills.some(skill => 
+                             typeof skill === 'object' && skill && 'name' in skill && 
+                             String(skill.name).toLowerCase().includes('vitality')
+                           ) && (
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
@@ -491,7 +507,11 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               style={{ width: `${Math.min(100, ((character.speed || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
-                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('speed') && (
+                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
+                           character.passiveSkills.some(skill => 
+                             typeof skill === 'object' && skill && 'name' in skill && 
+                             String(skill.name).toLowerCase().includes('speed')
+                           ) && (
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
@@ -510,7 +530,11 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               style={{ width: `${Math.min(100, ((character.resilience || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
-                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('resilience') && (
+                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
+                           character.passiveSkills.some(skill => 
+                             typeof skill === 'object' && skill && 'name' in skill && 
+                             String(skill.name).toLowerCase().includes('resilience')
+                           ) && (
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
@@ -529,7 +553,11 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               style={{ width: `${Math.min(100, ((character.focus || 0) / 100) * 100)}%` }}
                             ></div>
                           </div>
-                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('focus') && (
+                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
+                           character.passiveSkills.some(skill => 
+                             typeof skill === 'object' && skill && 'name' in skill && 
+                             String(skill.name).toLowerCase().includes('focus')
+                           ) && (
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
@@ -544,22 +572,89 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <span className="text-sm text-[#00B9AE]">Aura Bonuses</span>
                         </div>
                         <div className="text-xs text-[#C8B8DB]/80 space-y-1">
+                          {/* Display direct stat values */}
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
+                            {aura.attack !== null && aura.attack !== undefined && (
+                              <div className="flex items-center">
+                                <Sword className="h-3 w-3 mr-1 text-red-400" />
+                                <span>Attack: +{aura.attack}</span>
+                              </div>
+                            )}
+                            {aura.accuracy !== null && aura.accuracy !== undefined && (
+                              <div className="flex items-center">
+                                <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                                <span>Accuracy: +{aura.accuracy}</span>
+                              </div>
+                            )}
+                            {aura.defense !== null && aura.defense !== undefined && (
+                              <div className="flex items-center">
+                                <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                                <span>Defense: +{aura.defense}</span>
+                              </div>
+                            )}
+                            {aura.vitality !== null && aura.vitality !== undefined && (
+                              <div className="flex items-center">
+                                <Heart className="h-3 w-3 mr-1 text-red-500" />
+                                <span>Vitality: +{aura.vitality}</span>
+                              </div>
+                            )}
+                            {aura.speed !== null && aura.speed !== undefined && (
+                              <div className="flex items-center">
+                                <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                                <span>Speed: +{aura.speed}</span>
+                              </div>
+                            )}
+                            {aura.focus !== null && aura.focus !== undefined && (
+                              <div className="flex items-center">
+                                <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                                <span>Focus: +{aura.focus}</span>
+                              </div>
+                            )}
+                            {aura.resilience !== null && aura.resilience !== undefined && (
+                              <div className="flex items-center">
+                                <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                                <span>Resilience: +{aura.resilience}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Display stat multipliers */}
                           {aura.statMultipliers && typeof aura.statMultipliers === 'object' && 
-                           Object.entries(aura.statMultipliers as Record<string, unknown>).map(([stat, value]) => (
-                            <div key={stat} className="flex items-center">
-                              <span className="text-[#00B9AE]">+</span>
-                              <span className="ml-1">{typeof value === 'number' ? (value * 100).toFixed(0) : '0'}% {stat.charAt(0).toUpperCase() + stat.slice(1)}</span>
-                            </div>
-                          ))}
+                           Object.entries(aura.statMultipliers as Record<string, unknown>).length > 0 && (
+                            <>
+                              <div className="text-[#00B9AE] text-xs mb-1">Stat Multipliers:</div>
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                {Object.entries(aura.statMultipliers as Record<string, unknown>).map(([stat, value]) => (
+                                  <div key={stat} className="flex items-center">
+                                    <span className="text-[#00B9AE]">+</span>
+                                    <span className="ml-1">{typeof value === 'number' ? (value * 100).toFixed(0) : '0'}% {stat.charAt(0).toUpperCase() + stat.slice(1)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
                   
-                  {character.passiveSkill && (
+                  {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
                     <div className="bg-[#432874]/20 rounded-lg p-3 mb-4">
-                      <h4 className="font-semibold mb-2 text-[#C8B8DB]">Passive Skill</h4>
-                      <p className="text-sm">{character.passiveSkill}</p>
+                      <h4 className="font-semibold mb-2 text-[#C8B8DB]">Passive Skills</h4>
+                      <div className="space-y-2">
+                        {character.passiveSkills.map((skill, index) => (
+                          <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
+                            {typeof skill === 'object' && skill && 'name' in skill && 'description' in skill ? (
+                              <>
+                                <p className="text-sm font-medium text-[#00B9AE]">{String(skill.name)}</p>
+                                <p className="text-xs text-[#C8B8DB]/80 mt-1">{String(skill.description)}</p>
+                              </>
+                            ) : (
+                              <p className="text-sm">{typeof skill === 'string' ? skill : 'Unknown Skill'}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                   
