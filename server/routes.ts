@@ -2283,8 +2283,6 @@ function generateMockBattleLog(run: any, success: boolean) {
 }
 
 // Add routes for specific buildings and skill trees
-// Import the townhall skill tree
-import { townhallSkillTree, hasBuildingPlans, consumeBuildingPlan } from './townhallSkills';
 
 export async function addBuildingSkillRoutes(app: Express) {
   // Get Townhall skills
