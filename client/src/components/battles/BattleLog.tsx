@@ -28,7 +28,7 @@ interface BattleLogProps {
   isOpen: boolean;
   onClose: () => void;
   battleLog: any[];
-  runId?: number;
+  runId: number | null;
   onCompleteDungeon?: (runId: number) => void;
 }
 
@@ -161,6 +161,11 @@ export default function BattleLog({
           <Button onClick={handleComplete}>
             {finalResult.success ? 'Collect Rewards' : 'Return to Town'}
           </Button>
+          {runId && ( // Added conditional rendering for the "Complete Dungeon Run" button
+            <Button className="w-full bg-[#FF9D00] hover:bg-[#FF9D00]/80" onClick={() => onCompleteDungeon?.(runId)}>
+              Complete Dungeon Run
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
