@@ -126,10 +126,10 @@ const FarmingView = () => {
       const endTime = new Date(new Date().getTime() + farmingDuration * 1000);
       
       // Send request to start farming task
-      const response = await apiRequest('POST', '/api/farming/tasks', {
+      await apiRequest('POST', '/api/farming/tasks', {
         characterId: selectedCharacter,
         resourceName: selectedResource.name,
-        endTime: endTime,
+        endTime: endTime.toISOString(), // Convert Date to ISO string
         slotIndex: selectedSlot
       });
       
@@ -161,8 +161,7 @@ const FarmingView = () => {
   const handleCollectResources = async (taskId: number) => {
     setIsSubmitting(true);
     try {
-      const res = await apiRequest('POST', `/api/farming/complete/${taskId}`, undefined);
-      const data = await res.json();
+      const data = await apiRequest('POST', `/api/farming/complete/${taskId}`, undefined);
       
       toast({
         title: "Resources Collected",

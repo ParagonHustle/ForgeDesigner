@@ -107,17 +107,15 @@ const ForgeView = () => {
       endTime.setMinutes(endTime.getMinutes() + 5);
       
       // Create task with required materials
-      const res = await apiRequest('POST', '/api/forge/craft', {
+      const data = await apiRequest('POST', '/api/forge/craft', {
         taskType: 'craft',
         targetElement: selectedElement,
         startTime: new Date(),
-        endTime: endTime,
+        endTime: endTime.toISOString(),
         requiredMaterials: {
           'Essence': 500
         }
       });
-      
-      const data = await res.json();
       
       toast({
         title: "Crafting Started",
@@ -144,8 +142,7 @@ const ForgeView = () => {
   const completeForging = async (taskId: number) => {
     setIsSubmitting(true);
     try {
-      const res = await apiRequest('POST', `/api/forge/complete/${taskId}`, undefined);
-      const data = await res.json();
+      const data = await apiRequest('POST', `/api/forge/complete/${taskId}`, undefined);
       
       toast({
         title: `${data.aura.taskType === 'craft' ? 'Crafting' : 'Fusion'} Complete!`,

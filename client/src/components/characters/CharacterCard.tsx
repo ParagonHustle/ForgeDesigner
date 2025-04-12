@@ -382,60 +382,146 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-[#432874]/20 rounded-lg p-3">
-                      <h4 className="font-semibold mb-2 text-[#C8B8DB]">Combat Stats</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <Swords className="h-4 w-4 mr-1 text-red-400" />
-                            <span>Attack</span>
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-3 text-[#C8B8DB] border-b border-[#432874]/30 pb-1">Character Stats</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Stat bar displays with tooltip */}
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <div className="flex items-center">
+                              <Swords className="h-3 w-3 mr-1 text-red-400" />
+                              <span>Attack</span>
+                            </div>
+                            <span>{character.attack}</span>
                           </div>
-                          <span>{character.attack}</span>
+                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-red-500 to-red-400" 
+                              style={{ width: `${Math.min(100, (character.attack / 100) * 100)}%` }}
+                            ></div>
+                          </div>
+                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('attack') && (
+                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
+                          )}
                         </div>
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <Shield className="h-4 w-4 mr-1 text-blue-400" />
-                            <span>Defense</span>
+                        
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <div className="flex items-center">
+                              <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                              <span>Accuracy</span>
+                            </div>
+                            <span>{character.accuracy}</span>
                           </div>
-                          <span>{character.defense}</span>
+                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400" 
+                              style={{ width: `${Math.min(100, (character.accuracy / 100) * 100)}%` }}
+                            ></div>
+                          </div>
+                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('accuracy') && (
+                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
+                          )}
                         </div>
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <Heart className="h-4 w-4 mr-1 text-red-500" />
-                            <span>Health</span>
+                        
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <div className="flex items-center">
+                              <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                              <span>Defense</span>
+                            </div>
+                            <span>{character.defense}</span>
                           </div>
-                          <span>{character.vitality}</span>
+                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-blue-500 to-blue-400" 
+                              style={{ width: `${Math.min(100, (character.defense / 100) * 100)}%` }}
+                            ></div>
+                          </div>
+                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('defense') && (
+                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <div className="flex items-center">
+                              <Heart className="h-3 w-3 mr-1 text-red-500" />
+                              <span>Vitality</span>
+                            </div>
+                            <span>{character.vitality}</span>
+                          </div>
+                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-red-500 to-red-300" 
+                              style={{ width: `${Math.min(100, (character.vitality / 100) * 100)}%` }}
+                            ></div>
+                          </div>
+                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('vitality') && (
+                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <div className="flex items-center">
+                              <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                              <span>Speed</span>
+                            </div>
+                            <span>{character.speed}</span>
+                          </div>
+                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400" 
+                              style={{ width: `${Math.min(100, (character.speed / 100) * 100)}%` }}
+                            ></div>
+                          </div>
+                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('speed') && (
+                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <div className="flex justify-between text-xs mb-1">
+                            <div className="flex items-center">
+                              <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                              <span>Resilience</span>
+                            </div>
+                            <span>{character.resilience || 0}</span>
+                          </div>
+                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-purple-500 to-purple-400" 
+                              style={{ width: `${Math.min(100, ((character.resilience || 0) / 100) * 100)}%` }}
+                            ></div>
+                          </div>
+                          {character.passiveSkill && character.passiveSkill.toLowerCase().includes('resilience') && (
+                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
+                          )}
                         </div>
                       </div>
                     </div>
                     
-                    <div className="bg-[#432874]/20 rounded-lg p-3">
-                      <h4 className="font-semibold mb-2 text-[#C8B8DB]">Attributes</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <Zap className="h-4 w-4 mr-1 text-yellow-400" />
-                            <span>Speed</span>
-                          </div>
-                          <span>{character.speed}</span>
+                    {/* Aura Bonuses */}
+                    {aura && (
+                      <div className="mt-4 pt-3 border-t border-[#432874]/30">
+                        <div className="flex items-center mb-2">
+                          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mr-2"></div>
+                          <span className="text-sm text-[#00B9AE]">Aura Bonuses</span>
                         </div>
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <Flower2 className="h-4 w-4 mr-1 text-green-400" />
-                            <span>Vitality</span>
-                          </div>
-                          <span>{character.vitality}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <div className="flex items-center">
-                            <Brain className="h-4 w-4 mr-1 text-purple-400" />
-                            <span>Intelligence</span>
-                          </div>
-                          <span>{character.accuracy}</span>
+                        <div className="text-xs text-[#C8B8DB]/80 space-y-1">
+                          {aura.statMultipliers && Object.entries(aura.statMultipliers).map(([stat, value]) => (
+                            <div key={stat} className="flex items-center">
+                              <span className="text-[#00B9AE]">+</span>
+                              <span className="ml-1">{typeof value === 'number' ? (value * 100).toFixed(0) : '0'}% {stat.charAt(0).toUpperCase() + stat.slice(1)}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   
                   {character.passiveSkill && (
