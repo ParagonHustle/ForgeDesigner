@@ -1553,6 +1553,74 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
             </div>
           </TabsContent>
           
+          <TabsContent value="visual" className="border-none p-0">
+            <div className="mb-4 bg-[#1F1D36]/70 p-3 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex space-x-2">
+                  {!isReplaying ? (
+                    <Button 
+                      onClick={startReplay} 
+                      className="bg-[#432874] hover:bg-[#432874]/80"
+                      disabled={replayActionsRef.current.length === 0}
+                    >
+                      <Play className="h-4 w-4 mr-1" />
+                      {currentReplayStep === 0 ? 'Start Battle' : 'Resume'}
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={stopReplay} 
+                      className="bg-[#432874] hover:bg-[#432874]/80"
+                    >
+                      <Pause className="h-4 w-4 mr-1" />
+                      Pause
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={resetReplay} 
+                    className="bg-[#1F1D36] hover:bg-[#1F1D36]/80"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1" />
+                    Reset
+                  </Button>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-sm mr-2">Speed: {replaySpeed}x</span>
+                  <Button 
+                    onClick={fastForward} 
+                    className="bg-[#1F1D36] hover:bg-[#1F1D36]/80"
+                    disabled={replaySpeed >= 8}
+                  >
+                    <Forward className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Visual battle status indicator */}
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className={`h-2 w-2 rounded-full mr-2 ${isReplaying ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
+                  <span className="text-sm font-medium">
+                    {isReplaying ? 'Battle in progress...' : 'Battle ready'}
+                  </span>
+                </div>
+                <div className="text-xs text-[#C8B8DB]/80">
+                  {replayActionsRef.current.length > 0 ? 
+                    `Action ${currentReplayStep} of ${replayActionsRef.current.length}` :
+                    'No battle data available'}
+                </div>
+              </div>
+              
+              <p className="text-xs text-[#C8B8DB]/60">
+                Watch the battle unfold with detailed visuals. See all combatants, their skills, and attack timers in real-time.
+              </p>
+            </div>
+            
+            {/* Visual battle arena */}
+            <div className={`transition-all duration-200 ${isReplaying ? 'border-2 border-green-500/20 rounded-lg p-2' : ''}`}>
+              {renderCurrentReplayStep()}
+            </div>
+          </TabsContent>
+          
           <TabsContent value="summary" className="border-none p-0">
             {renderBattleSummary()}
           </TabsContent>
