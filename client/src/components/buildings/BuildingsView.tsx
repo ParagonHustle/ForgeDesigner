@@ -261,6 +261,9 @@ const BuildingsView = () => {
     return Math.min(100, Math.max(0, ((now - startTime) / (endTime - startTime)) * 100));
   };
 
+  // Import the TownhallSkillTree component
+  const TownhallSkillTree = React.lazy(() => import('./TownhallSkillTree'));
+  
   // Start building upgrade
   // Define the SkillTreeData type
   type SkillTreeData = {

@@ -2287,7 +2287,108 @@ function generateMockBattleLog(run: any, success: boolean) {
 }
 
 // Add routes for specific buildings and skill trees
+// Import the townhall skill tree
+import { townhallSkillTree, hasBuildingPlans, consumeBuildingPlan } from './townhallSkills';
+
 export async function addBuildingSkillRoutes(app: Express) {
+  // Get Townhall skills
+  app.get('/api/buildings/skills/townhall', authenticateUser, async (req, res) => {
+    try {
+      // Get the townhall building data
+      const townhall = await storage.getBuildingUpgradeByTypeAndUserId('townhall', req.session.userId!);
+      
+      if (!townhall) {
+        return res.status(404).json({ message: 'Townhall not found' });
+      }
+      
+      // Send the skill tree data along with building info
+      return res.json({
+        currentLevel: townhall.currentLevel,
+        unlockedSkills: townhall.unlockedSkills || [],
+        availableSkillTree: townhallSkillTree
+      });
+    } catch (error) {
+      console.error('Error fetching townhall skills:', error);
+      res.status(500).json({ message: 'Failed to fetch townhall skill data' });
+    }
+  });
+  
+  // Unlock a townhall skill (farm plot or forge slot)
+  app.post('/api/buildings/skills/townhall', authenticateUser, async (req, res) => {
+    try {
+      const { skillId } = req.body;
+      
+      if (!skillId) {
+        return res.status(400).json({ message: 'Skill ID is required' });
+      }
+      
+      // Get the townhall building data
+      const townhall = await storage.getBuildingUpgradeByTypeAndUserId('townhall', req.session.userId!);
+      
+      if (!townhall) {
+        return res.status(404).json({ message: 'Townhall not found' });
+      }
+      
+      // Check if skill is already unlocked
+      if (townhall.unlockedSkills && townhall.unlockedSkills.includes(skillId)) {
+        return res.status(400).json({ message: 'Skill is already unlocked' });
+      }
+      
+      // Find the skill in the skill tree
+      const skill = townhallSkillTree.find(s => s.id === skillId);
+      if (!skill) {
+        return res.status(404).json({ message: 'Skill not found in the skill tree' });
+      }
+      
+      // If the skill has level requirements, verify them
+      if (skill.requires && skill.requires.townhall_level) {
+        if (townhall.currentLevel < skill.requires.townhall_level) {
+          return res.status(400).json({ 
+            message: `Townhall level ${skill.requires.townhall_level} required to unlock this skill` 
+          });
+        }
+      }
+      
+      // Check if user has building plans
+      const hasBuildingPlansResource = await hasBuildingPlans(req.session.userId!, storage);
+      if (!hasBuildingPlansResource) {
+        return res.status(400).json({ message: 'You need Building Plans to unlock this skill' });
+      }
+      
+      // All checks passed, consume building plan
+      const planConsumed = await consumeBuildingPlan(req.session.userId!, storage);
+      if (!planConsumed) {
+        return res.status(500).json({ message: 'Failed to consume Building Plan' });
+      }
+      
+      // Add the skill to unlocked skills
+      const unlockedSkills = townhall.unlockedSkills || [];
+      unlockedSkills.push(skillId);
+      
+      // Update the townhall
+      await storage.updateBuildingUpgrade(townhall.id, {
+        unlockedSkills
+      });
+      
+      // Log the activity
+      await storage.createActivityLog({
+        userId: req.session.userId!,
+        activityType: 'townhall_skill_unlocked',
+        description: `Unlocked ${skill.name} at the Townhall`,
+        relatedIds: { buildingId: townhall.id }
+      });
+      
+      return res.json({
+        success: true,
+        message: `Successfully unlocked ${skill.name}`,
+        unlockedSkills
+      });
+    } catch (error) {
+      console.error('Error unlocking townhall skill:', error);
+      res.status(500).json({ message: 'Failed to unlock townhall skill' });
+    }
+  });
+  
   // Get Bounty Board building data
   app.get('/api/buildings/bountyBoard', authenticateUser, async (req, res) => {
     try {
