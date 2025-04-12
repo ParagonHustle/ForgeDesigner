@@ -380,7 +380,8 @@ const BuildingsView = () => {
       // Use apiRequest instead of fetch for better error handling
       const response = await apiRequest('POST', '/api/buildings/upgrade', requestData);
       
-      const data = await response.json();
+      // apiRequest already returns the parsed JSON data
+      const data = response;
       console.log("Upgrade response:", data);
       
       toast({
