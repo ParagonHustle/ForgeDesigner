@@ -157,25 +157,37 @@ const BuildingsView = () => {
   const getBuildingByType = (buildingType: string) => {
     console.log("All building upgrades:", buildingUpgrades);
     
+    // Map building IDs to the correct buildingType for the server
+    const buildingTypeMap: Record<string, string> = {
+      'townhall': 'townhall',
+      'forge': 'forge',
+      'blackmarket': 'blackmarket',
+      'bountyboard': 'bountyBoard',
+      'tavern': 'tavern'
+    };
+    
+    const normalizedType = buildingTypeMap[buildingType] || buildingType;
+    console.log("Mapped building type:", buildingType, "->", normalizedType);
+    
     // Check if we have a building of this type
-    const found = buildingUpgrades.find(upgrade => upgrade.buildingType === buildingType);
+    const found = buildingUpgrades.find(upgrade => upgrade.buildingType === normalizedType);
     if (found) {
-      console.log("Found building data for:", buildingType, found);
+      console.log("Found building data for:", normalizedType, found);
       return found;
     }
     
-    // If no building data found, let's create mock data for testing
-    console.log("Creating mock building data for:", buildingType);
+    // If no building data found, create a new building instance
+    console.log("Creating new building data for:", normalizedType);
     return {
       id: 0,
       userId: 1,
-      buildingType: buildingType,
+      buildingType: normalizedType,
       currentLevel: 1,
       upgradeStartTime: null,
       upgradeEndTime: null,
       upgradeInProgress: false,
       unlockedSkills: [],
-      availableSkillPoints: 1, // For testing, ensure we always have a skill point
+      availableSkillPoints: 1,
       skillDistribution: {}
     } as unknown as BuildingUpgrade;
   };
@@ -240,6 +252,8 @@ const BuildingsView = () => {
       name: string;
       description: string;
       maxLevel: number;
+      path?: string;
+      requires?: Record<string, number>;
     }>;
   };
 
@@ -249,7 +263,7 @@ const BuildingsView = () => {
     unlockedSkills: [], 
     availableSkillTree: [] 
   } as SkillTreeData } = useQuery<SkillTreeData>({
-    queryKey: selectedBuilding ? [`/api/buildings/skills/${selectedBuilding.id}`] : [],
+    queryKey: selectedBuilding ? [`/api/buildings/skills/${selectedBuilding.buildingType}`] : [],
     enabled: !!selectedBuilding && skillTreeDialog
   });
 
@@ -260,7 +274,7 @@ const BuildingsView = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await apiRequest('POST', `/api/buildings/skills/${selectedBuilding.id}`, {
+      const response = await apiRequest('POST', `/api/buildings/skills/${selectedBuilding.buildingType}`, {
         skillId: skillId
       });
       
