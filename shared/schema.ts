@@ -111,6 +111,7 @@ export const dungeonRuns = pgTable("dungeon_runs", {
 export const forgingTasks = pgTable("forging_tasks", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
+  characterId: integer("character_id").notNull(), // Character assigned to this task
   taskType: text("task_type").notNull(), // 'craft', 'fusion'
   primaryAuraId: integer("primary_aura_id"),
   secondaryAuraId: integer("secondary_aura_id"),
@@ -203,6 +204,7 @@ export const charactersRelations = relations(characters, ({ one, many }) => ({
     references: [auras.id],
   }),
   farmingTasks: many(farmingTasks),
+  forgingTasks: many(forgingTasks),
 }));
 
 export const aurasRelations = relations(auras, ({ one }) => ({
@@ -245,6 +247,10 @@ export const forgingTasksRelations = relations(forgingTasks, ({ one }) => ({
   user: one(users, {
     fields: [forgingTasks.userId],
     references: [users.id],
+  }),
+  character: one(characters, {
+    fields: [forgingTasks.characterId],
+    references: [characters.id],
   }),
   primaryAura: one(auras, {
     fields: [forgingTasks.primaryAuraId],
