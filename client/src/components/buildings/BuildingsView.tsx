@@ -140,7 +140,9 @@ const BuildingsView = () => {
   const { toast } = useToast();
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
   const [upgradeDialog, setUpgradeDialog] = useState<boolean>(false);
+  const [skillTreeDialog, setSkillTreeDialog] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   
   // Fetch building upgrades
   const { data: buildingUpgrades = [], isLoading, refetch: refetchBuildings } = useQuery<BuildingUpgrade[]>({
@@ -244,21 +246,10 @@ const BuildingsView = () => {
     try {
       console.log("Starting upgrade for building:", selectedBuilding.id);
       
-      // Call the API to start the upgrade with a short timeout
-      const response = await fetch('/api/buildings/upgrade', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          buildingType: selectedBuilding.id
-        }),
+      // Use apiRequest instead of fetch for better error handling
+      const response = await apiRequest('POST', '/api/buildings/upgrade', {
+        buildingType: selectedBuilding.id
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to start upgrade');
-      }
       
       const data = await response.json();
       console.log("Upgrade response:", data);
@@ -273,10 +264,8 @@ const BuildingsView = () => {
       setUpgradeDialog(false);
       
       // Refresh buildings and user data
-      setTimeout(() => {
-        refetchBuildings();
-        fetchUser();
-      }, 500); // Small delay to ensure server processes the upgrade
+      refetchBuildings();
+      fetchUser();
     } catch (error: any) {
       console.error('Error starting upgrade:', error);
       toast({

@@ -1477,9 +1477,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get building skill tree
+  app.get('/api/buildings/skills/:buildingType', authenticateUser, async (req, res) => {
+    try {
+      const { buildingType } = req.params;
+      
+      // Get the building
+      const building = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
+      
+      if (!building) {
+        return res.status(404).json({ message: 'Building not found' });
+      }
+      
+      // Define skill trees for each building type
+      const skillTrees = {
+        townhall: [
+          { id: 'th_slot_1', name: 'Extra Farming Slot', description: 'Unlocks an additional farming slot', maxLevel: 5 },
+          { id: 'th_resource_1', name: 'Resource Production', description: 'Increases resource gain by 5% per level', maxLevel: 5 },
+          { id: 'th_exp_1', name: 'Experience Boost', description: 'Increases XP gain by 5% per level', maxLevel: 5 },
+          { id: 'th_building_1', name: 'Construction Speed', description: 'Reduces building upgrade time by 5% per level', maxLevel: 5 },
+        ],
+        forge: [
+          { id: 'forge_speed_1', name: 'Forge Speed', description: 'Reduces crafting time by 5% per level', maxLevel: 5 },
+          { id: 'forge_slots_1', name: 'Forge Slots', description: 'Unlocks additional forging slot', maxLevel: 3 },
+          { id: 'forge_quality_1', name: 'Forge Quality', description: 'Increases stat multiplier bonuses by 5% per level', maxLevel: 5 },
+          { id: 'forge_crit_1', name: 'Critical Forge', description: 'Increases chance for random stat boost by 2% per level', maxLevel: 5 },
+          { id: 'forge_skill_1', name: 'Skill Boost', description: 'Increases chance for skills to level up during fusion by 5% per level', maxLevel: 5 },
+        ],
+        blackmarket: [
+          { id: 'bm_slots_1', name: 'Listing Slots', description: 'Unlocks additional personal listing slot', maxLevel: 5 },
+          { id: 'bm_premium_1', name: 'Premium Offers', description: 'Increases premium item offers available', maxLevel: 3 },
+          { id: 'bm_standard_1', name: 'Standard Offers', description: 'Increases standard item offers available', maxLevel: 3 },
+          { id: 'bm_fee_1', name: 'Reduced Fees', description: 'Reduces market listing fees by 5% per level', maxLevel: 5 },
+        ],
+        bountyBoard: [
+          { id: 'bb_daily_1', name: 'Daily Quest Slots', description: 'Increases available daily quests by 1', maxLevel: 4 },
+          { id: 'bb_weekly_1', name: 'Weekly Quest Slots', description: 'Increases available weekly quests by 1', maxLevel: 2 },
+          { id: 'bb_rewards_1', name: 'Enhanced Rewards', description: 'Increases quest rewards by 10% per level', maxLevel: 5 },
+          { id: 'bb_refresh_1', name: 'Quick Refresh', description: 'Reduces quest refresh timer by 1 hour per level', maxLevel: 3 },
+        ],
+      };
+      
+      // Get the appropriate skill tree
+      const skillTree = skillTrees[buildingType as keyof typeof skillTrees] || [];
+      
+      // Return the skill tree with the current unlocked skills
+      res.json({
+        buildingType,
+        currentLevel: building.currentLevel,
+        unlockedSkills: building.unlockedSkills || [],
+        availableSkillTree: skillTree
+      });
+    } catch (error) {
+      console.error('Error fetching building skill tree:', error);
+      res.status(500).json({ message: 'Failed to fetch building skill tree' });
+    }
+  });
+  
+  // Allocate skill points
+  app.post('/api/buildings/skills/:buildingType', authenticateUser, async (req, res) => {
+    try {
+      const { buildingType } = req.params;
+      const { skillId } = req.body;
+      
+      if (!skillId) {
+        return res.status(400).json({ message: 'Skill ID is required' });
+      }
+      
+      // Get the building
+      const building = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
+      
+      if (!building) {
+        return res.status(404).json({ message: 'Building not found' });
+      }
+      
+      // Check if there are unallocated skill points (building level - allocated skills)
+      const unlockedSkills = building.unlockedSkills || [];
+      const allocatedPoints = unlockedSkills.length;
+      const availablePoints = building.currentLevel - allocatedPoints;
+      
+      if (availablePoints <= 0) {
+        return res.status(400).json({ message: 'No skill points available' });
+      }
+      
+      // Add the skill to unlocked skills
+      const updatedBuilding = await storage.updateBuildingUpgrade(building.id, {
+        unlockedSkills: [...unlockedSkills, skillId]
+      });
+      
+      res.json(updatedBuilding);
+    } catch (error) {
+      console.error('Error allocating skill point:', error);
+      res.status(500).json({ message: 'Failed to allocate skill point' });
+    }
+  });
+
   app.post('/api/buildings/upgrade', authenticateUser, async (req, res) => {
     try {
-      const { buildingType } = req.body;
+      const { buildingType, allocatedSkill } = req.body;
       
       if (!buildingType) {
         return res.status(400).json({ message: 'Building type is required' });
