@@ -388,11 +388,198 @@ const InventoryView = () => {
               initial="hidden"
               animate="show"
             >
+              {/* Aura Detail Dialog */}
+              <Dialog open={!!selectedAura} onOpenChange={(open) => !open && setSelectedAura(null)}>
+                <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-2xl">
+                  {selectedAura && (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle className="text-[#FF9D00] font-cinzel text-xl flex items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3
+                            ${selectedAura.element === 'Fire' ? 'bg-red-500/20' : 
+                              selectedAura.element === 'Water' ? 'bg-blue-500/20' : 
+                              selectedAura.element === 'Earth' ? 'bg-amber-800/20' : 
+                              'bg-green-500/20'}`
+                          }>
+                            {selectedAura.element === 'Fire' ? (
+                              <div className="text-red-500">🔥</div>
+                            ) : selectedAura.element === 'Water' ? (
+                              <div className="text-blue-500">💧</div>
+                            ) : selectedAura.element === 'Earth' ? (
+                              <div className="text-amber-800">🏔️</div>
+                            ) : (
+                              <div className="text-green-500">🌪️</div>
+                            )}
+                          </div>
+                          {selectedAura.name || `${selectedAura.element || 'Mysterious'} Aura`}
+                        </DialogTitle>
+                      </DialogHeader>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                        {/* Left Column - Stats */}
+                        <div>
+                          <h3 className="font-semibold text-[#FF9D00] mb-3">Stats</h3>
+                          <div className="bg-[#1F1D36]/80 p-4 rounded-lg">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                              <div className="flex justify-between">
+                                <div className="flex items-center">
+                                  <Sword className="h-3 w-3 mr-1 text-red-400" />
+                                  <span>Attack</span>
+                                </div>
+                                <span className="text-[#00B9AE]">
+                                  {typeof selectedAura.attack === 'number' ? `+${selectedAura.attack}` : '0'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <div className="flex items-center">
+                                  <Target className="h-3 w-3 mr-1 text-blue-400" />
+                                  <span>Accuracy</span>
+                                </div>
+                                <span className="text-[#00B9AE]">
+                                  {typeof selectedAura.accuracy === 'number' ? `+${selectedAura.accuracy}` : '0'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <div className="flex items-center">
+                                  <Shield className="h-3 w-3 mr-1 text-amber-400" />
+                                  <span>Defense</span>
+                                </div>
+                                <span className="text-[#00B9AE]">
+                                  {typeof selectedAura.defense === 'number' ? `+${selectedAura.defense}` : '0'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <div className="flex items-center">
+                                  <Heart className="h-3 w-3 mr-1 text-green-400" />
+                                  <span>Vitality</span>
+                                </div>
+                                <span className="text-[#00B9AE]">
+                                  {typeof selectedAura.vitality === 'number' ? `+${selectedAura.vitality}` : '0'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <div className="flex items-center">
+                                  <Footprints className="h-3 w-3 mr-1 text-cyan-400" />
+                                  <span>Speed</span>
+                                </div>
+                                <span className="text-[#00B9AE]">
+                                  {typeof selectedAura.speed === 'number' ? `+${selectedAura.speed}` : '0'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <div className="flex items-center">
+                                  <Eye className="h-3 w-3 mr-1 text-yellow-400" />
+                                  <span>Focus</span>
+                                </div>
+                                <span className="text-[#00B9AE]">
+                                  {typeof selectedAura.focus === 'number' ? `+${selectedAura.focus}` : '0'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <div className="flex items-center">
+                                  <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                                  <span>Resilience</span>
+                                </div>
+                                <span className="text-[#00B9AE]">
+                                  {typeof selectedAura.resilience === 'number' ? `+${selectedAura.resilience}` : '0'}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {/* Display stat multipliers */}
+                            {selectedAura.statMultipliers && typeof selectedAura.statMultipliers === 'object' && 
+                            Object.entries(selectedAura.statMultipliers as Record<string, number>).length > 0 && (
+                              <>
+                                <div className="text-[#00B9AE] text-xs mt-4 mb-1">Stat Multipliers:</div>
+                                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                                  {Object.entries(selectedAura.statMultipliers as Record<string, number>).map(([stat, value]) => (
+                                    <div key={stat} className="flex justify-between">
+                                      <span className="capitalize">{stat}</span>
+                                      <span className="text-[#00B9AE]">
+                                        {typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : '0.00%'}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Right Column - Forge Information */}
+                        <div>
+                          <h3 className="font-semibold text-[#FF9D00] mb-3">Forge Information</h3>
+                          <div className="bg-[#1F1D36]/80 p-4 rounded-lg">
+                            <div className="mb-3">
+                              <div className="text-sm font-semibold mb-1">Element</div>
+                              <Badge className={`
+                                ${selectedAura.element === 'Fire' ? 'bg-red-500/20 text-red-400' : 
+                                  selectedAura.element === 'Water' ? 'bg-blue-500/20 text-blue-400' : 
+                                  selectedAura.element === 'Earth' ? 'bg-amber-800/20 text-amber-600' : 
+                                  'bg-green-500/20 text-green-400'}
+                              `}>
+                                {selectedAura.element || 'Unknown'}
+                              </Badge>
+                            </div>
+                            
+                            <div className="mb-3">
+                              <div className="text-sm font-semibold mb-1">Level</div>
+                              <div className="text-[#FF9D00]">{selectedAura.level || 1}</div>
+                            </div>
+                            
+                            {selectedAura.equippedByCharacterId && (
+                              <div className="mb-3">
+                                <div className="text-sm font-semibold mb-1">Equipped By</div>
+                                <div className="text-[#00B9AE]">
+                                  {characters.find(c => c.id === selectedAura.equippedByCharacterId)?.name || 'Unknown Character'}
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div>
+                              <div className="text-sm font-semibold mb-1">Forge Source</div>
+                              <div className="text-[#C8B8DB]/90 text-sm">
+                                {selectedAura.fusionSource ? (
+                                  <div className="bg-[#432874]/20 p-2 rounded-lg">
+                                    Created through fusion of multiple auras
+                                  </div>
+                                ) : (
+                                  <div className="bg-[#432874]/20 p-2 rounded-lg">
+                                    Basic elemental aura
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Character Source */}
+                            <div className="mt-3">
+                              <div className="text-sm font-semibold mb-1">Character Source</div>
+                              <div className="text-[#C8B8DB]/90 text-sm">
+                                {selectedAura.creatorCharacterId ? (
+                                  <div className="bg-[#432874]/20 p-2 rounded-lg">
+                                    Created by {characters.find(c => c.id === selectedAura.creatorCharacterId)?.name || 'Unknown Character'}
+                                  </div>
+                                ) : (
+                                  <div className="bg-[#432874]/20 p-2 rounded-lg">
+                                    Origin unknown
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </DialogContent>
+              </Dialog>
+              
               {filteredAuras.map((aura) => (
                 <motion.div
                   key={aura.id}
                   variants={item}
-                  className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
+                  onClick={() => setSelectedAura(aura)}
+                  className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden cursor-pointer hover:border-[#FF9D00]/50 hover:shadow-lg transition-all"
                 >
                   <div className="p-4">
                     <div className="flex items-center mb-3">
