@@ -557,6 +557,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Dungeon routes
+  app.get('/api/dungeons/types', authenticateUser, async (req, res) => {
+    try {
+      let dungeonTypes;
+      const { element, difficulty } = req.query;
+      
+      if (element) {
+        dungeonTypes = await storage.getDungeonTypesByElement(element as string);
+      } else if (difficulty) {
+        dungeonTypes = await storage.getDungeonTypesByDifficulty(difficulty as string);
+      } else {
+        dungeonTypes = await storage.getDungeonTypes();
+      }
+      
+      res.json(dungeonTypes);
+    } catch (error) {
+      console.error('Error fetching dungeon types:', error);
+      res.status(500).json({ message: 'Failed to fetch dungeon types' });
+    }
+  });
+
+  app.get('/api/dungeons/types/:id', authenticateUser, async (req, res) => {
+    try {
+      const dungeonType = await storage.getDungeonTypeById(parseInt(req.params.id));
+      
+      if (!dungeonType) {
+        return res.status(404).json({ message: 'Dungeon type not found' });
+      }
+      
+      res.json(dungeonType);
+    } catch (error) {
+      console.error('Error fetching dungeon type:', error);
+      res.status(500).json({ message: 'Failed to fetch dungeon type' });
+    }
+  });
+  
+  app.post('/api/dungeons/types', authenticateUser, async (req, res) => {
+    try {
+      // Only admins can create dungeon types
+      const user = await storage.getUserById(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: 'Unauthorized to create dungeon types' });
+      }
+      
+      const dungeonType = await storage.createDungeonType(req.body);
+      res.status(201).json(dungeonType);
+    } catch (error) {
+      console.error('Error creating dungeon type:', error);
+      res.status(500).json({ message: 'Failed to create dungeon type' });
+    }
+  });
+  
+  app.patch('/api/dungeons/types/:id', authenticateUser, async (req, res) => {
+    try {
+      // Only admins can update dungeon types
+      const user = await storage.getUserById(req.session.userId!);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: 'Unauthorized to update dungeon types' });
+      }
+      
+      const dungeonType = await storage.updateDungeonType(parseInt(req.params.id), req.body);
+      
+      if (!dungeonType) {
+        return res.status(404).json({ message: 'Dungeon type not found' });
+      }
+      
+      res.json(dungeonType);
+    } catch (error) {
+      console.error('Error updating dungeon type:', error);
+      res.status(500).json({ message: 'Failed to update dungeon type' });
+    }
+  });
+
   app.get('/api/dungeons/runs', authenticateUser, async (req, res) => {
     try {
       const runs = await storage.getDungeonRuns(req.session.userId!);
@@ -660,7 +732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const success = Math.random() < 0.7;
       
       // Generate battle log and rewards
-      const battleLog = generateMockBattleLog(run, success);
+      const battleLog = await generateMockBattleLog(run, success);
       
       // Generate rewards if successful
       let rewards = null;
@@ -2231,53 +2303,268 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 // Helper function to generate mock battle log
-function generateMockBattleLog(run: any, success: boolean) {
-  const rounds = Math.floor(Math.random() * 4) + 3; // 3-6 rounds
+async function generateMockBattleLog(run: any, success: boolean) {
+  const totalStages = run.totalStages || 8;
+  const completedStages = success ? totalStages : Math.floor(Math.random() * (totalStages - 1)) + 1;
+  const elementalType = run.elementalType || 'neutral';
   const log = [];
   
-  for (let i = 1; i <= rounds; i++) {
-    const roundActions = [];
+  // Define elemental effects and modifiers
+  const elementalEffects = {
+    fire: { strength: 'wind', weakness: 'water', effectName: 'Burning' },
+    water: { strength: 'fire', weakness: 'earth', effectName: 'Drenched' },
+    earth: { strength: 'water', weakness: 'wind', effectName: 'Petrified' },
+    wind: { strength: 'earth', weakness: 'fire', effectName: 'Airborne' },
+    neutral: { strength: null, weakness: null, effectName: 'Stunned' }
+  };
+  
+  const elementEffect = elementalEffects[elementalType as keyof typeof elementalEffects] || elementalEffects.neutral;
+  
+  // Boss names by element
+  const bossesByElement = {
+    fire: ['Inferno Drake', 'Magma Overlord', 'Flame Titan'],
+    water: ['Abyssal Hydra', 'Tidal Leviathan', 'Frost Behemoth'],
+    earth: ['Stone Colossus', 'Mountain King', 'Terra Wraith'],
+    wind: ['Storm Harpy', 'Tempest Lord', 'Cyclone Specter'],
+    neutral: ['Void Devourer', 'Shadow Emperor', 'Nexus Guardian']
+  };
+  
+  // Define character names and stats
+  const characterEntries = await Promise.all(run.characterIds.map(async (id: number) => {
+    const char = await storage.getCharacterById(id);
+    return {
+      id,
+      name: char?.name || `Character ${id}`,
+      attack: char?.attack || 50,
+      defense: char?.defense || 30,
+      hp: 100,
+      maxHp: 100,
+      effects: []
+    };
+  }));
+  
+  const characters = Object.fromEntries(
+    characterEntries.map(char => [char.id, char])
+  );
+  
+  // Generate enemies by dungeon element
+  const bossName = bossesByElement[elementalType as keyof typeof bossesByElement] 
+    ? bossesByElement[elementalType as keyof typeof bossesByElement][Math.floor(Math.random() * 3)] 
+    : 'Unknown Boss';
+  
+  // Generate stages
+  for (let stage = 1; stage <= completedStages; stage++) {
+    const isBossStage = stage === totalStages;
+    const stageEnemies = isBossStage 
+      ? [{ id: 'boss', name: bossName, hp: 200, maxHp: 200, attack: 60, defense: 40, effects: [] }]
+      : Array(Math.min(3, Math.floor(stage/2) + 1)).fill(0).map((_, i) => ({
+          id: `enemy_${stage}_${i}`,
+          name: `${elementalType.charAt(0).toUpperCase() + elementalType.slice(1)} Minion ${i+1}`,
+          hp: 50 + (stage * 10),
+          maxHp: 50 + (stage * 10),
+          attack: 30 + (stage * 3),
+          defense: 20 + (stage * 2),
+          effects: []
+        }));
     
-    // Player character actions
-    for (const charId of run.characterIds) {
-      const damage = Math.floor(Math.random() * 50) + 20;
-      roundActions.push({
-        actor: `Character ${charId}`,
-        target: `Enemy ${Math.floor(Math.random() * 3) + 1}`,
-        action: 'attack',
-        damage: damage,
-        isCritical: Math.random() < 0.2
-      });
-    }
+    // Setup stage object
+    const stageLog = {
+      stage,
+      isBossStage,
+      enemies: stageEnemies,
+      rounds: [],
+      outcome: stage < completedStages || success ? 'victory' : 'defeat',
+      stageCompleted: stage <= completedStages
+    };
     
-    // Enemy actions
-    for (let j = 1; j <= 3; j++) {
-      if (Math.random() < 0.8) { // 80% chance to attack
-        const damage = Math.floor(Math.random() * 30) + 10;
+    // Generate rounds for this stage
+    const maxRounds = isBossStage ? 5 : 3;
+    const rounds = Math.min(maxRounds, Math.floor(Math.random() * 3) + 2); // 2-4 rounds
+    
+    for (let round = 1; round <= rounds; round++) {
+      const roundActions = [];
+      let allEnemiesDefeated = false;
+      
+      // Player character actions
+      for (const charId of Object.keys(characters)) {
+        if (stageEnemies.length === 0) {
+          allEnemiesDefeated = true;
+          break;
+        }
+        
+        // Skip if character has 0 HP
+        if (characters[charId].hp <= 0) continue;
+        
+        // Target random living enemy
+        const livingEnemies = stageEnemies.filter(e => e.hp > 0);
+        if (livingEnemies.length === 0) {
+          allEnemiesDefeated = true;
+          break;
+        }
+        
+        const targetIdx = Math.floor(Math.random() * livingEnemies.length);
+        const target = livingEnemies[targetIdx];
+        
+        // Calculate damage
+        const baseDamage = characters[charId].attack - (target.defense / 2);
+        const isCritical = Math.random() < 0.2;
+        let damage = Math.max(5, Math.floor(baseDamage * (isCritical ? 1.5 : 1)));
+        
+        // Apply elemental advantages
+        if (elementalType === elementEffect.strength) {
+          damage = Math.floor(damage * 1.3);
+        } else if (elementalType === elementEffect.weakness) {
+          damage = Math.floor(damage * 0.7);
+        }
+        
+        // Apply damage
+        target.hp = Math.max(0, target.hp - damage);
+        
+        // Add action to log
         roundActions.push({
-          actor: `Enemy ${j}`,
-          target: `Character ${run.characterIds[Math.floor(Math.random() * run.characterIds.length)]}`,
+          actor: characters[charId].name,
+          target: target.name,
           action: 'attack',
-          damage: damage,
-          isCritical: Math.random() < 0.1
+          damage,
+          isCritical,
+          elementalEffect: isCritical ? elementEffect.effectName : null,
+          targetRemainingHp: target.hp,
+          targetMaxHp: target.maxHp
         });
+        
+        // Check if enemy defeated
+        if (target.hp <= 0) {
+          roundActions.push({
+            actor: 'system',
+            target: target.name,
+            action: 'defeat',
+            message: `${target.name} has been defeated!`
+          });
+          
+          // Remove enemy from active enemies
+          stageEnemies.splice(stageEnemies.indexOf(target), 1);
+        }
+      }
+      
+      // End round early if all enemies defeated
+      if (allEnemiesDefeated) {
+        stageLog.rounds.push({
+          round,
+          actions: roundActions,
+          summary: 'All enemies defeated!'
+        });
+        break;
+      }
+      
+      // Enemy actions
+      for (const enemy of stageEnemies) {
+        // Skip if enemy has 0 HP
+        if (enemy.hp <= 0) continue;
+        
+        // Get all living characters
+        const livingCharIds = Object.keys(characters).filter(id => characters[id].hp > 0);
+        if (livingCharIds.length === 0) {
+          roundActions.push({
+            actor: 'system',
+            action: 'defeat',
+            message: 'All characters have been defeated!'
+          });
+          stageLog.outcome = 'defeat';
+          break;
+        }
+        
+        // Target random living character
+        const targetCharId = livingCharIds[Math.floor(Math.random() * livingCharIds.length)];
+        const targetChar = characters[targetCharId];
+        
+        // Calculate damage
+        const baseDamage = enemy.attack - (targetChar.defense / 2);
+        const isCritical = Math.random() < 0.15;
+        let damage = Math.max(3, Math.floor(baseDamage * (isCritical ? 1.5 : 1)));
+        
+        // Apply damage
+        targetChar.hp = Math.max(0, targetChar.hp - damage);
+        
+        // Add action to log
+        roundActions.push({
+          actor: enemy.name,
+          target: targetChar.name,
+          action: 'attack',
+          damage,
+          isCritical,
+          elementalEffect: isCritical ? elementEffect.effectName : null,
+          targetRemainingHp: targetChar.hp,
+          targetMaxHp: targetChar.maxHp
+        });
+        
+        // Check if character defeated
+        if (targetChar.hp <= 0) {
+          roundActions.push({
+            actor: 'system',
+            target: targetChar.name,
+            action: 'defeat',
+            message: `${targetChar.name} has been defeated!`
+          });
+        }
+      }
+      
+      // Add round to stage log
+      stageLog.rounds.push({
+        round,
+        actions: roundActions
+      });
+      
+      // Check if all characters defeated
+      const allCharactersDefeated = Object.values(characters).every(char => char.hp <= 0);
+      if (allCharactersDefeated) {
+        stageLog.outcome = 'defeat';
+        break;
       }
     }
     
-    log.push({
-      round: i,
-      actions: roundActions
-    });
+    // Add stage summary
+    stageLog.summary = stageLog.outcome === 'victory' 
+      ? `Stage ${stage} cleared! Your party ${isBossStage ? 'defeats the boss and' : ''} moves forward.`
+      : `Your party was defeated in stage ${stage}.`;
+    
+    // Heal characters between non-boss stages (if victorious)
+    if (stageLog.outcome === 'victory' && !isBossStage) {
+      Object.values(characters).forEach(char => {
+        const healAmount = Math.floor(char.maxHp * 0.3);
+        char.hp = Math.min(char.maxHp, char.hp + healAmount);
+      });
+      
+      stageLog.recovery = {
+        message: 'Your party recovers some health before the next stage.',
+        characters: Object.entries(characters).map(([id, char]) => ({
+          id,
+          name: char.name,
+          hp: char.hp,
+          maxHp: char.maxHp
+        }))
+      };
+    }
+    
+    // Add stage to log
+    log.push(stageLog);
+    
+    // Exit if party was defeated
+    if (stageLog.outcome === 'defeat') {
+      break;
+    }
   }
   
-  // Final round with outcome
-  log.push({
-    round: rounds + 1,
-    outcome: success ? 'victory' : 'defeat',
-    summary: success ? 
-      'Your party defeats all enemies and claims the dungeon rewards!' : 
-      'Your party is overwhelmed by the enemies and must retreat.'
-  });
+  // Final result
+  const finalResult = {
+    totalStages,
+    completedStages,
+    success,
+    finalSummary: success 
+      ? `Dungeon cleared! Your party conquered all ${totalStages} stages and claimed the rewards.`
+      : `Dungeon attempt failed. Your party completed ${completedStages} out of ${totalStages} stages.`
+  };
+  
+  log.push(finalResult);
   
   return log;
 }

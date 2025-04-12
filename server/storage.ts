@@ -1,10 +1,11 @@
 import { db } from './db';
 import {
-  users, characters, auras, resources, farmingTasks, dungeonRuns,
+  users, characters, auras, resources, farmingTasks, dungeonTypes, dungeonRuns,
   forgingTasks, blackMarketListings, bountyQuests, buildingUpgrades, activityLogs,
   type User, type InsertUser, type Character, type InsertCharacter,
   type Aura, type InsertAura, type Resource, type InsertResource,
-  type FarmingTask, type InsertFarmingTask, type DungeonRun, type InsertDungeonRun,
+  type FarmingTask, type InsertFarmingTask, 
+  type DungeonType, type InsertDungeonType, type DungeonRun, type InsertDungeonRun,
   type ForgingTask, type InsertForgingTask, type BlackMarketListing, type InsertBlackMarketListing,
   type BountyQuest, type InsertBountyQuest, type BuildingUpgrade, type InsertBuildingUpgrade,
   type ActivityLog, type InsertActivityLog
@@ -45,6 +46,14 @@ export interface IStorage {
   createFarmingTask(task: InsertFarmingTask): Promise<FarmingTask>;
   updateFarmingTask(id: number, updates: Partial<FarmingTask>): Promise<FarmingTask | undefined>;
   deleteFarmingTask(id: number): Promise<boolean>;
+  
+  // Dungeon Type methods
+  getDungeonTypes(): Promise<DungeonType[]>;
+  getDungeonTypeById(id: number): Promise<DungeonType | undefined>;
+  getDungeonTypesByElement(elementalType: string): Promise<DungeonType[]>;
+  getDungeonTypesByDifficulty(difficulty: string): Promise<DungeonType[]>;
+  createDungeonType(dungeonType: InsertDungeonType): Promise<DungeonType>;
+  updateDungeonType(id: number, updates: Partial<DungeonType>): Promise<DungeonType | undefined>;
   
   // Dungeon Run methods
   getDungeonRuns(userId: number): Promise<DungeonRun[]>;
@@ -233,6 +242,36 @@ export class DatabaseStorage implements IStorage {
   async deleteFarmingTask(id: number): Promise<boolean> {
     const result = await db.delete(farmingTasks).where(eq(farmingTasks.id, id));
     return !!result.rowCount;
+  }
+
+  async getDungeonTypes(): Promise<DungeonType[]> {
+    return db.select().from(dungeonTypes);
+  }
+
+  async getDungeonTypeById(id: number): Promise<DungeonType | undefined> {
+    const [dungeonType] = await db.select().from(dungeonTypes).where(eq(dungeonTypes.id, id));
+    return dungeonType;
+  }
+
+  async getDungeonTypesByElement(elementalType: string): Promise<DungeonType[]> {
+    return db.select().from(dungeonTypes).where(eq(dungeonTypes.elementalType, elementalType));
+  }
+
+  async getDungeonTypesByDifficulty(difficulty: string): Promise<DungeonType[]> {
+    return db.select().from(dungeonTypes).where(eq(dungeonTypes.difficulty, difficulty));
+  }
+
+  async createDungeonType(dungeonType: InsertDungeonType): Promise<DungeonType> {
+    const [newDungeonType] = await db.insert(dungeonTypes).values(dungeonType).returning();
+    return newDungeonType;
+  }
+
+  async updateDungeonType(id: number, updates: Partial<DungeonType>): Promise<DungeonType | undefined> {
+    const [updatedDungeonType] = await db.update(dungeonTypes)
+      .set(updates)
+      .where(eq(dungeonTypes.id, id))
+      .returning();
+    return updatedDungeonType;
   }
 
   async getDungeonRuns(userId: number): Promise<DungeonRun[]> {

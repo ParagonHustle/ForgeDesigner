@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   blackMarketLevel: integer("black_market_level").default(1),
   bountyBoardLevel: integer("bounty_board_level").default(1),
   tavernLevel: integer("tavern_level").default(1),
+  isAdmin: boolean("is_admin").default(false),
 });
 
 // Character model
@@ -259,10 +260,18 @@ export const farmingTasksRelations = relations(farmingTasks, ({ one }) => ({
   }),
 }));
 
+export const dungeonTypesRelations = relations(dungeonTypes, ({ many }) => ({
+  dungeonRuns: many(dungeonRuns)
+}));
+
 export const dungeonRunsRelations = relations(dungeonRuns, ({ one }) => ({
   user: one(users, {
     fields: [dungeonRuns.userId],
     references: [users.id],
+  }),
+  dungeonType: one(dungeonTypes, {
+    fields: [dungeonRuns.dungeonTypeId],
+    references: [dungeonTypes.id],
   }),
 }));
 
@@ -323,6 +332,7 @@ export const insertCharacterSchema = createInsertSchema(characters).omit({ id: t
 export const insertAuraSchema = createInsertSchema(auras).omit({ id: true });
 export const insertResourceSchema = createInsertSchema(resources).omit({ id: true });
 export const insertFarmingTaskSchema = createInsertSchema(farmingTasks).omit({ id: true });
+export const insertDungeonTypeSchema = createInsertSchema(dungeonTypes).omit({ id: true });
 export const insertDungeonRunSchema = createInsertSchema(dungeonRuns).omit({ id: true });
 export const insertForgingTaskSchema = createInsertSchema(forgingTasks).omit({ id: true });
 export const insertBlackMarketListingSchema = createInsertSchema(blackMarketListings).omit({ id: true });
@@ -345,6 +355,9 @@ export type InsertResource = z.infer<typeof insertResourceSchema>;
 
 export type FarmingTask = typeof farmingTasks.$inferSelect;
 export type InsertFarmingTask = z.infer<typeof insertFarmingTaskSchema>;
+
+export type DungeonType = typeof dungeonTypes.$inferSelect;
+export type InsertDungeonType = z.infer<typeof insertDungeonTypeSchema>;
 
 export type DungeonRun = typeof dungeonRuns.$inferSelect;
 export type InsertDungeonRun = z.infer<typeof insertDungeonRunSchema>;
