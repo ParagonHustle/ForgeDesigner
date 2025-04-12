@@ -136,6 +136,23 @@ const buildings = [
     maxLevel: 9,
     baseUpgradeCost: { rogueCredits: 700, forgeTokens: 70 },
     upgradeTimeInMinutes: 35
+  },
+  {
+    id: 'farming',
+    name: 'Farming',
+    description: 'Enables resource gathering from farming tasks with improved efficiency and rewards.',
+    icon: <Wheat className="h-6 w-6" />,
+    color: 'text-[#8BC34A] bg-[#8BC34A]/10',
+    benefits: [
+      { level: 1, text: 'Basic farming efficiency (normal yields)' },
+      { level: 2, text: '10% faster farming task completion' },
+      { level: 3, text: '20% increased resource yield from farming' },
+      { level: 4, text: '40% faster farming task completion' },
+      { level: 5, text: '60% increased resource yield from farming' }
+    ],
+    maxLevel: 9,
+    baseUpgradeCost: { rogueCredits: 650, forgeTokens: 65 },
+    upgradeTimeInMinutes: 30
   }
 ];
 
