@@ -331,17 +331,69 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
   
   // Start replay animation
   const startReplay = () => {
-    setIsReplaying(true);
+    // Start by ensuring we have actions to replay
+    if (replayActionsRef.current.length === 0) {
+      console.log("No actions available for replay, re-initializing");
+      
+      // Re-process battle log data
+      const actions: any[] = [];
+      
+      battleLog.forEach(entry => {
+        if ('round' in entry) {
+          // Add round header
+          actions.push({
+            type: 'round-header',
+            round: entry.round,
+            displayDelay: 1000
+          });
+          
+          // Add all actions from this round
+          if (entry.actions && Array.isArray(entry.actions)) {
+            entry.actions.forEach(action => {
+              actions.push({
+                type: 'action',
+                ...action,
+                displayDelay: 1500
+              });
+            });
+          }
+          
+          // Add round summary if available
+          if (entry.outcome) {
+            actions.push({
+              type: 'stage-outcome',
+              outcome: entry.outcome,
+              summary: entry.summary,
+              displayDelay: 2000
+            });
+          }
+        }
+      });
+      
+      if (actions.length > 0) {
+        console.log(`Initialized ${actions.length} replay actions on start`);
+        replayActionsRef.current = actions;
+      } else {
+        console.error("Failed to create replay actions");
+        return;
+      }
+    }
     
     // If we're at the end, restart from beginning
     if (currentReplayStep >= replayActionsRef.current.length) {
+      console.log("Restarting replay from beginning");
       setCurrentReplayStep(0);
     }
     
-    // Start or resume animation
+    console.log(`Starting replay with ${replayActionsRef.current.length} actions`);
+    
+    // Set replaying state and start animation
+    setIsReplaying(true);
+    
+    // Start or resume animation with a small delay to ensure state updates
     setTimeout(() => {
       advanceReplay();
-    }, 100); // Small delay to ensure state update happens first
+    }, 100);
   };
   
   // Stop replay animation
@@ -1212,7 +1264,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
                     <Button 
                       onClick={startReplay} 
                       className="bg-[#432874] hover:bg-[#432874]/80"
-                      disabled={currentReplayStep >= replayActionsRef.current.length}
+                      disabled={replayActionsRef.current.length === 0}
                     >
                       <Play className="h-4 w-4 mr-1" />
                       {currentReplayStep === 0 ? 'Start Replay' : 'Resume'}
@@ -1245,12 +1297,31 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
                   </Button>
                 </div>
               </div>
+              
+              {/* Status indicator */}
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className={`h-2 w-2 rounded-full mr-2 ${isReplaying ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
+                  <span className="text-sm font-medium">
+                    {isReplaying ? 'Replay in progress...' : 'Replay ready'}
+                  </span>
+                </div>
+                <div className="text-xs text-[#C8B8DB]/80">
+                  {replayActionsRef.current.length > 0 ? 
+                    `${currentReplayStep} of ${replayActionsRef.current.length} actions` :
+                    'No replay data available'}
+                </div>
+              </div>
+              
               <p className="text-xs text-[#C8B8DB]/60">
                 Watch the battle unfold with timed animations. The replay shows detailed combat events including skill usage and damage indicators.
               </p>
             </div>
             
-            {renderCurrentReplayStep()}
+            {/* Replay visualization area */}
+            <div className={`transition-all duration-200 ${isReplaying ? 'border-2 border-green-500/20 rounded-lg p-2' : ''}`}>
+              {renderCurrentReplayStep()}
+            </div>
           </TabsContent>
           
           <TabsContent value="summary" className="border-none p-0">
