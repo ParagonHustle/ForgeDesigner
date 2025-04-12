@@ -2288,19 +2288,32 @@ export async function addBuildingSkillRoutes(app: Express) {
   // Get Townhall skills
   app.get('/api/buildings/skills/townhall', authenticateUser, async (req, res) => {
     try {
+      console.log('Townhall skills API endpoint called');
+      
       // Get the townhall building data
       const townhall = await storage.getBuildingUpgradeByTypeAndUserId('townhall', req.session.userId!);
       
+      console.log('Townhall data from database:', townhall);
+      
       if (!townhall) {
+        console.log('Townhall not found for user', req.session.userId);
         return res.status(404).json({ message: 'Townhall not found' });
       }
       
       // Send the skill tree data along with building info
-      return res.json({
+      const responseData = {
         currentLevel: townhall.currentLevel,
         unlockedSkills: townhall.unlockedSkills || [],
         availableSkillTree: townhallSkillTree
+      };
+      
+      console.log('Sending skill tree response:', {
+        currentLevel: responseData.currentLevel,
+        unlockedSkillsCount: responseData.unlockedSkills.length,
+        skillTreeCount: townhallSkillTree.length
       });
+      
+      return res.json(responseData);
     } catch (error) {
       console.error('Error fetching townhall skills:', error);
       res.status(500).json({ message: 'Failed to fetch townhall skill data' });

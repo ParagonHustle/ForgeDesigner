@@ -22,10 +22,16 @@ const TownhallSkillTree = ({
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [resourceChecked, setResourceChecked] = useState(false);
   
-  const { data: skillTreeData, isLoading } = useQuery({
+  const { data: skillTreeData, isLoading, error } = useQuery({
     queryKey: [`/api/buildings/skills/townhall`],
     enabled: !!building
   });
+  
+  // Debug logging
+  console.log("TownhallSkillTree rendering:", { building, currentLevel });
+  console.log("Skill tree data:", skillTreeData);
+  console.log("Loading state:", isLoading);
+  console.log("Error state:", error);
 
   useEffect(() => {
     // Check if player has "Building Plans" resource
