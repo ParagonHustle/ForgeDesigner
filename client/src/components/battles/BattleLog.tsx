@@ -643,11 +643,101 @@ const BattleLog: React.FC<BattleLogProps> = ({ isOpen, onClose, battleLog }) => 
   const startAutoPlay = () => {
     if (autoPlayActive) return;
     
+    console.log("Starting auto-play battle simulation");
+    
+    // Initialize with dummy battle data if none exists
+    if (battleState.characters.length === 0 || battleState.enemies.length === 0) {
+      console.log("Creating initial battle state for auto-play");
+      
+      // Set up a basic battle scenario
+      const newState = {
+        characters: [{
+          id: "char1",
+          name: "Character 1",
+          type: "character",
+          hp: 100,
+          maxHp: 100,
+          attackSpeed: 4.0,
+          attackTimer: 0,
+          stats: {
+            attack: 20,
+            defense: 15,
+            accuracy: 90,
+            speed: 10
+          },
+          skills: [
+            { id: "skill1", name: "Basic Attack", icon: "sword", cooldown: 0, currentCooldown: 0 },
+            { id: "skill2", name: "Power Strike", icon: "shieldOff", cooldown: 3, currentCooldown: 0 },
+            { id: "skill3", name: "Healing Potion", icon: "heart", cooldown: 5, currentCooldown: 0 }
+          ]
+        }],
+        enemies: [
+          {
+            id: "enemy1",
+            name: "Enemy 1",
+            type: "enemy",
+            hp: 80,
+            maxHp: 80,
+            attackSpeed: 4.5,
+            attackTimer: 0,
+            stats: {
+              attack: 16,
+              defense: 10,
+              accuracy: 85,
+              speed: 8
+            },
+            skills: [
+              { id: "skill1", name: "Basic Attack", icon: "sword", cooldown: 0, currentCooldown: 0 }
+            ]
+          },
+          {
+            id: "enemy2",
+            name: "Enemy 2",
+            type: "enemy",
+            hp: 70,
+            maxHp: 70,
+            attackSpeed: 3.5,
+            attackTimer: 0,
+            stats: {
+              attack: 18,
+              defense: 8,
+              accuracy: 88,
+              speed: 12
+            },
+            skills: [
+              { id: "skill1", name: "Basic Attack", icon: "sword", cooldown: 0, currentCooldown: 0 }
+            ]
+          }
+        ],
+        currentTurn: 0,
+        isActive: true,
+        actionLog: [],
+        battleLogs: ["Battle begins! Characters and enemies prepare to fight..."]
+      };
+      
+      setBattleState(newState);
+    } else {
+      // Use existing battle state
+      console.log("Using existing battle state for auto-play with", 
+                battleState.characters.length, "characters and", 
+                battleState.enemies.length, "enemies");
+      
+      setBattleState(prev => ({
+        ...prev, 
+        isActive: true,
+        battleLogs: [...(prev.battleLogs || []), "Battle resumes! Characters and enemies re-engage in combat..."]
+      }));
+    }
+    
     setAutoPlayActive(true);
-    setBattleState(prev => ({...prev, isActive: true}));
+    
+    // Clear any existing timer
+    if (battleTimerRef.current) {
+      clearTimeout(battleTimerRef.current);
+    }
     
     // Start the timer to update the battle state
-    updateBattleState();
+    battleTimerRef.current = window.setTimeout(updateBattleState, 100);
   };
   
   // Stop auto-play battle simulation
