@@ -42,8 +42,8 @@ export default function BattleLog({
   const handleComplete = () => {
     if (runId && onCompleteDungeon) {
       onCompleteDungeon(runId);
+      onClose();
     }
-    onClose();
   };
 
   if (!battleLog || battleLog.length === 0) {

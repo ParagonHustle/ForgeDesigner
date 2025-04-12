@@ -169,13 +169,10 @@ const DungeonView = () => {
     try {
       const res = await apiRequest('POST', `/api/dungeons/complete/${runId}`, undefined);
       const data = await res.json();
-
-      toast({
-        title: data.success ? "Dungeon Conquered!" : "Dungeon Failed",
-        description: data.success 
-          ? `Your party successfully cleared the dungeon and collected rewards.`
-          : `Your party was forced to retreat from the dungeon.`,
-      });
+      
+      // Show battle log immediately
+      setCurrentBattleLog(data.battleLog || []);
+      setShowBattleLog(true);
 
       // Refresh the list of dungeons
       activeDungeons.refetch();
