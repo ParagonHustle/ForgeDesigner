@@ -56,9 +56,16 @@ const BlackMarketView = () => {
   });
 
   // Filter listings by currency type and premium status
-  const premiumListings = listings.filter(listing => 
-    (listing.currencyType === 'forgeTokens' || listing.isPremium) && !listing.sold
+  const featuredPremiumListings = listings.filter(listing => 
+    listing.isPremium === true && !listing.sold
   );
+  
+  const regularPremiumListings = listings.filter(listing => 
+    listing.currencyType === 'forgeTokens' && !listing.isPremium && !listing.sold
+  );
+  
+  // Combine both for the premium tab
+  const premiumListings = [...featuredPremiumListings, ...regularPremiumListings];
   
   const standardListings = listings.filter(listing => 
     listing.currencyType === 'rogueCredits' && !listing.isPremium && !listing.sold
@@ -260,21 +267,110 @@ const BlackMarketView = () => {
         
         {/* Premium Items Tab */}
         <TabsContent value="premium">
+          {/* Featured Premium Items Section */}
+          {featuredPremiumListings.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center mb-4">
+                <Sparkles className="h-5 w-5 mr-2 text-[#FFD700]" />
+                <h3 className="text-xl font-cinzel font-bold text-[#FFD700]">Featured Premium Items</h3>
+              </div>
+              
+              <div className="bg-gradient-to-r from-[#432874]/40 to-[#1A1A2E] p-1 rounded-xl">
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 p-4"
+                >
+                  {featuredPremiumListings.map(listing => {
+                    const itemInfo = getItemInfo(listing);
+                    
+                    return (
+                      <motion.div
+                        key={listing.id}
+                        variants={item}
+                        className="bg-[#1A1A2E] border border-[#FFD700]/30 rounded-xl overflow-hidden shadow-lg shadow-[#FFD700]/10"
+                      >
+                        <div className="relative h-40">
+                          <img 
+                            src={itemInfo.image} 
+                            alt={itemInfo.title} 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A2E] to-transparent"></div>
+                          <div className="absolute top-2 right-2">
+                            <Badge className="bg-[#FFD700]/30 text-[#FFD700] border-[#FFD700]/50">
+                              <Sparkles className="h-3 w-3 mr-1" />
+                              Featured
+                            </Badge>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <h3 className="text-xl font-cinzel font-bold text-[#FFD700]">{itemInfo.title}</h3>
+                            <p className="text-sm text-[#C8B8DB]/80">{itemInfo.description}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="p-4">
+                          {/* Item details section */}
+                          {itemInfo.detailLines && itemInfo.detailLines.length > 0 && (
+                            <div className="mb-3 text-xs text-[#C8B8DB]/80 bg-[#1A1A2E]/80 rounded p-2 border border-[#FFD700]/20">
+                              {itemInfo.detailLines.map((line, index) => 
+                                line ? <div key={index} className="mb-1">{line}</div> : null
+                              )}
+                            </div>
+                          )}
+                          
+                          <div className="flex justify-between items-center mb-4">
+                            <div className="flex items-center">
+                              <img 
+                                src={getCurrencyIcon(listing.currencyType)} 
+                                alt={listing.currencyType} 
+                                className="w-6 h-6 rounded-full mr-2"
+                              />
+                              <span className="text-lg font-semibold text-[#FFD700]">{listing.price}</span>
+                            </div>
+                            
+                            <Button
+                              className={`${canAfford(listing) 
+                                ? 'bg-[#FFD700] hover:bg-[#FFD700]/80 text-[#1A1A2E]' 
+                                : 'bg-[#432874]/50 text-[#C8B8DB]/50 cursor-not-allowed'}`}
+                              disabled={!canAfford(listing) || isSubmitting}
+                              onClick={() => setConfirmDialog({ open: true, listing })}
+                            >
+                              <ShoppingBag className="h-4 w-4 mr-2" />
+                              {canAfford(listing) ? 'Purchase' : 'Can\'t Afford'}
+                            </Button>
+                          </div>
+                          
+                          <div className="text-xs text-[#FFD700]/60 italic">
+                            Limited time offer, exclusive premium item!
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              </div>
+            </div>
+          )}
+          
+          {/* Regular Premium Items */}
+          <h3 className="text-xl font-cinzel font-semibold text-[#FF9D00] mb-4">Premium Items</h3>
           <motion.div
             variants={container}
             initial="hidden"
             animate="show"
             className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
           >
-            {premiumListings.length === 0 ? (
+            {regularPremiumListings.length === 0 ? (
               <div className="col-span-full bg-[#1A1A2E] rounded-xl p-8 text-center">
                 <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
                 <p className="text-[#C8B8DB]/80 mb-4">
-                  No premium items are available at the moment. Check back later!
+                  No regular premium items are available at the moment. Check back later!
                 </p>
               </div>
             ) : (
-              premiumListings.map(listing => {
+              regularPremiumListings.map(listing => {
                 const itemInfo = getItemInfo(listing);
                 
                 return (
