@@ -1,5 +1,31 @@
 // Townhall skill tree structure
 export const townhallSkillTree = [
+  // Main Townhall skills
+  {
+    id: 'resource_production',
+    name: 'Resource Production',
+    description: 'Increases resource gain by 5% per level',
+    maxLevel: 5
+  },
+  {
+    id: 'experience_boost',
+    name: 'Experience Boost',
+    description: 'Increases XP gain by 5% per level',
+    maxLevel: 5
+  },
+  {
+    id: 'construction_speed',
+    name: 'Construction Speed',
+    description: 'Reduces building upgrade time by 5% per level',
+    maxLevel: 5
+  },
+  {
+    id: 'extra_farming_slot',
+    name: 'Extra Farming Slot',
+    description: 'Unlocks an additional farming slot',
+    maxLevel: 5
+  },
+
   // Farm Plot unlocks
   { 
     id: 'th_farm_plot_1', 
