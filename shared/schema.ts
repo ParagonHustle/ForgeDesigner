@@ -54,7 +54,6 @@ export const auras = pgTable("auras", {
   name: text("name").notNull(),
   level: integer("level").default(1),
   element: text("element").notNull(), // fire, water, earth, air, light, dark
-  rarity: text("rarity").notNull(), // common, rare, epic, legendary
   tier: integer("tier").default(1),
   attack: integer("attack").default(0),
   accuracy: integer("accuracy").default(0),

@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useGameStore } from "@/lib/zustandStore";
 import { motion } from "framer-motion";
-import { Clock, Flame, Hammer, Sparkles } from "lucide-react";
+import { Clock, Flame, Hammer, Sparkles, User, Info } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -29,11 +29,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Aura, BuildingUpgrade, ForgingTask } from "@shared/schema";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Aura, BuildingUpgrade, Character, ForgingTask } from "@shared/schema";
 import CountdownTimer from "../common/CountdownTimer";
 
 const ForgeView = () => {
-  const { auras = [], resources = [], fetchAuras, fetchResources, fetchForgingTasks } = useGameStore();
+  const { auras = [], resources = [], characters = [], fetchAuras, fetchResources, fetchForgingTasks, fetchCharacters } = useGameStore();
   const { toast } = useToast();
   
   // Get forge building level
@@ -50,12 +51,19 @@ const ForgeView = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [primaryAura, setPrimaryAura] = useState<Aura | null>(null);
   const [secondaryAura, setSecondaryAura] = useState<Aura | null>(null);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
   
   // Get forging tasks
   const { data: forgingTasks = [], isLoading: isTasksLoading } = useQuery<ForgingTask[]>({ 
     queryKey: ['/api/forge/tasks'],
     refetchInterval: 10000 // Refresh every 10 seconds
   });
+  
+  // Get currently available characters (not assigned to any activity)
+  const availableCharacters = characters.filter(char => 
+    !char.activityType || // Not doing any activity
+    (new Date(char.activityEndTime || 0) < new Date()) // Activity has ended
+  );
 
   // Filter auras that are not currently being used in fusion
   const availableAuras = auras.filter(aura => !aura.isFusing);
@@ -311,10 +319,56 @@ const ForgeView = () => {
           {/* Crafting Interface */}
           <TabsContent value="craft" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left side: Element selection */}
+              {/* Left side: Element and Character selection */}
               <div className="bg-[#15152C] rounded-lg border border-[#432874]/20 p-4">
-                <h3 className="text-lg font-semibold mb-4">Choose Element</h3>
+                <h3 className="text-lg font-semibold mb-4">Select Character & Element</h3>
                 
+                {/* Character Selection */}
+                <div className="mb-6">
+                  <h4 className="text-md font-semibold mb-3 flex items-center">
+                    Assign Character
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="ml-2 cursor-help">
+                            <Info className="h-4 w-4 text-[#C8B8DB]/60" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm">
+                          <p>You must assign a character to assist with crafting. This character will be unavailable for other tasks until crafting is complete.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </h4>
+                  
+                  {availableCharacters.length > 0 ? (
+                    <Select 
+                      value={selectedCharacterId ? String(selectedCharacterId) : ""} 
+                      onValueChange={(value) => setSelectedCharacterId(Number(value))}
+                    >
+                      <SelectTrigger className="bg-[#1A1A2E] border-[#432874]/30">
+                        <SelectValue placeholder="Select a character" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCharacters.map(character => (
+                          <SelectItem key={character.id} value={String(character.id)}>
+                            {character.name} (Lvl {character.level} {character.class})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-amber-400 py-2 px-4 bg-amber-950/20 border border-amber-900/30 rounded-md">
+                      <span className="flex items-center">
+                        <Info className="h-4 w-4 mr-2" />
+                        All characters are currently busy. Wait for them to complete their tasks.
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Element Selection */}
+                <h4 className="text-md font-semibold mb-3">Element Type</h4>
                 <Select value={selectedElement || ''} onValueChange={setSelectedElement}>
                   <SelectTrigger className="bg-[#1A1A2E] border-[#432874]/30">
                     <SelectValue placeholder="Select element" />
