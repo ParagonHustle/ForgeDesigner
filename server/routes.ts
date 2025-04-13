@@ -2457,10 +2457,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 // Helper function to generate mock battle log
 async function generateMockBattleLog(run: any, success: boolean) {
-  const totalStages = run.totalStages || 8;
-  const completedStages = success ? totalStages : Math.floor(Math.random() * (totalStages - 1)) + 1;
-  const elementalType = run.elementalType || 'neutral';
-  const log = [];
+  // Initialize battle data
+  const battleLog = [];
+  const allies = [];
+  const enemies = [];
+
+  // Get character data for allies
+  for (const charId of run.characterIds) {
+    const char = await storage.getCharacterById(charId);
+    const aura = char?.equippedAuraId ? await storage.getAuraById(char.equippedAuraId) : null;
+    
+    allies.push({
+      id: charId,
+      name: char?.name || 'Unknown Hero',
+      stats: {
+        attack: char?.attack || 50,
+        vitality: char?.vitality || 100,
+        speed: char?.speed || 40
+      },
+      skills: {
+        basic: aura?.skills?.[0] || { name: 'Basic Attack', damage: 1.0 },
+        advanced: aura?.skills?.[1] || { name: 'Advanced Skill', damage: 1.5, cooldown: 4 },
+        ultimate: aura?.skills?.[2] || { name: 'Ultimate', damage: 2.0, cooldown: 6 }
+      }
+    });
+  }
+
+  // Generate enemies based on dungeon level
+  const enemyTypes = ['Minion', 'Elite', 'Boss'];
+  const enemyCount = Math.min(3, Math.floor(run.dungeonLevel / 2) + 1);
+  
+  for (let i = 0; i < enemyCount; i++) {
+    const type = i === enemyCount - 1 ? 'Boss' : 'Minion';
+    const level = run.dungeonLevel;
+    
+    enemies.push({
+      id: `enemy_${i}`,
+      name: `${type} ${i + 1}`,
+      stats: {
+        attack: 40 + (level * 5),
+        vitality: type === 'Boss' ? 200 + (level * 20) : 80 + (level * 10),
+        speed: type === 'Boss' ? 35 + (level * 2) : 45 + (level * 3)
+      },
+      skills: {
+        basic: { name: 'Enemy Attack', damage: 1.0 },
+        advanced: type === 'Boss' ? { name: 'Boss Strike', damage: 1.8, cooldown: 3 } : null,
+        ultimate: type === 'Boss' ? { name: 'Boss Ultimate', damage: 2.5, cooldown: 5 } : null
+      }
+    });
+  }
+
+  // Initial battle state
+  battleLog.push({
+    type: 'battle_start',
+    allies,
+    enemies,
+    timestamp: Date.now()
+  });
+
+  // Simulate combat with attack meters
+  let aliveAllies = [...allies];
+  let aliveEnemies = [...enemies];
+  let round = 0;
+  const maxRounds = 30;
+
+  while (round < maxRounds && aliveAllies.length > 0 && aliveEnemies.length > 0) {
+    round++;
+    const roundActions = [];
+
+    // Process all units' actions based on speed
+    const allUnits = [...aliveAllies, ...aliveEnemies].map(unit => ({
+      ...unit,
+      actionTimer: 100 / (unit.stats.speed / 40)
+    }));
+
+    // Sort by action timer (lower acts first)
+    allUnits.sort((a, b) => a.actionTimer - b.actionTimer);
+
+    for (const unit of allUnits) {
+      // Skip if unit is defeated
+      if (!aliveAllies.includes(unit) && !aliveEnemies.includes(unit)) continue;
+
+      const isAlly = aliveAllies.includes(unit);
+      const targets = isAlly ? aliveEnemies : aliveAllies;
+      if (targets.length === 0) continue;
+
+      // Select skill based on cooldowns
+      const availableSkills = [unit.skills.basic];
+      if (unit.skills.advanced && round % unit.skills.advanced.cooldown === 0) {
+        availableSkills.push(unit.skills.advanced);
+      }
+      if (unit.skills.ultimate && round % unit.skills.ultimate.cooldown === 0) {
+        availableSkills.push(unit.skills.ultimate);
+      }
+
+      const skill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+      const target = targets[Math.floor(Math.random() * targets.length)];
+
+      // Calculate damage
+      const baseDamage = unit.stats.attack * skill.damage;
+      const isCritical = Math.random() < 0.2;
+      const damage = Math.floor(baseDamage * (isCritical ? 1.5 : 1));
+
+      // Record action
+      roundActions.push({
+        actor: unit.name,
+        skill: skill.name,
+        target: target.name,
+        damage,
+        isCritical
+      });
+
+      // Apply damage and check for defeats
+      target.stats.vitality -= damage;
+      if (target.stats.vitality <= 0) {
+        if (isAlly) {
+          aliveEnemies = aliveEnemies.filter(e => e.id !== target.id);
+          roundActions.push({
+            type: 'defeat',
+            target: target.name
+          });
+        } else {
+          aliveAllies = aliveAllies.filter(a => a.id !== target.id);
+          roundActions.push({
+            type: 'defeat',
+            target: target.name
+          });
+        }
+      }
+    }
+
+    // Record round results
+    battleLog.push({
+      type: 'round',
+      number: round,
+      actions: roundActions,
+      remainingAllies: aliveAllies.length,
+      remainingEnemies: aliveEnemies.length
+    });
+  }
+
+  // Record battle outcome
+  const victory = aliveEnemies.length === 0;
+  battleLog.push({
+    type: 'battle_end',
+    victory,
+    totalRounds: round,
+    survivingAllies: aliveAllies.map(a => a.name),
+    summary: victory ? 
+      `Victory achieved in ${round} rounds!` : 
+      `Defeat after ${round} rounds of combat.`
+  });
+
+  return battleLog;
   
   // Define elemental effects and modifiers
   const elementalEffects = {
