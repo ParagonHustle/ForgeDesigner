@@ -85,7 +85,13 @@ const DungeonView = () => {
   const [currentBattleLog, setCurrentBattleLog] = useState<any[]>([]);
 
   // Get active characters (not assigned to other tasks)
-  const availableCharacters = characters.filter(char => !char.isActive);
+  const availableCharacters = characters.filter(char => {
+    // Check if character is in any active task
+    const isInDungeon = char.isActive && char.activityType === 'dungeon';
+    const isInForge = char.isActive && char.activityType === 'forging';
+    const isInFarming = char.isActive && char.activityType === 'farming';
+    return !isInDungeon && !isInForge && !isInFarming;
+  });
   const activeDungeons = useQuery<DungeonRun[]>({ 
     queryKey: ['/api/dungeons/runs'],
     refetchInterval: 30000 // Refresh every 30 seconds
