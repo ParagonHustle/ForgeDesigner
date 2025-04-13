@@ -30,6 +30,10 @@ interface BattleUnit {
     attack: number;
     vitality: number;
     speed: number;
+    focus: number;
+    accuracy: number;
+    defense: number;
+    resilience: number;
     element?: string;
   };
   skills: {
