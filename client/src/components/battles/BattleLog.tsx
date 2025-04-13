@@ -39,6 +39,8 @@ interface BattleUnit {
   };
   // Status effects that can be applied
   statusEffects?: StatusEffect[];
+  // Track when status effects were last updated (by round number)
+  lastStatusUpdate?: number;
   lastSkillUse: number;
   totalDamageDealt: number;
   totalDamageReceived: number;
@@ -61,6 +63,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [units, setUnits] = useState<BattleUnit[]>([]);
   const [actionLog, setActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
+  const [battleRound, setBattleRound] = useState(1);
   
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
@@ -120,6 +123,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               const expiringEffects = [];
               const remainingEffects = [];
               
+              // Process status effects - this only happens once per round
+              // Each active unit gets their status effects processed once per combat round
+              // Force decrement by checking if this unit should have their status effects tick down
+              const shouldDecrement = !unit.lastStatusUpdate || unit.lastStatusUpdate < battleRound;
+              
+              console.log(`Processing ${unit.name}'s status effects - Current round: ${battleRound}, Last update: ${unit.lastStatusUpdate || 'never'}, Should decrement: ${shouldDecrement}`);
+              
               // First, create new effects with decremented durations and collect messages
               for (let j = 0; j < updatedStatusEffects.length; j++) {
                 const effect = updatedStatusEffects[j];
@@ -131,9 +141,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   statusMessages.push(`${unit.name} took ${dotDamage} damage from ${effect.name}`);
                 }
                 
-                // Create a NEW effect with reduced duration - don't modify original
-                const newDuration = effect.duration - 1;
-                console.log(`Decrementing ${unit.name}'s ${effect.name} effect from ${effect.duration} to ${newDuration} turns`);
+                // Only decrement duration if it's a new round for this unit
+                let newDuration = effect.duration;
+                if (shouldDecrement) {
+                  newDuration = effect.duration - 1;
+                  console.log(`Decrementing ${unit.name}'s ${effect.name} effect from ${effect.duration} to ${newDuration} turns`);
+                } else {
+                  console.log(`Skipping decrement for ${unit.name}'s ${effect.name} - already processed this round`);
+                }
                 
                 const updatedEffect = {
                   ...effect,
@@ -177,7 +192,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   ...unit,
                   hp: Math.max(0, unit.hp - statusEffectDamage),
                   totalDamageReceived: unit.totalDamageReceived + statusEffectDamage,
-                  statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0) // Remove expired effects
+                  statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0), // Remove expired effects
+                  lastStatusUpdate: battleRound // Mark this unit as having its status effects processed this round
                 };
                 
                 // Add status effect messages to the action log
@@ -199,7 +215,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   
                 updatedUnits[i] = {
                   ...unit,
-                  statusEffects: filteredEffects
+                  statusEffects: filteredEffects,
+                  lastStatusUpdate: battleRound // Mark this unit as having its status effects processed this round
                 };
               }
             }
@@ -233,7 +250,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             }
 
             updatedUnits[i] = {
-              ...unit,
+              ...updatedUnits[i], // Use the potentially updated unit with statusEffects and lastStatusUpdate
               attackMeter: newMeter
             };
           }
