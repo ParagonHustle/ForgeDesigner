@@ -228,53 +228,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             let healingTarget: BattleUnit | null = null;
             let healAmount = 0;
             
+            // NOTE: We will handle healing in the performAction function only to avoid duplicate healing
+            // This block will only prepare the healing text for the action message
             if (skill.name === "Soothing Current") {
-              // Find ally with lowest HP (only consider living allies)
-              const allies = units.filter(u => 
-                battleLog[0]?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
-              );
+              // Just set a generic healing effect text - actual healing will be applied in performAction
+              healingEffectText = " (with healing)";
               
-              if (allies.length > 0) {
-                // Sort allies by HP percentage (lowest first)
-                const sortedAllies = [...allies].sort((a, b) => 
-                  (a.hp / a.maxHp) - (b.hp / b.maxHp)
-                );
-                
-                // Get the ally with lowest HP (not the attacker if possible)
-                healingTarget = sortedAllies.length > 1 && sortedAllies[0].id === attacker.id 
-                  ? sortedAllies[1] 
-                  : sortedAllies[0];
-                
-                // Calculate healing amount (5% of attacker's max HP)
-                const attackerMaxHp = 800; // Standard base value for G-Wolf, the healer
-                healAmount = Math.floor(attackerMaxHp * 0.05); // Should heal for 40 HP
-                
-                // Update the healing target's HP
-                setUnits(prevUnits => 
-                  prevUnits.map(u => {
-                    if (u.id === healingTarget?.id) {
-                      const newHp = Math.min(u.maxHp, u.hp + healAmount);
-                      return {
-                        ...u,
-                        hp: newHp,
-                        totalHealingReceived: u.totalHealingReceived + healAmount
-                      };
-                    }
-                    if (u.id === attacker.id) {
-                      return {
-                        ...u,
-                        totalHealingDone: u.totalHealingDone + healAmount
-                      };
-                    }
-                    return u;
-                  })
-                );
-                
-                healingEffectText = ` and healed ${healingTarget.name} for ${healAmount} HP`;
-                
-                // We now include healing information in the action message via healingEffectText
-                // so we don't need a separate message here
-              }
+              // We now include healing information in the action message via healingEffectText
+              // so we don't need a separate message here
             }
             
             // Format the action message with more details
@@ -365,6 +326,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 const allies = updatedUnits.filter(u => 
                   battleLog[0]?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
                 );
+                
+                // Debug
+                console.log("SECOND LOCATION - Initial allies:");
+                allies.forEach(ally => {
+                  console.log(`Ally ${ally.name}: ${ally.hp}/${ally.maxHp} = ${(ally.hp / ally.maxHp * 100).toFixed(1)}%`);
+                });
                 
                 if (allies.length > 0) {
                   // Sort allies by HP percentage (lowest first)
@@ -582,15 +549,28 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         );
         
         if (allies.length > 0) {
+          // Debug allies HP percentages
+          allies.forEach(ally => {
+            console.log(`Ally ${ally.name}: ${ally.hp}/${ally.maxHp} = ${(ally.hp / ally.maxHp * 100).toFixed(1)}%`);
+          });
+          
           // Sort allies by HP percentage (lowest first)
           const sortedAllies = [...allies].sort((a, b) => 
             (a.hp / a.maxHp) - (b.hp / b.maxHp)
           );
           
-          // Get the ally with lowest HP (not the attacker if possible)
-          const healTarget = sortedAllies.length > 1 && sortedAllies[0].id === attacker.id 
-            ? sortedAllies[1] 
-            : sortedAllies[0];
+          // Debug sorted order
+          console.log("Sorted allies by HP percentage:");
+          sortedAllies.forEach(ally => {
+            console.log(`Sorted Ally ${ally.name}: ${ally.hp}/${ally.maxHp} = ${(ally.hp / ally.maxHp * 100).toFixed(1)}%`);
+          });
+          
+          // Always pick the ally with the lowest HP percentage, 
+          // only consider the attacker's ID if we actually need to find a different target
+          let healTarget = sortedAllies[0];
+          
+          // Debug the selected heal target
+          console.log(`Selected heal target: ${healTarget.name} with ${healTarget.hp}/${healTarget.maxHp} = ${(healTarget.hp / healTarget.maxHp * 100).toFixed(1)}%`);
           
           // Calculate healing amount (5% of attacker's max HP)
           const attackerMaxHp = 800; // Standard base value for G-Wolf, the healer
