@@ -1,0 +1,61 @@
+Here’s a clean and detailed prompt you can use to instruct AI (or a developer) to implement the **Live Battle Replay** system for your game:
+
+---
+
+**Prompt: Implement Live Battle Replay for Dungeon Runs**
+
+Add a **Live Battle Replay** feature to the Dungeon system that allows players to review completed runs through a real-time visual simulation. This replay should accurately reflect the combat interactions between all party members and enemies.
+
+### **Core Requirements**
+
+#### **1. Combat Flow**
+- Each unit (ally or enemy) has an **attack meter** that fills based on their **Speed stat**.
+  - A character with **120 Speed** attacks 3x as frequently as a character with **40 Speed**.
+- When the attack meter is full, the unit performs an action:
+  - **Default**: Basic skill from their equipped Aura
+  - **Advanced Skill**: Used every _N_ attacks, where _N = cooldown value_ (e.g., 4 = every 4th attack)
+  - **Ultimate Skill**: Same cooldown logic as above
+
+#### **2. Stat Behavior**
+- **Attack** = determines outgoing damage
+- **Vitality** × 8 = total HP
+- **Speed** = determines how fast the attack meter fills
+- Skill effects (damage, buffs, debuffs, healing, etc.) should be pulled from the Aura data
+
+#### **3. Replay Controls**
+- Player must be able to:
+  - **Pause** the replay
+  - **Speed up** playback (2x, 4x options)
+  - **Complete** instantly to skip to the result screen
+
+#### **4. Result Summary**
+After the Dungeon replay ends, show a detailed summary:
+- **Each character:**
+  - Total damage dealt
+  - Total damage received
+  - Total healing done and received
+- **Overall dungeon outcome:**
+  - Stages completed
+  - Rewards earned
+
+#### **5. Defeat Penalty**
+- Any character defeated during the battle will enter a **5-minute rest cooldown** and cannot be used in other activities until the timer ends.
+
+---
+
+### **Additional Recommendations**
+
+For the first version or future versions, consider the following enhancements:
+
+- **Action Log Panel**: Text log of actions taken per second (e.g., “Zara used Flame Bolt – 218 dmg”)
+- **Health Bars & Status Effects**: Display real-time HP bars and active buffs/debuffs above each unit
+- **Skip to Key Moments**: Add buttons to skip to a character's defeat or boss phase
+- **Camera Focus**: Auto-focus the camera on units when they act, or let players manually follow a specific unit
+- **Replay Save/Share**: Allow storing a replay or sharing it via a link or code
+- **Combat Metrics Export**: Option to export damage/healing data for performance tracking
+- **Auto Highlights**: End-of-battle MVP and most-damaged display
+- **Optional Fog of War**: Add light visual effects like battlefield fog or lighting for mood
+
+---
+
+Let me know if you want this broken into developer tickets or formatted for technical documentation.
