@@ -2774,6 +2774,10 @@ async function generateMockBattleLog(run: any, success: boolean) {
       attack: aura.attack || 0,
       vitality: aura.vitality || 0, 
       speed: aura.speed || 0,
+      focus: aura.focus || 0,
+      accuracy: aura.accuracy || 0,
+      defense: aura.defense || 0,
+      resilience: aura.resilience || 0,
       element: aura.element
     } : null;
     
