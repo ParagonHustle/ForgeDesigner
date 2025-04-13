@@ -170,10 +170,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   }
                 }, 0);
               } else {
-                // Just remove expired effects if no damage was dealt
+                // Make sure both expired effects are removed AND durations are updated
+                const filteredEffects = updatedStatusEffects.filter(effect => effect.duration > 0);
+                console.log(`${unit.name} status effects after filtering expired:`, 
+                  filteredEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
+                  
                 updatedUnits[i] = {
                   ...unit,
-                  statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0)
+                  statusEffects: filteredEffects
                 };
               }
             }
@@ -307,7 +311,21 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               
               // Apply the status effect to the target
               if (!target.statusEffects) target.statusEffects = [];
-              target.statusEffects.push(effect);
+              
+              // Check if target already has this effect - if so, extend duration rather than adding new
+              const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
+              if (existingEffectIndex >= 0) {
+                // Update the existing effect duration (extend it)
+                target.statusEffects[existingEffectIndex].duration = Math.max(
+                  target.statusEffects[existingEffectIndex].duration,
+                  effect.duration
+                );
+                console.log(`Extended existing ${effect.name} effect on ${target.name} to ${target.statusEffects[existingEffectIndex].duration} turns`);
+              } else {
+                // Add new effect
+                target.statusEffects.push(effect);
+                console.log(`Added new ${effect.name} effect to ${target.name} with ${effect.duration} turns duration`);
+              }
             }
             
             const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
@@ -650,12 +668,50 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
     const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
 
-    if (allAlliesDefeated || allEnemiesDefeated) {
+    // If all allies are defeated, the dungeon run is over
+    if (allAlliesDefeated) {
       setIsComplete(true);
       setActionLog(prev => [
         ...prev,
-        `Battle ended! ${allAlliesDefeated ? 'Enemies' : 'Allies'} are victorious!`
+        `Battle ended! Your party has been defeated at stage ${currentStage + 1}.`
       ]);
+      console.log(`Dungeon ended - party defeated at stage ${currentStage + 1}`);
+    } 
+    // If all enemies are defeated and we haven't reached the final stage (8), progress to next stage
+    else if (allEnemiesDefeated) {
+      // Final stage is 7 (index 0-7 for 8 total stages)
+      const isFinalStage = currentStage >= 7;
+      
+      if (isFinalStage) {
+        // Complete dungeon if this is the final stage
+        setIsComplete(true);
+        setActionLog(prev => [
+          ...prev,
+          `Congratulations! You've completed all stages of the dungeon!`
+        ]);
+        console.log(`Dungeon completed - all 8 stages cleared!`);
+      } else {
+        // Progress to next stage
+        const nextStage = currentStage + 1;
+        setCurrentStage(nextStage);
+        setActionLog(prev => [
+          ...prev,
+          `Stage ${currentStage + 1} completed! Moving to stage ${nextStage + 1}...`
+        ]);
+        console.log(`Moving to stage ${nextStage + 1}`);
+        
+        // Reset enemy units for the next stage
+        // This is just a placeholder - in a real implementation, we would load new enemy data
+        // from the next stage in the battleLog array
+        setTimeout(() => {
+          // Placeholder for new stage setup
+          // In a full implementation, you would:
+          // 1. Reset enemy units' HP from the next stage's data
+          // 2. Clear status effects from allies (optional, based on game design)
+          // 3. Maybe recover some ally HP (also optional)
+          console.log(`Stage ${nextStage + 1} is ready to begin`);
+        }, 1000);
+      }
     }
   };
 
@@ -941,7 +997,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           </TabsContent>
         </Tabs>
 
-        <DialogFooter>
+        <DialogFooter className="flex flex-col gap-2 sm:gap-0">
+          {isComplete && (
+            <div className="w-full flex-col space-y-2 text-center mb-2">
+              <h4 className="text-[#FF9D00] font-semibold">
+                {battleLog.find(log => log.allies && Array.isArray(log.allies))?.allies.every((a: any) => units.find(u => u.id === a.id)?.hp <= 0) ? 
+                  `Your party was defeated on Stage ${currentStage + 1}` : 
+                  `Dungeon Completed! Cleared ${currentStage + 1} of 8 stages`
+                }
+              </h4>
+              <div className="text-sm">
+                <div>Reward Based on Progress:</div>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-yellow-400">+{Math.floor(50 * Math.pow(1.2, currentStage))} Rogue Credits</span>
+                  <span className="text-purple-400">+{Math.floor(15 * Math.pow(1.3, currentStage))} Soul Shards</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {isComplete ? (
             <Button
               className="bg-[#FF9D00] hover:bg-[#FF9D00]/80"
@@ -952,7 +1026,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 onClose();
               }}
             >
-              Complete Battle
+              Collect Rewards
             </Button>
           ) : (
             <Button
