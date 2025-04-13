@@ -29,82 +29,74 @@ import {
   DialogTitle, 
   DialogTrigger,
   DialogDescription,
-  DialogFooter
+  DialogFooter 
 } from '@/components/ui/dialog';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import CountdownTimer from '../common/CountdownTimer';
 
 interface CharacterCardProps {
   character: Character;
+  availableAuras: Aura[];
+  refetchAura?: () => void;
+  refetchAllAuras?: () => void;
+  showDetailed?: boolean;
+  allAuras: Aura[];
+  equippedAura?: Aura | null;
 }
 
-const CharacterCard = ({ character }: CharacterCardProps) => {
-  const [showDetails, setShowDetails] = useState(false);
+const CharacterCard = ({ 
+  character, 
+  availableAuras, 
+  refetchAura, 
+  refetchAllAuras,
+  showDetailed = false,
+  allAuras = [],
+  equippedAura
+}: CharacterCardProps) => {
   const [equipAuraDialogOpen, setEquipAuraDialogOpen] = useState(false);
   const [selectedAuraId, setSelectedAuraId] = useState<number | null>(null);
   const [isEquipping, setIsEquipping] = useState(false);
-
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Fetch aura details if character has an equipped aura
-  const { data: aura, isLoading: isAuraLoading, error: auraError, refetch: refetchAura } = useQuery<Aura>({ 
-    queryKey: character.equippedAuraId ? [`/api/auras/${character.equippedAuraId}`] : [],
-    enabled: !!character.equippedAuraId,
-    staleTime: 0, // Don't use cached data
-    refetchOnWindowFocus: true,
-    refetchOnMount: true
-  });
-  
-  // More detailed debugging
-  console.log(`Character ${character.name} (ID: ${character.id}) equipped aura ID:`, character.equippedAuraId);
-  if (aura) {
-    console.log(`Found aura data for character ${character.name}:`, {
-      id: aura.id,
-      name: aura.name,
-      element: aura.element,
-      level: aura.level
-    });
-    // Debug aura skills
-    console.log(`Aura skills for ${character.name}:`, aura.skills);
-  } else {
-    console.log(`No aura data found for character ${character.name} with equippedAuraId ${character.equippedAuraId}`);
-    if (auraError) {
-      console.error('Error fetching aura:', auraError);
+  // Find aura equipped by this character
+  const aura = allAuras.find(a => a.id === character.equippedAuraId);
+
+  // Get skills from aura
+  let auraSkills: any[] = [];
+  if (aura && aura.skills) {
+    try {
+      if (typeof aura.skills === 'string') {
+        auraSkills = JSON.parse(aura.skills);
+      } else if (Array.isArray(aura.skills)) {
+        auraSkills = aura.skills;
+      }
+    } catch (e) {
+      console.error('Failed to parse aura skills:', e);
     }
   }
-  
-  // Get all auras for comparison and fallback
-  const { data: allAuras = [], refetch: refetchAllAuras } = useQuery<Aura[]>({
-    queryKey: ['/api/auras'],
-    staleTime: 0, // Don't use cached data
-    refetchOnWindowFocus: true,
-    refetchOnMount: true
-  });
-  
-  // Find the equipped aura in the list of all auras as a backup
-  const equippedAura = character.equippedAuraId ? 
-    allAuras.find(a => a.id === character.equippedAuraId) : null;
-  
-  if (equippedAura && !aura) {
-    console.log(`Found equipped aura in all auras list: ${equippedAura.name}`);
-  }
 
-  // Fetch all available auras for equipping
-  const { data: availableAuras = [] } = useQuery<Aura[]>({
-    queryKey: ['/api/auras'],
-    enabled: equipAuraDialogOpen
-  });
+  // Function to calculate status text based on a stat's multiplier
+  const getStatModifierText = (statValue: number | null) => {
+    if (!statValue) return <span className="text-gray-500">±0%</span>;
+    
+    if (statValue > 0) {
+      return <span className="text-green-500">+{statValue}%</span>;
+    } else if (statValue < 0) {
+      return <span className="text-red-500">{statValue}%</span>;
+    } else {
+      return <span className="text-gray-500">±0%</span>;
+    }
+  };
 
-  // Get auras that are not equipped by any character, sorted by level (highest first)
   const unequippedAuras = availableAuras
     .filter(a => !a.equippedByCharacterId && !a.isFusing)
     .sort((a, b) => (b.level || 0) - (a.level || 0));
@@ -464,511 +456,174 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
             {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
               <div className="flex items-center">
                 <Check className="h-3 w-3 mr-1 text-green-400" />
-                <span className="text-green-400">Passive{character.passiveSkills.length > 1 ? 's' : ''}</span>
+                <span>
+                  {character.passiveSkills.length} passive{character.passiveSkills.length > 1 ? 's' : ''}
+                </span>
               </div>
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#432874]/30">
-            {character.equippedAuraId ? (
-              <div className="flex flex-col text-xs">
-                <div className="flex items-center">
-                  <div className={`w-4 h-4 rounded-full mr-1 ${
-                    (aura || equippedAura)?.element === 'fire' ? 'bg-gradient-to-r from-red-500 to-orange-500' 
-                    : (aura || equippedAura)?.element === 'water' ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                    : (aura || equippedAura)?.element === 'earth' ? 'bg-gradient-to-r from-green-500 to-lime-500' 
-                    : (aura || equippedAura)?.element === 'wind' ? 'bg-gradient-to-r from-sky-500 to-cyan-500'
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                  }`}></div>
-                  <span className="text-[#00B9AE]">
-                    {(aura || equippedAura) ? (
-                      (aura?.name || equippedAura?.name) && (aura?.name?.trim() !== '' || equippedAura?.name?.trim() !== '') ? 
-                        `${aura?.name || equippedAura?.name} (Lv.${(aura || equippedAura)?.level || 1})` : 
-                        (aura || equippedAura)?.element ? 
-                          `${(aura || equippedAura)?.element.charAt(0).toUpperCase()}${(aura || equippedAura)?.element.slice(1)} Aura (Lv.${(aura || equippedAura)?.level || 1})` : 
-                          `Mysterious Aura (Lv.${(aura || equippedAura)?.level || 1})`
-                    ) : 'Loading...'}
-                  </span>
-                </div>
-                
-                {/* Aura Bonuses Line */}
-                {(aura || equippedAura) && (
-                  <div className="flex flex-wrap gap-x-2 mt-1">
-                    {/* Attack Bonus */}
-                    {((aura?.attack !== null && aura?.attack !== undefined && aura?.attack !== 0) ||
-                     (equippedAura?.attack !== null && equippedAura?.attack !== undefined && equippedAura?.attack !== 0)) && (
-                      <span className={(aura?.attack || equippedAura?.attack || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                        ATK: {(aura?.attack || equippedAura?.attack || 0) > 0 ? "+" : ""}{aura?.attack || equippedAura?.attack || 0}%
-                      </span>
-                    )}
-                    
-                    {/* Defense Bonus */}
-                    {((aura?.defense !== null && aura?.defense !== undefined && aura?.defense !== 0) ||
-                     (equippedAura?.defense !== null && equippedAura?.defense !== undefined && equippedAura?.defense !== 0)) && (
-                      <span className={(aura?.defense || equippedAura?.defense || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                        DEF: {(aura?.defense || equippedAura?.defense || 0) > 0 ? "+" : ""}{aura?.defense || equippedAura?.defense || 0}%
-                      </span>
-                    )}
-                    
-                    {/* Speed Bonus */}
-                    {((aura?.speed !== null && aura?.speed !== undefined && aura?.speed !== 0) ||
-                     (equippedAura?.speed !== null && equippedAura?.speed !== undefined && equippedAura?.speed !== 0)) && (
-                      <span className={(aura?.speed || equippedAura?.speed || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                        SPD: {(aura?.speed || equippedAura?.speed || 0) > 0 ? "+" : ""}{aura?.speed || equippedAura?.speed || 0}%
-                      </span>
-                    )}
-                    
-                    {/* Other bonuses could be added here */}
-                    {/* If no bonuses, show a placeholder */}
-                    {!(((aura?.attack !== null && aura?.attack !== undefined && aura?.attack !== 0) ||
-                       (equippedAura?.attack !== null && equippedAura?.attack !== undefined && equippedAura?.attack !== 0)) || 
-                      ((aura?.defense !== null && aura?.defense !== undefined && aura?.defense !== 0) ||
-                       (equippedAura?.defense !== null && equippedAura?.defense !== undefined && equippedAura?.defense !== 0)) ||
-                      ((aura?.speed !== null && aura?.speed !== undefined && aura?.speed !== 0) ||
-                       (equippedAura?.speed !== null && equippedAura?.speed !== undefined && equippedAura?.speed !== 0))) && (
-                      <span className="text-[#C8B8DB]/60">No stat bonuses</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-xs text-[#C8B8DB]/60">No Aura Equipped</div>
-            )}
-          </div>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <div className="absolute inset-0 cursor-pointer rounded-xl hover:bg-[#432874]/10 transition-colors" />
-              </DialogTrigger>
-              <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB]">
-                <DialogHeader>
-                  <DialogTitle className="text-[#FF9D00] font-cinzel text-xl flex items-center">
-                    <img
-                      src={character.avatarUrl}
-                      alt={character.name}
-                      className="w-8 h-8 rounded-full object-cover border border-[#FF9D00] mr-2"
-                    />
-                    {character.name}
-                  </DialogTitle>
-                </DialogHeader>
-
-                <div className="py-4">
-                  <div className="flex justify-between mb-4">
-                    <Badge className={`${getClassColor(character.class)}`}>{character.class}</Badge>
-                    <div className="text-sm text-[#C8B8DB]/80">
-                      Level {character.level || 1}
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <h4 className="font-semibold mb-3 text-[#C8B8DB] border-b border-[#432874]/30 pb-1">Character Stats</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Stat bar displays with tooltip */}
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <div className="flex items-center">
-                              <Swords className="h-3 w-3 mr-1 text-red-400" />
-                              <span>Attack</span>
-                            </div>
-                            <span>{character.attack}</span>
-                          </div>
-                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-red-500 to-red-400" 
-                              style={{ width: `${Math.min(100, ((character.attack || 0) / 100) * 100)}%` }}
-                            ></div>
-                          </div>
-                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
-                           character.passiveSkills.some(skill => 
-                             typeof skill === 'object' && skill && 'name' in skill && 
-                             String(skill.name).toLowerCase().includes('attack')
-                           ) && (
-                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
-                          )}
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <div className="flex items-center">
-                              <Target className="h-3 w-3 mr-1 text-yellow-400" />
-                              <span>Accuracy</span>
-                            </div>
-                            <span>{character.accuracy}</span>
-                          </div>
-                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-yellow-500 to-yellow-400" 
-                              style={{ width: `${Math.min(100, ((character.accuracy || 0) / 100) * 100)}%` }}
-                            ></div>
-                          </div>
-                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
-                           character.passiveSkills.some(skill => 
-                             typeof skill === 'object' && skill && 'name' in skill && 
-                             String(skill.name).toLowerCase().includes('accuracy')
-                           ) && (
-                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
-                          )}
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <div className="flex items-center">
-                              <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                              <span>Defense</span>
-                            </div>
-                            <span>{character.defense}</span>
-                          </div>
-                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-blue-500 to-blue-400" 
-                              style={{ width: `${Math.min(100, ((character.defense || 0) / 100) * 100)}%` }}
-                            ></div>
-                          </div>
-                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
-                           character.passiveSkills.some(skill => 
-                             typeof skill === 'object' && skill && 'name' in skill && 
-                             String(skill.name).toLowerCase().includes('defense')
-                           ) && (
-                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <div className="flex items-center">
-                              <Heart className="h-3 w-3 mr-1 text-red-500" />
-                              <span>Vitality</span>
-                            </div>
-                            <span>{character.vitality}</span>
-                          </div>
-                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-red-500 to-red-300" 
-                              style={{ width: `${Math.min(100, ((character.vitality || 0) / 100) * 100)}%` }}
-                            ></div>
-                          </div>
-                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
-                           character.passiveSkills.some(skill => 
-                             typeof skill === 'object' && skill && 'name' in skill && 
-                             String(skill.name).toLowerCase().includes('vitality')
-                           ) && (
-                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
-                          )}
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <div className="flex items-center">
-                              <Zap className="h-3 w-3 mr-1 text-cyan-400" />
-                              <span>Speed</span>
-                            </div>
-                            <span>{character.speed}</span>
-                          </div>
-                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400" 
-                              style={{ width: `${Math.min(100, ((character.speed || 0) / 100) * 100)}%` }}
-                            ></div>
-                          </div>
-                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
-                           character.passiveSkills.some(skill => 
-                             typeof skill === 'object' && skill && 'name' in skill && 
-                             String(skill.name).toLowerCase().includes('speed')
-                           ) && (
-                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
-                          )}
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <div className="flex items-center">
-                              <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
-                              <span>Resilience</span>
-                            </div>
-                            <span>{character.resilience || 0}</span>
-                          </div>
-                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-purple-500 to-purple-400" 
-                              style={{ width: `${Math.min(100, ((character.resilience || 0) / 100) * 100)}%` }}
-                            ></div>
-                          </div>
-                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
-                           character.passiveSkills.some(skill => 
-                             typeof skill === 'object' && skill && 'name' in skill && 
-                             String(skill.name).toLowerCase().includes('resilience')
-                           ) && (
-                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
-                          )}
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <div className="flex items-center">
-                              <Brain className="h-3 w-3 mr-1 text-purple-400" />
-                              <span>Focus</span>
-                            </div>
-                            <span>{character.focus || 0}</span>
-                          </div>
-                          <div className="h-2 bg-[#432874]/20 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-purple-500 to-indigo-400" 
-                              style={{ width: `${Math.min(100, ((character.focus || 0) / 100) * 100)}%` }}
-                            ></div>
-                          </div>
-                          {character.passiveSkills && Array.isArray(character.passiveSkills) && 
-                           character.passiveSkills.some(skill => 
-                             typeof skill === 'object' && skill && 'name' in skill && 
-                             String(skill.name).toLowerCase().includes('focus')
-                           ) && (
-                            <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Aura Bonuses */}
-                    {(aura || equippedAura) && (
-                      <div className="mt-4 pt-3 border-t border-[#432874]/30">
-                        <div className="flex items-center mb-2">
-                          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mr-2"></div>
-                          <span className="text-sm text-[#00B9AE]">Aura Bonuses</span>
-                        </div>
-                        <div className="text-xs text-[#C8B8DB]/80 space-y-1">
-                          {/* Always display all 7 stat values */}
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
-                            {/* Attack */}
-                            <div className="flex items-center">
-                              <Swords className="h-3 w-3 mr-1 text-red-400" />
-                              <span>
-                                Attack: <span className={(aura?.attack || equippedAura?.attack || 0) > 0 ? "text-green-400" : (aura?.attack || equippedAura?.attack || 0) < 0 ? "text-red-400" : "text-gray-500"}>
-                                  {(aura?.attack || equippedAura?.attack || 0) > 0 ? "+" : (aura?.attack || equippedAura?.attack || 0) < 0 ? "" : "±"}{aura?.attack || equippedAura?.attack || 0}%
-                                </span>
-                              </span>
-                            </div>
-                            
-                            {/* Accuracy */}
-                            <div className="flex items-center">
-                              <Target className="h-3 w-3 mr-1 text-yellow-400" />
-                              <span>
-                                Accuracy: <span className={(aura?.accuracy || equippedAura?.accuracy || 0) > 0 ? "text-green-400" : (aura?.accuracy || equippedAura?.accuracy || 0) < 0 ? "text-red-400" : "text-gray-500"}>
-                                  {(aura?.accuracy || equippedAura?.accuracy || 0) > 0 ? "+" : (aura?.accuracy || equippedAura?.accuracy || 0) < 0 ? "" : "±"}{aura?.accuracy || equippedAura?.accuracy || 0}%
-                                </span>
-                              </span>
-                            </div>
-                            
-                            {/* Defense */}
-                            <div className="flex items-center">
-                              <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                              <span>
-                                Defense: <span className={(aura?.defense || equippedAura?.defense || 0) > 0 ? "text-green-400" : (aura?.defense || equippedAura?.defense || 0) < 0 ? "text-red-400" : "text-gray-500"}>
-                                  {(aura?.defense || equippedAura?.defense || 0) > 0 ? "+" : (aura?.defense || equippedAura?.defense || 0) < 0 ? "" : "±"}{aura?.defense || equippedAura?.defense || 0}%
-                                </span>
-                              </span>
-                            </div>
-                            
-                            {/* Vitality */}
-                            <div className="flex items-center">
-                              <Heart className="h-3 w-3 mr-1 text-red-500" />
-                              <span>
-                                Vitality: <span className={(aura?.vitality || equippedAura?.vitality || 0) > 0 ? "text-green-400" : (aura?.vitality || equippedAura?.vitality || 0) < 0 ? "text-red-400" : "text-gray-500"}>
-                                  {(aura?.vitality || equippedAura?.vitality || 0) > 0 ? "+" : (aura?.vitality || equippedAura?.vitality || 0) < 0 ? "" : "±"}{aura?.vitality || equippedAura?.vitality || 0}%
-                                </span>
-                              </span>
-                            </div>
-                            
-                            {/* Speed */}
-                            <div className="flex items-center">
-                              <Zap className="h-3 w-3 mr-1 text-cyan-400" />
-                              <span>
-                                Speed: <span className={(aura?.speed || equippedAura?.speed || 0) > 0 ? "text-green-400" : (aura?.speed || equippedAura?.speed || 0) < 0 ? "text-red-400" : "text-gray-500"}>
-                                  {(aura?.speed || equippedAura?.speed || 0) > 0 ? "+" : (aura?.speed || equippedAura?.speed || 0) < 0 ? "" : "±"}{aura?.speed || equippedAura?.speed || 0}%
-                                </span>
-                              </span>
-                            </div>
-                            
-                            {/* Focus */}
-                            <div className="flex items-center">
-                              <Brain className="h-3 w-3 mr-1 text-purple-400" />
-                              <span>
-                                Focus: <span className={(aura?.focus || equippedAura?.focus || 0) > 0 ? "text-green-400" : (aura?.focus || equippedAura?.focus || 0) < 0 ? "text-red-400" : "text-gray-500"}>
-                                  {(aura?.focus || equippedAura?.focus || 0) > 0 ? "+" : (aura?.focus || equippedAura?.focus || 0) < 0 ? "" : "±"}{aura?.focus || equippedAura?.focus || 0}%
-                                </span>
-                              </span>
-                            </div>
-                            
-                            {/* Resilience */}
-                            <div className="flex items-center">
-                              <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
-                              <span>
-                                Resilience: <span className={(aura?.resilience || equippedAura?.resilience || 0) > 0 ? "text-green-400" : (aura?.resilience || equippedAura?.resilience || 0) < 0 ? "text-red-400" : "text-gray-500"}>
-                                  {(aura?.resilience || equippedAura?.resilience || 0) > 0 ? "+" : (aura?.resilience || equippedAura?.resilience || 0) < 0 ? "" : "±"}{aura?.resilience || equippedAura?.resilience || 0}%
-                                </span>
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Note: Stat bonuses are now displayed directly in the attributes above */}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
+          {showDetailed && (
+            <div className="mt-4 space-y-4">
+              <div className="space-y-4">
+                {aura || equippedAura ? (
+                  <>
+                    {/* Equipped Aura Details */}
                     <div className="bg-[#432874]/20 rounded-lg p-3 mb-4">
-                      <h4 className="font-semibold mb-2 text-[#C8B8DB]">Passive Skills</h4>
+                      <h4 className="font-semibold text-sm mb-2 text-[#00B9AE]">Aura Skills</h4>
                       <div className="space-y-2">
-                        {character.passiveSkills.map((skill, index) => (
-                          <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
-                            {typeof skill === 'object' && skill && 'name' in skill && 'description' in skill ? (
-                              <>
-                                <p className="text-sm font-medium text-[#00B9AE]">{String(skill.name)}</p>
-                                <p className="text-xs text-[#C8B8DB]/80 mt-1">{String(skill.description)}</p>
-                              </>
-                            ) : (
-                              <p className="text-sm">{typeof skill === 'string' ? skill : 'Unknown Skill'}</p>
-                            )}
-                          </div>
-                        ))}
+                        {auraSkills.length > 0 ? (
+                          auraSkills.map((skill, index) => (
+                            <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
+                              <div className="text-xs font-medium text-[#00B9AE]">{skill.name}</div>
+                              <div className="text-xs text-[#C8B8DB]/80">{skill.description}</div>
+                              <div className="flex justify-between mt-1 text-xs text-[#C8B8DB]/60">
+                                <span>Type: {skill.type}</span>
+                                <span>Targets: {skill.targets || 1}</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-xs text-[#C8B8DB]/60">No skills available</div>
+                        )}
                       </div>
                     </div>
-                  )}
 
-                  <div className="bg-[#432874]/20 rounded-lg p-3">
-                    <h4 className="font-semibold mb-2 text-[#C8B8DB]">Equipped Aura</h4>
-                    {character.equippedAuraId ? (
+                    {/* Equipped Aura Stats */}
+                    <div className="bg-[#432874]/20 rounded-lg p-3">
+                      <h4 className="font-semibold text-sm mb-2">Equipped Aura</h4>
                       <div>
                         <div className="flex items-center mb-2">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${getAuraElementClass((aura || equippedAura)?.element)}`}>
-                            {(aura || equippedAura) && getElementIcon((aura || equippedAura)?.element)}
+                            {getElementIcon((aura || equippedAura)?.element)}
                           </div>
                           <div>
                             <div className="text-sm text-[#00B9AE]">
-                              {character.equippedAuraId 
-                                ? ((aura || equippedAura) ? (
-                                  (aura?.name || equippedAura?.name) && ((aura?.name?.trim() !== '' || equippedAura?.name?.trim() !== '')) 
-                                    ? (aura?.name || equippedAura?.name) 
-                                    : (aura || equippedAura)?.element 
-                                      ? `${(aura || equippedAura)?.element.charAt(0).toUpperCase()}${(aura || equippedAura)?.element.slice(1)} Aura` 
-                                      : 'Mysterious Aura'
-                                ) : 'Loading Aura...')
-                                : 'No Aura'}
+                              {(aura || equippedAura)?.name}
                             </div>
                             <div className="text-xs text-[#C8B8DB]/60">
-                              {(aura || equippedAura) ? `Level ${(aura || equippedAura)?.level || 1} • Tier ${(aura || equippedAura)?.tier || 1}` : character.equippedAuraId ? 'Loading...' : ''}
+                              {(aura || equippedAura)?.element} • 
+                              Level {(aura || equippedAura)?.level} • 
+                              Tier {(aura || equippedAura)?.tier || 1}
                             </div>
                           </div>
                         </div>
-                        
-                        {/* Simplified Aura Skills Display with ElementalSkills */}
+
                         <div className="mt-2 border-t border-[#432874]/30 pt-2">
-                          <div className="text-xs font-medium text-[#00B9AE] mb-1">Skills:</div>
+                          <div className="text-xs font-medium text-[#00B9AE] mb-1">Stats:</div>
                           <div className="space-y-2">
-                            {/* For Tier 1 Auras - Show generated Basic skill based on element */}
-                            {(aura || equippedAura) && (
-                              <>
-                                {/* Basic Skill */}
-                                <div className="text-xs">
-                                  <span className="text-yellow-400">Basic:</span>{" "}
-                                  <span className="text-[#C8B8DB]">
-                                    {(aura?.element || equippedAura?.element) === "fire" && "Flame Strike"}
-                                    {(aura?.element || equippedAura?.element) === "water" && "Soothing Current"}
-                                    {(aura?.element || equippedAura?.element) === "earth" && "Earthen Shield"}
-                                    {(aura?.element || equippedAura?.element) === "wind" && "Swift Gust"}
-                                  </span>
-                                  <span className="text-red-400 ml-1">
-                                    (Damage: {(aura?.tier || equippedAura?.tier || 1) * 50})
-                                  </span>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <Swords className="h-3 w-3 mr-1 text-red-400" />
+                                  <span className="text-xs">Attack</span>
                                 </div>
-                                
-                                {/* Advanced Skill - Only for Tier 2+ */}
-                                {((aura?.tier || equippedAura?.tier || 1) >= 2) && (
-                                  <div className="text-xs">
-                                    <span className="text-purple-400">Advanced:</span>{" "}
-                                    <span className="text-[#C8B8DB]">
-                                      {(aura?.element || equippedAura?.element) === "fire" && "Inferno Blast"}
-                                      {(aura?.element || equippedAura?.element) === "water" && "Tidal Wave"}
-                                      {(aura?.element || equippedAura?.element) === "earth" && "Stone Spikes"}
-                                      {(aura?.element || equippedAura?.element) === "wind" && "Tornado Slash"}
-                                    </span>
-                                    <span className="text-red-400 ml-1">
-                                      (Damage: {(aura?.tier || equippedAura?.tier || 1) * 75})
-                                    </span>
-                                    <span className="text-blue-400 ml-1">
-                                      CD: 3
-                                    </span>
-                                  </div>
-                                )}
-                                
-                                {/* Ultimate Skill - Only for Tier 3 */}
-                                {((aura?.tier || equippedAura?.tier || 1) >= 3) && (
-                                  <div className="text-xs">
-                                    <span className="text-orange-400">Ultimate:</span>{" "}
-                                    <span className="text-[#C8B8DB]">
-                                      {(aura?.element || equippedAura?.element) === "fire" && "Blazing Eruption"}
-                                      {(aura?.element || equippedAura?.element) === "water" && "Abyssal Deluge"}
-                                      {(aura?.element || equippedAura?.element) === "earth" && "Tectonic Collapse"}
-                                      {(aura?.element || equippedAura?.element) === "wind" && "Hurricane Force"}
-                                    </span>
-                                    <span className="text-red-400 ml-1">
-                                      (Damage: {(aura?.tier || equippedAura?.tier || 1) * 120})
-                                    </span>
-                                    <span className="text-blue-400 ml-1">
-                                      CD: 5
-                                    </span>
-                                  </div>
-                                )}
-                              </>
-                            )}
-                            
-                            {/* If no element/aura found */}
-                            {!aura?.element && !equippedAura?.element && (
-                              <div className="text-xs text-[#C8B8DB]/60">No skills available</div>
-                            )}
+                                <div className="text-xs">
+                                  {getStatModifierText((aura || equippedAura)?.attack)}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                                  <span className="text-xs">Accuracy</span>
+                                </div>
+                                <div className="text-xs">
+                                  {getStatModifierText((aura || equippedAura)?.accuracy)}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                                  <span className="text-xs">Defense</span>
+                                </div>
+                                <div className="text-xs">
+                                  {getStatModifierText((aura || equippedAura)?.defense)}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <Heart className="h-3 w-3 mr-1 text-red-500" />
+                                  <span className="text-xs">Vitality</span>
+                                </div>
+                                <div className="text-xs">
+                                  {getStatModifierText((aura || equippedAura)?.vitality)}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                                  <span className="text-xs">Speed</span>
+                                </div>
+                                <div className="text-xs">
+                                  {getStatModifierText((aura || equippedAura)?.speed)}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                                  <span className="text-xs">Focus</span>
+                                </div>
+                                <div className="text-xs">
+                                  {getStatModifierText((aura || equippedAura)?.focus)}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                                  <span className="text-xs">Resilience</span>
+                                </div>
+                                <div className="text-xs">
+                                  {getStatModifierText((aura || equippedAura)?.resilience)}
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <div className="text-sm text-[#C8B8DB]/60">No Aura Equipped</div>
-                    )}
-                  </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-[#C8B8DB]/60">No Aura Equipped</div>
+                )}
 
-                  <div className="mt-4 flex justify-end space-x-2">
-                    {!character.isActive && (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
-                          onClick={() => setEquipAuraDialogOpen(true)}
-                        >
-                          Equip Aura
-                        </Button>
-                        <Button className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]">
-                          Assign Task
-                        </Button>
-                      </>
-                    )}
-                    {character.isActive && (
-                      <div className="flex items-center text-[#DC143C]">
-                        <Lock className="h-4 w-4 mr-1" />
-                        <span>
-                          Busy: {character.activityType} 
-                          {character.activityEndTime && (
-                            <span className="ml-1">
-                              (<CountdownTimer endTime={character.activityEndTime} />)
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                <div className="mt-4 flex justify-end space-x-2">
+                  {!character.isActive && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
+                        onClick={() => setEquipAuraDialogOpen(true)}
+                      >
+                        Equip Aura
+                      </Button>
+                      <Button className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]">
+                        Assign Task
+                      </Button>
+                    </>
+                  )}
+                  {character.isActive && (
+                    <div className="flex items-center text-[#DC143C]">
+                      <Lock className="h-4 w-4 mr-1" />
+                      <span>
+                        Busy: {character.activityType} 
+                        {character.activityEndTime && (
+                          <span className="ml-1">
+                            (<CountdownTimer endTime={character.activityEndTime} />)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </>
