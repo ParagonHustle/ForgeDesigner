@@ -845,11 +845,61 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
           <TabsContent value="log">
             <div className="h-[400px] overflow-y-auto space-y-1">
-              {actionLog.map((log, index) => (
-                <div key={index} className="text-sm py-1 border-b border-[#432874]/20">
-                  {log}
-                </div>
-              ))}
+              {actionLog.map((log, index) => {
+                // Check if this is an ally or enemy action
+                const isAllyAction = log.includes("G-Wolf used") || log.includes("Kleos used");
+                const isEnemyAction = log.includes("Boss") || log.includes("Minion");
+                
+                // Format damage numbers in red and bold
+                let formattedLog = log;
+                if (log.includes("damage")) {
+                  // Extract the damage number
+                  const damageMatch = log.match(/for (\d+) damage/);
+                  if (damageMatch && damageMatch[1]) {
+                    const damageAmount = damageMatch[1];
+                    formattedLog = log.replace(
+                      `for ${damageAmount} damage`,
+                      `for <span class="text-red-500 font-bold">${damageAmount}</span> damage`
+                    );
+                  }
+                }
+                
+                // Format healing numbers in green and bold
+                if (log.includes("healed")) {
+                  const healMatch = log.match(/for (\d+) HP/);
+                  if (healMatch && healMatch[1]) {
+                    const healAmount = healMatch[1];
+                    formattedLog = log.replace(
+                      `for ${healAmount} HP`,
+                      `for <span class="text-green-500 font-bold">${healAmount}</span> HP`
+                    );
+                  }
+                }
+                
+                // Format healing amount in skill text
+                if (formattedLog.includes("includes healing for")) {
+                  const healMatch = formattedLog.match(/healing for (\d+) HP/);
+                  if (healMatch && healMatch[1]) {
+                    const healAmount = healMatch[1];
+                    formattedLog = formattedLog.replace(
+                      `healing for ${healAmount} HP`,
+                      `healing for <span class="text-green-500 font-bold">${healAmount}</span> HP`
+                    );
+                  }
+                }
+                
+                return (
+                  <div 
+                    key={index} 
+                    className={`text-sm py-1 border-b border-[#432874]/20 ${
+                      isAllyAction ? 'text-left' : 
+                      isEnemyAction ? 'text-right' : 
+                      'text-center'
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: formattedLog }}
+                  />
+                );
+              })}
             </div>
           </TabsContent>
         </Tabs>
