@@ -4,6 +4,7 @@ import type { Character, Aura } from '@shared/schema';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import TooltipWrapper from '@/components/common/TooltipWrapper';
 import { 
   Lock,
   Shield, 
@@ -856,34 +857,54 @@ const CharacterCard = ({
             </div>
 
             <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
-              <div className="flex items-center">
-                <Swords className="h-3 w-3 mr-1 text-red-400" />
-                <span>ATK: {character.attack}</span>
-              </div>
-              <div className="flex items-center">
-                <Target className="h-3 w-3 mr-1 text-yellow-400" />
-                <span>ACC: {character.accuracy}</span>
-              </div>
-              <div className="flex items-center">
-                <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                <span>DEF: {character.defense}</span>
-              </div>
-              <div className="flex items-center">
-                <Heart className="h-3 w-3 mr-1 text-red-500" />
-                <span>VIT: {character.vitality}</span>
-              </div>
-              <div className="flex items-center">
-                <Zap className="h-3 w-3 mr-1 text-cyan-400" />
-                <span>SPD: {character.speed}</span>
-              </div>
-              <div className="flex items-center">
-                <Brain className="h-3 w-3 mr-1 text-purple-400" />
-                <span>FOC: {character.focus || 0}</span>
-              </div>
-              <div className="flex items-center">
-                <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
-                <span>RES: {character.resilience || 0}</span>
-              </div>
+              <TooltipWrapper id="attack-stat" content="Attack determines your character's damage output in combat. Higher Attack means more damage dealt with skills and abilities.">
+                <div className="flex items-center">
+                  <Swords className="h-3 w-3 mr-1 text-red-400" />
+                  <span>ATK: {character.attack}</span>
+                </div>
+              </TooltipWrapper>
+              
+              <TooltipWrapper id="accuracy-stat" content="Accuracy affects your character's chance to hit enemies. Higher Accuracy reduces the chance of missing attacks.">
+                <div className="flex items-center">
+                  <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                  <span>ACC: {character.accuracy}</span>
+                </div>
+              </TooltipWrapper>
+              
+              <TooltipWrapper id="defense-stat" content="Defense reduces the damage your character takes from enemy attacks. Higher Defense means less damage taken.">
+                <div className="flex items-center">
+                  <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                  <span>DEF: {character.defense}</span>
+                </div>
+              </TooltipWrapper>
+              
+              <TooltipWrapper id="vitality-stat" content="Vitality determines your character's health points (HP). Higher Vitality means more HP and better survival.">
+                <div className="flex items-center">
+                  <Heart className="h-3 w-3 mr-1 text-red-500" />
+                  <span>VIT: {character.vitality}</span>
+                </div>
+              </TooltipWrapper>
+              
+              <TooltipWrapper id="speed-stat" content="Speed determines how quickly your character's action gauge fills. Higher Speed means more frequent turns in combat.">
+                <div className="flex items-center">
+                  <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                  <span>SPD: {character.speed}</span>
+                </div>
+              </TooltipWrapper>
+              
+              <TooltipWrapper id="focus-stat" content="Focus increases critical hit chance and effectiveness of elemental skills. Higher Focus means more frequent and powerful critical hits.">
+                <div className="flex items-center">
+                  <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                  <span>FOC: {character.focus || 0}</span>
+                </div>
+              </TooltipWrapper>
+              
+              <TooltipWrapper id="resilience-stat" content="Resilience reduces the duration and effect of negative status effects. Higher Resilience means better resistance to debuffs.">
+                <div className="flex items-center">
+                  <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                  <span>RES: {character.resilience || 0}</span>
+                </div>
+              </TooltipWrapper>
               {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
                 <div className="flex items-center">
                   <Check className="h-3 w-3 mr-1 text-green-400" />

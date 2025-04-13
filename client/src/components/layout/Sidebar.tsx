@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import AICompanion from '../ui/AICompanion';
+import MechanicsHelpModal from '../common/MechanicsHelpModal';
 import { 
   Home, 
   Package, 
@@ -10,7 +11,8 @@ import {
   Building2, 
   List, 
   Hammer,
-  Award
+  Award,
+  HelpCircle
 } from 'lucide-react';
 
 const navItems = [
@@ -51,7 +53,18 @@ const Sidebar = () => {
         })}
       </div>
       
-      <div className="mt-auto p-4 hidden md:block">
+      <div className="mt-auto p-4 hidden md:block space-y-4">
+        <div className="bg-[#432874]/20 rounded-lg p-2 text-center">
+          <div className="text-xs text-[#C8B8DB]/70">Game Mechanics</div>
+          <div className="mt-2 flex justify-center">
+            <MechanicsHelpModal 
+              buttonText="Game Guide" 
+              buttonVariant="outline"
+              buttonSize="sm"
+            />
+          </div>
+        </div>
+        
         <div className="bg-[#432874]/20 rounded-lg p-2 text-center">
           <div className="text-xs text-[#C8B8DB]/70">AI Companion</div>
           <AICompanion />
