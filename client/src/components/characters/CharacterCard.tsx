@@ -402,9 +402,17 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
           <div className="mt-4 pt-3 border-t border-[#432874]/30 flex justify-between items-center">
             {character.equippedAuraId ? (
               <div className="flex items-center text-xs">
-                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mr-1"></div>
+                <div className={`w-4 h-4 rounded-full mr-1 ${
+                  aura?.element === 'fire' ? 'bg-gradient-to-r from-red-500 to-orange-500' 
+                  : aura?.element === 'water' ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                  : aura?.element === 'earth' ? 'bg-gradient-to-r from-green-500 to-lime-500' 
+                  : aura?.element === 'wind' ? 'bg-gradient-to-r from-sky-500 to-cyan-500'
+                  : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                }`}></div>
                 <span className="text-[#00B9AE]">
-                  {aura ? `${aura.name || (aura.element ? `${aura.element} Aura` : 'Mysterious Aura')} (Lv.${aura.level || 1})` : 'Aura Equipped'}
+                  {aura ? (
+                    `${aura.name || `${aura.element?.charAt(0).toUpperCase()}${aura.element?.slice(1)} Aura`} (Lv.${aura.level || 1})`
+                  ) : 'Loading...'}
                 </span>
               </div>
             ) : (
