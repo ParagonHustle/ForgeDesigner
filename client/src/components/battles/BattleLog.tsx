@@ -226,12 +226,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               if (statusEffectDamage > 0) {
                 setTimeout(() => {
                   statusMessages.forEach(message => {
-                    setActionLog(prev => [...prev, message]);
+                    setActionLog(prev => [message, ...prev]);
                   });
                   
                   // Check if unit was defeated by status effects
                   if (updatedUnits[i].hp <= 0 && unit.hp > 0) {
-                    setActionLog(prev => [...prev, `${unit.name} has been defeated by status effects!`]);
+                    setActionLog(prev => [`${unit.name} has been defeated by status effects!`, ...prev]);
                     
                     // Check if this was the last alive ally
                     const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
@@ -416,11 +416,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               if (effectType === "burn") {
                 // Burn effect: 5% of max HP damage per turn
                 const burnDamage = Math.floor(target.maxHp * 0.05);
+                // Get burn duration based on skill
+                let burnDuration = 3; // Default duration
+                if (skill.name === "Ember") {
+                  burnDuration = 1; // Ember applies burn for 1 turn only
+                } else if (skill.name === "Flame Whip") {
+                  burnDuration = 2; // Flame Whip applies burn for 2 turns
+                }
                 effect = {
                   name: "Burning",
                   effect: "Burn",
                   value: burnDamage,
-                  duration: 3,
+                  duration: burnDuration,
                   source: attacker.id
                 };
                 statusEffectText = ` [Burning applied - ${burnDamage} damage per turn]`;
@@ -468,7 +475,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             console.log(actionMessage);
             
             // Update action log
-            setActionLog(prev => [...prev, actionMessage]);
+            setActionLog(prev => [actionMessage, ...prev]);
             
             // Apply damage to the target first
             setUnits(prevUnits => {
@@ -477,7 +484,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   const newHp = Math.max(0, u.hp - damage);
                   // Check if target is defeated
                   if (newHp <= 0 && u.hp > 0) {
-                    setActionLog(prev => [...prev, `${target.name} has been defeated!`]);
+                    setActionLog(prev => [`${target.name} has been defeated!`, ...prev]);
                   }
                   return {
                     ...u,
@@ -632,11 +639,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       if (effectType === "burn") {
         // Burn effect: 5% of max HP damage per turn
         const burnDamage = Math.floor(target.maxHp * 0.05);
+        // Get burn duration based on skill
+        let burnDuration = 3; // Default duration
+        if (skill.name === "Ember") {
+          burnDuration = 1; // Ember applies burn for 1 turn only
+        } else if (skill.name === "Flame Whip") {
+          burnDuration = 2; // Flame Whip applies burn for 2 turns
+        }
         effect = {
           name: "Burning",
           effect: "Burn",
           value: burnDamage,
-          duration: 3,
+          duration: burnDuration,
           source: attacker.id
         };
         statusEffectText = ` [Burning applied - ${burnDamage} damage per turn]`;
@@ -698,7 +712,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     
     const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
 
-    setActionLog(prev => [...prev, actionMessage]);
+    setActionLog(prev => [actionMessage]);
 
     // First apply damage to the target
     setUnits(prevUnits => {
@@ -708,7 +722,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           
           // Check if target is defeated
           if (newHp <= 0 && u.hp > 0) {
-            setActionLog(prev => [...prev, `${target.name} has been defeated!`]);
+            setActionLog(prev => [`${target.name} has been defeated!`]);
           }
           
           // Preserve status effects that were just added to the target
@@ -767,7 +781,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           
           // Add a single healing message
           const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP with Soothing Current!`;
-          setActionLog(prev => [...prev, healMessage]);
+          setActionLog(prev => [healMessage]);
           
           // Apply healing
           return updatedUnits.map(u => {
