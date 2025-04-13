@@ -717,7 +717,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                         </div>
                         <div>
                           <div className="text-sm text-[#00B9AE]">
-                            {aura ? `${aura.name || `${aura.element?.charAt(0).toUpperCase()}${aura.element?.slice(1)} Aura`}` : 'No Aura'}
+                            {aura ? (aura.name || (aura.element ? `${aura.element.charAt(0).toUpperCase()}${aura.element.slice(1)} Aura` : 'Unknown Aura')) : 'No Aura'}
                           </div>
                           <div className="text-xs text-[#C8B8DB]/60">
                             {aura ? `Level ${aura.level || 1} • Tier ${aura.tier || 1}` : 'Loading...'}
