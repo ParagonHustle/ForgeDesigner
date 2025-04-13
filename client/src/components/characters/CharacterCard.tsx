@@ -792,6 +792,18 @@ const CharacterCard = ({
                                       <Flame className="h-3 w-3 mr-1 text-orange-400" />
                                       <span className="text-[#C8B8DB]/80">
                                         Effect: <span className="text-purple-400">{skill.effect}</span>
+                                        {skill.effectChance && <span className="ml-1 text-yellow-400">({skill.effectChance}% chance)</span>}
+                                        {skill.effectStacks && <span className="ml-1 text-blue-400">({skill.effectStacks} stacks)</span>}
+                                      </span>
+                                    </div>
+                                  )}
+                                  
+                                  {skill.healing && (
+                                    <div className="flex items-center mt-1">
+                                      <Heart className="h-3 w-3 mr-1 text-green-400" />
+                                      <span className="text-[#C8B8DB]/80">
+                                        Healing: <span className="text-green-400">{skill.healing}%</span> of max health
+                                        {skill.healTargets && <span className="ml-1 text-blue-400">({skill.healTargets > 1 ? `${skill.healTargets} targets` : '1 target'})</span>}
                                       </span>
                                     </div>
                                   )}
