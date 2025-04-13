@@ -4,13 +4,86 @@ import { Zap } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useDiscordAuth();
-  const { forgeTokens, rogueCredits, speedBoostActive, speedBoostMultiplier } = useGameStore();
+  const { forgeTokens, rogueCredits, speedBoostActive, speedBoostMultiplier, farmingTasks, dungeonRuns, forgingTasks } = useGameStore();
+  const location = useLocation();
+
+  // Get shortest remaining timer for each activity type
+  const getShortestTimer = () => {
+    const now = new Date().getTime();
+    const activities = {
+      dungeon: { time: Infinity, path: '/dungeons' },
+      forge: { time: Infinity, path: '/forge' },
+      farming: { time: Infinity, path: '/farming' }
+    };
+
+    dungeonRuns?.forEach(run => {
+      if (!run.completed) {
+        const endTime = new Date(run.endTime).getTime();
+        if (endTime - now < activities.dungeon.time) {
+          activities.dungeon.time = endTime - now;
+        }
+      }
+    });
+
+    forgingTasks?.forEach(task => {
+      if (!task.completed) {
+        const endTime = new Date(task.endTime).getTime();
+        if (endTime - now < activities.forge.time) {
+          activities.forge.time = endTime - now;
+        }
+      }
+    });
+
+    farmingTasks?.forEach(task => {
+      if (!task.completed) {
+        const endTime = new Date(task.endTime).getTime();
+        if (endTime - now < activities.farming.time) {
+          activities.farming.time = endTime - now;
+        }
+      }
+    });
+
+    return activities;
+  };
+
+  const shortestTimers = getShortestTimer();
   
   return (
     <nav className="bg-[#1A1A2E] border-b border-[#432874]/50 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
       <div className="flex items-center">
         <div className="text-2xl font-cinzel font-bold text-[#FF9D00] mr-2">The Forge</div>
         <span className="bg-[#00B9AE]/20 text-[#00B9AE] text-xs px-2 py-0.5 rounded">Alpha v0.1</span>
+        
+        {/* Activity Timer Tags */}
+        <div className="ml-4 flex gap-2">
+          {Object.entries(shortestTimers).map(([type, data]) => {
+            if (data.time === Infinity) return null;
+            const isComplete = data.time <= 0;
+            return (
+              <Link 
+                key={type} 
+                href={data.path}
+                className={`
+                  px-2 py-1 rounded text-xs flex items-center gap-1 cursor-pointer
+                  ${isComplete 
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    : 'bg-[#432874]/20 text-[#C8B8DB] border border-[#432874]/30'}
+                `}
+              >
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+                {!isComplete && (
+                  <CountdownTimer 
+                    endTime={new Date(Date.now() + data.time).toISOString()} 
+                    className="ml-1"
+                  />
+                )}
+                {isComplete && (
+                  <span className="text-green-400">✓</span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
         
         {speedBoostActive && (
           <div className="ml-2 flex items-center bg-[#FF9D00]/20 text-[#FF9D00] text-xs px-2 py-0.5 rounded animate-pulse">
