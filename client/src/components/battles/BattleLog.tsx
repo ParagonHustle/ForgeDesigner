@@ -223,6 +223,62 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             // Damage = Attack * Skill Damage Multiplier
             const damage = Math.floor(attackValue * skill.damage);
             
+            // Check for special skills with healing effects (like Soothing Current)
+            let healingEffectText = "";
+            let healingTarget: BattleUnit | null = null;
+            let healAmount = 0;
+            
+            if (skill.name === "Soothing Current") {
+              // Find ally with lowest HP
+              const allies = units.filter(u => 
+                battleLog[0]?.allies?.some((a: any) => a.id === u.id)
+              );
+              
+              if (allies.length > 0) {
+                // Sort allies by HP percentage (lowest first)
+                const sortedAllies = [...allies].sort((a, b) => 
+                  (a.hp / a.maxHp) - (b.hp / b.maxHp)
+                );
+                
+                // Get the ally with lowest HP (not the attacker if possible)
+                healingTarget = sortedAllies.length > 1 && sortedAllies[0].id === attacker.id 
+                  ? sortedAllies[1] 
+                  : sortedAllies[0];
+                
+                // Calculate healing amount (5% of attacker's max HP)
+                healAmount = Math.floor(attacker.maxHp * 0.05);
+                
+                // Update the healing target's HP
+                setUnits(prevUnits => 
+                  prevUnits.map(u => {
+                    if (u.id === healingTarget?.id) {
+                      const newHp = Math.min(u.maxHp, u.hp + healAmount);
+                      return {
+                        ...u,
+                        hp: newHp,
+                        totalHealingReceived: u.totalHealingReceived + healAmount
+                      };
+                    }
+                    if (u.id === attacker.id) {
+                      return {
+                        ...u,
+                        totalHealingDone: u.totalHealingDone + healAmount
+                      };
+                    }
+                    return u;
+                  })
+                );
+                
+                healingEffectText = ` and healed ${healingTarget.name} for ${healAmount} HP`;
+                
+                // Add a separate healing message to the log
+                setTimeout(() => {
+                  const healingMessage = `${attacker.name} healed ${healingTarget?.name} for ${healAmount} HP with Soothing Current!`;
+                  setActionLog(prev => [...prev, healingMessage]);
+                }, 500);
+              }
+            }
+            
             // Format the action message with more details
             let statusEffectText = "";
             if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
@@ -274,15 +330,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               target.statusEffects.push(effect);
             }
             
-            const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}`;
+            const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
             console.log(actionMessage);
             
             // Update action log
             setActionLog(prev => [...prev, actionMessage]);
             
-            // Update units with new HP and stats
-            setUnits(prevUnits => 
-              prevUnits.map(u => {
+            // Apply damage to the target first
+            setUnits(prevUnits => {
+              const updatedUnits = prevUnits.map(u => {
                 if (u.id === target.id) {
                   const newHp = Math.max(0, u.hp - damage);
                   // Check if target is defeated
@@ -303,8 +359,58 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   };
                 }
                 return u;
-              })
-            );
+              });
+              
+              // If skill is Soothing Current, apply healing effect
+              if (skill.name === "Soothing Current") {
+                // Get all living allies
+                const allies = updatedUnits.filter(u => 
+                  battleLog[0]?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
+                );
+                
+                if (allies.length > 0) {
+                  // Sort allies by HP percentage (lowest first)
+                  const sortedAllies = [...allies].sort((a, b) => 
+                    (a.hp / a.maxHp) - (b.hp / b.maxHp)
+                  );
+                  
+                  // Get the ally with lowest HP (not the attacker if possible)
+                  const healTarget = sortedAllies.length > 1 && sortedAllies[0].id === attacker.id 
+                    ? sortedAllies[1] 
+                    : sortedAllies[0];
+                  
+                  // Calculate healing amount (5% of attacker's max HP)
+                  const healAmount = Math.floor(attacker.maxHp * 0.05);
+                  
+                  // Log a separate healing message
+                  setTimeout(() => {
+                    const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP!`;
+                    setActionLog(prev => [...prev, healMessage]);
+                  }, 300);
+                  
+                  // Apply healing
+                  return updatedUnits.map(u => {
+                    if (u.id === healTarget.id) {
+                      const newHp = Math.min(u.maxHp, u.hp + healAmount);
+                      return {
+                        ...u,
+                        hp: newHp,
+                        totalHealingReceived: u.totalHealingReceived + healAmount
+                      };
+                    }
+                    if (u.id === attacker.id) {
+                      return {
+                        ...u,
+                        totalHealingDone: u.totalHealingDone + healAmount
+                      };
+                    }
+                    return u;
+                  });
+                }
+              }
+              
+              return updatedUnits;
+            });
           });
           
           // Check if battle has ended after all attacks
@@ -433,12 +539,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       }
     }
     
-    const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}`;
+    // Add healing effect text for Soothing Current
+    let healingEffectText = "";
+    if (skill.name === "Soothing Current") {
+      healingEffectText = " (includes healing effect)";
+    }
+    
+    const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
 
     setActionLog(prev => [...prev, actionMessage]);
 
-    setUnits(prevUnits =>
-      prevUnits.map(u => {
+    // First apply damage to the target
+    setUnits(prevUnits => {
+      const updatedUnits = prevUnits.map(u => {
         if (u.id === target.id) {
           const newHp = Math.max(0, u.hp - damage);
           
@@ -463,8 +576,59 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           };
         }
         return u;
-      })
-    );
+      });
+      
+      // If the skill is Soothing Current, apply healing to the lowest HP ally
+      if (skill.name === "Soothing Current") {
+        // Get all living allies
+        const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+        const allies = updatedUnits.filter(u => 
+          battleEntry?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
+        );
+        
+        if (allies.length > 0) {
+          // Sort allies by HP percentage (lowest first)
+          const sortedAllies = [...allies].sort((a, b) => 
+            (a.hp / a.maxHp) - (b.hp / b.maxHp)
+          );
+          
+          // Get the ally with lowest HP (not the attacker if possible)
+          const healTarget = sortedAllies.length > 1 && sortedAllies[0].id === attacker.id 
+            ? sortedAllies[1] 
+            : sortedAllies[0];
+          
+          // Calculate healing amount (5% of attacker's max HP)
+          const healAmount = Math.floor(attacker.maxHp * 0.05);
+          
+          // Create a separate healing message
+          setTimeout(() => {
+            const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP!`;
+            setActionLog(prev => [...prev, healMessage]);
+          }, 300);
+          
+          // Apply healing
+          return updatedUnits.map(u => {
+            if (u.id === healTarget.id) {
+              const newHp = Math.min(u.maxHp, u.hp + healAmount);
+              return {
+                ...u,
+                hp: newHp,
+                totalHealingReceived: u.totalHealingReceived + healAmount
+              };
+            }
+            if (u.id === attacker.id) {
+              return {
+                ...u,
+                totalHealingDone: u.totalHealingDone + healAmount
+              };
+            }
+            return u;
+          });
+        }
+      }
+      
+      return updatedUnits;
+    });
 
     checkBattleEnd();
   };

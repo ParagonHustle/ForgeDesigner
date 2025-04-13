@@ -2875,28 +2875,30 @@ async function generateMockBattleLog(run: any, success: boolean) {
       
       // Check for special skills that include healing effects
       if (isAlly && skill.name === "Soothing Current" && aliveAllies.length > 0) {
-        // Find the ally with the lowest HP
-        let lowestHpAlly = aliveAllies[0];
-        for (const ally of aliveAllies) {
-          if (ally.stats.vitality < lowestHpAlly.stats.vitality) {
-            lowestHpAlly = ally;
-          }
-        }
+        // Find the ally with the lowest HP (excluding the caster if possible)
+        const otherAllies = aliveAllies.filter(ally => ally !== unit);
+        const healTarget = otherAllies.length > 0 
+          ? otherAllies.reduce((lowest, current) => 
+              current.stats.vitality < lowest.stats.vitality ? current : lowest, otherAllies[0])
+          : unit; // Self-heal if no other allies
         
         // Apply healing (5% of max health)
         const healAmount = Math.floor(unit.stats.vitality * 0.05);
-        const originalHp = lowestHpAlly.stats.vitality;
-        lowestHpAlly.stats.vitality = Math.min(lowestHpAlly.stats.vitality + healAmount, 100); // Assuming 100 is max HP
+        const originalHp = healTarget.stats.vitality;
+        healTarget.stats.vitality = Math.min(healTarget.stats.vitality + healAmount, 100); // Assuming 100 is max HP
         
-        // Record healing in action log
+        // Log the healing action separately
         roundActions.push({
           actor: unit.name,
-          skill: skill.name,
-          target: lowestHpAlly.name,
-          type: 'heal',
-          amount: healAmount,
-          newHp: lowestHpAlly.stats.vitality
+          skill: `${skill.name} - Healing Effect`,
+          target: healTarget.name,
+          damage: -healAmount, // Negative damage indicates healing
+          isCritical: false,
+          healing: true,
+          message: `${unit.name} healed ${healTarget.name} for ${healAmount} HP!`
         });
+        
+        console.log(`Healing effect applied: ${unit.name} healed ${healTarget.name} for ${healAmount} HP!`);
       }
       
       if (target.stats.vitality <= 0) {
