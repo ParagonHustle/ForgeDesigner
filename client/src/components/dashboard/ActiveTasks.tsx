@@ -172,13 +172,14 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   }
 
   return (
-    <motion.div 
-      className="bg-[#1A1A2E] rounded-xl p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-cinzel font-bold">Active Tasks</h2>
+    <>
+      <motion.div 
+        className="bg-[#1A1A2E] rounded-xl p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-cinzel font-bold">Active Tasks</h2>
         <Link href="/dungeons">
           <button className="text-[#FF9D00] text-sm hover:underline">View All</button>
         </Link>
@@ -361,12 +362,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
           );
         })}
       </motion.div>
-    </motion.div>
-  );
-};
-
-export default ActiveTasks;
-
+      
       {/* Forge Result Dialog */}
       <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
         <DialogContent className="bg-[#1A1A2E] border-[#432874] max-w-2xl">
@@ -467,3 +463,8 @@ export default ActiveTasks;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+};
+
+export default ActiveTasks;
