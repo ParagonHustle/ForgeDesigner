@@ -2779,8 +2779,8 @@ async function generateMockBattleLog(run: any, success: boolean) {
       },
       skills: {
         basic: aura?.skills?.[0] || { name: 'Basic Attack', damage: 1.0 },
-        advanced: aura?.skills?.[1] || { name: 'Advanced Skill', damage: 1.5, cooldown: 4 },
-        ultimate: aura?.skills?.[2] || { name: 'Ultimate', damage: 2.0, cooldown: 6 }
+        advanced: aura?.skills?.[1] || null,
+        ultimate: aura?.skills?.[2] || null
       }
     });
   }
@@ -2872,6 +2872,33 @@ async function generateMockBattleLog(run: any, success: boolean) {
 
       // Apply damage and check for defeats
       target.stats.vitality -= damage;
+      
+      // Check for special skills that include healing effects
+      if (isAlly && skill.name === "Soothing Current" && aliveAllies.length > 0) {
+        // Find the ally with the lowest HP
+        let lowestHpAlly = aliveAllies[0];
+        for (const ally of aliveAllies) {
+          if (ally.stats.vitality < lowestHpAlly.stats.vitality) {
+            lowestHpAlly = ally;
+          }
+        }
+        
+        // Apply healing (5% of max health)
+        const healAmount = Math.floor(unit.stats.vitality * 0.05);
+        const originalHp = lowestHpAlly.stats.vitality;
+        lowestHpAlly.stats.vitality = Math.min(lowestHpAlly.stats.vitality + healAmount, 100); // Assuming 100 is max HP
+        
+        // Record healing in action log
+        roundActions.push({
+          actor: unit.name,
+          skill: skill.name,
+          target: lowestHpAlly.name,
+          type: 'heal',
+          amount: healAmount,
+          newHp: lowestHpAlly.stats.vitality
+        });
+      }
+      
       if (target.stats.vitality <= 0) {
         if (isAlly) {
           aliveEnemies = aliveEnemies.filter(e => e.id !== target.id);
