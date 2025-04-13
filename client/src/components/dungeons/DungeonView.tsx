@@ -169,7 +169,7 @@ const DungeonView = () => {
     try {
       const res = await apiRequest('POST', `/api/dungeons/complete/${runId}`, undefined);
       const data = await res.json();
-      
+
       // Show battle log immediately
       setCurrentBattleLog(data.battleLog || []);
       setShowBattleLog(true);
@@ -278,77 +278,6 @@ const DungeonView = () => {
         </div>
       )}
 
-      {/* Completed Dungeon Runs */}
-      {activeDungeons.data && activeDungeons.data.filter(run => run.completed).length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-cinzel font-bold mb-4">Recent Dungeon Results</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {activeDungeons.data
-              .filter(run => run.completed)
-              .slice(0, 2)
-              .map(run => (
-                <Card key={run.id} className="bg-[#1A1A2E] border-[#432874]/30">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-[#FF9D00] font-cinzel">{run.dungeonName}</CardTitle>
-                        <CardDescription>Level {run.dungeonLevel}</CardDescription>
-                      </div>
-                      <Badge className={run.success 
-                        ? "bg-green-700/20 text-green-400 border-green-700/30"
-                        : "bg-red-700/20 text-red-400 border-red-700/30"
-                      }>
-                        {run.success ? "Victory" : "Defeat"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    {run.success && run.rewards && (
-                      <div className="bg-[#432874]/20 p-2 rounded-md mb-2">
-                        <div className="text-xs text-[#C8B8DB]/80 mb-1">Rewards:</div>
-                        <div className="flex flex-wrap gap-1">
-                          <Badge className="bg-[#FF9D00]/20 text-[#FF9D00] border-[#FF9D00]/30">
-                            {run.rewards.rogueCredits} Credits
-                          </Badge>
-                          <Badge className="bg-[#00B9AE]/20 text-[#00B9AE] border-[#00B9AE]/30">
-                            {run.rewards.soulShards} Soul Shards
-                          </Badge>
-                          {run.rewards.materials.map((mat: any, idx: number) => (
-                            <Badge key={idx} className="bg-[#C8B8DB]/20 text-[#C8B8DB] border-[#C8B8DB]/30">
-                              {mat.amount} {mat.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex space-x-2">
-                      {run.characterIds.map((charId) => {
-                        const character = characters.find(c => c.id === charId);
-                        return (
-                          <img 
-                            key={charId}
-                            src={character?.avatarUrl || "https://via.placeholder.com/40"}
-                            alt={character?.name || "Character"}
-                            className="w-8 h-8 rounded-full border border-[#432874]"
-                          />
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      className="w-full bg-[#432874]/50 hover:bg-[#432874]/70"
-                      onClick={() => viewBattleLog(run.battleLog)}
-                    >
-                      <ScrollText className="h-4 w-4 mr-2" />
-                      View Battle Log
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-          </div>
-        </div>
-      )}
 
       {/* Available Dungeons */}
       <div>
