@@ -12,9 +12,11 @@ import {
   Zap, 
   Brain, 
   Flower2, 
-  Clock, 
+  Clock,
+  Star,
+  Bolt,
+  Flame, 
   Info,
-  Flame,
   Droplet,
   Leaf,
   Wind,
@@ -729,8 +731,47 @@ const CharacterCard = ({
                               <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
                                 <div className="text-xs font-medium text-[#00B9AE]">{skill.name}</div>
                                 <div className="text-xs text-[#C8B8DB]/80">{skill.description}</div>
-                                <div className="flex justify-between mt-1 text-xs text-[#C8B8DB]/60">
-                                  <span>Type: {skill.type}</span>
+                                
+                                {/* Enhanced skill details */}
+                                <div className="mt-2 text-xs">
+                                  {skill.damage && (
+                                    <div className="flex items-center">
+                                      <Swords className="h-3 w-3 mr-1 text-red-400" />
+                                      <span className="text-[#C8B8DB]/80">
+                                        Damage Multiplier: <span className="text-amber-400">{skill.damage}x</span> (Deals {skill.damage}x of Attack as damage)
+                                      </span>
+                                    </div>
+                                  )}
+                                  
+                                  {skill.effect && (
+                                    <div className="flex items-center mt-1">
+                                      <Flame className="h-3 w-3 mr-1 text-orange-400" />
+                                      <span className="text-[#C8B8DB]/80">
+                                        Effect: <span className="text-purple-400">{skill.effect}</span>
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {skill.cooldown && (
+                                    <div className="flex items-center mt-1">
+                                      <Clock className="h-3 w-3 mr-1 text-blue-400" />
+                                      <span className="text-[#C8B8DB]/80">
+                                        Cooldown: <span className="text-blue-400">{skill.cooldown} turns</span>
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="flex justify-between mt-2 text-xs text-[#C8B8DB]/60">
+                                  <span>Type: 
+                                    <span className={
+                                      skill.type === "Ultimate" ? " text-amber-500" : 
+                                      skill.type === "Advanced" ? " text-blue-500" : 
+                                      " text-green-500"
+                                    }>
+                                      {" "}{skill.type}
+                                    </span>
+                                  </span>
                                   <span>Targets: {skill.targets || 1}</span>
                                 </div>
                               </div>
@@ -827,6 +868,41 @@ const CharacterCard = ({
                     </>
                   ) : (
                     <div className="text-sm text-[#C8B8DB]/60">No Aura Equipped</div>
+                  )}
+
+                  {/* Character Passive Skills Section */}
+                  {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
+                    <div className="bg-[#432874]/20 rounded-lg p-3 mt-4">
+                      <h4 className="font-semibold text-sm mb-2 text-[#00B9AE]">Character Passive Skills</h4>
+                      <div className="space-y-2">
+                        {character.passiveSkills.map((passive: any, index) => (
+                          <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
+                            <div className="text-xs font-medium text-[#00B9AE]">{passive.name}</div>
+                            <div className="text-xs text-[#C8B8DB]/80">{passive.description}</div>
+                            
+                            <div className="mt-2 text-xs">
+                              {passive.effect && (
+                                <div className="flex items-center">
+                                  <Star className="h-3 w-3 mr-1 text-amber-400" />
+                                  <span className="text-[#C8B8DB]/80">
+                                    Effect: <span className="text-purple-400">{passive.effect}</span>
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {passive.trigger && (
+                                <div className="flex items-center mt-1">
+                                  <Bolt className="h-3 w-3 mr-1 text-yellow-400" />
+                                  <span className="text-[#C8B8DB]/80">
+                                    Trigger: <span className="text-blue-400">{passive.trigger}</span>
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
 
                   <div className="mt-4 flex justify-end space-x-2">
