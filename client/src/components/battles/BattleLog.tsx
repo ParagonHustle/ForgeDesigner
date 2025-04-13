@@ -68,10 +68,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   }, [battleLog]);
 
-  // Battle simulation loop
+  // Battle simulation loop - using a more direct approach
   useEffect(() => {
-    if (!isPaused && !isComplete) {
+    if (!isPaused && !isComplete && units.length > 0) {
+      // Add debug logging
+      console.log("Battle simulation running with", units.length, "units");
+      
       const interval = setInterval(() => {
+        // First pass: update meters and track which units should attack
+        const unitsToAttack: { attacker: BattleUnit, target: BattleUnit }[] = [];
+        
         setUnits(prevUnits => {
           const updatedUnits = [...prevUnits];
           
@@ -84,15 +90,27 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             const meterIncrease = (unit.stats.speed / 40) * playbackSpeed;
             let newMeter = unit.attackMeter + meterIncrease;
 
+            // If meter is full, find a target and add to attack queue
             if (newMeter >= 100) {
+              console.log(`${unit.name}'s attack meter is full!`);
               // Reset meter
               newMeter = 0;
               
-              // Find a target and perform attack action using the dedicated function
-              const target = selectTarget(unit, updatedUnits);
-              if (target) {
-                // Call the performAction function which handles skill selection and damage
-                performAction(unit, target);
+              // Find a target
+              const possibleTargets = updatedUnits.filter(u => {
+                if (u.hp <= 0) return false;
+                
+                // Allies target enemies, enemies target allies
+                const isAttackerAlly = battleLog[0]?.allies?.some((a: any) => a.id === unit.id);
+                const isTargetAlly = battleLog[0]?.allies?.some((a: any) => a.id === u.id);
+                
+                return isAttackerAlly !== isTargetAlly; // Target must be on opposite side
+              });
+              
+              if (possibleTargets.length > 0) {
+                const target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+                console.log(`${unit.name} will attack ${target.name}`);
+                unitsToAttack.push({ attacker: unit, target });
               }
             }
 
@@ -101,13 +119,88 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               attackMeter: newMeter
             };
           }
+          
           return updatedUnits;
         });
-      }, 100);
+        
+        // Second pass: Process attacks after state update
+        setTimeout(() => {
+          unitsToAttack.forEach(({ attacker, target }) => {
+            // Calculate attack details
+            const attackCount = attacker.lastSkillUse + 1;
+            let skill = attacker.skills.basic;
+            let skillType = 'basic';
+            
+            // Check for ultimate/advanced skill usage based on cooldown
+            if (attacker.skills.ultimate && attackCount % attacker.skills.ultimate.cooldown === 0) {
+              skill = attacker.skills.ultimate;
+              skillType = 'ultimate';
+            } else if (attacker.skills.advanced && attackCount % attacker.skills.advanced.cooldown === 0) {
+              skill = attacker.skills.advanced;
+              skillType = 'advanced';
+            }
+            
+            // Calculate damage
+            const damage = Math.floor(skill.damage * (attacker.stats.attack / 100));
+            const actionMessage = `${attacker.name} used ${skill.name} (${skillType}) on ${target.name} for ${damage} damage!`;
+            console.log(actionMessage);
+            
+            // Update action log
+            setActionLog(prev => [...prev, actionMessage]);
+            
+            // Update units with new HP and stats
+            setUnits(prevUnits => 
+              prevUnits.map(u => {
+                if (u.id === target.id) {
+                  const newHp = Math.max(0, u.hp - damage);
+                  // Check if target is defeated
+                  if (newHp <= 0 && u.hp > 0) {
+                    setActionLog(prev => [...prev, `${target.name} has been defeated!`]);
+                  }
+                  return {
+                    ...u,
+                    hp: newHp,
+                    totalDamageReceived: u.totalDamageReceived + damage
+                  };
+                }
+                if (u.id === attacker.id) {
+                  return {
+                    ...u,
+                    lastSkillUse: attackCount,
+                    totalDamageDealt: u.totalDamageDealt + damage
+                  };
+                }
+                return u;
+              })
+            );
+          });
+          
+          // Check if battle has ended after all attacks
+          if (unitsToAttack.length > 0) {
+            setTimeout(() => {
+              const allies = units.filter(u => battleLog[0]?.allies?.some((a: any) => a.id === u.id));
+              const enemies = units.filter(u => battleLog[0]?.enemies?.some((e: any) => e.id === u.id));
+              
+              const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
+              const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
+              
+              if (allAlliesDefeated || allEnemiesDefeated) {
+                setIsComplete(true);
+                setActionLog(prev => [
+                  ...prev,
+                  `Battle ended! ${allAlliesDefeated ? 'Enemies' : 'Allies'} are victorious!`
+                ]);
+                console.log("Battle complete!");
+              }
+            }, 100);
+          }
+        }, 50);
+        
+      }, 200); // Slower interval to make attacks more visible
 
       return () => clearInterval(interval);
     }
-  }, [isPaused, playbackSpeed, isComplete]);
+  }, [isPaused, playbackSpeed, isComplete, units, battleLog]);
 
   const selectTarget = (attacker: BattleUnit, allUnits: BattleUnit[]) => {
     // Get first log entry that has allies defined
@@ -242,7 +335,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <h3 className="font-semibold">Allies</h3>
-                {units.filter(u => battleLog[0]?.allies?.some(a => a.id === u.id)).map(unit => (
+                {units.filter(u => battleLog[0]?.allies?.some((a: any) => a.id === u.id)).map(unit => (
                   <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
                     <div className="flex justify-between">
                       <span>{unit.name}</span>
@@ -267,7 +360,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
               <div className="space-y-2">
                 <h3 className="font-semibold">Enemies</h3>
-                {units.filter(u => battleLog[0]?.enemies?.some(e => e.id === u.id)).map(unit => (
+                {units.filter(u => battleLog[0]?.enemies?.some((e: any) => e.id === u.id)).map(unit => (
                   <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
                     <div className="flex justify-between">
                       <span>{unit.name}</span>
