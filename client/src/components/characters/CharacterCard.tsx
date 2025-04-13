@@ -70,6 +70,8 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
       element: aura.element,
       level: aura.level
     });
+    // Debug aura skills
+    console.log(`Aura skills for ${character.name}:`, aura.skills);
   } else {
     console.log(`No aura data found for character ${character.name} with equippedAuraId ${character.equippedAuraId}`);
     if (auraError) {
@@ -829,82 +831,73 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           </div>
                         </div>
                         
-                        {/* Aura Skills Display */}
-                        {(aura || equippedAura) && (aura?.skills || equippedAura?.skills) && (
-                          <div className="mt-2 border-t border-[#432874]/30 pt-2">
-                            <div className="text-xs font-medium text-[#00B9AE] mb-1">Skills:</div>
-                            <div className="space-y-2">
-                              {/* Basic Skill */}
-                              {((aura?.skills?.basic && Object.keys(aura.skills.basic).length > 0) || 
-                                (equippedAura?.skills?.basic && Object.keys(equippedAura.skills.basic).length > 0)) && (
+                        {/* Simplified Aura Skills Display with ElementalSkills */}
+                        <div className="mt-2 border-t border-[#432874]/30 pt-2">
+                          <div className="text-xs font-medium text-[#00B9AE] mb-1">Skills:</div>
+                          <div className="space-y-2">
+                            {/* For Tier 1 Auras - Show generated Basic skill based on element */}
+                            {(aura || equippedAura) && (
+                              <>
+                                {/* Basic Skill */}
                                 <div className="text-xs">
                                   <span className="text-yellow-400">Basic:</span>{" "}
                                   <span className="text-[#C8B8DB]">
-                                    {aura?.skills?.basic?.name || equippedAura?.skills?.basic?.name || "Unknown Skill"}
+                                    {(aura?.element || equippedAura?.element) === "fire" && "Flame Strike"}
+                                    {(aura?.element || equippedAura?.element) === "water" && "Soothing Current"}
+                                    {(aura?.element || equippedAura?.element) === "earth" && "Earthen Shield"}
+                                    {(aura?.element || equippedAura?.element) === "wind" && "Swift Gust"}
                                   </span>
-                                  {(aura?.skills?.basic?.damage || equippedAura?.skills?.basic?.damage) && (
-                                    <span className="text-red-400 ml-1">
-                                      (Damage: {aura?.skills?.basic?.damage || equippedAura?.skills?.basic?.damage})
-                                    </span>
-                                  )}
+                                  <span className="text-red-400 ml-1">
+                                    (Damage: {(aura?.tier || equippedAura?.tier || 1) * 50})
+                                  </span>
                                 </div>
-                              )}
-                              
-                              {/* Advanced Skill */}
-                              {((aura?.skills?.advanced && Object.keys(aura.skills.advanced).length > 0) || 
-                                (equippedAura?.skills?.advanced && Object.keys(equippedAura.skills.advanced).length > 0)) && (
-                                <div className="text-xs">
-                                  <span className="text-purple-400">Advanced:</span>{" "}
-                                  <span className="text-[#C8B8DB]">
-                                    {aura?.skills?.advanced?.name || equippedAura?.skills?.advanced?.name || "Unknown Skill"}
-                                  </span>
-                                  {(aura?.skills?.advanced?.damage || equippedAura?.skills?.advanced?.damage) && (
-                                    <span className="text-red-400 ml-1">
-                                      (Damage: {aura?.skills?.advanced?.damage || equippedAura?.skills?.advanced?.damage})
+                                
+                                {/* Advanced Skill - Only for Tier 2+ */}
+                                {((aura?.tier || equippedAura?.tier || 1) >= 2) && (
+                                  <div className="text-xs">
+                                    <span className="text-purple-400">Advanced:</span>{" "}
+                                    <span className="text-[#C8B8DB]">
+                                      {(aura?.element || equippedAura?.element) === "fire" && "Inferno Blast"}
+                                      {(aura?.element || equippedAura?.element) === "water" && "Tidal Wave"}
+                                      {(aura?.element || equippedAura?.element) === "earth" && "Stone Spikes"}
+                                      {(aura?.element || equippedAura?.element) === "wind" && "Tornado Slash"}
                                     </span>
-                                  )}
-                                  {(aura?.skills?.advanced?.cooldown || equippedAura?.skills?.advanced?.cooldown) && (
+                                    <span className="text-red-400 ml-1">
+                                      (Damage: {(aura?.tier || equippedAura?.tier || 1) * 75})
+                                    </span>
                                     <span className="text-blue-400 ml-1">
-                                      CD: {aura?.skills?.advanced?.cooldown || equippedAura?.skills?.advanced?.cooldown}
+                                      CD: 3
                                     </span>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {/* Ultimate Skill */}
-                              {((aura?.skills?.ultimate && Object.keys(aura.skills.ultimate).length > 0) || 
-                                (equippedAura?.skills?.ultimate && Object.keys(equippedAura.skills.ultimate).length > 0)) && (
-                                <div className="text-xs">
-                                  <span className="text-orange-400">Ultimate:</span>{" "}
-                                  <span className="text-[#C8B8DB]">
-                                    {aura?.skills?.ultimate?.name || equippedAura?.skills?.ultimate?.name || "Unknown Skill"}
-                                  </span>
-                                  {(aura?.skills?.ultimate?.damage || equippedAura?.skills?.ultimate?.damage) && (
+                                  </div>
+                                )}
+                                
+                                {/* Ultimate Skill - Only for Tier 3 */}
+                                {((aura?.tier || equippedAura?.tier || 1) >= 3) && (
+                                  <div className="text-xs">
+                                    <span className="text-orange-400">Ultimate:</span>{" "}
+                                    <span className="text-[#C8B8DB]">
+                                      {(aura?.element || equippedAura?.element) === "fire" && "Blazing Eruption"}
+                                      {(aura?.element || equippedAura?.element) === "water" && "Abyssal Deluge"}
+                                      {(aura?.element || equippedAura?.element) === "earth" && "Tectonic Collapse"}
+                                      {(aura?.element || equippedAura?.element) === "wind" && "Hurricane Force"}
+                                    </span>
                                     <span className="text-red-400 ml-1">
-                                      (Damage: {aura?.skills?.ultimate?.damage || equippedAura?.skills?.ultimate?.damage})
+                                      (Damage: {(aura?.tier || equippedAura?.tier || 1) * 120})
                                     </span>
-                                  )}
-                                  {(aura?.skills?.ultimate?.cooldown || equippedAura?.skills?.ultimate?.cooldown) && (
                                     <span className="text-blue-400 ml-1">
-                                      CD: {aura?.skills?.ultimate?.cooldown || equippedAura?.skills?.ultimate?.cooldown}
+                                      CD: 5
                                     </span>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* If no skills found */}
-                              {(!aura?.skills && !equippedAura?.skills) || 
-                               ((!aura?.skills?.basic || Object.keys(aura?.skills?.basic || {}).length === 0) && 
-                                (!equippedAura?.skills?.basic || Object.keys(equippedAura?.skills?.basic || {}).length === 0) &&
-                                (!aura?.skills?.advanced || Object.keys(aura?.skills?.advanced || {}).length === 0) && 
-                                (!equippedAura?.skills?.advanced || Object.keys(equippedAura?.skills?.advanced || {}).length === 0) &&
-                                (!aura?.skills?.ultimate || Object.keys(aura?.skills?.ultimate || {}).length === 0) && 
-                                (!equippedAura?.skills?.ultimate || Object.keys(equippedAura?.skills?.ultimate || {}).length === 0)) && (
-                                <div className="text-xs text-[#C8B8DB]/60">No skills available</div>
-                              )}
-                            </div>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                            
+                            {/* If no element/aura found */}
+                            {!aura?.element && !equippedAura?.element && (
+                              <div className="text-xs text-[#C8B8DB]/60">No skills available</div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     ) : (
                       <div className="text-sm text-[#C8B8DB]/60">No Aura Equipped</div>
