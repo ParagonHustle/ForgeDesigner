@@ -116,6 +116,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               const updatedStatusEffects = [...unit.statusEffects];
               
               // Process each status effect
+              // Track effects that will be removed after processing
+              const expiringEffects = [];
+              const remainingEffects = [];
+              
+              // First, create new effects with decremented durations and collect messages
               for (let j = 0; j < updatedStatusEffects.length; j++) {
                 const effect = updatedStatusEffects[j];
                 
@@ -126,23 +131,40 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   statusMessages.push(`${unit.name} took ${dotDamage} damage from ${effect.name}`);
                 }
                 
-                console.log(`Decrementing ${unit.name}'s ${effect.name} effect from ${effect.duration} to ${effect.duration-1} turns`);
+                // Create a NEW effect with reduced duration - don't modify original
+                const newDuration = effect.duration - 1;
+                console.log(`Decrementing ${unit.name}'s ${effect.name} effect from ${effect.duration} to ${newDuration} turns`);
                 
-                // Reduce duration by 1 for ALL effect types
-                updatedStatusEffects[j] = {
+                const updatedEffect = {
                   ...effect,
-                  duration: effect.duration - 1
+                  duration: newDuration
                 };
                 
-                // Log status effect duration change for debugging
-                if (updatedStatusEffects[j].duration <= 0) {
+                // Sort effects into expiring or remaining
+                if (newDuration <= 0) {
+                  expiringEffects.push(effect.name);
                   console.log(`${effect.name} has EXPIRED on ${unit.name}`);
                   statusMessages.push(`${effect.name} has expired on ${unit.name}`);
-                } else if (effect.effect === "ReduceAtk" || effect.effect === "ReduceSpd") {
-                  // Only log debuff duration for non-damaging effects
-                  console.log(`${unit.name}'s ${effect.name} effect has ${updatedStatusEffects[j].duration} turns remaining`);
-                  statusMessages.push(`${unit.name}'s ${effect.name} effect: ${updatedStatusEffects[j].duration} turns remaining`);
+                } else {
+                  remainingEffects.push(updatedEffect);
+                  if (effect.effect === "ReduceAtk" || effect.effect === "ReduceSpd") {
+                    // Only log debuff duration for non-damaging effects
+                    console.log(`${unit.name}'s ${effect.name} effect has ${newDuration} turns remaining`);
+                    statusMessages.push(`${unit.name}'s ${effect.name} effect: ${newDuration} turns remaining`);
+                  }
                 }
+                
+                // Update the effect in the array with the decremented duration
+                updatedStatusEffects[j] = updatedEffect;
+              }
+              
+              // Log summary of effects
+              if (expiringEffects.length > 0) {
+                console.log(`Effects expiring on ${unit.name}:`, expiringEffects.join(", "));
+              }
+              if (remainingEffects.length > 0) {
+                console.log(`Effects remaining on ${unit.name}:`, 
+                  remainingEffects.map(e => `${e.name} (${e.duration})`).join(", "));
               }
               
               // Debug updated status effects
@@ -693,11 +715,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
   const checkBattleEnd = () => {
     const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-    const allies = units.filter(u => battleEntry?.allies.some((a: any) => a.id === u.id));
-    const enemies = units.filter(u => battleEntry?.enemies.some((e: any) => e.id === u.id));
+    if (!battleEntry) {
+      console.error("No battle entry found with allies array");
+      return;
+    }
+    
+    const allies = units.filter(u => battleEntry.allies.some((a: any) => a.id === u.id));
+    const enemies = units.filter(u => battleEntry.enemies.some((e: any) => e.id === u.id));
 
     const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
     const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
+    
+    console.log(`Checking battle end conditions:
+      - All allies defeated: ${allAlliesDefeated} (${allies.length} allies)
+      - All enemies defeated: ${allEnemiesDefeated} (${enemies.length} enemies)
+      - Current stage: ${currentStage + 1} of 8
+      - Is battle complete: ${isComplete}
+    `);
 
     // If all allies are defeated, the dungeon run is over
     if (allAlliesDefeated) {
@@ -709,7 +743,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       console.log(`Dungeon ended - party defeated at stage ${currentStage + 1}`);
     } 
     // If all enemies are defeated and we haven't reached the final stage (8), progress to next stage
-    else if (allEnemiesDefeated) {
+    else if (allEnemiesDefeated && !isComplete) {
       // Final stage is 7 (index 0-7 for 8 total stages)
       const isFinalStage = currentStage >= 7;
       
@@ -724,39 +758,60 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       } else {
         // Progress to next stage
         const nextStage = currentStage + 1;
-        setCurrentStage(nextStage);
+        
+        // First update the action log to show progression
         setActionLog(prev => [
           ...prev,
           `Stage ${currentStage + 1} completed! Moving to stage ${nextStage + 1}...`
         ]);
         console.log(`Moving to stage ${nextStage + 1}`);
         
+        // IMPORTANT: Update the current stage AFTER setting up the new units to avoid race conditions
+        // This ensures that components displaying the stage number use the updated value
+        
         // Reset enemy units for the next stage
         setTimeout(() => {
-          // Reset the enemy units
+          // Reset the enemy units with new stats and HP
           setUnits(prevUnits => {
-            return prevUnits.map(unit => {
-              // If this is an enemy, reset it with new health
-              const isEnemy = battleEntry?.enemies.some((e: any) => e.id === unit.id);
+            const updatedUnits = prevUnits.map(unit => {
+              // Check if this is an enemy
+              const isEnemy = battleEntry.enemies.some((e: any) => e.id === unit.id);
               
               if (isEnemy) {
-                // Generate new enemy based on current stage
+                // Generate new enemy based on next stage
                 const stageMultiplier = 1 + (nextStage * 0.12); // 12% increase per stage
+                const baseMaxHp = unit.maxHp > 0 ? 
+                  Math.floor(unit.maxHp / (1 + (currentStage * 0.12))) : // Reverse calculate base HP if available
+                  unit.maxHp; // Fallback to current maxHp
+                
+                const newMaxHp = Math.floor(baseMaxHp * stageMultiplier);
+                const newAttack = Math.floor(unit.stats.attack * stageMultiplier);
+                const newVitality = Math.floor(unit.stats.vitality * stageMultiplier);
+                const newSpeed = Math.floor(unit.stats.speed * (1 + (nextStage * 0.05))); // 5% speed increase per stage
+                
+                console.log(`Resetting enemy ${unit.name} for stage ${nextStage + 1}:
+                  - HP: ${newMaxHp}
+                  - Attack: ${newAttack}
+                  - Vitality: ${newVitality}
+                  - Speed: ${newSpeed}
+                `);
                 
                 return {
                   ...unit,
-                  hp: Math.floor(unit.maxHp * stageMultiplier), // Increase HP based on stage
-                  maxHp: Math.floor(unit.maxHp * stageMultiplier),
+                  hp: newMaxHp,
+                  maxHp: newMaxHp,
                   stats: {
                     ...unit.stats,
-                    attack: Math.floor(unit.stats.attack * stageMultiplier),
-                    vitality: Math.floor(unit.stats.vitality * stageMultiplier),
-                    speed: Math.floor(unit.stats.speed * (1 + (nextStage * 0.05))) // 5% speed increase per stage
+                    attack: newAttack,
+                    vitality: newVitality,
+                    speed: newSpeed
                   },
-                  statusEffects: [] // Clear status effects from enemies
+                  attackMeter: 0, // Reset attack meter
+                  statusEffects: [], // Clear status effects from enemies
+                  totalDamageDealt: 0,  // Reset statistics for the new stage
+                  totalDamageReceived: 0
                 };
               } 
-              
               // If it's an ally, optionally heal a small amount and clear debuffs
               else {
                 // Recover 10% HP per stage cleared as a stage clear bonus
@@ -768,6 +823,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   effect => !["Weakened", "Slowed", "Burning", "Poisoned"].includes(effect.name)
                 ) || [];
                 
+                console.log(`Healing ally ${unit.name} after stage clear:
+                  - Current HP: ${unit.hp}/${unit.maxHp}
+                  - Healing amount: ${healAmount}
+                  - New HP: ${newHp}/${unit.maxHp}
+                  - Cleared negative effects: ${
+                    (unit.statusEffects?.length || 0) - (filteredEffects.length || 0)
+                  } effects removed
+                `);
+                
+                // Add a message to the action log for each healed ally
                 setActionLog(prev => [
                   ...prev,
                   `${unit.name} recovered ${healAmount} HP after clearing stage ${currentStage + 1}!`
@@ -777,13 +842,20 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   ...unit,
                   hp: newHp,
                   statusEffects: filteredEffects,
-                  totalHealingReceived: unit.totalHealingReceived + healAmount
+                  attackMeter: Math.min(unit.attackMeter, 95), // Cap attack meter at 95% to prevent immediate attacks
+                  totalHealingReceived: (unit.totalHealingReceived || 0) + healAmount
                 };
               }
             });
+            
+            // After updating all units, now set the stage
+            setTimeout(() => {
+              setCurrentStage(nextStage); // Update stage AFTER all units are reset
+              console.log(`Stage ${nextStage + 1} is ready to begin`);
+            }, 100);
+            
+            return updatedUnits;
           });
-          
-          console.log(`Stage ${nextStage + 1} is ready to begin`);
         }, 1000);
       }
     }
