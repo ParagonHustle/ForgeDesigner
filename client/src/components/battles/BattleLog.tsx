@@ -5,6 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { Shield, Swords, Heart, Zap } from 'lucide-react';
 
+interface StatusEffect {
+  name: string;
+  duration: number;
+  effect: string; // "Burn" | "Poison" | "Weaken" | "Slow" | etc.
+  value: number;  // Damage amount or stat reduction percentage
+  source?: string; // ID of the unit that applied the effect
+}
+
 interface BattleUnit {
   id: string;
   name: string;
@@ -30,12 +38,7 @@ interface BattleUnit {
     ultimate?: { name: string; damage: number; cooldown: number };
   };
   // Status effects that can be applied
-  statusEffects?: Array<{
-    name: string;
-    duration: number;
-    effect: string;
-    value: number;
-  }>;
+  statusEffects?: StatusEffect[];
   lastSkillUse: number;
   totalDamageDealt: number;
   totalDamageReceived: number;
@@ -99,10 +102,65 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           for (let i = 0; i < updatedUnits.length; i++) {
             const unit = updatedUnits[i];
             if (unit.hp <= 0) continue;
-
+            
+            // Process status effects before the unit takes their turn
+            if (unit.statusEffects && unit.statusEffects.length > 0) {
+              let statusEffectDamage = 0;
+              let statusMessages: string[] = [];
+              
+              // Create a copy of status effects to process
+              const updatedStatusEffects = [...unit.statusEffects];
+              
+              // Process each status effect
+              for (let j = 0; j < updatedStatusEffects.length; j++) {
+                const effect = updatedStatusEffects[j];
+                
+                // Apply burn and poison effects (5% of max health)
+                if (effect.effect === "Burn" || effect.effect === "Poison") {
+                  const dotDamage = effect.value;
+                  statusEffectDamage += dotDamage;
+                  statusMessages.push(`${unit.name} took ${dotDamage} damage from ${effect.name}`);
+                  
+                  // Reduce duration by 1
+                  updatedStatusEffects[j] = {
+                    ...effect,
+                    duration: effect.duration - 1
+                  };
+                }
+              }
+              
+              // Apply damage from status effects
+              if (statusEffectDamage > 0) {
+                updatedUnits[i] = {
+                  ...unit,
+                  hp: Math.max(0, unit.hp - statusEffectDamage),
+                  totalDamageReceived: unit.totalDamageReceived + statusEffectDamage,
+                  statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0) // Remove expired effects
+                };
+                
+                // Add status effect messages to the action log
+                setTimeout(() => {
+                  statusMessages.forEach(message => {
+                    setActionLog(prev => [...prev, message]);
+                  });
+                  
+                  // Check if unit was defeated by status effects
+                  if (updatedUnits[i].hp <= 0 && unit.hp > 0) {
+                    setActionLog(prev => [...prev, `${unit.name} has been defeated by status effects!`]);
+                  }
+                }, 0);
+              } else {
+                // Just remove expired effects if no damage was dealt
+                updatedUnits[i] = {
+                  ...unit,
+                  statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0)
+                };
+              }
+            }
+            
             // Update attack meter based on speed (120 speed = 3x faster than 40 speed)
             const meterIncrease = (unit.stats.speed / 40) * playbackSpeed;
-            let newMeter = unit.attackMeter + meterIncrease;
+            let newMeter = updatedUnits[i].attackMeter + meterIncrease;
 
             // If meter is full, find a target and add to attack queue
             if (newMeter >= 100) {
@@ -168,18 +226,52 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             // Format the action message with more details
             let statusEffectText = "";
             if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
-              const possibleEffects = [
-                {name: "Burning", effect: "DoT", value: Math.floor(damage * 0.1)},
-                {name: "Weakened", effect: "ReduceAtk", value: 10},
-                {name: "Slowed", effect: "ReduceSpd", value: 15}
-              ];
+              // Determine the type of status effect based on skill name/type
+              let effectType = "general";
+              if (skill.name.toLowerCase().includes("burn") || skill.name.toLowerCase().includes("fire") || 
+                  skill.name.toLowerCase().includes("flame") || skill.name.toLowerCase().includes("inferno")) {
+                effectType = "burn";
+              } else if (skill.name.toLowerCase().includes("poison") || skill.name.toLowerCase().includes("venom") || 
+                        skill.name.toLowerCase().includes("toxic")) {
+                effectType = "poison";
+              }
               
-              const effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
-              statusEffectText = ` [${effect.name} applied]`;
+              let effect: StatusEffect;
+              if (effectType === "burn") {
+                // Burn effect: 5% of max HP damage per turn
+                const burnDamage = Math.floor(target.maxHp * 0.05);
+                effect = {
+                  name: "Burning",
+                  effect: "Burn",
+                  value: burnDamage,
+                  duration: 3,
+                  source: attacker.id
+                };
+                statusEffectText = ` [Burning applied - ${burnDamage} damage per turn]`;
+              } else if (effectType === "poison") {
+                // Poison effect: 5% of max HP damage per turn
+                const poisonDamage = Math.floor(target.maxHp * 0.05);
+                effect = {
+                  name: "Poisoned",
+                  effect: "Poison",
+                  value: poisonDamage,
+                  duration: 3,
+                  source: attacker.id
+                };
+                statusEffectText = ` [Poisoned applied - ${poisonDamage} damage per turn]`;
+              } else {
+                // General status effects
+                const possibleEffects = [
+                  {name: "Weakened", effect: "ReduceAtk", value: 10, duration: 2, source: attacker.id},
+                  {name: "Slowed", effect: "ReduceSpd", value: 15, duration: 2, source: attacker.id}
+                ];
+                effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
+                statusEffectText = ` [${effect.name} applied]`;
+              }
               
               // Apply the status effect to the target
               if (!target.statusEffects) target.statusEffects = [];
-              target.statusEffects.push({...effect, duration: 2});
+              target.statusEffects.push(effect);
             }
             
             const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}`;
@@ -282,18 +374,63 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Format the action message with more details
     let statusEffectText = "";
     if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
-      const possibleEffects = [
-        {name: "Burning", effect: "DoT", value: Math.floor(damage * 0.1)},
-        {name: "Weakened", effect: "ReduceAtk", value: 10},
-        {name: "Slowed", effect: "ReduceSpd", value: 15}
-      ];
+      // Determine the type of status effect based on skill name/type
+      let effectType = "general";
+      if (skill.name.toLowerCase().includes("burn") || skill.name.toLowerCase().includes("fire") || 
+          skill.name.toLowerCase().includes("flame") || skill.name.toLowerCase().includes("inferno")) {
+        effectType = "burn";
+      } else if (skill.name.toLowerCase().includes("poison") || skill.name.toLowerCase().includes("venom") || 
+                skill.name.toLowerCase().includes("toxic")) {
+        effectType = "poison";
+      }
       
-      const effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
-      statusEffectText = ` [${effect.name} applied]`;
+      let effect: StatusEffect;
+      if (effectType === "burn") {
+        // Burn effect: 5% of max HP damage per turn
+        const burnDamage = Math.floor(target.maxHp * 0.05);
+        effect = {
+          name: "Burning",
+          effect: "Burn",
+          value: burnDamage,
+          duration: 3,
+          source: attacker.id
+        };
+        statusEffectText = ` [Burning applied - ${burnDamage} damage per turn]`;
+      } else if (effectType === "poison") {
+        // Poison effect: 5% of max HP damage per turn
+        const poisonDamage = Math.floor(target.maxHp * 0.05);
+        effect = {
+          name: "Poisoned",
+          effect: "Poison",
+          value: poisonDamage,
+          duration: 3,
+          source: attacker.id
+        };
+        statusEffectText = ` [Poisoned applied - ${poisonDamage} damage per turn]`;
+      } else {
+        // General status effects
+        const possibleEffects = [
+          {name: "Weakened", effect: "ReduceAtk", value: 10, duration: 2, source: attacker.id},
+          {name: "Slowed", effect: "ReduceSpd", value: 15, duration: 2, source: attacker.id}
+        ];
+        effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
+        statusEffectText = ` [${effect.name} applied]`;
+      }
       
-      // Apply the status effect to the target
+      // Apply the status effect to the target (will be added when the unit's state is updated)
       if (!target.statusEffects) target.statusEffects = [];
-      target.statusEffects.push({...effect, duration: 2});
+      // Check if target already has this effect, if so, extend duration rather than adding new
+      const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
+      if (existingEffectIndex >= 0) {
+        // Extend existing effect duration
+        target.statusEffects[existingEffectIndex].duration = Math.max(
+          target.statusEffects[existingEffectIndex].duration,
+          effect.duration
+        );
+      } else {
+        // Add new effect
+        target.statusEffects.push(effect);
+      }
     }
     
     const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}`;
@@ -310,13 +447,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             setActionLog(prev => [...prev, `${target.name} has been defeated!`]);
           }
           
+          // Preserve status effects that were just added to the target
           return {
             ...u,
             hp: newHp,
             totalDamageReceived: u.totalDamageReceived + damage,
-            statusEffects: u.id === target.id && statusEffectText ? 
-              [...(u.statusEffects || []), ...target.statusEffects || []] : 
-              u.statusEffects
+            statusEffects: target.statusEffects // Use the updated status effects
           };
         }
         if (u.id === attacker.id) {
@@ -353,10 +489,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const renderUnitStats = (unit: BattleUnit) => {
     // Check if unit has aura bonuses
     const hasAuraBonuses = unit.auraBonus && (
-      unit.auraBonus.attack !== 0 || 
-      unit.auraBonus.vitality !== 0 || 
-      unit.auraBonus.speed !== 0
+      (unit.auraBonus.attack !== undefined && unit.auraBonus.attack !== 0) || 
+      (unit.auraBonus.vitality !== undefined && unit.auraBonus.vitality !== 0) || 
+      (unit.auraBonus.speed !== undefined && unit.auraBonus.speed !== 0)
     );
+    
+    // Get aura bonus values safely
+    const attackBonus = unit.auraBonus?.attack ?? 0;
+    const vitalityBonus = unit.auraBonus?.vitality ?? 0;
+    const speedBonus = unit.auraBonus?.speed ?? 0;
     
     return (
       <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
@@ -364,9 +505,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           <Swords className="h-3 w-3 mr-1 text-red-400" />
           <span>
             ATK: {unit.stats.attack}
-            {hasAuraBonuses && unit.auraBonus?.attack !== 0 && (
-              <span className={unit.auraBonus?.attack > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
-                {unit.auraBonus?.attack > 0 ? "+" : ""}{unit.auraBonus?.attack}%
+            {hasAuraBonuses && attackBonus !== 0 && (
+              <span className={attackBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                {attackBonus > 0 ? "+" : ""}{attackBonus}%
               </span>
             )}
           </span>
@@ -375,9 +516,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           <Heart className="h-3 w-3 mr-1 text-red-500" />
           <span>
             VIT: {unit.stats.vitality}
-            {hasAuraBonuses && unit.auraBonus?.vitality !== 0 && (
-              <span className={unit.auraBonus?.vitality > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
-                {unit.auraBonus?.vitality > 0 ? "+" : ""}{unit.auraBonus?.vitality}%
+            {hasAuraBonuses && vitalityBonus !== 0 && (
+              <span className={vitalityBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                {vitalityBonus > 0 ? "+" : ""}{vitalityBonus}%
               </span>
             )}
           </span>
@@ -386,9 +527,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           <Zap className="h-3 w-3 mr-1 text-yellow-400" />
           <span>
             SPD: {unit.stats.speed}
-            {hasAuraBonuses && unit.auraBonus?.speed !== 0 && (
-              <span className={unit.auraBonus?.speed > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
-                {unit.auraBonus?.speed > 0 ? "+" : ""}{unit.auraBonus?.speed}%
+            {hasAuraBonuses && speedBonus !== 0 && (
+              <span className={speedBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                {speedBonus > 0 ? "+" : ""}{speedBonus}%
               </span>
             )}
           </span>
@@ -455,6 +596,31 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                       />
                     </div>
                     {renderUnitStats(unit)}
+                    
+                    {/* Status effects display for allies */}
+                    {unit.statusEffects && unit.statusEffects.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {unit.statusEffects.map((effect, index) => {
+                          let statusColor = "bg-gray-600";
+                          if (effect.effect === "Burn") statusColor = "bg-red-600";
+                          if (effect.effect === "Poison") statusColor = "bg-green-600";
+                          if (effect.effect === "ReduceAtk") statusColor = "bg-orange-600";
+                          if (effect.effect === "ReduceSpd") statusColor = "bg-blue-600";
+                          
+                          return (
+                            <div 
+                              key={index}
+                              className={`text-xs px-1 rounded text-white ${statusColor} flex items-center`}
+                              title={`${effect.name}: ${effect.effect === "Burn" || effect.effect === "Poison" ? 
+                                `${effect.value} damage per turn` : 
+                                `${effect.value}% reduction`} (${effect.duration} turns remaining)`}
+                            >
+                              {effect.name} ({effect.duration})
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -480,6 +646,31 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                       />
                     </div>
                     {renderUnitStats(unit)}
+                    
+                    {/* Status effects display for enemies */}
+                    {unit.statusEffects && unit.statusEffects.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {unit.statusEffects.map((effect, index) => {
+                          let statusColor = "bg-gray-600";
+                          if (effect.effect === "Burn") statusColor = "bg-red-600";
+                          if (effect.effect === "Poison") statusColor = "bg-green-600";
+                          if (effect.effect === "ReduceAtk") statusColor = "bg-orange-600";
+                          if (effect.effect === "ReduceSpd") statusColor = "bg-blue-600";
+                          
+                          return (
+                            <div 
+                              key={index}
+                              className={`text-xs px-1 rounded text-white ${statusColor} flex items-center`}
+                              title={`${effect.name}: ${effect.effect === "Burn" || effect.effect === "Poison" ? 
+                                `${effect.value} damage per turn` : 
+                                `${effect.value}% reduction`} (${effect.duration} turns remaining)`}
+                            >
+                              {effect.name} ({effect.duration})
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
