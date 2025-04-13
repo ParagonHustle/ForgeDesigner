@@ -95,6 +95,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       console.log("Battle simulation running with", units.length, "units");
       
       const interval = setInterval(() => {
+        // Increment battle round on each interval - this ensures status effects decrement properly
+        setBattleRound(prevRound => {
+          console.log(`Advancing to battle round ${prevRound + 1}`);
+          return prevRound + 1;
+        });
+
         // First pass: update meters and track which units should attack
         const unitsToAttack: { attacker: BattleUnit, target: BattleUnit }[] = [];
         
@@ -829,38 +835,34 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   totalDamageReceived: 0
                 };
               } 
-              // If it's an ally, optionally heal a small amount and clear debuffs
+              // If it's an ally, do NOT heal but do clear debuffs
               else {
-                // Recover 10% HP per stage cleared as a stage clear bonus
-                const healAmount = Math.floor(unit.maxHp * 0.1);
-                const newHp = Math.min(unit.maxHp, unit.hp + healAmount);
-                
+                // Per user requirement: No healing between dungeon stages
                 // Only keep beneficial status effects for allies between stages
                 const filteredEffects = unit.statusEffects?.filter(
                   effect => !["Weakened", "Slowed", "Burning", "Poisoned"].includes(effect.name)
                 ) || [];
                 
-                console.log(`Healing ally ${unit.name} after stage clear:
-                  - Current HP: ${unit.hp}/${unit.maxHp}
-                  - Healing amount: ${healAmount}
-                  - New HP: ${newHp}/${unit.maxHp}
+                console.log(`Processing ally ${unit.name} after stage clear:
+                  - Current HP: ${unit.hp}/${unit.maxHp} (no healing between stages)
                   - Cleared negative effects: ${
                     (unit.statusEffects?.length || 0) - (filteredEffects.length || 0)
                   } effects removed
                 `);
                 
-                // Add a message to the action log for each healed ally
-                setActionLog(prev => [
-                  ...prev,
-                  `${unit.name} recovered ${healAmount} HP after clearing stage ${currentStage + 1}!`
-                ]);
+                // Add a message to the action log that negative effects were removed
+                if ((unit.statusEffects?.length || 0) > (filteredEffects.length || 0)) {
+                  setActionLog(prev => [
+                    ...prev,
+                    `${unit.name} had negative status effects removed after completing stage ${currentStage + 1}.`
+                  ]);
+                }
                 
                 return {
                   ...unit,
-                  hp: newHp,
+                  // hp remains unchanged - no healing
                   statusEffects: filteredEffects,
-                  attackMeter: Math.min(unit.attackMeter, 95), // Cap attack meter at 95% to prevent immediate attacks
-                  totalHealingReceived: (unit.totalHealingReceived || 0) + healAmount
+                  attackMeter: Math.min(unit.attackMeter, 95) // Cap attack meter at 95% to prevent immediate attacks
                 };
               }
             });
