@@ -222,6 +222,39 @@ const CharacterCard = ({
       default: return 'bg-gradient-to-r from-purple-500 to-pink-500';
     }
   };
+  
+  // Function to generate skill logic text from skill properties
+  const generateSkillLogic = (skill: any): string => {
+    let logic = '';
+    
+    // Damage component
+    if (skill.damage) {
+      logic += `${skill.damage}x Damage to ${skill.targets || 1} Target${skill.targets > 1 ? 's' : ''}`;
+    }
+    
+    // Effect component
+    if (skill.effect) {
+      if (logic) logic += ' and ';
+      logic += `Apply ${skill.effect}`;
+      if (skill.effectStacks) logic += ` (${skill.effectStacks} stacks)`;
+      if (skill.effectChance && skill.effectChance < 100) logic += ` with ${skill.effectChance}% chance`;
+    }
+    
+    // Healing component
+    if (skill.healing) {
+      if (logic) logic += ' and ';
+      logic += `Heal ${skill.healTargets > 1 ? `${skill.healTargets} Party Members` : 
+               skill.healTargets === 'all' ? 'All Party Members' : 
+               '1 Random Party Member'} by ${skill.healing}% of the Caster's Max Health`;
+    }
+    
+    // If we couldn't generate logic, use description as fallback
+    if (!logic && skill.description) {
+      return skill.description;
+    }
+    
+    return logic || 'Attack a single target';
+  };
 
   return (
     <>
@@ -727,10 +760,21 @@ const CharacterCard = ({
                         <h4 className="font-semibold text-sm mb-2 text-[#00B9AE]">Aura Skills</h4>
                         <div className="space-y-2">
                           {auraSkills.length > 0 ? (
-                            auraSkills.map((skill, index) => (
-                              <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
-                                <div className="text-xs font-medium text-[#00B9AE]">{skill.name}</div>
-                                <div className="text-xs text-[#C8B8DB]/80">{skill.description}</div>
+                            auraSkills.map((skill: any, index) => (
+                              <div key={index} className="border-b border-[#432874]/30 pb-3 last:border-b-0 last:pb-0">
+                                <div className="flex justify-between items-center">
+                                  <div className="text-xs font-medium text-[#00B9AE]">{skill.name}</div>
+                                  <div className="text-xs px-2 py-0.5 rounded-full bg-[#432874]/40 text-[#00B9AE]">
+                                    Level {skill.level || 1}
+                                  </div>
+                                </div>
+
+                                {/* Full skill logic */}
+                                <div className="text-xs text-amber-300 mt-1 italic">
+                                  "{skill.logic || generateSkillLogic(skill)}"
+                                </div>
+                                
+                                <div className="text-xs text-[#C8B8DB]/80 mt-1">{skill.description}</div>
                                 
                                 {/* Enhanced skill details */}
                                 <div className="mt-2 text-xs">
