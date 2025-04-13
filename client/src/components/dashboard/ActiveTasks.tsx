@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import CountdownTimer from '../common/CountdownTimer';
 import { Link } from 'wouter';
 import { Grid, Gem, Hammer, User } from 'lucide-react';
@@ -35,16 +36,16 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   const handleCompleteFarmingTask = async (taskId: number) => {
     if (completingTask) return;
     setCompletingTask(taskId);
-    
+
     try {
       const res = await apiRequest('POST', `/api/farming/complete/${taskId}`, undefined);
       const data = await res.json();
-      
+
       toast({
         title: "Farming Complete",
         description: `Gained ${data.amount} ${data.resource}`,
       });
-      
+
       // Refresh farming tasks
       fetchFarmingTasks();
     } catch (error) {
@@ -62,11 +63,11 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   const handleCompleteDungeonRun = async (runId: number) => {
     if (completingTask) return;
     setCompletingTask(runId);
-    
+
     try {
       const res = await apiRequest('POST', `/api/dungeons/complete/${runId}`, undefined);
       const data = await res.json();
-      
+
       toast({
         title: data.success ? "Dungeon Cleared!" : "Dungeon Failed",
         description: data.success 
@@ -74,7 +75,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
           : "Your party had to retreat from the dungeon",
         variant: data.success ? "default" : "destructive",
       });
-      
+
       // Refresh dungeon runs
       fetchDungeonRuns();
     } catch (error) {
@@ -90,20 +91,20 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   };
 
   const [showResultDialog, setShowResultDialog] = useState(false);
-const [completedAura, setCompletedAura] = useState<Aura | null>(null);
+  const [completedAura, setCompletedAura] = useState<Aura | null>(null);
 
-const handleCompleteForging = async (taskId: number) => {
+  const handleCompleteForging = async (taskId: number) => {
     if (completingTask) return;
     setCompletingTask(taskId);
-    
+
     try {
       const res = await apiRequest('POST', `/api/forge/complete/${taskId}`, undefined);
       const data = await res.json();
-      
+
       // Store the completed aura and show dialog
       setCompletedAura(data.aura);
       setShowResultDialog(true);
-      
+
       // Refresh forging tasks
       fetchForgingTasks();
     } catch (error) {
@@ -143,7 +144,7 @@ const handleCompleteForging = async (taskId: number) => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-cinzel font-bold">Active Tasks</h2>
         </div>
-        
+
         <div className="bg-[#2D1B4E]/20 rounded-lg p-8 text-center">
           <p className="text-[#C8B8DB]/80 mb-4">You have no active tasks at the moment.</p>
           <div className="flex flex-wrap gap-2 justify-center">
@@ -183,7 +184,7 @@ const handleCompleteForging = async (taskId: number) => {
           <button className="text-[#FF9D00] text-sm hover:underline">View All</button>
         </Link>
       </div>
-      
+
       <motion.div 
         className="space-y-4"
         variants={container}
@@ -232,13 +233,13 @@ const handleCompleteForging = async (taskId: number) => {
             )}
           </motion.div>
         ))}
-        
+
         {/* Farming Tasks */}
         {activeFarmingTasks.map((task) => {
           // Get the character name if there's a character assigned
           const character = task.characterId ? charactersById[task.characterId] : null;
           const characterName = character ? character.name : 'Unknown';
-          
+
           return (
             <motion.div 
               key={`farming-${task.id}`}
@@ -259,13 +260,13 @@ const handleCompleteForging = async (taskId: number) => {
                   />
                 </div>
               </div>
-              
+
               {/* Display assigned character */}
               <div className="mt-2 text-sm text-[#C8B8DB]/70 flex items-center">
                 <User className="h-3 w-3 mr-1" />
                 <span>Assigned: {characterName}</span>
               </div>
-              
+
               <div className="mt-2">
                 <div className="flex items-center">
                   <img 
@@ -281,7 +282,7 @@ const handleCompleteForging = async (taskId: number) => {
                   </div>
                 </div>
               </div>
-              
+
               {new Date(task.endTime) <= new Date() && (
                 <Button 
                   className="w-full mt-2 bg-[#228B22] hover:bg-[#228B22]/80 text-white"
@@ -294,12 +295,12 @@ const handleCompleteForging = async (taskId: number) => {
             </motion.div>
           );
         })}
-        
+
         {/* Forge Tasks */}
         {activeForgingTasks.map((task) => {
           const startTime = task.startTime ? new Date(task.startTime) : new Date();
           const endTime = task.endTime ? new Date(task.endTime) : new Date();
-          
+
           const taskProgress = Math.min(
             100,
             Math.max(
@@ -309,11 +310,11 @@ const handleCompleteForging = async (taskId: number) => {
                 100
             )
           );
-          
+
           // Get the character name if there's a character assigned
           const character = task.characterId ? charactersById[task.characterId] : null;
           const characterName = character ? character.name : 'Unknown';
-          
+
           return (
             <motion.div 
               key={`forge-${task.id}`}
@@ -338,13 +339,13 @@ const handleCompleteForging = async (taskId: number) => {
                   />
                 </div>
               </div>
-              
+
               {/* Display assigned character */}
               <div className="mt-2 text-sm text-[#C8B8DB]/70 flex items-center">
                 <User className="h-3 w-3 mr-1" />
                 <span>Assigned: {characterName}</span>
               </div>
-              
+
               <div className="mt-2">
                 <Progress value={taskProgress} className="h-2 bg-[#1F1D36] border-[#432874]/20" />
               </div>
@@ -375,7 +376,7 @@ export default ActiveTasks;
               Forging Complete!
             </DialogTitle>
           </DialogHeader>
-          
+
           {completedAura && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
@@ -456,7 +457,7 @@ export default ActiveTasks;
               )}
             </div>
           )}
-          
+
           <DialogFooter>
             <Button 
               onClick={() => setShowResultDialog(false)}
