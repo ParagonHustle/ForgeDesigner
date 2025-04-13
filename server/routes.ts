@@ -1164,12 +1164,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Generate a value between -10 and +10 for each stat
         const generateStatBonus = () => Math.floor(Math.random() * 21) - 10; // -10 to +10
         
-        // Default element if not specified (fire, water, earth, air)
-        const elementType = task.targetElement || ['fire', 'water', 'earth', 'air'][Math.floor(Math.random() * 4)];
+        // Default element if not specified (fire, water, earth, wind)
+        const elementType = task.targetElement || ['fire', 'water', 'earth', 'wind'][Math.floor(Math.random() * 4)];
+        
+        // Get aura name based on element
+        let auraName = '';
+        switch(elementType) {
+          case 'fire': 
+            auraName = 'Inferno\'s Embrace';
+            break;
+          case 'water': 
+            auraName = 'Ocean\'s Mercy';
+            break;
+          case 'earth': 
+            auraName = 'Stoneguard\'s Pact';
+            break;
+          case 'wind': 
+            auraName = 'Zephyr\'s Whisper';
+            break;
+          default:
+            auraName = `${elementType.charAt(0).toUpperCase() + elementType.slice(1)} Aura`;
+        }
+        
+        // Generate skills for the aura based on element
+        // 50% chance of getting either basic skill for the element
+        const skills = [];
+        
+        // Define the basic skills for each element
+        const elementSkills = {
+          fire: [
+            {
+              name: "Ember",
+              type: "Basic",
+              description: "A focused burst of flame latches onto the target, searing over time.",
+              damage: 1.0,
+              level: 1,
+              effect: "10% chance to apply 1 Burn Stack for 1 Turn",
+              targets: 1
+            },
+            {
+              name: "Wildfire",
+              type: "Basic",
+              description: "Unpredictable flames leap across the battlefield in violent bursts.",
+              damage: 0.8,
+              level: 1,
+              effect: "10% chance to hit 1 more target",
+              targets: "2-3 Random"
+            }
+          ],
+          water: [
+            {
+              name: "Soothing Current",
+              type: "Basic",
+              description: "A soft wave crashes through the enemy and flows into an ally.",
+              damage: 0.8,
+              level: 1,
+              effect: "Heal lowest HP Ally for 5% of caster's Max HP",
+              targets: 1
+            },
+            {
+              name: "Cleansing Tide",
+              type: "Basic",
+              description: "Water surges over the battlefield, sweeping away ailing effects.",
+              damage: 0.7,
+              level: 1,
+              effect: "10% chance to remove 1 Debuff from a Random Ally",
+              targets: 1
+            }
+          ],
+          earth: [
+            {
+              name: "Stone Slam",
+              type: "Basic",
+              description: "A hammering blow backed by earth essence dulls the target's edge.",
+              damage: 1.0,
+              level: 1,
+              effect: "20% chance to apply Weakness (-10% Damage Dealt) for 1 Turn",
+              targets: 1
+            },
+            {
+              name: "Dust Spikes",
+              type: "Basic",
+              description: "Fragments of stone erupt from the ground and scatter outward.",
+              damage: 0.9,
+              level: 1,
+              effect: "No special effect at Level 1",
+              targets: "2 Random"
+            }
+          ],
+          wind: [
+            {
+              name: "Gust",
+              type: "Basic",
+              description: "A sharp burst of wind knocks the enemy off balance.",
+              damage: 0.8,
+              level: 1,
+              effect: "10% chance to apply Minor Slow (Speed -20%) for 1 Turn",
+              targets: 1
+            },
+            {
+              name: "Breeze",
+              type: "Basic",
+              description: "A disruptive current slips beneath the target, breaking their momentum.",
+              damage: 0.7,
+              level: 1,
+              effect: "10% chance to reduce Turn Meter by 10%",
+              targets: 1
+            }
+          ]
+        };
+        
+        // 50% chance to get either skill
+        const skillIndex = Math.random() < 0.5 ? 0 : 1;
+        // Use type assertion to handle the element type safely
+        const elementTypeSafe = elementType as keyof typeof elementSkills;
+        if (elementSkills[elementTypeSafe]) {
+          skills.push(elementSkills[elementTypeSafe][skillIndex]);
+        }
         
         const newAura = await storage.createAura({
           userId: req.session.userId!,
-          name: `${elementType} Aura`,
+          name: auraName,
           level: 1,
           element: elementType,
           tier: 1,
@@ -1183,7 +1298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           accuracy: generateStatBonus(),
           fusionSource: false,
           creatorCharacterId: task.characterId,
-          skills: []
+          skills: skills
         });
         
         // Update task
@@ -1251,9 +1366,181 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return Math.max(pStat, sStat);
         };
         
+        // Get aura name based on element (maintain core aura names)
+        let auraName = '';
+        switch(primaryAura.element) {
+          case 'fire': 
+            auraName = 'Inferno\'s Embrace';
+            break;
+          case 'water': 
+            auraName = 'Ocean\'s Mercy';
+            break;
+          case 'earth': 
+            auraName = 'Stoneguard\'s Pact';
+            break;
+          case 'wind': 
+            auraName = 'Zephyr\'s Whisper';
+            break;
+          default:
+            auraName = `Enhanced ${primaryAura.element} Aura`;
+        }
+        
+        // Process skills - chance to upgrade Basic skills to Advanced or Ultimate
+        const processedSkills = [...(primaryAura.skills || [])].map(skill => {
+          // Deep clone the skill
+          const newSkill = {...skill};
+          
+          // Only Basic skills can be upgraded initially
+          if (newSkill.type === 'Basic' && newLevel >= 2) {
+            // 25% chance to upgrade to Advanced at level 2+ (tier 2)
+            if (Math.random() < 0.25) {
+              // Define advanced skills for each element
+              const advancedSkills = {
+                fire: [
+                  {
+                    name: "Flame Whip",
+                    type: "Advanced",
+                    description: "A cracking lash of fire that scorches in a line.",
+                    damage: 1.2,
+                    level: 2,
+                    effect: "25% chance to apply 1 Burn Stack for 2 Turns",
+                    targets: "2-3 in a row"
+                  },
+                  {
+                    name: "Combustion",
+                    type: "Advanced",
+                    description: "Focuses heat into a precise explosion that weakens all defenses.",
+                    damage: 1.3,
+                    level: 2,
+                    effect: "15% chance to apply Defense Down (-20%) for 1 Turn",
+                    targets: 1
+                  }
+                ],
+                water: [
+                  {
+                    name: "Tidal Wave",
+                    type: "Advanced",
+                    description: "A wall of rushing water crashes over multiple enemies.",
+                    damage: 1.1,
+                    level: 2,
+                    effect: "15% chance to Knockback (reduce Turn Meter by 20%)",
+                    targets: "2-3 Random"
+                  },
+                  {
+                    name: "Mist Veil",
+                    type: "Advanced",
+                    description: "A protective fog envelops allies, protecting them from harm.",
+                    damage: 0.7,
+                    level: 2,
+                    effect: "Apply Shield (10% of Caster's Max HP) to lowest HP Ally",
+                    targets: 1
+                  }
+                ],
+                earth: [
+                  {
+                    name: "Fissure",
+                    type: "Advanced",
+                    description: "The ground breaks open beneath the enemy, disrupting their stance.",
+                    damage: 1.3,
+                    level: 2,
+                    effect: "35% chance to apply Stagger (miss next turn)",
+                    targets: 1
+                  },
+                  {
+                    name: "Stone Armor",
+                    type: "Advanced",
+                    description: "Layers of rock form a protective coating around the caster.",
+                    damage: 0.6,
+                    level: 2,
+                    effect: "Self buff: Defense Up (+30%) for 2 Turns",
+                    targets: 1
+                  }
+                ],
+                wind: [
+                  {
+                    name: "Cyclone",
+                    type: "Advanced",
+                    description: "A spinning vortex pulls in multiple enemies and tosses them about.",
+                    damage: 1.0,
+                    level: 2,
+                    effect: "35% chance to apply Confusion (50% chance to attack ally) for 1 Turn",
+                    targets: "2 Random"
+                  },
+                  {
+                    name: "Tailwind",
+                    type: "Advanced",
+                    description: "Favorable winds increase party movement speed.",
+                    damage: 0.6,
+                    level: 2,
+                    effect: "Grant Speed Up (+20%) to all allies for 2 Turns",
+                    targets: "All Allies"
+                  }
+                ]
+              };
+              
+              // Select a random Advanced skill to replace the Basic skill
+              if (advancedSkills[primaryAura.element]) {
+                const randomIndex = Math.floor(Math.random() * advancedSkills[primaryAura.element].length);
+                return advancedSkills[primaryAura.element][randomIndex];
+              }
+            }
+            
+            // Extremely rare 5% chance to upgrade to Ultimate at level 3+ (tier 3)
+            else if (newLevel >= 3 && Math.random() < 0.05) {
+              // Define ultimate skills for each element
+              const ultimateSkills = {
+                fire: {
+                  name: "Supernova",
+                  type: "Ultimate",
+                  description: "All surrounding matter ignites in a cataclysmic blast of energy.",
+                  damage: 1.8,
+                  level: 3,
+                  effect: "Apply Burn (5% HP damage per turn) to all enemies for 2 Turns",
+                  targets: "All Enemies"
+                },
+                water: {
+                  name: "Abyssal Depths",
+                  type: "Ultimate",
+                  description: "The crushing pressure of the deep ocean consumes all enemies.",
+                  damage: 1.5,
+                  level: 3,
+                  effect: "Apply Slow (speed -40%) to all enemies for 2 Turns",
+                  targets: "All Enemies"
+                },
+                earth: {
+                  name: "Tectonic Shift",
+                  type: "Ultimate",
+                  description: "The battlefield fractures as massive stone pillars erupt from below.",
+                  damage: 1.7,
+                  level: 3,
+                  effect: "50% chance to Stun each enemy for 1 Turn",
+                  targets: "All Enemies"
+                },
+                wind: {
+                  name: "Hurricane",
+                  type: "Ultimate",
+                  description: "A devastating storm tears through the battlefield with unmatched fury.",
+                  damage: 1.6,
+                  level: 3,
+                  effect: "Reduce Turn Meter of all enemies by 30%",
+                  targets: "All Enemies"
+                }
+              };
+              
+              // Return the Ultimate skill for this element
+              if (ultimateSkills[primaryAura.element]) {
+                return ultimateSkills[primaryAura.element];
+              }
+            }
+          }
+          
+          // Return the original skill if no upgrade happened
+          return newSkill;
+        });
+        
         const resultAura = await storage.createAura({
           userId: req.session.userId!,
-          name: `Enhanced ${primaryAura.element} Aura`,
+          name: auraName,
           level: newLevel,
           element: primaryAura.element,
           tier: primaryAura.tier !== null ? primaryAura.tier + 1 : 2,
@@ -1268,14 +1555,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Record fusion source for display in aura details
           fusionSource: true,
           creatorCharacterId: task.characterId,
-          skills: [...(primaryAura.skills || [])]
+          skills: processedSkills
         });
         
-        // 30% chance to transfer a skill from secondary aura
+        // 30% chance to transfer a skill from secondary aura if they're not the same skills
         if (secondaryAura.skills && secondaryAura.skills.length > 0 && Math.random() < 0.3) {
-          const randomSkill = secondaryAura.skills[Math.floor(Math.random() * secondaryAura.skills.length)];
-          resultAura.skills = [...resultAura.skills, randomSkill];
-          await storage.updateAura(resultAura.id, { skills: resultAura.skills });
+          // Find a skill from the secondary aura that isn't already in the result aura
+          const availableSkills = secondaryAura.skills.filter(secondarySkill => 
+            !resultAura.skills.some(resultSkill => resultSkill.name === secondarySkill.name)
+          );
+          
+          if (availableSkills.length > 0) {
+            const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+            resultAura.skills = [...resultAura.skills, randomSkill];
+            await storage.updateAura(resultAura.id, { skills: resultAura.skills });
+          }
         }
         
         // Delete source auras
