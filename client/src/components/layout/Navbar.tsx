@@ -52,13 +52,13 @@ const Navbar = () => {
   };
 
   const activityTimers = getActivityTimers();
-  
+
   return (
     <nav className="bg-[#1A1A2E] border-b border-[#432874]/50 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
       <div className="flex items-center">
         <div className="text-2xl font-cinzel font-bold text-[#FF9D00] mr-2">The Forge</div>
         <span className="bg-[#00B9AE]/20 text-[#00B9AE] text-xs px-2 py-0.5 rounded">Alpha v0.1</span>
-        
+
         {/* Activity Timer Tags */}
         <div className="ml-4 flex gap-2">
           {Object.entries(activityTimers).map(([type, data]) => {
@@ -94,7 +94,7 @@ const Navbar = () => {
             );
           })}
         </div>
-        
+
         {speedBoostActive && (
           <div className="ml-2 flex items-center bg-[#FF9D00]/20 text-[#FF9D00] text-xs px-2 py-0.5 rounded animate-pulse">
             <Zap className="h-3 w-3 mr-1" />
@@ -102,7 +102,7 @@ const Navbar = () => {
           </div>
         )}
       </div>
-      
+
       <div className="flex items-center space-x-4">
         {/* Resources Display */}
         <div className="hidden md:flex items-center space-x-3">
@@ -123,7 +123,7 @@ const Navbar = () => {
             <span>{rogueCredits}</span>
           </div>
         </div>
-        
+
         {/* User Profile */}
         <div className="relative group">
           <div className="flex items-center bg-[#432874]/30 rounded-full px-3 py-1.5 cursor-pointer">
@@ -134,7 +134,7 @@ const Navbar = () => {
             />
             <span className="ml-2 text-sm hidden md:block">{user?.username || "ForgeHero"}</span>
           </div>
-          
+
           {/* Dropdown menu */}
           <div className="absolute right-0 mt-2 w-48 bg-[#1A1A2E] border border-[#432874]/50 rounded-lg shadow-lg overflow-hidden transform scale-0 group-hover:scale-100 transition-transform origin-top-right">
             <div className="p-2">
