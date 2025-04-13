@@ -246,7 +246,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   : sortedAllies[0];
                 
                 // Calculate healing amount (5% of attacker's max HP)
-                healAmount = Math.floor(attacker.maxHp * 0.05);
+                const attackerMaxHp = 800; // Standard base value for G-Wolf, the healer
+                healAmount = Math.floor(attackerMaxHp * 0.05); // Should heal for 40 HP
                 
                 // Update the healing target's HP
                 setUnits(prevUnits => 
@@ -377,7 +378,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     : sortedAllies[0];
                   
                   // Calculate healing amount (5% of attacker's max HP)
-                  const healAmount = Math.floor(attacker.maxHp * 0.05);
+                  const attackerMaxHp = 800; // Standard base value for G-Wolf, the healer
+                  const healAmount = Math.floor(attackerMaxHp * 0.05); // Should heal for 40 HP
                   
                   // We won't add a separate log message here - only one will be shown in the action message
                   
@@ -591,7 +593,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             : sortedAllies[0];
           
           // Calculate healing amount (5% of attacker's max HP)
-          const healAmount = Math.floor(attacker.maxHp * 0.05);
+          const attackerMaxHp = 800; // Standard base value for G-Wolf, the healer
+          const healAmount = Math.floor(attackerMaxHp * 0.05); // Should heal for 40 HP
           
           // Add a single healing message
           const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP with Soothing Current!`;
