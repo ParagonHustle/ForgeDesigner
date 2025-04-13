@@ -431,23 +431,65 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
 
           <div className="mt-4 pt-3 border-t border-[#432874]/30 flex justify-between items-center">
             {character.equippedAuraId ? (
-              <div className="flex items-center text-xs">
-                <div className={`w-4 h-4 rounded-full mr-1 ${
-                  (aura || equippedAura)?.element === 'fire' ? 'bg-gradient-to-r from-red-500 to-orange-500' 
-                  : (aura || equippedAura)?.element === 'water' ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                  : (aura || equippedAura)?.element === 'earth' ? 'bg-gradient-to-r from-green-500 to-lime-500' 
-                  : (aura || equippedAura)?.element === 'wind' ? 'bg-gradient-to-r from-sky-500 to-cyan-500'
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                }`}></div>
-                <span className="text-[#00B9AE]">
-                  {(aura || equippedAura) ? (
-                    (aura?.name || equippedAura?.name) && (aura?.name?.trim() !== '' || equippedAura?.name?.trim() !== '') ? 
-                      `${aura?.name || equippedAura?.name} (Lv.${(aura || equippedAura)?.level || 1})` : 
-                      (aura || equippedAura)?.element ? 
-                        `${(aura || equippedAura)?.element.charAt(0).toUpperCase()}${(aura || equippedAura)?.element.slice(1)} Aura (Lv.${(aura || equippedAura)?.level || 1})` : 
-                        `Mysterious Aura (Lv.${(aura || equippedAura)?.level || 1})`
-                  ) : 'Loading...'}
-                </span>
+              <div className="flex flex-col text-xs">
+                <div className="flex items-center">
+                  <div className={`w-4 h-4 rounded-full mr-1 ${
+                    (aura || equippedAura)?.element === 'fire' ? 'bg-gradient-to-r from-red-500 to-orange-500' 
+                    : (aura || equippedAura)?.element === 'water' ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                    : (aura || equippedAura)?.element === 'earth' ? 'bg-gradient-to-r from-green-500 to-lime-500' 
+                    : (aura || equippedAura)?.element === 'wind' ? 'bg-gradient-to-r from-sky-500 to-cyan-500'
+                    : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                  }`}></div>
+                  <span className="text-[#00B9AE]">
+                    {(aura || equippedAura) ? (
+                      (aura?.name || equippedAura?.name) && (aura?.name?.trim() !== '' || equippedAura?.name?.trim() !== '') ? 
+                        `${aura?.name || equippedAura?.name} (Lv.${(aura || equippedAura)?.level || 1})` : 
+                        (aura || equippedAura)?.element ? 
+                          `${(aura || equippedAura)?.element.charAt(0).toUpperCase()}${(aura || equippedAura)?.element.slice(1)} Aura (Lv.${(aura || equippedAura)?.level || 1})` : 
+                          `Mysterious Aura (Lv.${(aura || equippedAura)?.level || 1})`
+                    ) : 'Loading...'}
+                  </span>
+                </div>
+                
+                {/* Aura Bonuses Line */}
+                {(aura || equippedAura) && (
+                  <div className="flex flex-wrap gap-x-2 mt-1">
+                    {/* Attack Bonus */}
+                    {((aura?.attack !== null && aura?.attack !== undefined && aura?.attack !== 0) ||
+                     (equippedAura?.attack !== null && equippedAura?.attack !== undefined && equippedAura?.attack !== 0)) && (
+                      <span className={(aura?.attack || equippedAura?.attack || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                        ATK: {(aura?.attack || equippedAura?.attack || 0) > 0 ? "+" : ""}{aura?.attack || equippedAura?.attack || 0}%
+                      </span>
+                    )}
+                    
+                    {/* Defense Bonus */}
+                    {((aura?.defense !== null && aura?.defense !== undefined && aura?.defense !== 0) ||
+                     (equippedAura?.defense !== null && equippedAura?.defense !== undefined && equippedAura?.defense !== 0)) && (
+                      <span className={(aura?.defense || equippedAura?.defense || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                        DEF: {(aura?.defense || equippedAura?.defense || 0) > 0 ? "+" : ""}{aura?.defense || equippedAura?.defense || 0}%
+                      </span>
+                    )}
+                    
+                    {/* Speed Bonus */}
+                    {((aura?.speed !== null && aura?.speed !== undefined && aura?.speed !== 0) ||
+                     (equippedAura?.speed !== null && equippedAura?.speed !== undefined && equippedAura?.speed !== 0)) && (
+                      <span className={(aura?.speed || equippedAura?.speed || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                        SPD: {(aura?.speed || equippedAura?.speed || 0) > 0 ? "+" : ""}{aura?.speed || equippedAura?.speed || 0}%
+                      </span>
+                    )}
+                    
+                    {/* Other bonuses could be added here */}
+                    {/* If no bonuses, show a placeholder */}
+                    {!(((aura?.attack !== null && aura?.attack !== undefined && aura?.attack !== 0) ||
+                       (equippedAura?.attack !== null && equippedAura?.attack !== undefined && equippedAura?.attack !== 0)) || 
+                      ((aura?.defense !== null && aura?.defense !== undefined && aura?.defense !== 0) ||
+                       (equippedAura?.defense !== null && equippedAura?.defense !== undefined && equippedAura?.defense !== 0)) ||
+                      ((aura?.speed !== null && aura?.speed !== undefined && aura?.speed !== 0) ||
+                       (equippedAura?.speed !== null && equippedAura?.speed !== undefined && equippedAura?.speed !== 0))) && (
+                      <span className="text-[#C8B8DB]/60">No stat bonuses</span>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-xs text-[#C8B8DB]/60">No Aura Equipped</div>
@@ -772,26 +814,105 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                   <div className="bg-[#432874]/20 rounded-lg p-3">
                     <h4 className="font-semibold mb-2 text-[#C8B8DB]">Equipped Aura</h4>
                     {character.equippedAuraId ? (
-                      <div className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${getAuraElementClass((aura || equippedAura)?.element)}`}>
-                          {(aura || equippedAura) && getElementIcon((aura || equippedAura)?.element)}
-                        </div>
-                        <div>
-                          <div className="text-sm text-[#00B9AE]">
-                            {character.equippedAuraId 
-                              ? ((aura || equippedAura) ? (
-                                (aura?.name || equippedAura?.name) && ((aura?.name?.trim() !== '' || equippedAura?.name?.trim() !== '')) 
-                                  ? (aura?.name || equippedAura?.name) 
-                                  : (aura || equippedAura)?.element 
-                                    ? `${(aura || equippedAura)?.element.charAt(0).toUpperCase()}${(aura || equippedAura)?.element.slice(1)} Aura` 
-                                    : 'Mysterious Aura'
-                              ) : 'Loading Aura...')
-                              : 'No Aura'}
+                      <div>
+                        <div className="flex items-center mb-2">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${getAuraElementClass((aura || equippedAura)?.element)}`}>
+                            {(aura || equippedAura) && getElementIcon((aura || equippedAura)?.element)}
                           </div>
-                          <div className="text-xs text-[#C8B8DB]/60">
-                            {(aura || equippedAura) ? `Level ${(aura || equippedAura)?.level || 1} • Tier ${(aura || equippedAura)?.tier || 1}` : character.equippedAuraId ? 'Loading...' : ''}
+                          <div>
+                            <div className="text-sm text-[#00B9AE]">
+                              {character.equippedAuraId 
+                                ? ((aura || equippedAura) ? (
+                                  (aura?.name || equippedAura?.name) && ((aura?.name?.trim() !== '' || equippedAura?.name?.trim() !== '')) 
+                                    ? (aura?.name || equippedAura?.name) 
+                                    : (aura || equippedAura)?.element 
+                                      ? `${(aura || equippedAura)?.element.charAt(0).toUpperCase()}${(aura || equippedAura)?.element.slice(1)} Aura` 
+                                      : 'Mysterious Aura'
+                                ) : 'Loading Aura...')
+                                : 'No Aura'}
+                            </div>
+                            <div className="text-xs text-[#C8B8DB]/60">
+                              {(aura || equippedAura) ? `Level ${(aura || equippedAura)?.level || 1} • Tier ${(aura || equippedAura)?.tier || 1}` : character.equippedAuraId ? 'Loading...' : ''}
+                            </div>
                           </div>
                         </div>
+                        
+                        {/* Aura Skills Display */}
+                        {(aura || equippedAura) && (aura?.skills || equippedAura?.skills) && (
+                          <div className="mt-2 border-t border-[#432874]/30 pt-2">
+                            <div className="text-xs font-medium text-[#00B9AE] mb-1">Skills:</div>
+                            <div className="space-y-2">
+                              {/* Basic Skill */}
+                              {((aura?.skills?.basic && Object.keys(aura.skills.basic).length > 0) || 
+                                (equippedAura?.skills?.basic && Object.keys(equippedAura.skills.basic).length > 0)) && (
+                                <div className="text-xs">
+                                  <span className="text-yellow-400">Basic:</span>{" "}
+                                  <span className="text-[#C8B8DB]">
+                                    {aura?.skills?.basic?.name || equippedAura?.skills?.basic?.name || "Unknown Skill"}
+                                  </span>
+                                  {(aura?.skills?.basic?.damage || equippedAura?.skills?.basic?.damage) && (
+                                    <span className="text-red-400 ml-1">
+                                      (Damage: {aura?.skills?.basic?.damage || equippedAura?.skills?.basic?.damage})
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Advanced Skill */}
+                              {((aura?.skills?.advanced && Object.keys(aura.skills.advanced).length > 0) || 
+                                (equippedAura?.skills?.advanced && Object.keys(equippedAura.skills.advanced).length > 0)) && (
+                                <div className="text-xs">
+                                  <span className="text-purple-400">Advanced:</span>{" "}
+                                  <span className="text-[#C8B8DB]">
+                                    {aura?.skills?.advanced?.name || equippedAura?.skills?.advanced?.name || "Unknown Skill"}
+                                  </span>
+                                  {(aura?.skills?.advanced?.damage || equippedAura?.skills?.advanced?.damage) && (
+                                    <span className="text-red-400 ml-1">
+                                      (Damage: {aura?.skills?.advanced?.damage || equippedAura?.skills?.advanced?.damage})
+                                    </span>
+                                  )}
+                                  {(aura?.skills?.advanced?.cooldown || equippedAura?.skills?.advanced?.cooldown) && (
+                                    <span className="text-blue-400 ml-1">
+                                      CD: {aura?.skills?.advanced?.cooldown || equippedAura?.skills?.advanced?.cooldown}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Ultimate Skill */}
+                              {((aura?.skills?.ultimate && Object.keys(aura.skills.ultimate).length > 0) || 
+                                (equippedAura?.skills?.ultimate && Object.keys(equippedAura.skills.ultimate).length > 0)) && (
+                                <div className="text-xs">
+                                  <span className="text-orange-400">Ultimate:</span>{" "}
+                                  <span className="text-[#C8B8DB]">
+                                    {aura?.skills?.ultimate?.name || equippedAura?.skills?.ultimate?.name || "Unknown Skill"}
+                                  </span>
+                                  {(aura?.skills?.ultimate?.damage || equippedAura?.skills?.ultimate?.damage) && (
+                                    <span className="text-red-400 ml-1">
+                                      (Damage: {aura?.skills?.ultimate?.damage || equippedAura?.skills?.ultimate?.damage})
+                                    </span>
+                                  )}
+                                  {(aura?.skills?.ultimate?.cooldown || equippedAura?.skills?.ultimate?.cooldown) && (
+                                    <span className="text-blue-400 ml-1">
+                                      CD: {aura?.skills?.ultimate?.cooldown || equippedAura?.skills?.ultimate?.cooldown}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* If no skills found */}
+                              {(!aura?.skills && !equippedAura?.skills) || 
+                               ((!aura?.skills?.basic || Object.keys(aura?.skills?.basic || {}).length === 0) && 
+                                (!equippedAura?.skills?.basic || Object.keys(equippedAura?.skills?.basic || {}).length === 0) &&
+                                (!aura?.skills?.advanced || Object.keys(aura?.skills?.advanced || {}).length === 0) && 
+                                (!equippedAura?.skills?.advanced || Object.keys(equippedAura?.skills?.advanced || {}).length === 0) &&
+                                (!aura?.skills?.ultimate || Object.keys(aura?.skills?.ultimate || {}).length === 0) && 
+                                (!equippedAura?.skills?.ultimate || Object.keys(equippedAura?.skills?.ultimate || {}).length === 0)) && (
+                                <div className="text-xs text-[#C8B8DB]/60">No skills available</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="text-sm text-[#C8B8DB]/60">No Aura Equipped</div>
