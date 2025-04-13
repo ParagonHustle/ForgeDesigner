@@ -717,10 +717,12 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                         </div>
                         <div>
                           <div className="text-sm text-[#00B9AE]">
-                            {aura?.name || 'No Aura'}
+                            {character.equippedAuraId 
+                              ? (aura ? aura.name : 'Loading Aura...')
+                              : 'No Aura'}
                           </div>
                           <div className="text-xs text-[#C8B8DB]/60">
-                            {aura ? `Level ${aura.level || 1} • Tier ${aura.tier || 1}` : 'Loading...'}
+                            {aura ? `Level ${aura.level || 1} • Tier ${aura.tier || 1}` : character.equippedAuraId ? 'Loading...' : ''}
                           </div>
                         </div>
                       </div>
