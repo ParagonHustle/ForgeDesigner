@@ -473,7 +473,14 @@ const InventoryView = () => {
               animate="show"
             >
               {filteredCharacters.map((character) => (
-                <CharacterCard key={character.id} character={character} />
+                <CharacterCard 
+                  key={character.id} 
+                  character={character} 
+                  availableAuras={auras || []}
+                  allAuras={auras || []}
+                  refetchAura={() => refetch()}
+                  refetchAllAuras={() => refetch()}
+                />
               ))}
             </motion.div>
           )}

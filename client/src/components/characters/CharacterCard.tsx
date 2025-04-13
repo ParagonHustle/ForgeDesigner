@@ -97,9 +97,11 @@ const CharacterCard = ({
     }
   };
 
-  const unequippedAuras = availableAuras
-    .filter(a => !a.equippedByCharacterId && !a.isFusing)
-    .sort((a, b) => (b.level || 0) - (a.level || 0));
+  const unequippedAuras = availableAuras 
+    ? availableAuras
+        .filter(a => !a.equippedByCharacterId && !a.isFusing)
+        .sort((a, b) => (b.level || 0) - (a.level || 0))
+    : [];
 
   // Function to equip an aura to the character
   const equipAura = async () => {
