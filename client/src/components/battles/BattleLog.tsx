@@ -712,7 +712,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     
     const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
 
-    setActionLog(prev => [actionMessage]);
+    setActionLog(prev => [actionMessage, ...prev]);
 
     // First apply damage to the target
     setUnits(prevUnits => {
@@ -722,7 +722,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           
           // Check if target is defeated
           if (newHp <= 0 && u.hp > 0) {
-            setActionLog(prev => [`${target.name} has been defeated!`]);
+            setActionLog(prev => [`${target.name} has been defeated!`, ...prev]);
           }
           
           // Preserve status effects that were just added to the target
@@ -781,7 +781,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           
           // Add a single healing message
           const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP with Soothing Current!`;
-          setActionLog(prev => [healMessage]);
+          setActionLog(prev => [healMessage, ...prev]);
           
           // Apply healing
           return updatedUnits.map(u => {
