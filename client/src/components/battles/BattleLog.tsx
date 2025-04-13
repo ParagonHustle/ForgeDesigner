@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -96,10 +95,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   }, [isPaused, playbackSpeed, isComplete]);
 
   const selectTarget = (attacker: BattleUnit, allUnits: BattleUnit[]) => {
-    const isAlly = battleLog[0].allies.some(a => a.id === attacker.id);
-    const possibleTargets = allUnits.filter(u => 
-      u.hp > 0 && 
-      (isAlly ? battleLog[0].enemies.some(e => e.id === u.id) : battleLog[0].allies.some(a => a.id === u.id))
+    // Get first log entry that has allies defined
+    const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+    const isAlly = battleEntry?.allies?.some(a => a.id === attacker.id) || false;
+
+    const possibleTargets = allUnits.filter(u =>
+      u.hp > 0 &&
+      (isAlly ? battleEntry?.enemies?.some(e => e.id === u.id) : battleEntry?.allies?.some(a => a.id === u.id))
     );
     return possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
   };
@@ -121,10 +123,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Calculate damage based on attacker's attack stat
     const damage = Math.floor(skill.damage * (attacker.stats.attack / 100));
     const actionMessage = `${attacker.name} used ${skill.name} (${skillType}) on ${target.name} for ${damage} damage!`;
-    
+
     setActionLog(prev => [...prev, actionMessage]);
 
-    setUnits(prevUnits => 
+    setUnits(prevUnits =>
       prevUnits.map(u => {
         if (u.id === target.id) {
           const newHp = Math.max(0, u.hp - damage);
@@ -149,8 +151,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   };
 
   const checkBattleEnd = () => {
-    const allies = units.filter(u => battleLog[0].allies.some(a => a.id === u.id));
-    const enemies = units.filter(u => battleLog[0].enemies.some(e => e.id === u.id));
+    const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+    const allies = units.filter(u => battleEntry?.allies.some(a => a.id === u.id));
+    const enemies = units.filter(u => battleEntry?.enemies.some(e => e.id === u.id));
 
     const allAlliesDefeated = allies.every(a => a.hp <= 0);
     const allEnemiesDefeated = enemies.every(e => e.hp <= 0);
@@ -224,7 +227,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <h3 className="font-semibold">Allies</h3>
-                {units.filter(u => battleLog[0].allies.some(a => a.id === u.id)).map(unit => (
+                {units.filter(u => battleLog[0]?.allies?.some(a => a.id === u.id)).map(unit => (
                   <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
                     <div className="flex justify-between">
                       <span>{unit.name}</span>
@@ -249,7 +252,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
               <div className="space-y-2">
                 <h3 className="font-semibold">Enemies</h3>
-                {units.filter(u => battleLog[0].enemies.some(e => e.id === u.id)).map(unit => (
+                {units.filter(u => battleLog[0]?.enemies?.some(e => e.id === u.id)).map(unit => (
                   <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
                     <div className="flex justify-between">
                       <span>{unit.name}</span>
@@ -304,7 +307,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
         <DialogFooter>
           {isComplete ? (
-            <Button 
+            <Button
               className="bg-[#FF9D00] hover:bg-[#FF9D00]/80"
               onClick={() => {
                 if (runId && onCompleteDungeon) {
