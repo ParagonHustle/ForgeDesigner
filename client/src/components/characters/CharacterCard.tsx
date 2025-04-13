@@ -115,22 +115,44 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
 
     setIsEquipping(true);
     try {
-      await apiRequest('POST', `/api/characters/${character.id}/equip-aura/${selectedAuraId}`);
-
-      // Force immediate refresh of data
+      const response = await apiRequest('POST', `/api/characters/${character.id}/equip-aura/${selectedAuraId}`);
+      console.log("Equip aura response:", response);
+      
+      // Update character in place with the new equippedAuraId
+      // This ensures we don't have to wait for the query invalidation
+      character.equippedAuraId = selectedAuraId;
+      
+      // Force immediate refresh of ALL related data
       queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auras'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/auras/${selectedAuraId}`] });
+      queryClient.refetchQueries({ queryKey: ['/api/characters'] });
+      queryClient.refetchQueries({ queryKey: ['/api/auras'] });
       
-      // Force a specific refetch for this character's new aura
-      // This ensures we get fresh data immediately
-      if (refetchAura) {
-        setTimeout(() => {
-          refetchAura();
-          refetchAllAuras();
-          console.log("Forced refetch of aura data after equipping");
-        }, 300); // Small delay to ensure backend has processed the change
-      }
+      // We also need to directly refetch the specific aura data
+      if (refetchAura) refetchAura();
+      if (refetchAllAuras) refetchAllAuras();
+      
+      // Force fetch for the newly equipped aura
+      queryClient.fetchQuery({ 
+        queryKey: [`/api/auras/${selectedAuraId}`]
+      });
+      
+      // Wait a moment and then perform a second round of refreshes
+      // This handles any potential race conditions
+      setTimeout(() => {
+        if (refetchAura) refetchAura();
+        if (refetchAllAuras) refetchAllAuras();
+        queryClient.refetchQueries({ queryKey: ['/api/characters'] });
+        console.log("Completed second round of data refreshes");
+        
+        // Create a simulated cache update for immediate UI feedback
+        // This makes the UI show the new aura right away
+        const auraToEquip = allAuras.find(a => a.id === selectedAuraId);
+        if (auraToEquip) {
+          console.log("Using cached aura data for immediate display:", auraToEquip);
+          queryClient.setQueryData([`/api/auras/${selectedAuraId}`], auraToEquip);
+        }
+      }, 500);
 
       toast({
         title: "Aura equipped",
