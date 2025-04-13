@@ -478,8 +478,9 @@ const InventoryView = () => {
                   character={character} 
                   availableAuras={auras || []}
                   allAuras={auras || []}
-                  refetchAura={() => refetch()}
-                  refetchAllAuras={() => refetch()}
+                  refetchAura={() => fetchAuras()}
+                  refetchAllAuras={() => fetchAuras()}
+                  equippedAura={auras.find(aura => aura.id === character.equippedAuraId)}
                 />
               ))}
             </motion.div>

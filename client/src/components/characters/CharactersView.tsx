@@ -11,13 +11,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 
 const CharactersView = () => {
-  const { data: characters = [], isLoading } = useQuery<Character[]>({ 
+  const { data: characters = [], isLoading: loadingCharacters, refetch: refetchCharacters } = useQuery<Character[]>({ 
     queryKey: ['/api/characters']
   });
+  const { data: auras = [], isLoading: loadingAuras, refetch: refetchAuras } = useQuery<Aura[]>({ 
+    queryKey: ['/api/auras']
+  });
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const { toast } = useToast();
+  
+  const isLoading = loadingCharacters || loadingAuras;
 
   const filteredCharacters = characters.filter(character => {
     // Apply search filter
@@ -195,7 +201,15 @@ const CharactersView = () => {
           animate="show"
         >
           {filteredCharacters.map((character) => (
-            <CharacterCard key={character.id} character={character} />
+            <CharacterCard 
+              key={character.id} 
+              character={character} 
+              availableAuras={auras}
+              allAuras={auras}
+              refetchAura={() => refetchAuras()}
+              refetchAllAuras={() => refetchAuras()}
+              equippedAura={auras.find(aura => aura.id === character.equippedAuraId)}
+            />
           ))}
         </motion.div>
       )}
