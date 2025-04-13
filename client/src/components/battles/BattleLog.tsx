@@ -73,17 +73,29 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   // Initialize battle units
   useEffect(() => {
     if (battleLog && battleLog.length > 0) {
-      const initialUnits = [...battleLog[0].allies, ...battleLog[0].enemies].map(unit => ({
-        ...unit,
-        attackMeter: 0,
-        lastSkillUse: 0,
-        totalDamageDealt: 0,
-        totalDamageReceived: 0,
-        totalHealingDone: 0,
-        totalHealingReceived: 0,
-        hp: unit.stats.vitality * 8,
-        maxHp: unit.stats.vitality * 8
-      }));
+      const initialUnits = [...battleLog[0].allies, ...battleLog[0].enemies].map(unit => {
+        // Calculate vitality with aura bonus if available
+        let vitalityStat = unit.stats.vitality;
+        if (unit.auraBonus?.vitality) {
+          // Apply percentage bonus from aura
+          vitalityStat = Math.floor(vitalityStat * (1 + unit.auraBonus.vitality / 100));
+        }
+        
+        // Calculate HP based on adjusted vitality
+        const hpValue = vitalityStat * 8;
+        
+        return {
+          ...unit,
+          attackMeter: 0,
+          lastSkillUse: 0,
+          totalDamageDealt: 0,
+          totalDamageReceived: 0,
+          totalHealingDone: 0,
+          totalHealingReceived: 0,
+          hp: hpValue,
+          maxHp: hpValue
+        };
+      });
       setUnits(initialUnits);
     }
   }, [battleLog]);
@@ -248,7 +260,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             }
             
             // Update attack meter based on speed (120 speed = 3x faster than 40 speed)
-            const meterIncrease = (unit.stats.speed / 40) * playbackSpeed;
+            // Apply aura speed bonus if available
+            let speedValue = unit.stats.speed;
+            if (unit.auraBonus?.speed) {
+              // Apply percentage bonus from aura
+              speedValue = Math.floor(speedValue * (1 + unit.auraBonus.speed / 100));
+            }
+            
+            const meterIncrease = (speedValue / 40) * playbackSpeed;
             let newMeter = updatedUnits[i].attackMeter + meterIncrease;
 
             // If meter is full, find a target and add to attack queue
