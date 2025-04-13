@@ -229,9 +229,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             let healAmount = 0;
             
             if (skill.name === "Soothing Current") {
-              // Find ally with lowest HP
+              // Find ally with lowest HP (only consider living allies)
               const allies = units.filter(u => 
-                battleLog[0]?.allies?.some((a: any) => a.id === u.id)
+                battleLog[0]?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
               );
               
               if (allies.length > 0) {
