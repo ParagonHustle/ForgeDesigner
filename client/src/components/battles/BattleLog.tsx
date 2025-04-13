@@ -44,6 +44,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [units, setUnits] = useState<BattleUnit[]>([]);
   const [actionLog, setActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
+  
+  // Function to handle changing the playback speed
+  const handleSpeedChange = (newSpeed: number) => {
+    setPlaybackSpeed(newSpeed);
+  };
 
   // Initialize battle units
   useEffect(() => {
@@ -80,29 +85,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             let newMeter = unit.attackMeter + meterIncrease;
 
             if (newMeter >= 100) {
-              // Reset meter and perform attack
+              // Reset meter
               newMeter = 0;
+              
+              // Find a target and perform attack action using the dedicated function
               const target = selectTarget(unit, updatedUnits);
               if (target) {
-                // Select skill based on cooldowns
-                const availableSkills = [unit.skills.basic];
-                if (unit.skills.advanced) availableSkills.push(unit.skills.advanced);
-                if (unit.skills.ultimate) availableSkills.push(unit.skills.ultimate);
-                
-                const selectedSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
-                const damage = Math.floor(selectedSkill.damage * (unit.stats.attack / 100));
-                
-                target.hp = Math.max(0, target.hp - damage);
-                unit.totalDamageDealt += damage;
-                target.totalDamageReceived += damage;
-
-                const actionMessage = `${unit.name} used ${selectedSkill.name} on ${target.name} for ${damage} damage!`;
-                setActionLog(prev => [...prev, actionMessage]);
-
-                if (target.hp <= 0) {
-                  setActionLog(prev => [...prev, `${target.name} has been defeated!`]);
-                  checkBattleEnd();
-                }
+                // Call the performAction function which handles skill selection and damage
+                performAction(unit, target);
               }
             }
 
@@ -122,11 +112,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const selectTarget = (attacker: BattleUnit, allUnits: BattleUnit[]) => {
     // Get first log entry that has allies defined
     const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-    const isAlly = battleEntry?.allies?.some(a => a.id === attacker.id) || false;
+    const isAlly = battleEntry?.allies?.some((a: any) => a.id === attacker.id) || false;
 
     const possibleTargets = allUnits.filter(u =>
       u.hp > 0 &&
-      (isAlly ? battleEntry?.enemies?.some(e => e.id === u.id) : battleEntry?.allies?.some(a => a.id === u.id))
+      (isAlly ? battleEntry?.enemies?.some((e: any) => e.id === u.id) : battleEntry?.allies?.some((a: any) => a.id === u.id))
     );
     return possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
   };
@@ -177,11 +167,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
   const checkBattleEnd = () => {
     const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-    const allies = units.filter(u => battleEntry?.allies.some(a => a.id === u.id));
-    const enemies = units.filter(u => battleEntry?.enemies.some(e => e.id === u.id));
+    const allies = units.filter(u => battleEntry?.allies.some((a: any) => a.id === u.id));
+    const enemies = units.filter(u => battleEntry?.enemies.some((e: any) => e.id === u.id));
 
-    const allAlliesDefeated = allies.every(a => a.hp <= 0);
-    const allEnemiesDefeated = enemies.every(e => e.hp <= 0);
+    const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
+    const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
 
     if (allAlliesDefeated || allEnemiesDefeated) {
       setIsComplete(true);
