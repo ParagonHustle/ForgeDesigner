@@ -378,14 +378,21 @@ const DungeonView = () => {
                   <div>
                     <h3 className="text-sm font-bold mb-2">Select Party Members (Up to 4)</h3>
                     <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
-                      {characters.map(character => {
-                        const isInDungeon = character.isActive && character.activityType === 'dungeon';
-                        const isInForge = character.isActive && character.activityType === 'forging';
-                        const isInFarming = character.isActive && character.activityType === 'farming';
-                        const hasNoAura = !character.equippedAuraId;
-                        const isUnavailable = isInDungeon || isInForge || isInFarming || hasNoAura;
+                      {characters
+                        .sort((a, b) => {
+                          // Sort function to put available characters first
+                          const aUnavailable = (a.isActive && (a.activityType === 'dungeon' || a.activityType === 'forging' || a.activityType === 'farming')) || !a.equippedAuraId;
+                          const bUnavailable = (b.isActive && (b.activityType === 'dungeon' || b.activityType === 'forging' || b.activityType === 'farming')) || !b.equippedAuraId;
+                          return Number(aUnavailable) - Number(bUnavailable);
+                        })
+                        .map(character => {
+                          const isInDungeon = character.isActive && character.activityType === 'dungeon';
+                          const isInForge = character.isActive && character.activityType === 'forging';
+                          const isInFarming = character.isActive && character.activityType === 'farming';
+                          const hasNoAura = !character.equippedAuraId;
+                          const isUnavailable = isInDungeon || isInForge || isInFarming || hasNoAura;
 
-                        return (
+                          return (
                           <div 
                             key={character.id}
                             className={`flex items-center p-2 rounded-md border ${
@@ -397,13 +404,90 @@ const DungeonView = () => {
                             }`}
                             onClick={() => !isUnavailable && toggleCharacterSelection(character.id)}
                           >
-                            {isUnavailable && (
-                              <div className="absolute right-2 top-2">
+                            <div className="absolute right-2 top-2 flex items-center gap-2">
+                              {isUnavailable ? (
                                 <Badge variant="outline" className="bg-red-900/20 text-red-400 border-red-500/30">
                                   {hasNoAura ? 'No Aura' : character.activityType}
                                 </Badge>
-                              </div>
-                            )}
+                              ) : (
+                                <Badge variant="outline" className="bg-green-900/20 text-green-400 border-green-500/30">
+                                  Available
+                                </Badge>
+                              )}
+                              {!isUnavailable && (
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="h-6 bg-transparent border-[#432874]/50 hover:bg-[#432874]/20 text-xs"
+                                    >
+                                      View
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB]">
+                                    <DialogHeader>
+                                      <DialogTitle className="text-[#FF9D00] font-cinzel">
+                                        {character.name} - Level {character.level}
+                                      </DialogTitle>
+                                    </DialogHeader>
+                                    <div className="py-4">
+                                      <div className="flex items-center gap-4 mb-4">
+                                        <img
+                                          src={character.avatarUrl}
+                                          alt={character.name}
+                                          className="w-16 h-16 rounded-full object-cover border-2 border-[#432874]"
+                                        />
+                                        <div>
+                                          <Badge className={`font-normal ${getClassColor(character.class)}`}>
+                                            {character.class}
+                                          </Badge>
+                                          <div className="mt-2 text-sm text-[#C8B8DB]/80">
+                                            Level {character.level}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div className="flex items-center">
+                                          <Swords className="h-4 w-4 mr-2 text-red-400" />
+                                          <span>ATK: {character.attack}</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                          <Shield className="h-4 w-4 mr-2 text-blue-400" />
+                                          <span>DEF: {character.defense}</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                          <Heart className="h-4 w-4 mr-2 text-red-500" />
+                                          <span>HP: {character.health}</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                          <Zap className="h-4 w-4 mr-2 text-yellow-400" />
+                                          <span>SPD: {character.speed}</span>
+                                        </div>
+                                      </div>
+
+                                      {character.equippedAuraId && (
+                                        <div className="mt-4 p-3 bg-[#432874]/20 rounded-lg">
+                                          <h4 className="font-semibold mb-2">Equipped Aura</h4>
+                                          <div className="flex items-center">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mr-2"></div>
+                                            <div>
+                                              <div className="text-sm text-[#00B9AE]">
+                                                {character.equippedAura?.name || 'Mysterious Aura'}
+                                              </div>
+                                              <div className="text-xs text-[#C8B8DB]/60">
+                                                Level {character.equippedAura?.level || 1}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              )}
+                            </div>
                             <img 
                               src={character.avatarUrl}
                               alt={character.name}
