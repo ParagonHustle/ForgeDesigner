@@ -130,11 +130,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               const remainingEffects = [];
               
               // Process status effects - this only happens once per round
-              // Each active unit gets their status effects processed once per combat round
-              // Force decrement by checking if this unit should have their status effects tick down
-              const shouldDecrement = !unit.lastStatusUpdate || unit.lastStatusUpdate < battleRound;
+              // Status effects should only decrement when it's the unit's turn
+              // This ensures effects last the proper number of full rounds
+              // We'll track if this is the unit's turn to act
+              const isUnitsTurn = unitsToAttack.some(u => u.attacker.id === unit.id);
+              const shouldDecrement = isUnitsTurn;
               
-              console.log(`Processing ${unit.name}'s status effects - Current round: ${battleRound}, Last update: ${unit.lastStatusUpdate || 'never'}, Should decrement: ${shouldDecrement}`);
+              console.log(`Processing ${unit.name}'s status effects - Current round: ${battleRound}, Is unit's turn: ${isUnitsTurn}, Should decrement: ${shouldDecrement}`);
               
               // First, create new effects with decremented durations and collect messages
               for (let j = 0; j < updatedStatusEffects.length; j++) {
@@ -168,11 +170,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   statusMessages.push(`${effect.name} has expired on ${unit.name}`);
                 } else {
                   remainingEffects.push(updatedEffect);
-                  if (effect.effect === "ReduceAtk" || effect.effect === "ReduceSpd") {
-                    // Only log debuff duration for non-damaging effects
-                    console.log(`${unit.name}'s ${effect.name} effect has ${newDuration} turns remaining`);
-                    statusMessages.push(`${unit.name}'s ${effect.name} effect: ${newDuration} turns remaining`);
-                  }
+                  // Log all status effects with their remaining turns
+                  console.log(`${unit.name}'s ${effect.name} effect has ${newDuration} turns remaining`);
+                  statusMessages.push(`${unit.name}'s ${effect.name} effect: ${newDuration} turns remaining`);
                 }
                 
                 // Update the effect in the array with the decremented duration
@@ -372,7 +372,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             if ((skillType !== 'basic' && Math.random() < 0.3) || (isEmberSkill && Math.random() < 0.1)) {
               // Determine the type of status effect based on skill name/type
               let effectType = "general";
-              if (skill.name.toLowerCase().includes("burn") || skill.name.toLowerCase().includes("fire") || 
+              
+              // Special handling for Ember - always applies Burn
+              if (isEmberSkill) {
+                effectType = "burn";
+              }
+              // For other skills, check name for hints
+              else if (skill.name.toLowerCase().includes("burn") || skill.name.toLowerCase().includes("fire") || 
                   skill.name.toLowerCase().includes("flame") || skill.name.toLowerCase().includes("inferno")) {
                 effectType = "burn";
               } else if (skill.name.toLowerCase().includes("poison") || skill.name.toLowerCase().includes("venom") || 
