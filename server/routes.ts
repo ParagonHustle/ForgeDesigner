@@ -2769,6 +2769,14 @@ async function generateMockBattleLog(run: any, success: boolean) {
     const char = await storage.getCharacterById(charId);
     const aura = char?.equippedAuraId ? await storage.getAuraById(char.equippedAuraId) : null;
     
+    // Calculate aura stat bonuses if an aura is equipped
+    const auraBonus = aura ? {
+      attack: aura.attack || 0,
+      vitality: aura.vitality || 0, 
+      speed: aura.speed || 0,
+      element: aura.element
+    } : null;
+    
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',
@@ -2781,7 +2789,9 @@ async function generateMockBattleLog(run: any, success: boolean) {
         basic: aura?.skills?.[0] || { name: 'Basic Attack', damage: 1.0 },
         advanced: aura?.skills?.[1] || null,
         ultimate: aura?.skills?.[2] || null
-      }
+      },
+      // Add aura bonuses to be applied during battle calculations
+      auraBonus: auraBonus
     });
   }
 
