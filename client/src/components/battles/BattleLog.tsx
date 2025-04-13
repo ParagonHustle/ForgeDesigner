@@ -84,12 +84,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               newMeter = 0;
               const target = selectTarget(unit, updatedUnits);
               if (target) {
-                const damage = Math.floor(skill.damage * (unit.stats.attack / 100));
+                // Select skill based on cooldowns
+                const availableSkills = [unit.skills.basic];
+                if (unit.skills.advanced) availableSkills.push(unit.skills.advanced);
+                if (unit.skills.ultimate) availableSkills.push(unit.skills.ultimate);
+                
+                const selectedSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                const damage = Math.floor(selectedSkill.damage * (unit.stats.attack / 100));
+                
                 target.hp = Math.max(0, target.hp - damage);
                 unit.totalDamageDealt += damage;
                 target.totalDamageReceived += damage;
 
-                const actionMessage = `${unit.name} used ${skill.name} on ${target.name} for ${damage} damage!`;
+                const actionMessage = `${unit.name} used ${selectedSkill.name} on ${target.name} for ${damage} damage!`;
                 setActionLog(prev => [...prev, actionMessage]);
 
                 if (target.hp <= 0) {
