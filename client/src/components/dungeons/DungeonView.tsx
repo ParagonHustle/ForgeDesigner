@@ -62,6 +62,19 @@ const dungeons = [
   }
 ];
 
+const getClassColor = (characterClass: string) => {
+  switch (characterClass.toLowerCase()) {
+    case 'warrior':
+      return 'bg-red-900/20 text-red-400 border-red-500/30';
+    case 'mage':
+      return 'bg-blue-900/20 text-blue-400 border-blue-500/30';
+    case 'rogue':
+      return 'bg-green-900/20 text-green-400 border-green-500/30';
+    default:
+      return 'bg-purple-900/20 text-purple-400 border-purple-500/30';
+  }
+};
+
 const DungeonView = () => {
   const { characters, fetchDungeonRuns } = useGameStore();
   const { toast } = useToast();
