@@ -765,8 +765,18 @@ const completeForging = async (taskId: number) => {
       </div>
 
       {/* Forge Result Dialog */}
-      <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
-        <DialogContent className="bg-[#1A1A2E] border-[#432874] max-w-2xl">
+      <Dialog 
+        open={showResultDialog} 
+        onOpenChange={(open) => {
+          // Only allow closing via the Close button, not by clicking outside
+          if (!open) {
+            // Do nothing - prevent automatic closing
+            return;
+          }
+          setShowResultDialog(open);
+        }}
+      >
+        <DialogContent className="bg-[#1A1A2E] border-[#432874] max-w-2xl" onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="text-2xl font-cinzel text-[#FF9D00]">
               Forging Complete!
@@ -903,12 +913,15 @@ const completeForging = async (taskId: number) => {
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <div className="text-sm text-[#C8B8DB]/60 mb-2 sm:mb-0 sm:mr-auto">
+              Click the button below to close this dialog
+            </div>
             <Button 
               onClick={() => setShowResultDialog(false)}
-              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E] font-semibold px-6 py-2 text-base"
             >
-              Close
+              Close Dialog
             </Button>
           </DialogFooter>
         </DialogContent>
