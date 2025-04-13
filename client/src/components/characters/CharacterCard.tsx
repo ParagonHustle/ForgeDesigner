@@ -56,14 +56,40 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
   const { toast } = useToast();
 
   // Fetch aura details if character has an equipped aura
-  const { data: aura, isLoading: isAuraLoading } = useQuery<Aura>({ 
-    queryKey: character.equippedAuraId ? ['/api/auras', character.equippedAuraId] : [],
+  const { data: aura, isLoading: isAuraLoading, error: auraError } = useQuery<Aura>({ 
+    queryKey: character.equippedAuraId ? [`/api/auras/${character.equippedAuraId}`] : [],
     enabled: !!character.equippedAuraId
   });
   
-  // For debugging
-  console.log('Character equipped aura ID:', character.equippedAuraId);
-  console.log('Aura data:', aura);
+  // More detailed debugging
+  console.log(`Character ${character.name} (ID: ${character.id}) equipped aura ID:`, character.equippedAuraId);
+  if (aura) {
+    console.log(`Found aura data for character ${character.name}:`, {
+      id: aura.id,
+      name: aura.name,
+      element: aura.element,
+      level: aura.level
+    });
+  } else {
+    console.log(`No aura data found for character ${character.name} with equippedAuraId ${character.equippedAuraId}`);
+    if (auraError) {
+      console.error('Error fetching aura:', auraError);
+    }
+  }
+  
+  // Manual debugging alternative - check if the aura exists in the availableAuras
+  const { data: allAuras = [] } = useQuery<Aura[]>({
+    queryKey: ['/api/auras'],
+    enabled: !!character.equippedAuraId
+  });
+  
+  // Find the equipped aura in the list of all auras
+  const equippedAura = character.equippedAuraId ? 
+    allAuras.find(a => a.id === character.equippedAuraId) : null;
+  
+  if (equippedAura && !aura) {
+    console.log(`Found equipped aura in all auras list: ${equippedAura.name}`);
+  }
 
   // Fetch all available auras for equipping
   const { data: availableAuras = [] } = useQuery<Aura[]>({
@@ -407,19 +433,19 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
             {character.equippedAuraId ? (
               <div className="flex items-center text-xs">
                 <div className={`w-4 h-4 rounded-full mr-1 ${
-                  aura?.element === 'fire' ? 'bg-gradient-to-r from-red-500 to-orange-500' 
-                  : aura?.element === 'water' ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                  : aura?.element === 'earth' ? 'bg-gradient-to-r from-green-500 to-lime-500' 
-                  : aura?.element === 'wind' ? 'bg-gradient-to-r from-sky-500 to-cyan-500'
+                  (aura || equippedAura)?.element === 'fire' ? 'bg-gradient-to-r from-red-500 to-orange-500' 
+                  : (aura || equippedAura)?.element === 'water' ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                  : (aura || equippedAura)?.element === 'earth' ? 'bg-gradient-to-r from-green-500 to-lime-500' 
+                  : (aura || equippedAura)?.element === 'wind' ? 'bg-gradient-to-r from-sky-500 to-cyan-500'
                   : 'bg-gradient-to-r from-purple-500 to-pink-500'
                 }`}></div>
                 <span className="text-[#00B9AE]">
-                  {aura ? (
-                    aura.name && aura.name.trim() !== '' ? 
-                      `${aura.name} (Lv.${aura.level || 1})` : 
-                      aura.element ? 
-                        `${aura.element.charAt(0).toUpperCase()}${aura.element.slice(1)} Aura (Lv.${aura.level || 1})` : 
-                        `Mysterious Aura (Lv.${aura.level || 1})`
+                  {(aura || equippedAura) ? (
+                    (aura?.name || equippedAura?.name) && (aura?.name?.trim() !== '' || equippedAura?.name?.trim() !== '') ? 
+                      `${aura?.name || equippedAura?.name} (Lv.${(aura || equippedAura)?.level || 1})` : 
+                      (aura || equippedAura)?.element ? 
+                        `${(aura || equippedAura)?.element.charAt(0).toUpperCase()}${(aura || equippedAura)?.element.slice(1)} Aura (Lv.${(aura || equippedAura)?.level || 1})` : 
+                        `Mysterious Aura (Lv.${(aura || equippedAura)?.level || 1})`
                   ) : 'Loading...'}
                 </span>
               </div>
@@ -629,7 +655,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                     </div>
 
                     {/* Aura Bonuses */}
-                    {aura && (
+                    {(aura || equippedAura) && (
                       <div className="mt-4 pt-3 border-t border-[#432874]/30">
                         <div className="flex items-center mb-2">
                           <div className="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mr-2"></div>
@@ -638,42 +664,46 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                         <div className="text-xs text-[#C8B8DB]/80 space-y-1">
                           {/* Display direct stat values */}
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
-                            {aura.attack !== null && aura.attack !== undefined && aura.attack !== 0 && (
+                            {(aura?.attack !== null && aura?.attack !== undefined && aura?.attack !== 0) || 
+                             (equippedAura?.attack !== null && equippedAura?.attack !== undefined && equippedAura?.attack !== 0) && (
                               <div className="flex items-center">
                                 <Swords className="h-3 w-3 mr-1 text-red-400" />
                                 <span>
-                                  Attack: <span className={aura.attack > 0 ? "text-green-400" : "text-red-400"}>
-                                    {aura.attack > 0 ? "+" : ""}{aura.attack}%
+                                  Attack: <span className={(aura?.attack || equippedAura?.attack || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                                    {(aura?.attack || equippedAura?.attack || 0) > 0 ? "+" : ""}{aura?.attack || equippedAura?.attack || 0}%
                                   </span>
                                 </span>
                               </div>
                             )}
-                            {aura.accuracy !== null && aura.accuracy !== undefined && aura.accuracy !== 0 && (
+                            {(aura?.accuracy !== null && aura?.accuracy !== undefined && aura?.accuracy !== 0) ||
+                             (equippedAura?.accuracy !== null && equippedAura?.accuracy !== undefined && equippedAura?.accuracy !== 0) && (
                               <div className="flex items-center">
                                 <Target className="h-3 w-3 mr-1 text-yellow-400" />
                                 <span>
-                                  Accuracy: <span className={aura.accuracy > 0 ? "text-green-400" : "text-red-400"}>
-                                    {aura.accuracy > 0 ? "+" : ""}{aura.accuracy}%
+                                  Accuracy: <span className={(aura?.accuracy || equippedAura?.accuracy || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                                    {(aura?.accuracy || equippedAura?.accuracy || 0) > 0 ? "+" : ""}{aura?.accuracy || equippedAura?.accuracy || 0}%
                                   </span>
                                 </span>
                               </div>
                             )}
-                            {aura.defense !== null && aura.defense !== undefined && aura.defense !== 0 && (
+                            {(aura?.defense !== null && aura?.defense !== undefined && aura?.defense !== 0) ||
+                             (equippedAura?.defense !== null && equippedAura?.defense !== undefined && equippedAura?.defense !== 0) && (
                               <div className="flex items-center">
                                 <Shield className="h-3 w-3 mr-1 text-blue-400" />
                                 <span>
-                                  Defense: <span className={aura.defense > 0 ? "text-green-400" : "text-red-400"}>
-                                    {aura.defense > 0 ? "+" : ""}{aura.defense}%
+                                  Defense: <span className={(aura?.defense || equippedAura?.defense || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                                    {(aura?.defense || equippedAura?.defense || 0) > 0 ? "+" : ""}{aura?.defense || equippedAura?.defense || 0}%
                                   </span>
                                 </span>
                               </div>
                             )}
-                            {aura.vitality !== null && aura.vitality !== undefined && aura.vitality !== 0 && (
+                            {(aura?.vitality !== null && aura?.vitality !== undefined && aura?.vitality !== 0) ||
+                             (equippedAura?.vitality !== null && equippedAura?.vitality !== undefined && equippedAura?.vitality !== 0) && (
                               <div className="flex items-center">
                                 <Heart className="h-3 w-3 mr-1 text-red-500" />
                                 <span>
-                                  Vitality: <span className={aura.vitality > 0 ? "text-green-400" : "text-red-400"}>
-                                    {aura.vitality > 0 ? "+" : ""}{aura.vitality}%
+                                  Vitality: <span className={(aura?.vitality || equippedAura?.vitality || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                                    {(aura?.vitality || equippedAura?.vitality || 0) > 0 ? "+" : ""}{aura?.vitality || equippedAura?.vitality || 0}%
                                   </span>
                                 </span>
                               </div>
@@ -740,21 +770,23 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                     <h4 className="font-semibold mb-2 text-[#C8B8DB]">Equipped Aura</h4>
                     {character.equippedAuraId ? (
                       <div className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${getAuraElementClass(aura?.element)}`}>
-                          {aura && getElementIcon(aura.element)}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${getAuraElementClass((aura || equippedAura)?.element)}`}>
+                          {(aura || equippedAura) && getElementIcon((aura || equippedAura)?.element)}
                         </div>
                         <div>
                           <div className="text-sm text-[#00B9AE]">
                             {character.equippedAuraId 
-                              ? (aura ? (
-                                aura.name && aura.name.trim() !== '' ? aura.name : 
-                                aura.element ? `${aura.element.charAt(0).toUpperCase()}${aura.element.slice(1)} Aura` : 
-                                'Mysterious Aura'
+                              ? ((aura || equippedAura) ? (
+                                (aura?.name || equippedAura?.name) && ((aura?.name?.trim() !== '' || equippedAura?.name?.trim() !== '')) 
+                                  ? (aura?.name || equippedAura?.name) 
+                                  : (aura || equippedAura)?.element 
+                                    ? `${(aura || equippedAura)?.element.charAt(0).toUpperCase()}${(aura || equippedAura)?.element.slice(1)} Aura` 
+                                    : 'Mysterious Aura'
                               ) : 'Loading Aura...')
                               : 'No Aura'}
                           </div>
                           <div className="text-xs text-[#C8B8DB]/60">
-                            {aura ? `Level ${aura.level || 1} • Tier ${aura.tier || 1}` : character.equippedAuraId ? 'Loading...' : ''}
+                            {(aura || equippedAura) ? `Level ${(aura || equippedAura)?.level || 1} • Tier ${(aura || equippedAura)?.tier || 1}` : character.equippedAuraId ? 'Loading...' : ''}
                           </div>
                         </div>
                       </div>
