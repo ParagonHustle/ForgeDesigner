@@ -6,10 +6,11 @@ import { Grid, Gem, Hammer, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useGameStore } from '@/lib/zustandStore';
 import { apiRequest } from '@/lib/queryClient';
-import type { FarmingTask, DungeonRun, ForgingTask, Character } from '@shared/schema';
+import type { FarmingTask, DungeonRun, ForgingTask, Character, Aura } from '@shared/schema';
 
 interface ActiveTasksProps {
   farmingTasks: FarmingTask[];
@@ -180,17 +181,17 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-cinzel font-bold">Active Tasks</h2>
-        <Link href="/dungeons">
-          <button className="text-[#FF9D00] text-sm hover:underline">View All</button>
-        </Link>
-      </div>
+          <Link href="/dungeons">
+            <button className="text-[#FF9D00] text-sm hover:underline">View All</button>
+          </Link>
+        </div>
 
-      <motion.div 
-        className="space-y-4"
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
+        <motion.div 
+          className="space-y-4"
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
         {/* Dungeon Tasks */}
         {activeDungeonRuns.map((run) => (
           <motion.div 
@@ -463,6 +464,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </motion.div>
     </>
   );
 };
