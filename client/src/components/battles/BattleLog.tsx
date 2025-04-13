@@ -216,6 +216,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             };
           }
           
+          // Check for battle completion
+          const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+          const allies = updatedUnits.filter(u => battleEntry?.allies.some((a: any) => a.id === u.id));
+          const enemies = updatedUnits.filter(u => battleEntry?.enemies.some((e: any) => e.id === u.id));
+          
+          const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
+          const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
+          
+          if (allEnemiesDefeated && !allAlliesDefeated && !isComplete) {
+            console.log("All enemies defeated, should progress to next stage!");
+            checkBattleEnd();
+          }
+          
           return updatedUnits;
         });
         
@@ -257,10 +270,28 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             if (skill.name === "Soothing Current") {
               // Calculate healing amount to show in the log
               const healAmount = Math.floor(800 * 0.05); // 5% of 800 = 40 HP
-              healingEffectText = ` (with healing for ${healAmount} HP)`;
               
-              // We now include healing information in the action message via healingEffectText
-              // so we don't need a separate message here
+              // Get all living allies (hp > 0) to find who we'll be healing
+              const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+              const allies = units.filter(u => 
+                battleEntry?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
+              );
+              
+              if (allies.length > 0) {
+                // Sort allies by HP percentage (lowest first)
+                const sortedAllies = [...allies].sort((a, b) => 
+                  (a.hp / a.maxHp) - (b.hp / b.maxHp)
+                );
+                
+                // Always pick the ally with the lowest HP percentage
+                const healTarget = sortedAllies[0];
+                
+                // Include the heal target's name in the message
+                healingEffectText = ` (healing ${healTarget.name} for ${healAmount} HP)`;
+              } else {
+                // Fallback if no allies found (shouldn't happen)
+                healingEffectText = ` (with healing for ${healAmount} HP)`;
+              }
             }
             
             // Format the action message with more details
@@ -1000,27 +1031,31 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   }
                 }
                 
-                // Format healing amount in skill text with healing for X HP
-                if (formattedLog.includes("with healing for")) {
-                  const healMatch = formattedLog.match(/healing for (\d+) HP/);
-                  if (healMatch && healMatch[1]) {
-                    const healAmount = healMatch[1];
+                // Format all healing in messages - supports multiple formats:
+                // "with healing for X HP"
+                // "includes healing for X HP"
+                // "healing X for Y HP"
+                if (formattedLog.includes("healing")) {
+                  // First pattern: "healing CHARACTER for X HP"
+                  const healTargetMatch = formattedLog.match(/healing ([\w\s-]+) for (\d+) HP/);
+                  if (healTargetMatch && healTargetMatch[1] && healTargetMatch[2]) {
+                    const healTarget = healTargetMatch[1];
+                    const healAmount = healTargetMatch[2];
                     formattedLog = formattedLog.replace(
-                      `healing for ${healAmount} HP`,
-                      `healing for <span class="text-green-500 font-bold">${healAmount}</span> HP`
+                      `healing ${healTarget} for ${healAmount} HP`,
+                      `healing <span class="text-indigo-300 font-semibold">${healTarget}</span> for <span class="text-green-500 font-bold">${healAmount}</span> HP`
                     );
-                  }
-                }
-                
-                // Format healing amount in skill text with includes healing for X HP
-                if (formattedLog.includes("includes healing for")) {
-                  const healMatch = formattedLog.match(/healing for (\d+) HP/);
-                  if (healMatch && healMatch[1]) {
-                    const healAmount = healMatch[1];
-                    formattedLog = formattedLog.replace(
-                      `healing for ${healAmount} HP`,
-                      `healing for <span class="text-green-500 font-bold">${healAmount}</span> HP`
-                    );
+                  } 
+                  // Second pattern: just "healing for X HP" (without character name)
+                  else {
+                    const healMatch = formattedLog.match(/healing for (\d+) HP/);
+                    if (healMatch && healMatch[1]) {
+                      const healAmount = healMatch[1];
+                      formattedLog = formattedLog.replace(
+                        `healing for ${healAmount} HP`,
+                        `healing for <span class="text-green-500 font-bold">${healAmount}</span> HP`
+                      );
+                    }
                   }
                 }
                 
