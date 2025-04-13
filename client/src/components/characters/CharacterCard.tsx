@@ -243,9 +243,24 @@ const CharacterCard = ({
     // Healing component
     if (skill.healing) {
       if (logic) logic += ' and ';
-      logic += `Heal ${skill.healTargets > 1 ? `${skill.healTargets} Party Members` : 
-               skill.healTargets === 'all' ? 'All Party Members' : 
-               '1 Random Party Member'} by ${skill.healing}% of the Caster's Max Health`;
+      
+      // Handle different heal target types
+      if (skill.name === "Soothing Current") {
+        logic += `Heal the lowest HP Ally for ${skill.healing}% of the Caster's Max Health`;
+      } else if (skill.healTargetType === "lowest") {
+        logic += `Heal the lowest HP Ally for ${skill.healing}% of the Caster's Max Health`;
+      } else if (skill.healTargetType === "all") {
+        logic += `Heal All Party Members by ${skill.healing}% of the Caster's Max Health`;
+      } else if (skill.healTargets > 1) {
+        logic += `Heal ${skill.healTargets} Party Members by ${skill.healing}% of the Caster's Max Health`;
+      } else {
+        logic += `Heal ${skill.healTargetType === "random" ? "1 Random" : "1"} Party Member by ${skill.healing}% of the Caster's Max Health`;
+      }
+    }
+    
+    // Special case for known skills that need hardcoded logic
+    if (skill.name === "Soothing Current" && !logic) {
+      return `${skill.damage || 0.8}x Damage to 1 Target and Heal the lowest HP Ally for ${skill.healing || 5}% of the Caster's Max Health`;
     }
     
     // If we couldn't generate logic, use description as fallback
