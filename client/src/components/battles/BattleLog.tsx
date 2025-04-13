@@ -271,11 +271,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 
                 healingEffectText = ` and healed ${healingTarget.name} for ${healAmount} HP`;
                 
-                // Add a separate healing message to the log
-                setTimeout(() => {
-                  const healingMessage = `${attacker.name} healed ${healingTarget?.name} for ${healAmount} HP with Soothing Current!`;
-                  setActionLog(prev => [...prev, healingMessage]);
-                }, 500);
+                // We now include healing information in the action message via healingEffectText
+                // so we don't need a separate message here
               }
             }
             
@@ -363,7 +360,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               
               // If skill is Soothing Current, apply healing effect
               if (skill.name === "Soothing Current") {
-                // Get all living allies
+                // Get all living allies (hp > 0)
                 const allies = updatedUnits.filter(u => 
                   battleLog[0]?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
                 );
@@ -382,11 +379,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   // Calculate healing amount (5% of attacker's max HP)
                   const healAmount = Math.floor(attacker.maxHp * 0.05);
                   
-                  // Log a separate healing message
-                  setTimeout(() => {
-                    const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP!`;
-                    setActionLog(prev => [...prev, healMessage]);
-                  }, 300);
+                  // We won't add a separate log message here - only one will be shown in the action message
                   
                   // Apply healing
                   return updatedUnits.map(u => {
@@ -600,11 +593,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           // Calculate healing amount (5% of attacker's max HP)
           const healAmount = Math.floor(attacker.maxHp * 0.05);
           
-          // Create a separate healing message
-          setTimeout(() => {
-            const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP!`;
-            setActionLog(prev => [...prev, healMessage]);
-          }, 300);
+          // Add a single healing message
+          const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP with Soothing Current!`;
+          setActionLog(prev => [...prev, healMessage]);
           
           // Apply healing
           return updatedUnits.map(u => {
