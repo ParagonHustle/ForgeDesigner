@@ -826,7 +826,56 @@ const completeForging = async (taskId: number) => {
                     <div>Resilience: <span className="text-[#FF9D00]">+{completedAura.resilience}%</span></div>
                   )}
                 </div>
+                <div className="mt-3 pt-3 border-t border-[#432874]/30">
+                  <div className="text-sm font-semibold">Total Stat Value</div>
+                  <div className="text-[#FF9D00] text-lg">
+                    +{(completedAura.attack || 0) + 
+                       (completedAura.defense || 0) + 
+                       (completedAura.vitality || 0) + 
+                       (completedAura.speed || 0) + 
+                       (completedAura.accuracy || 0) + 
+                       (completedAura.focus || 0) + 
+                       (completedAura.resilience || 0)}%
+                  </div>
+                </div>
               </div>
+
+              {completedAura.skills && completedAura.skills.length > 0 && (
+                <div className="bg-[#432874]/20 rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">Skills</h4>
+                  <div className="space-y-3">
+                    {completedAura.skills.map((skill: any, index: number) => (
+                      <div key={index} className="border border-[#432874]/40 rounded p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-medium text-[#FF9D00]">{skill.name}</div>
+                            <div className="text-xs text-[#C8B8DB]/60">{skill.type} Skill</div>
+                          </div>
+                          <Badge className={
+                            skill.type === 'Basic' ? 'bg-blue-500/20 text-blue-300' :
+                            skill.type === 'Advanced' ? 'bg-purple-500/20 text-purple-300' :
+                            'bg-amber-500/20 text-amber-300'
+                          }>
+                            Level {skill.level}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-[#C8B8DB]/80">{skill.description}</div>
+                        <div className="mt-2 space-y-1 text-xs">
+                          {skill.damage && (
+                            <div className="text-red-400">Base Damage: {skill.damage}x</div>
+                          )}
+                          {skill.effect && (
+                            <div className="text-emerald-400">{skill.effect}</div>
+                          )}
+                          {skill.targets && (
+                            <div className="text-blue-400">Targets: {skill.targets}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {completedAura.description && (
                 <div className="bg-[#432874]/20 rounded-lg p-4">
