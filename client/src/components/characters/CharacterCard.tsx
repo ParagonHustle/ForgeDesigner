@@ -56,10 +56,14 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
   const { toast } = useToast();
 
   // Fetch aura details if character has an equipped aura
-  const { data: aura } = useQuery<Aura>({ 
+  const { data: aura, isLoading: isAuraLoading } = useQuery<Aura>({ 
     queryKey: character.equippedAuraId ? ['/api/auras', character.equippedAuraId] : [],
     enabled: !!character.equippedAuraId
   });
+  
+  // For debugging
+  console.log('Character equipped aura ID:', character.equippedAuraId);
+  console.log('Aura data:', aura);
 
   // Fetch all available auras for equipping
   const { data: availableAuras = [] } = useQuery<Aura[]>({
@@ -411,7 +415,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                 }`}></div>
                 <span className="text-[#00B9AE]">
                   {aura ? (
-                    aura.name ? 
+                    aura.name && aura.name.trim() !== '' ? 
                       `${aura.name} (Lv.${aura.level || 1})` : 
                       aura.element ? 
                         `${aura.element.charAt(0).toUpperCase()}${aura.element.slice(1)} Aura (Lv.${aura.level || 1})` : 
@@ -743,7 +747,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <div className="text-sm text-[#00B9AE]">
                             {character.equippedAuraId 
                               ? (aura ? (
-                                aura.name ? aura.name : 
+                                aura.name && aura.name.trim() !== '' ? aura.name : 
                                 aura.element ? `${aura.element.charAt(0).toUpperCase()}${aura.element.slice(1)} Aura` : 
                                 'Mysterious Aura'
                               ) : 'Loading Aura...')
