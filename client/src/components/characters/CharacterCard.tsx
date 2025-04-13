@@ -650,34 +650,54 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                                 </span>
                               </div>
                             )}
-                            {aura.defense !== null && aura.defense !== undefined && (
+                            {aura.defense !== null && aura.defense !== undefined && aura.defense !== 0 && (
                               <div className="flex items-center">
                                 <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                                <span>Defense: +{aura.defense}</span>
+                                <span>
+                                  Defense: <span className={aura.defense > 0 ? "text-green-400" : "text-red-400"}>
+                                    {aura.defense > 0 ? "+" : ""}{aura.defense}%
+                                  </span>
+                                </span>
                               </div>
                             )}
-                            {aura.vitality !== null && aura.vitality !== undefined && (
+                            {aura.vitality !== null && aura.vitality !== undefined && aura.vitality !== 0 && (
                               <div className="flex items-center">
                                 <Heart className="h-3 w-3 mr-1 text-red-500" />
-                                <span>Vitality: +{aura.vitality}</span>
+                                <span>
+                                  Vitality: <span className={aura.vitality > 0 ? "text-green-400" : "text-red-400"}>
+                                    {aura.vitality > 0 ? "+" : ""}{aura.vitality}%
+                                  </span>
+                                </span>
                               </div>
                             )}
-                            {aura.speed !== null && aura.speed !== undefined && (
+                            {aura.speed !== null && aura.speed !== undefined && aura.speed !== 0 && (
                               <div className="flex items-center">
                                 <Zap className="h-3 w-3 mr-1 text-cyan-400" />
-                                <span>Speed: +{aura.speed}</span>
+                                <span>
+                                  Speed: <span className={aura.speed > 0 ? "text-green-400" : "text-red-400"}>
+                                    {aura.speed > 0 ? "+" : ""}{aura.speed}%
+                                  </span>
+                                </span>
                               </div>
                             )}
-                            {aura.focus !== null && aura.focus !== undefined && (
+                            {aura.focus !== null && aura.focus !== undefined && aura.focus !== 0 && (
                               <div className="flex items-center">
                                 <Brain className="h-3 w-3 mr-1 text-purple-400" />
-                                <span>Focus: +{aura.focus}</span>
+                                <span>
+                                  Focus: <span className={aura.focus > 0 ? "text-green-400" : "text-red-400"}>
+                                    {aura.focus > 0 ? "+" : ""}{aura.focus}%
+                                  </span>
+                                </span>
                               </div>
                             )}
-                            {aura.resilience !== null && aura.resilience !== undefined && (
+                            {aura.resilience !== null && aura.resilience !== undefined && aura.resilience !== 0 && (
                               <div className="flex items-center">
                                 <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
-                                <span>Resilience: +{aura.resilience}</span>
+                                <span>
+                                  Resilience: <span className={aura.resilience > 0 ? "text-green-400" : "text-red-400"}>
+                                    {aura.resilience > 0 ? "+" : ""}{aura.resilience}%
+                                  </span>
+                                </span>
                               </div>
                             )}
                           </div>
