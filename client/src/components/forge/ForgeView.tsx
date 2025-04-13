@@ -13,6 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -182,7 +189,10 @@ const ForgeView = () => {
   };
   
   // Complete a forging task
-  const completeForging = async (taskId: number) => {
+  const [showResultDialog, setShowResultDialog] = useState(false);
+const [completedAura, setCompletedAura] = useState<Aura | null>(null);
+
+const completeForging = async (taskId: number) => {
     setIsSubmitting(true);
     try {
       const response = await apiRequest('POST', `/api/forge/complete/${taskId}`, undefined);
@@ -194,10 +204,9 @@ const ForgeView = () => {
       
       const data = await response.json();
       
-      toast({
-        title: `${data.taskType === 'craft' ? 'Crafting' : 'Fusion'} Complete!`,
-        description: `Successfully created a new Level ${data.aura.level} ${data.aura.element} Aura.`,
-      });
+      // Store the completed aura and show dialog
+      setCompletedAura(data.aura);
+      setShowResultDialog(true);
       
       // Refresh forging tasks, auras, and characters
       fetchForgingTasks();
@@ -754,6 +763,107 @@ const ForgeView = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Forge Result Dialog */}
+      <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
+        <DialogContent className="bg-[#1A1A2E] border-[#432874] max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-cinzel text-[#FF9D00]">
+              Forging Complete!
+            </DialogTitle>
+          </DialogHeader>
+          
+          {completedAura && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                  completedAura.element === 'fire' ? 'bg-red-500/30 text-red-300' 
+                  : completedAura.element === 'water' ? 'bg-blue-500/30 text-blue-300'
+                  : completedAura.element === 'earth' ? 'bg-green-500/30 text-green-300' 
+                  : completedAura.element === 'wind' ? 'bg-cyan-500/30 text-cyan-300'
+                  : completedAura.element === 'light' ? 'bg-yellow-500/30 text-yellow-300'
+                  : 'bg-purple-500/30 text-purple-300'
+                }`}>
+                  <span className="text-2xl">{completedAura.element?.charAt(0).toUpperCase()}</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold capitalize">
+                    {completedAura.name || `${completedAura.element} Aura`}
+                  </h3>
+                  <div className="flex gap-2">
+                    <Badge className="bg-purple-700/30 text-purple-300 border-purple-600/30">
+                      Level {completedAura.level}
+                    </Badge>
+                    <Badge className="bg-[#432874]/30 text-[#C8B8DB]">
+                      {completedAura.tier ? `Tier ${completedAura.tier}` : 'Basic Tier'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#432874]/20 rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Stat Multipliers</h4>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[#C8B8DB]">
+                  {completedAura.attack && (
+                    <div>Attack: <span className="text-[#FF9D00]">+{completedAura.attack}%</span></div>
+                  )}
+                  {completedAura.defense && (
+                    <div>Defense: <span className="text-[#FF9D00]">+{completedAura.defense}%</span></div>
+                  )}
+                  {completedAura.vitality && (
+                    <div>Vitality: <span className="text-[#FF9D00]">+{completedAura.vitality}%</span></div>
+                  )}
+                  {completedAura.speed && (
+                    <div>Speed: <span className="text-[#FF9D00]">+{completedAura.speed}%</span></div>
+                  )}
+                  {completedAura.accuracy && (
+                    <div>Accuracy: <span className="text-[#FF9D00]">+{completedAura.accuracy}%</span></div>
+                  )}
+                  {completedAura.focus && (
+                    <div>Focus: <span className="text-[#FF9D00]">+{completedAura.focus}%</span></div>
+                  )}
+                  {completedAura.resilience && (
+                    <div>Resilience: <span className="text-[#FF9D00]">+{completedAura.resilience}%</span></div>
+                  )}
+                </div>
+              </div>
+
+              {completedAura.description && (
+                <div className="bg-[#432874]/20 rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">Description</h4>
+                  <p className="text-[#C8B8DB]">{completedAura.description}</p>
+                </div>
+              )}
+
+              {completedAura.skills && (
+                <div className="bg-[#432874]/20 rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">Skills</h4>
+                  <div className="space-y-2">
+                    {(typeof completedAura.skills === 'string' 
+                      ? JSON.parse(completedAura.skills) 
+                      : completedAura.skills
+                    ).map((skill: any, index: number) => (
+                      <div key={index} className="border border-[#432874]/40 rounded p-2">
+                        <div className="font-medium text-[#FF9D00]">{skill.name}</div>
+                        <div className="text-sm text-[#C8B8DB]/80">{skill.description}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              onClick={() => setShowResultDialog(false)}
+              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
