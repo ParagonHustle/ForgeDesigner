@@ -21,6 +21,8 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   const { toast } = useToast();
   const { characters, fetchFarmingTasks, fetchDungeonRuns, fetchForgingTasks } = useGameStore();
   const [completingTask, setCompletingTask] = useState<number | null>(null);
+  const [showResultDialog, setShowResultDialog] = useState(false);
+  const [completedAura, setCompletedAura] = useState<Aura | null>(null);
 
   // Filter only active tasks
   const activeFarmingTasks = farmingTasks.filter(task => !task.completed);
@@ -89,9 +91,6 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
       setCompletingTask(null);
     }
   };
-
-  const [showResultDialog, setShowResultDialog] = useState(false);
-  const [completedAura, setCompletedAura] = useState<Aura | null>(null);
 
   const handleCompleteForging = async (taskId: number) => {
     if (completingTask) return;
