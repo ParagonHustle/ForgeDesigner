@@ -68,7 +68,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     if (!isPaused && !isComplete) {
       const interval = setInterval(() => {
         setUnits(prevUnits => {
-          return prevUnits.map(unit => {
+          const updatedUnits = [...prevUnits];
+          
+          // Process each unit's turn
+          for (let i = 0; i < updatedUnits.length; i++) {
+            const unit = updatedUnits[i];
+            if (unit.hp <= 0) continue;
+
             // Update attack meter based on speed (120 speed = 3x faster than 40 speed)
             const meterIncrease = (unit.stats.speed / 40) * playbackSpeed;
             let newMeter = unit.attackMeter + meterIncrease;
@@ -76,17 +82,29 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             if (newMeter >= 100) {
               // Reset meter and perform attack
               newMeter = 0;
-              const target = selectTarget(unit, prevUnits);
+              const target = selectTarget(unit, updatedUnits);
               if (target) {
-                performAction(unit, target);
+                const damage = Math.floor(skill.damage * (unit.stats.attack / 100));
+                target.hp = Math.max(0, target.hp - damage);
+                unit.totalDamageDealt += damage;
+                target.totalDamageReceived += damage;
+
+                const actionMessage = `${unit.name} used ${skill.name} on ${target.name} for ${damage} damage!`;
+                setActionLog(prev => [...prev, actionMessage]);
+
+                if (target.hp <= 0) {
+                  setActionLog(prev => [...prev, `${target.name} has been defeated!`]);
+                  checkBattleEnd();
+                }
               }
             }
 
-            return {
+            updatedUnits[i] = {
               ...unit,
               attackMeter: newMeter
             };
-          });
+          }
+          return updatedUnits;
         });
       }, 100);
 
