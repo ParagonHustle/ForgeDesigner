@@ -701,14 +701,57 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         console.log(`Moving to stage ${nextStage + 1}`);
         
         // Reset enemy units for the next stage
-        // This is just a placeholder - in a real implementation, we would load new enemy data
-        // from the next stage in the battleLog array
         setTimeout(() => {
-          // Placeholder for new stage setup
-          // In a full implementation, you would:
-          // 1. Reset enemy units' HP from the next stage's data
-          // 2. Clear status effects from allies (optional, based on game design)
-          // 3. Maybe recover some ally HP (also optional)
+          // Reset the enemy units
+          setUnits(prevUnits => {
+            return prevUnits.map(unit => {
+              // If this is an enemy, reset it with new health
+              const isEnemy = battleEntry?.enemies.some((e: any) => e.id === unit.id);
+              
+              if (isEnemy) {
+                // Generate new enemy based on current stage
+                const stageMultiplier = 1 + (nextStage * 0.12); // 12% increase per stage
+                
+                return {
+                  ...unit,
+                  hp: Math.floor(unit.maxHp * stageMultiplier), // Increase HP based on stage
+                  maxHp: Math.floor(unit.maxHp * stageMultiplier),
+                  stats: {
+                    ...unit.stats,
+                    attack: Math.floor(unit.stats.attack * stageMultiplier),
+                    vitality: Math.floor(unit.stats.vitality * stageMultiplier),
+                    speed: Math.floor(unit.stats.speed * (1 + (nextStage * 0.05))) // 5% speed increase per stage
+                  },
+                  statusEffects: [] // Clear status effects from enemies
+                };
+              } 
+              
+              // If it's an ally, optionally heal a small amount and clear debuffs
+              else {
+                // Recover 10% HP per stage cleared as a stage clear bonus
+                const healAmount = Math.floor(unit.maxHp * 0.1);
+                const newHp = Math.min(unit.maxHp, unit.hp + healAmount);
+                
+                // Only keep beneficial status effects for allies between stages
+                const filteredEffects = unit.statusEffects?.filter(
+                  effect => !["Weakened", "Slowed", "Burning", "Poisoned"].includes(effect.name)
+                ) || [];
+                
+                setActionLog(prev => [
+                  ...prev,
+                  `${unit.name} recovered ${healAmount} HP after clearing stage ${currentStage + 1}!`
+                ]);
+                
+                return {
+                  ...unit,
+                  hp: newHp,
+                  statusEffects: filteredEffects,
+                  totalHealingReceived: unit.totalHealingReceived + healAmount
+                };
+              }
+            });
+          });
+          
           console.log(`Stage ${nextStage + 1} is ready to begin`);
         }, 1000);
       }
@@ -1001,10 +1044,20 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           {isComplete && (
             <div className="w-full flex-col space-y-2 text-center mb-2">
               <h4 className="text-[#FF9D00] font-semibold">
-                {battleLog.find(log => log.allies && Array.isArray(log.allies))?.allies.every((a: any) => units.find(u => u.id === a.id)?.hp <= 0) ? 
-                  `Your party was defeated on Stage ${currentStage + 1}` : 
-                  `Dungeon Completed! Cleared ${currentStage + 1} of 8 stages`
-                }
+                {/* First check if there's a valid battleLog entry with allies array */}
+                {(() => {
+                  const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+                  if (!battleEntry) return `Dungeon Completed! Cleared ${currentStage + 1} of 8 stages`;
+                  
+                  // Then check if all allies are defeated
+                  const allAlliesDefeated = battleEntry.allies.every((a: any) => 
+                    units.find(u => u.id === a.id)?.hp <= 0
+                  );
+                  
+                  return allAlliesDefeated 
+                    ? `Your party was defeated on Stage ${currentStage + 1}` 
+                    : `Dungeon Completed! Cleared ${currentStage + 1} of 8 stages`;
+                })()}
               </h4>
               <div className="text-sm">
                 <div>Reward Based on Progress:</div>
