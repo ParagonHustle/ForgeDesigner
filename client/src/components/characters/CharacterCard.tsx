@@ -103,7 +103,8 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
   };
 
   // Function to get element icon
-  const getElementIcon = (element: string) => {
+  const getElementIcon = (element?: string) => {
+    if (!element) return null;
     switch (element.toLowerCase()) {
       case 'fire': return <Flame className="h-4 w-4 text-red-500" />;
       case 'water': return <Droplet className="h-4 w-4 text-blue-500" />;
