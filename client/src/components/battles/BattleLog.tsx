@@ -115,17 +115,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               for (let j = 0; j < updatedStatusEffects.length; j++) {
                 const effect = updatedStatusEffects[j];
                 
-                // Apply burn and poison effects (5% of max health)
+                // Apply burn and poison effects (damage over time)
                 if (effect.effect === "Burn" || effect.effect === "Poison") {
                   const dotDamage = effect.value;
                   statusEffectDamage += dotDamage;
                   statusMessages.push(`${unit.name} took ${dotDamage} damage from ${effect.name}`);
-                  
-                  // Reduce duration by 1
-                  updatedStatusEffects[j] = {
-                    ...effect,
-                    duration: effect.duration - 1
-                  };
+                }
+                
+                // Reduce duration by 1 for ALL effect types
+                updatedStatusEffects[j] = {
+                  ...effect,
+                  duration: effect.duration - 1
+                };
+                
+                // Log status effect duration change for debugging
+                if (updatedStatusEffects[j].duration <= 0) {
+                  statusMessages.push(`${effect.name} has expired on ${unit.name}`);
+                } else if (effect.effect === "ReduceAtk" || effect.effect === "ReduceSpd") {
+                  // Only log debuff duration for non-damaging effects
+                  statusMessages.push(`${unit.name}'s ${effect.name} effect: ${updatedStatusEffects[j].duration} turns remaining`);
                 }
               }
               
@@ -339,10 +347,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     (a.hp / a.maxHp) - (b.hp / b.maxHp)
                   );
                   
-                  // Get the ally with lowest HP (not the attacker if possible)
-                  const healTarget = sortedAllies.length > 1 && sortedAllies[0].id === attacker.id 
-                    ? sortedAllies[1] 
-                    : sortedAllies[0];
+                  // Always pick the ally with the lowest HP percentage
+                  const healTarget = sortedAllies[0];
+                  
+                  // Debug the selected heal target
+                  console.log(`SECOND LOCATION - Selected heal target: ${healTarget.name} with ${healTarget.hp}/${healTarget.maxHp} = ${(healTarget.hp / healTarget.maxHp * 100).toFixed(1)}%`);
                   
                   // Calculate healing amount (5% of attacker's max HP)
                   const attackerMaxHp = 800; // Standard base value for G-Wolf, the healer
@@ -504,7 +513,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Add healing effect text for Soothing Current
     let healingEffectText = "";
     if (skill.name === "Soothing Current") {
-      healingEffectText = " (includes healing effect)";
+      // Calculate healing amount to show in the log
+      const healAmount = Math.floor(800 * 0.05); // 5% of 800 = 40 HP
+      healingEffectText = ` (includes healing for ${healAmount} HP)`;
     }
     
     const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
