@@ -211,6 +211,24 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   // Check if unit was defeated by status effects
                   if (updatedUnits[i].hp <= 0 && unit.hp > 0) {
                     setActionLog(prev => [...prev, `${unit.name} has been defeated by status effects!`]);
+                    
+                    // Check if this was the last alive ally
+                    const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+                    if (battleEntry) {
+                      const updatedAllies = updatedUnits.filter(u => 
+                        battleEntry.allies.some((a: any) => a.id === u.id)
+                      );
+                      
+                      // If this defeat means all allies are now defeated, end the battle
+                      const allAlliesDefeated = updatedAllies.every(a => a.hp <= 0);
+                      if (allAlliesDefeated && !isComplete) {
+                        console.log("All allies defeated by status effects! Ending dungeon.");
+                        setTimeout(() => {
+                          // Adding slight delay for the defeat message to appear first
+                          checkBattleEnd();
+                        }, 50);
+                      }
+                    }
                   }
                 }, 0);
               } else {
@@ -269,8 +287,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
           const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
           
-          if (allEnemiesDefeated && !allAlliesDefeated && !isComplete) {
-            console.log("All enemies defeated, should progress to next stage!");
+          // Check for battle end conditions - either all allies or all enemies defeated
+          if ((allEnemiesDefeated && !allAlliesDefeated && !isComplete) || (allAlliesDefeated && !isComplete)) {
+            console.log(allAlliesDefeated 
+              ? "All allies defeated, ending dungeon run!" 
+              : "All enemies defeated, should progress to next stage!");
             checkBattleEnd();
           }
           
