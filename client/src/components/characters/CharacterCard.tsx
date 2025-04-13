@@ -708,32 +708,35 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                                 </span>
                               </div>
                             )}
-                            {aura.speed !== null && aura.speed !== undefined && aura.speed !== 0 && (
+                            {((aura?.speed !== null && aura?.speed !== undefined && aura?.speed !== 0) ||
+                             (equippedAura?.speed !== null && equippedAura?.speed !== undefined && equippedAura?.speed !== 0)) && (
                               <div className="flex items-center">
                                 <Zap className="h-3 w-3 mr-1 text-cyan-400" />
                                 <span>
-                                  Speed: <span className={aura.speed > 0 ? "text-green-400" : "text-red-400"}>
-                                    {aura.speed > 0 ? "+" : ""}{aura.speed}%
+                                  Speed: <span className={(aura?.speed || equippedAura?.speed || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                                    {(aura?.speed || equippedAura?.speed || 0) > 0 ? "+" : ""}{aura?.speed || equippedAura?.speed || 0}%
                                   </span>
                                 </span>
                               </div>
                             )}
-                            {aura.focus !== null && aura.focus !== undefined && aura.focus !== 0 && (
+                            {((aura?.focus !== null && aura?.focus !== undefined && aura?.focus !== 0) ||
+                             (equippedAura?.focus !== null && equippedAura?.focus !== undefined && equippedAura?.focus !== 0)) && (
                               <div className="flex items-center">
                                 <Brain className="h-3 w-3 mr-1 text-purple-400" />
                                 <span>
-                                  Focus: <span className={aura.focus > 0 ? "text-green-400" : "text-red-400"}>
-                                    {aura.focus > 0 ? "+" : ""}{aura.focus}%
+                                  Focus: <span className={(aura?.focus || equippedAura?.focus || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                                    {(aura?.focus || equippedAura?.focus || 0) > 0 ? "+" : ""}{aura?.focus || equippedAura?.focus || 0}%
                                   </span>
                                 </span>
                               </div>
                             )}
-                            {aura.resilience !== null && aura.resilience !== undefined && aura.resilience !== 0 && (
+                            {((aura?.resilience !== null && aura?.resilience !== undefined && aura?.resilience !== 0) ||
+                             (equippedAura?.resilience !== null && equippedAura?.resilience !== undefined && equippedAura?.resilience !== 0)) && (
                               <div className="flex items-center">
                                 <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
                                 <span>
-                                  Resilience: <span className={aura.resilience > 0 ? "text-green-400" : "text-red-400"}>
-                                    {aura.resilience > 0 ? "+" : ""}{aura.resilience}%
+                                  Resilience: <span className={(aura?.resilience || equippedAura?.resilience || 0) > 0 ? "text-green-400" : "text-red-400"}>
+                                    {(aura?.resilience || equippedAura?.resilience || 0) > 0 ? "+" : ""}{aura?.resilience || equippedAura?.resilience || 0}%
                                   </span>
                                 </span>
                               </div>
