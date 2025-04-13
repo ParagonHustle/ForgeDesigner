@@ -377,25 +377,33 @@ const DungeonView = () => {
 
                   <div>
                     <h3 className="text-sm font-bold mb-2">Select Party Members (Up to 4)</h3>
-                    {availableCharacters.length === 0 ? (
-                      <div className="bg-[#432874]/20 rounded-lg p-4 text-center">
-                        <p className="text-sm text-[#C8B8DB]/80 mb-2">
-                          All your characters are currently busy.
-                        </p>
-                        <p className="text-xs text-[#C8B8DB]/60">
-                          Wait for them to complete their current tasks or recruit new characters.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
-                        {availableCharacters.map(character => (
+                    <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
+                      {characters.map(character => {
+                        const isInDungeon = character.isActive && character.activityType === 'dungeon';
+                        const isInForge = character.isActive && character.activityType === 'forging';
+                        const isInFarming = character.isActive && character.activityType === 'farming';
+                        const hasNoAura = !character.equippedAuraId;
+                        const isUnavailable = isInDungeon || isInForge || isInFarming || hasNoAura;
+
+                        return (
                           <div 
                             key={character.id}
-                            className={`flex items-center p-2 rounded-md border border-[#432874]/30 cursor-pointer ${
-                              selectedCharacters.includes(character.id) ? 'bg-[#432874]/40 border-[#FF9D00]/50' : 'bg-[#1F1D36]/50'
+                            className={`flex items-center p-2 rounded-md border ${
+                              isUnavailable 
+                                ? 'border-red-500/30 bg-red-900/10 cursor-not-allowed opacity-70' 
+                                : selectedCharacters.includes(character.id)
+                                  ? 'bg-[#432874]/40 border-[#FF9D00]/50 cursor-pointer'
+                                  : 'bg-[#1F1D36]/50 border-[#432874]/30 cursor-pointer'
                             }`}
-                            onClick={() => toggleCharacterSelection(character.id)}
+                            onClick={() => !isUnavailable && toggleCharacterSelection(character.id)}
                           >
+                            {isUnavailable && (
+                              <div className="absolute right-2 top-2">
+                                <Badge variant="outline" className="bg-red-900/20 text-red-400 border-red-500/30">
+                                  {hasNoAura ? 'No Aura' : character.activityType}
+                                </Badge>
+                              </div>
+                            )}
                             <img 
                               src={character.avatarUrl}
                               alt={character.name}
@@ -418,9 +426,9 @@ const DungeonView = () => {
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
 
                     <div className="mt-4">
                       <h3 className="text-sm font-bold mb-2">Selected Party ({selectedCharacters.length}/4)</h3>
