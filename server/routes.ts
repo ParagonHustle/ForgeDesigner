@@ -1219,7 +1219,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               description: "A soft wave crashes through the enemy and flows into an ally.",
               damage: 0.8,
               level: 1,
-              effect: "Heal lowest HP Ally for 5% of caster's Max HP",
+              healing: 5,
+              healTargetType: "lowest",
+              logic: "0.8x Damage to 1 Target and Heal the lowest HP Ally for 5% of the Caster's Max Health",
               targets: 1
             },
             {

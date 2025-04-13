@@ -227,9 +227,33 @@ const CharacterCard = ({
   const generateSkillLogic = (skill: any): string => {
     let logic = '';
     
+    // Special case for Soothing Current
+    if (skill.name === "Soothing Current") {
+      return `${skill.damage}x Damage to 1 Target and Heal the lowest HP Ally for ${skill.healing || 5}% of the Caster's Max Health`;
+    }
+    
     // Damage component
     if (skill.damage) {
       logic += `${skill.damage}x Damage to ${skill.targets || 1} Target${skill.targets > 1 ? 's' : ''}`;
+    }
+    
+    // Healing component
+    if (skill.healing) {
+      if (logic) logic += ' and ';
+      
+      let healingText = `Heal `;
+      if (skill.healTargetType === "lowest") {
+        healingText += "the lowest HP Ally";
+      } else if (skill.healTargetType === "all") {
+        healingText += "all Allies";
+      } else {
+        healingText += `${skill.healTargets || 1} Target${(skill.healTargets || 1) > 1 ? 's' : ''}`;
+      }
+      
+      healingText += ` for ${skill.healing}% of `;
+      healingText += "the Caster's Max Health";
+      
+      logic += healingText;
     }
     
     // Effect component
@@ -240,23 +264,7 @@ const CharacterCard = ({
       if (skill.effectChance && skill.effectChance < 100) logic += ` with ${skill.effectChance}% chance`;
     }
     
-    // Healing component
-    if (skill.healing) {
-      if (logic) logic += ' and ';
-      
-      // Handle different heal target types
-      if (skill.name === "Soothing Current") {
-        logic += `Heal the lowest HP Ally for ${skill.healing}% of the Caster's Max Health`;
-      } else if (skill.healTargetType === "lowest") {
-        logic += `Heal the lowest HP Ally for ${skill.healing}% of the Caster's Max Health`;
-      } else if (skill.healTargetType === "all") {
-        logic += `Heal All Party Members by ${skill.healing}% of the Caster's Max Health`;
-      } else if (skill.healTargets > 1) {
-        logic += `Heal ${skill.healTargets} Party Members by ${skill.healing}% of the Caster's Max Health`;
-      } else {
-        logic += `Heal ${skill.healTargetType === "random" ? "1 Random" : "1"} Party Member by ${skill.healing}% of the Caster's Max Health`;
-      }
-    }
+
     
     // Special case for known skills that need hardcoded logic
     if (skill.name === "Soothing Current" && !logic) {
@@ -622,12 +630,74 @@ const CharacterCard = ({
                       <h4 className="font-semibold text-sm mb-2 text-[#00B9AE]">Aura Skills</h4>
                       <div className="space-y-2">
                         {auraSkills.length > 0 ? (
-                          auraSkills.map((skill, index) => (
-                            <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
-                              <div className="text-xs font-medium text-[#00B9AE]">{skill.name}</div>
-                              <div className="text-xs text-[#C8B8DB]/80">{skill.description}</div>
-                              <div className="flex justify-between mt-1 text-xs text-[#C8B8DB]/60">
-                                <span>Type: {skill.type}</span>
+                          auraSkills.map((skill: any, index) => (
+                            <div key={index} className="border-b border-[#432874]/30 pb-3 last:border-b-0 last:pb-0">
+                              <div className="flex justify-between items-center">
+                                <div className="text-xs font-medium text-[#00B9AE]">{skill.name}</div>
+                                <div className="text-xs px-2 py-0.5 rounded-full bg-[#432874]/40 text-[#00B9AE]">
+                                  Level {skill.level || 1}
+                                </div>
+                              </div>
+
+                              {/* Full skill logic */}
+                              <div className="text-xs text-amber-300 mt-1 italic">
+                                "{skill.logic || generateSkillLogic(skill)}"
+                              </div>
+                              
+                              <div className="text-xs text-[#C8B8DB]/80 mt-1">{skill.description}</div>
+                              
+                              {/* Enhanced skill details */}
+                              <div className="mt-2 text-xs">
+                                {skill.damage && (
+                                  <div className="flex items-center">
+                                    <Swords className="h-3 w-3 mr-1 text-red-400" />
+                                    <span className="text-[#C8B8DB]/80">
+                                      Damage Multiplier: <span className="text-amber-400">{skill.damage}x</span> (Deals {skill.damage}x of Attack as damage)
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {skill.effect && (
+                                  <div className="flex items-center mt-1">
+                                    <Flame className="h-3 w-3 mr-1 text-orange-400" />
+                                    <span className="text-[#C8B8DB]/80">
+                                      Effect: <span className="text-purple-400">{skill.effect}</span>
+                                      {skill.effectChance && <span className="ml-1 text-yellow-400">({skill.effectChance}% chance)</span>}
+                                      {skill.effectStacks && <span className="ml-1 text-blue-400">({skill.effectStacks} stacks)</span>}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {skill.healing && (
+                                  <div className="flex items-center mt-1">
+                                    <Heart className="h-3 w-3 mr-1 text-green-400" />
+                                    <span className="text-[#C8B8DB]/80">
+                                      Healing: <span className="text-green-400">{skill.healing}%</span> of max health
+                                      {skill.healTargets && <span className="ml-1 text-blue-400">({skill.healTargets > 1 ? `${skill.healTargets} targets` : '1 target'})</span>}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {skill.cooldown && (
+                                  <div className="flex items-center mt-1">
+                                    <Clock className="h-3 w-3 mr-1 text-blue-400" />
+                                    <span className="text-[#C8B8DB]/80">
+                                      Cooldown: <span className="text-blue-400">{skill.cooldown} turns</span>
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex justify-between mt-2 text-xs text-[#C8B8DB]/60">
+                                <span>Type: 
+                                  <span className={
+                                    skill.type === "Ultimate" ? " text-amber-500" : 
+                                    skill.type === "Advanced" ? " text-blue-500" : 
+                                    " text-green-500"
+                                  }>
+                                    {" "}{skill.type}
+                                  </span>
+                                </span>
                                 <span>Targets: {skill.targets || 1}</span>
                               </div>
                             </div>
