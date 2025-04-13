@@ -756,19 +756,22 @@ const InventoryView = () => {
                   <div className="p-4">
                     <div className="flex items-center mb-3">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-3
-                        ${aura.element === 'Fire' ? 'bg-red-500/20' : 
-                          aura.element === 'Water' ? 'bg-blue-500/20' : 
-                          aura.element === 'Earth' ? 'bg-amber-800/20' : 
+                        ${aura.element?.toLowerCase() === 'fire' ? 'bg-red-500/20' : 
+                          aura.element?.toLowerCase() === 'water' ? 'bg-blue-500/20' : 
+                          aura.element?.toLowerCase() === 'earth' ? 'bg-amber-800/20' : 
+                          aura.element?.toLowerCase() === 'wind' ? 'bg-cyan-500/20' :
                           'bg-green-500/20'}`
                       }>
-                        {aura.element === 'Fire' ? (
+                        {aura.element?.toLowerCase() === 'fire' ? (
                           <div className="text-red-500">🔥</div>
-                        ) : aura.element === 'Water' ? (
+                        ) : aura.element?.toLowerCase() === 'water' ? (
                           <div className="text-blue-500">💧</div>
-                        ) : aura.element === 'Earth' ? (
+                        ) : aura.element?.toLowerCase() === 'earth' ? (
                           <div className="text-amber-800">🏔️</div>
+                        ) : aura.element?.toLowerCase() === 'wind' ? (
+                          <div className="text-cyan-500">🌪️</div>
                         ) : (
-                          <div className="text-green-500">🌪️</div>
+                          <div className="text-purple-500">✨</div>
                         )}
                       </div>
                       <div>
