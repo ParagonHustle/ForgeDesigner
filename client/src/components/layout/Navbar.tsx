@@ -9,17 +9,18 @@ const Navbar = () => {
   const { forgeTokens, rogueCredits, speedBoostActive, speedBoostMultiplier, farmingTasks, dungeonRuns, forgingTasks } = useGameStore();
   const location = useLocation();
 
-  // Get shortest remaining timer for each activity type
-  const getShortestTimer = () => {
+  // Get activity timers and counts
+  const getActivityTimers = () => {
     const now = new Date().getTime();
     const activities = {
-      dungeon: { time: Infinity, path: '/dungeons' },
-      forge: { time: Infinity, path: '/forge' },
-      farming: { time: Infinity, path: '/farming' }
+      dungeon: { time: Infinity, path: '/dungeons', count: 0 },
+      forge: { time: Infinity, path: '/forge', count: 0 },
+      farming: { time: Infinity, path: '/farming', count: 0 }
     };
 
     dungeonRuns?.forEach(run => {
       if (!run.completed) {
+        activities.dungeon.count++;
         const endTime = new Date(run.endTime).getTime();
         if (endTime - now < activities.dungeon.time) {
           activities.dungeon.time = endTime - now;
@@ -29,6 +30,7 @@ const Navbar = () => {
 
     forgingTasks?.forEach(task => {
       if (!task.completed) {
+        activities.forge.count++;
         const endTime = new Date(task.endTime).getTime();
         if (endTime - now < activities.forge.time) {
           activities.forge.time = endTime - now;
@@ -38,6 +40,7 @@ const Navbar = () => {
 
     farmingTasks?.forEach(task => {
       if (!task.completed) {
+        activities.farming.count++;
         const endTime = new Date(task.endTime).getTime();
         if (endTime - now < activities.farming.time) {
           activities.farming.time = endTime - now;
@@ -48,7 +51,7 @@ const Navbar = () => {
     return activities;
   };
 
-  const shortestTimers = getShortestTimer();
+  const activityTimers = getActivityTimers();
   
   return (
     <nav className="bg-[#1A1A2E] border-b border-[#432874]/50 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
@@ -58,8 +61,8 @@ const Navbar = () => {
         
         {/* Activity Timer Tags */}
         <div className="ml-4 flex gap-2">
-          {Object.entries(shortestTimers).map(([type, data]) => {
-            if (data.time === Infinity) return null;
+          {Object.entries(activityTimers).map(([type, data]) => {
+            if (data.count === 0) return null;
             const isComplete = data.time <= 0;
             return (
               <Link 
@@ -73,6 +76,11 @@ const Navbar = () => {
                 `}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
+                {data.count > 1 && (
+                  <span className="text-[#FF9D00] font-semibold ml-1">
+                    x{data.count}
+                  </span>
+                )}
                 {!isComplete && (
                   <CountdownTimer 
                     endTime={new Date(Date.now() + data.time).toISOString()} 
