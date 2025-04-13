@@ -51,16 +51,16 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
   const [equipAuraDialogOpen, setEquipAuraDialogOpen] = useState(false);
   const [selectedAuraId, setSelectedAuraId] = useState<number | null>(null);
   const [isEquipping, setIsEquipping] = useState(false);
-  
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   // Fetch aura details if character has an equipped aura
   const { data: aura } = useQuery<Aura>({ 
     queryKey: character.equippedAuraId ? ['/api/auras', character.equippedAuraId] : [],
     enabled: !!character.equippedAuraId
   });
-  
+
   // Fetch all available auras for equipping
   const { data: availableAuras = [] } = useQuery<Aura[]>({
     queryKey: ['/api/auras'],
@@ -71,24 +71,24 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
   const unequippedAuras = availableAuras
     .filter(a => !a.equippedByCharacterId && !a.isFusing)
     .sort((a, b) => (b.level || 0) - (a.level || 0));
-  
+
   // Function to equip an aura to the character
   const equipAura = async () => {
     if (!selectedAuraId) return;
-    
+
     setIsEquipping(true);
     try {
       await apiRequest('POST', `/api/characters/${character.id}/equip-aura/${selectedAuraId}`);
-      
+
       // Invalidate character and aura queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auras'] });
-      
+
       toast({
         title: "Aura equipped",
         description: "The aura has been successfully equipped to your character.",
       });
-      
+
       setEquipAuraDialogOpen(false);
     } catch (error) {
       console.error('Failed to equip aura:', error);
@@ -101,7 +101,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
       setIsEquipping(false);
     }
   };
-  
+
   // Function to get element icon
   const getElementIcon = (element: string) => {
     switch (element.toLowerCase()) {
@@ -120,7 +120,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
       'rogue': 'bg-green-700/30 text-green-400',
       'cleric': 'bg-yellow-700/30 text-yellow-400',
     };
-    
+
     return classColors[characterClass.toLowerCase()] || 'bg-gray-700/30 text-gray-400';
   };
 
@@ -128,7 +128,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
 
   const getActivityText = () => {
     if (!character.isActive) return null;
-    
+
     return (
       <div className="absolute top-2 right-2 flex items-center space-x-1">
         <Badge variant="outline" className="bg-[#DC143C]/20 text-[#DC143C] border-[#DC143C]/30 flex items-center">
@@ -145,6 +145,16 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
     );
   };
 
+  const getAuraElementClass = (element: string) => {
+    switch (element.toLowerCase()) {
+      case 'fire': return 'bg-gradient-to-r from-red-500 to-orange-500';
+      case 'water': return 'bg-gradient-to-r from-blue-500 to-cyan-500';
+      case 'earth': return 'bg-gradient-to-r from-green-500 to-lime-500';
+      case 'wind': return 'bg-gradient-to-r from-sky-500 to-cyan-500';
+      default: return 'bg-gradient-to-r from-purple-500 to-pink-500';
+    }
+  };
+
   return (
     <>
       {/* Equip Aura Dialog */}
@@ -158,7 +168,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
               Select an aura to equip to your character. Only unequipped auras are shown.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="my-4">
             {unequippedAuras.length === 0 ? (
               <div className="py-8 text-center text-[#C8B8DB]/60">
@@ -181,21 +191,21 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                 </SelectContent>
               </Select>
             )}
-            
+
             {selectedAuraId && (
               <div className="mt-4 p-3 bg-[#432874]/20 rounded-lg">
                 <h4 className="font-semibold mb-2 text-sm">Selected Aura Details</h4>
                 {(() => {
                   const selectedAura = unequippedAuras.find(a => a.id === selectedAuraId);
                   if (!selectedAura) return <div>No aura selected</div>;
-                  
+
                   // Parse skills if they exist
                   const skills = selectedAura.skills ? 
                     typeof selectedAura.skills === 'string' ? 
                       JSON.parse(selectedAura.skills as string) : 
                       selectedAura.skills : 
                     [];
-                  
+
                   return (
                     <div className="text-sm">
                       <div className="flex items-center mb-1">
@@ -207,7 +217,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                         <div>Level: {selectedAura.level}</div>
                         <div>Tier: {selectedAura.tier}</div>
                       </div>
-                      
+
                       {skills && skills.length > 0 && (
                         <div className="mt-2">
                           <h5 className="font-semibold text-xs mb-1">Skills:</h5>
@@ -218,7 +228,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           </ul>
                         </div>
                       )}
-                      
+
                       {(selectedAura.attack !== 0 || selectedAura.accuracy !== 0 || selectedAura.defense !== 0 || 
                         selectedAura.vitality !== 0 || selectedAura.speed !== 0 || selectedAura.focus !== 0 || 
                         selectedAura.resilience !== 0) && (
@@ -290,7 +300,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
               </div>
             )}
           </div>
-          
+
           <DialogFooter>
             <Button 
               variant="outline" 
@@ -309,7 +319,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       <motion.div
         className="bg-[#1A1A2E] rounded-xl overflow-hidden border border-[#432874]/30 relative"
         whileHover={{ y: -5, boxShadow: '0 5px 20px rgba(67, 40, 116, 0.3)' }}
@@ -319,7 +329,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
       >
         {/* Activity Indicator */}
         {getActivityText()}
-        
+
         <div className="p-4">
           <div className="flex items-center space-x-4">
             <div className="relative">
@@ -334,7 +344,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                 </div>
               </div>
             </div>
-            
+
             <div>
               <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB]">
                 {character.name}
@@ -349,7 +359,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
             <div className="flex items-center">
               <Swords className="h-3 w-3 mr-1 text-red-400" />
@@ -386,7 +396,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
               </div>
             )}
           </div>
-          
+
           <div className="mt-4 pt-3 border-t border-[#432874]/30 flex justify-between items-center">
             {character.equippedAuraId ? (
               <div className="flex items-center text-xs">
@@ -398,7 +408,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
             ) : (
               <div className="text-xs text-[#C8B8DB]/60">No Aura Equipped</div>
             )}
-            
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
@@ -421,7 +431,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                     {character.name}
                   </DialogTitle>
                 </DialogHeader>
-                
+
                 <div className="py-4">
                   <div className="flex justify-between mb-4">
                     <Badge className={`${getClassColor(character.class)}`}>{character.class}</Badge>
@@ -429,7 +439,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                       Level {character.level || 1}
                     </div>
                   </div>
-                  
+
                   <div className="mb-4">
                     <h4 className="font-semibold mb-3 text-[#C8B8DB] border-b border-[#432874]/30 pb-1">Character Stats</h4>
                     <div className="grid grid-cols-2 gap-4">
@@ -457,7 +467,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
-                        
+
                         <div>
                           <div className="flex justify-between text-xs mb-1">
                             <div className="flex items-center">
@@ -480,7 +490,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
-                        
+
                         <div>
                           <div className="flex justify-between text-xs mb-1">
                             <div className="flex items-center">
@@ -504,7 +514,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <div>
                           <div className="flex justify-between text-xs mb-1">
@@ -528,7 +538,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
-                        
+
                         <div>
                           <div className="flex justify-between text-xs mb-1">
                             <div className="flex items-center">
@@ -551,7 +561,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                             <div className="text-xs text-green-500 mt-1">+Passive Bonus</div>
                           )}
                         </div>
-                        
+
                         <div>
                           <div className="flex justify-between text-xs mb-1">
                             <div className="flex items-center">
@@ -599,7 +609,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Aura Bonuses */}
                     {aura && (
                       <div className="mt-4 pt-3 border-t border-[#432874]/30">
@@ -661,13 +671,13 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                               </div>
                             )}
                           </div>
-                          
+
                           {/* Note: Stat bonuses are now displayed directly in the attributes above */}
                         </div>
                       </div>
                     )}
                   </div>
-                  
+
                   {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
                     <div className="bg-[#432874]/20 rounded-lg p-3 mb-4">
                       <h4 className="font-semibold mb-2 text-[#C8B8DB]">Passive Skills</h4>
@@ -687,12 +697,14 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="bg-[#432874]/20 rounded-lg p-3">
                     <h4 className="font-semibold mb-2 text-[#C8B8DB]">Equipped Aura</h4>
                     {character.equippedAuraId ? (
                       <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mr-2"></div>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${getAuraElementClass(aura?.element)}`}>
+                          {aura && getElementIcon(aura.element)}
+                        </div>
                         <div>
                           <div className="text-sm text-[#00B9AE]">
                             {aura ? `${aura.name || (aura.element ? `${aura.element} Aura` : 'Mysterious Aura')}` : 'Aura Equipped'}
@@ -706,7 +718,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                       <div className="text-sm text-[#C8B8DB]/60">No Aura Equipped</div>
                     )}
                   </div>
-                  
+
                   <div className="mt-4 flex justify-end space-x-2">
                     {!character.isActive && (
                       <>
