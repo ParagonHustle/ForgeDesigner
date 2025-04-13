@@ -15,7 +15,8 @@ import {
 } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { HelpCircle, Lightbulb } from 'lucide-react';
-import { gameMechanicsTooltips, GameMechanicTooltip } from '@/lib/tooltipData';
+import { gameMechanicsTooltips } from '@/lib/tooltipData';
+import { GameMechanicTooltip } from '@/components/common/GameTooltip';
 
 // Props for the MechanicsHelpModal
 interface MechanicsHelpModalProps {

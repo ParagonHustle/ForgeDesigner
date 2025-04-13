@@ -209,7 +209,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                 <CountdownTimer 
                   endTime={run.endTime} 
                   className="ml-2" 
-                  onComplete={() => handleCompleteDungeonRun(run.id)}
+                  onComplete={() => {}} // Removed auto-complete
                 />
               </div>
             </div>
@@ -224,13 +224,13 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
               ))}
             </div>
             {new Date(run.endTime) <= new Date() && (
-              <Button 
-                className="w-full mt-2 bg-[#DC143C] hover:bg-[#DC143C]/80 text-white"
-                onClick={() => handleCompleteDungeonRun(run.id)}
-                disabled={completingTask === run.id}
-              >
-                {completingTask === run.id ? "Completing..." : "Complete Dungeon"}
-              </Button>
+              <Link href="/dungeons">
+                <Button 
+                  className="w-full mt-2 bg-[#DC143C] hover:bg-[#DC143C]/80 text-white"
+                >
+                  View Dungeon Run
+                </Button>
+              </Link>
             )}
           </motion.div>
         ))}
