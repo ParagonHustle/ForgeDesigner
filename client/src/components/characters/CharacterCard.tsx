@@ -56,9 +56,12 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
   const { toast } = useToast();
 
   // Fetch aura details if character has an equipped aura
-  const { data: aura, isLoading: isAuraLoading, error: auraError } = useQuery<Aura>({ 
+  const { data: aura, isLoading: isAuraLoading, error: auraError, refetch: refetchAura } = useQuery<Aura>({ 
     queryKey: character.equippedAuraId ? [`/api/auras/${character.equippedAuraId}`] : [],
-    enabled: !!character.equippedAuraId
+    enabled: !!character.equippedAuraId,
+    staleTime: 0, // Don't use cached data
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
   
   // More detailed debugging
@@ -79,13 +82,15 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
     }
   }
   
-  // Manual debugging alternative - check if the aura exists in the availableAuras
-  const { data: allAuras = [] } = useQuery<Aura[]>({
+  // Get all auras for comparison and fallback
+  const { data: allAuras = [], refetch: refetchAllAuras } = useQuery<Aura[]>({
     queryKey: ['/api/auras'],
-    enabled: !!character.equippedAuraId
+    staleTime: 0, // Don't use cached data
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
   
-  // Find the equipped aura in the list of all auras
+  // Find the equipped aura in the list of all auras as a backup
   const equippedAura = character.equippedAuraId ? 
     allAuras.find(a => a.id === character.equippedAuraId) : null;
   
@@ -112,9 +117,20 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
     try {
       await apiRequest('POST', `/api/characters/${character.id}/equip-aura/${selectedAuraId}`);
 
-      // Invalidate character and aura queries to refresh data
+      // Force immediate refresh of data
       queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auras'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/auras/${selectedAuraId}`] });
+      
+      // Force a specific refetch for this character's new aura
+      // This ensures we get fresh data immediately
+      if (refetchAura) {
+        setTimeout(() => {
+          refetchAura();
+          refetchAllAuras();
+          console.log("Forced refetch of aura data after equipping");
+        }, 300); // Small delay to ensure backend has processed the change
+      }
 
       toast({
         title: "Aura equipped",
