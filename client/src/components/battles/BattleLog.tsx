@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
+import { Shield, Swords, Heart, Zap } from 'lucide-react';
 
 interface BattleUnit {
   id: string;
@@ -55,7 +56,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         totalDamageDealt: 0,
         totalDamageReceived: 0,
         totalHealingDone: 0,
-        totalHealingReceived: 0
+        totalHealingReceived: 0,
+        hp: unit.stats.vitality * 8,
+        maxHp: unit.stats.vitality * 8
       }));
       setUnits(initialUnits);
     }
@@ -67,7 +70,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       const interval = setInterval(() => {
         setUnits(prevUnits => {
           return prevUnits.map(unit => {
-            // Update attack meter based on speed
+            // Update attack meter based on speed (120 speed = 3x faster than 40 speed)
             const meterIncrease = (unit.stats.speed / 40) * playbackSpeed;
             let newMeter = unit.attackMeter + meterIncrease;
 
@@ -104,24 +107,30 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const performAction = (attacker: BattleUnit, target: BattleUnit) => {
     const attackCount = attacker.lastSkillUse + 1;
     let skill = attacker.skills.basic;
+    let skillType = 'basic';
 
-    // Check for ultimate/advanced skill usage
+    // Check for ultimate/advanced skill usage based on cooldown
     if (attacker.skills.ultimate && attackCount % attacker.skills.ultimate.cooldown === 0) {
       skill = attacker.skills.ultimate;
+      skillType = 'ultimate';
     } else if (attacker.skills.advanced && attackCount % attacker.skills.advanced.cooldown === 0) {
       skill = attacker.skills.advanced;
+      skillType = 'advanced';
     }
 
+    // Calculate damage based on attacker's attack stat
     const damage = Math.floor(skill.damage * (attacker.stats.attack / 100));
-
-    setActionLog(prev => [...prev, `${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!`]);
+    const actionMessage = `${attacker.name} used ${skill.name} (${skillType}) on ${target.name} for ${damage} damage!`;
+    
+    setActionLog(prev => [...prev, actionMessage]);
 
     setUnits(prevUnits => 
       prevUnits.map(u => {
         if (u.id === target.id) {
+          const newHp = Math.max(0, u.hp - damage);
           return {
             ...u,
-            hp: Math.max(0, u.hp - damage),
+            hp: newHp,
             totalDamageReceived: u.totalDamageReceived + damage
           };
         }
@@ -148,30 +157,40 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
     if (allAlliesDefeated || allEnemiesDefeated) {
       setIsComplete(true);
-      // Add defeated characters to cooldown
-      allies.filter(a => a.hp <= 0).forEach(defeatedAlly => {
-        // Implement 5-minute cooldown logic here
-      });
+      setActionLog(prev => [
+        ...prev,
+        `Battle ended! ${allAlliesDefeated ? 'Enemies' : 'Allies'} are victorious!`
+      ]);
     }
   };
 
-  const handleSpeedChange = (speed: number) => {
-    setPlaybackSpeed(speed);
-  };
-
-  const handleComplete = () => {
-    setIsComplete(true);
-    onClose();
-  };
-
-  const finalResult = battleLog[battleLog.length - 1];
+  const renderUnitStats = (unit: BattleUnit) => (
+    <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+      <div className="flex items-center">
+        <Swords className="h-3 w-3 mr-1 text-red-400" />
+        <span>ATK: {unit.stats.attack}</span>
+      </div>
+      <div className="flex items-center">
+        <Heart className="h-3 w-3 mr-1 text-red-500" />
+        <span>VIT: {unit.stats.vitality}</span>
+      </div>
+      <div className="flex items-center">
+        <Shield className="h-3 w-3 mr-1 text-blue-400" />
+        <span>DEF: {unit.stats.vitality * 8}</span>
+      </div>
+      <div className="flex items-center">
+        <Zap className="h-3 w-3 mr-1 text-yellow-400" />
+        <span>SPD: {unit.stats.speed}</span>
+      </div>
+    </div>
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-[#1A1A2E] border-[#432874] text-[#C8B8DB] max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-[#FF9D00] font-cinzel">
-            Dungeon Battle Log
+            Battle Log - Stage {currentStage + 1}
           </DialogTitle>
         </DialogHeader>
 
@@ -209,7 +228,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
                     <div className="flex justify-between">
                       <span>{unit.name}</span>
-                      <span>{unit.hp}/{unit.maxHp} HP</span>
+                      <span>{Math.ceil(unit.hp)}/{unit.maxHp} HP</span>
                     </div>
                     <div className="w-full bg-[#432874]/30 h-2 rounded">
                       <motion.div
@@ -223,6 +242,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         style={{ width: `${unit.attackMeter}%` }}
                       />
                     </div>
+                    {renderUnitStats(unit)}
                   </div>
                 ))}
               </div>
@@ -233,7 +253,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
                     <div className="flex justify-between">
                       <span>{unit.name}</span>
-                      <span>{unit.hp}/{unit.maxHp} HP</span>
+                      <span>{Math.ceil(unit.hp)}/{unit.maxHp} HP</span>
                     </div>
                     <div className="w-full bg-[#432874]/30 h-2 rounded">
                       <motion.div
@@ -247,6 +267,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         style={{ width: `${unit.attackMeter}%` }}
                       />
                     </div>
+                    {renderUnitStats(unit)}
                   </div>
                 ))}
               </div>
@@ -256,7 +277,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           <TabsContent value="summary">
             <div className="space-y-4">
               <h3 className="font-semibold">Battle Statistics</h3>
-              {units.filter(u => battleLog[0].allies.some(a => a.id === u.id)).map(unit => (
+              {units.map(unit => (
                 <div key={unit.id} className="bg-[#432874]/20 p-3 rounded">
                   <h4 className="font-medium mb-2">{unit.name}</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -267,25 +288,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   </div>
                 </div>
               ))}
-
-              <div className="mt-6">
-                <h3 className="font-semibold mb-2">Dungeon Result</h3>
-                <div className="bg-[#432874]/20 p-3 rounded">
-                  <div>Stages Completed: {finalResult.completedStages} / {finalResult.totalStages}</div>
-                  {finalResult.success && (
-                    <div className="mt-2">
-                      <h4 className="font-medium mb-1">Rewards Earned:</h4>
-                      {finalResult.rewards && (
-                        <ul className="list-disc list-inside text-sm">
-                          {Object.entries(finalResult.rewards).map(([key, value]) => (
-                            <li key={key}>{key}: {value}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </TabsContent>
 
@@ -300,16 +302,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="flex justify-between">
-          <Button onClick={handleComplete}>
-            {finalResult.success ? 'Collect Rewards' : 'Return to Town'}
-          </Button>
-          {runId && (
+        <DialogFooter>
+          {isComplete ? (
             <Button 
-              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80" 
-              onClick={() => onCompleteDungeon?.(runId)}
+              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80"
+              onClick={() => {
+                if (runId && onCompleteDungeon) {
+                  onCompleteDungeon(runId);
+                }
+                onClose();
+              }}
             >
-              Complete Dungeon Run
+              Complete Battle
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setIsPaused(!isPaused)}
+            >
+              {isPaused ? 'Resume Battle' : 'Pause Battle'}
             </Button>
           )}
         </DialogFooter>
