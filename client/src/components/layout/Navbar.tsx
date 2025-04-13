@@ -2,6 +2,7 @@ import { useDiscordAuth } from '@/lib/discordAuth';
 import { useGameStore } from '@/lib/zustandStore';
 import { Zap } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
+import CountdownTimer from '@/components/common/CountdownTimer';
 
 const Navbar = () => {
   const { user, logout } = useDiscordAuth();
