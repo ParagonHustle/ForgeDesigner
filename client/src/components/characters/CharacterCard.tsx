@@ -469,7 +469,7 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#432874]/30 flex justify-between items-center">
+          <div className="mt-4 pt-3 border-t border-[#432874]/30">
             {character.equippedAuraId ? (
               <div className="flex flex-col text-xs">
                 <div className="flex items-center">
@@ -534,17 +534,11 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
             ) : (
               <div className="text-xs text-[#C8B8DB]/60">No Aura Equipped</div>
             )}
+          </div>
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-7 bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
-                  disabled={character.isActive ? true : false}
-                >
-                  <Info className="h-3 w-3 mr-1" /> Details
-                </Button>
+                <div className="absolute inset-0 cursor-pointer rounded-xl hover:bg-[#432874]/10 transition-colors" />
               </DialogTrigger>
               <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB]">
                 <DialogHeader>
