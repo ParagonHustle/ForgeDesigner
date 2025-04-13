@@ -1385,158 +1385,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
             auraName = `Enhanced ${primaryAura.element} Aura`;
         }
         
-        // Process skills - chance to upgrade Basic skills to Advanced or Ultimate
-        const processedSkills = [...(primaryAura.skills || [])].map(skill => {
-          // Deep clone the skill
-          const newSkill = {...skill};
+        // Keep the primary aura's skills (no chance-based upgrades)
+        // Just carry over the existing skills
+        const processedSkills = [...(primaryAura.skills || [])];
+        
+        // When fusing to create a Tier 2 aura, add an Advanced skill
+        if ((primaryAura.tier === 1 || !primaryAura.tier) && 
+            (resultAura.tier === 2 || newLevel >= 2)) {
+          // Define advanced skills for each element
+          const advancedSkills = {
+            fire: [
+              {
+                name: "Flame Whip",
+                type: "Advanced",
+                description: "A cracking lash of fire that scorches in a line.",
+                damage: 1.2,
+                level: 2,
+                effect: "25% chance to apply 1 Burn Stack for 2 Turns",
+                targets: "2-3 in a row"
+              },
+              {
+                name: "Combustion",
+                type: "Advanced",
+                description: "Focuses heat into a precise explosion that weakens all defenses.",
+                damage: 1.3,
+                level: 2,
+                effect: "15% chance to apply Defense Down (-20%) for 1 Turn",
+                targets: 1
+              }
+            ],
+            water: [
+              {
+                name: "Tidal Wave",
+                type: "Advanced",
+                description: "A wall of rushing water crashes over multiple enemies.",
+                damage: 1.1,
+                level: 2,
+                effect: "15% chance to Knockback (reduce Turn Meter by 20%)",
+                targets: "2-3 Random"
+              },
+              {
+                name: "Mist Veil",
+                type: "Advanced",
+                description: "A protective fog envelops allies, protecting them from harm.",
+                damage: 0.7,
+                level: 2,
+                effect: "Apply Shield (10% of Caster's Max HP) to lowest HP Ally",
+                targets: 1
+              }
+            ],
+            earth: [
+              {
+                name: "Fissure",
+                type: "Advanced",
+                description: "The ground breaks open beneath the enemy, disrupting their stance.",
+                damage: 1.3,
+                level: 2,
+                effect: "35% chance to apply Stagger (miss next turn)",
+                targets: 1
+              },
+              {
+                name: "Stone Armor",
+                type: "Advanced",
+                description: "Layers of rock form a protective coating around the caster.",
+                damage: 0.6,
+                level: 2,
+                effect: "Self buff: Defense Up (+30%) for 2 Turns",
+                targets: 1
+              }
+            ],
+            wind: [
+              {
+                name: "Cyclone",
+                type: "Advanced",
+                description: "A spinning vortex pulls in multiple enemies and tosses them about.",
+                damage: 1.0,
+                level: 2,
+                effect: "35% chance to apply Confusion (50% chance to attack ally) for 1 Turn",
+                targets: "2 Random"
+              },
+              {
+                name: "Tailwind",
+                type: "Advanced",
+                description: "Favorable winds increase party movement speed.",
+                damage: 0.6,
+                level: 2,
+                effect: "Grant Speed Up (+20%) to all allies for 2 Turns",
+                targets: "All Allies"
+              }
+            ]
+          };
           
-          // Only Basic skills can be upgraded initially
-          if (newSkill.type === 'Basic' && newLevel >= 2) {
-            // 25% chance to upgrade to Advanced at level 2+ (tier 2)
-            if (Math.random() < 0.25) {
-              // Define advanced skills for each element
-              const advancedSkills = {
-                fire: [
-                  {
-                    name: "Flame Whip",
-                    type: "Advanced",
-                    description: "A cracking lash of fire that scorches in a line.",
-                    damage: 1.2,
-                    level: 2,
-                    effect: "25% chance to apply 1 Burn Stack for 2 Turns",
-                    targets: "2-3 in a row"
-                  },
-                  {
-                    name: "Combustion",
-                    type: "Advanced",
-                    description: "Focuses heat into a precise explosion that weakens all defenses.",
-                    damage: 1.3,
-                    level: 2,
-                    effect: "15% chance to apply Defense Down (-20%) for 1 Turn",
-                    targets: 1
-                  }
-                ],
-                water: [
-                  {
-                    name: "Tidal Wave",
-                    type: "Advanced",
-                    description: "A wall of rushing water crashes over multiple enemies.",
-                    damage: 1.1,
-                    level: 2,
-                    effect: "15% chance to Knockback (reduce Turn Meter by 20%)",
-                    targets: "2-3 Random"
-                  },
-                  {
-                    name: "Mist Veil",
-                    type: "Advanced",
-                    description: "A protective fog envelops allies, protecting them from harm.",
-                    damage: 0.7,
-                    level: 2,
-                    effect: "Apply Shield (10% of Caster's Max HP) to lowest HP Ally",
-                    targets: 1
-                  }
-                ],
-                earth: [
-                  {
-                    name: "Fissure",
-                    type: "Advanced",
-                    description: "The ground breaks open beneath the enemy, disrupting their stance.",
-                    damage: 1.3,
-                    level: 2,
-                    effect: "35% chance to apply Stagger (miss next turn)",
-                    targets: 1
-                  },
-                  {
-                    name: "Stone Armor",
-                    type: "Advanced",
-                    description: "Layers of rock form a protective coating around the caster.",
-                    damage: 0.6,
-                    level: 2,
-                    effect: "Self buff: Defense Up (+30%) for 2 Turns",
-                    targets: 1
-                  }
-                ],
-                wind: [
-                  {
-                    name: "Cyclone",
-                    type: "Advanced",
-                    description: "A spinning vortex pulls in multiple enemies and tosses them about.",
-                    damage: 1.0,
-                    level: 2,
-                    effect: "35% chance to apply Confusion (50% chance to attack ally) for 1 Turn",
-                    targets: "2 Random"
-                  },
-                  {
-                    name: "Tailwind",
-                    type: "Advanced",
-                    description: "Favorable winds increase party movement speed.",
-                    damage: 0.6,
-                    level: 2,
-                    effect: "Grant Speed Up (+20%) to all allies for 2 Turns",
-                    targets: "All Allies"
-                  }
-                ]
-              };
-              
-              // Select a random Advanced skill to replace the Basic skill
-              if (advancedSkills[primaryAura.element]) {
-                const randomIndex = Math.floor(Math.random() * advancedSkills[primaryAura.element].length);
-                return advancedSkills[primaryAura.element][randomIndex];
-              }
-            }
+          // Safely get the element type
+          const elementTypeSafe = primaryAura.element as keyof typeof advancedSkills;
+          
+          // Select a random Advanced skill to add
+          if (advancedSkills[elementTypeSafe]) {
+            const randomIndex = Math.floor(Math.random() * advancedSkills[elementTypeSafe].length);
+            const advancedSkill = advancedSkills[elementTypeSafe][randomIndex];
             
-            // Extremely rare 5% chance to upgrade to Ultimate at level 3+ (tier 3)
-            else if (newLevel >= 3 && Math.random() < 0.05) {
-              // Define ultimate skills for each element
-              const ultimateSkills = {
-                fire: {
-                  name: "Supernova",
-                  type: "Ultimate",
-                  description: "All surrounding matter ignites in a cataclysmic blast of energy.",
-                  damage: 1.8,
-                  level: 3,
-                  effect: "Apply Burn (5% HP damage per turn) to all enemies for 2 Turns",
-                  targets: "All Enemies"
-                },
-                water: {
-                  name: "Abyssal Depths",
-                  type: "Ultimate",
-                  description: "The crushing pressure of the deep ocean consumes all enemies.",
-                  damage: 1.5,
-                  level: 3,
-                  effect: "Apply Slow (speed -40%) to all enemies for 2 Turns",
-                  targets: "All Enemies"
-                },
-                earth: {
-                  name: "Tectonic Shift",
-                  type: "Ultimate",
-                  description: "The battlefield fractures as massive stone pillars erupt from below.",
-                  damage: 1.7,
-                  level: 3,
-                  effect: "50% chance to Stun each enemy for 1 Turn",
-                  targets: "All Enemies"
-                },
-                wind: {
-                  name: "Hurricane",
-                  type: "Ultimate",
-                  description: "A devastating storm tears through the battlefield with unmatched fury.",
-                  damage: 1.6,
-                  level: 3,
-                  effect: "Reduce Turn Meter of all enemies by 30%",
-                  targets: "All Enemies"
-                }
-              };
-              
-              // Return the Ultimate skill for this element
-              if (ultimateSkills[primaryAura.element]) {
-                return ultimateSkills[primaryAura.element];
-              }
+            // Add the Advanced skill if one doesn't already exist
+            if (!processedSkills.some(skill => skill.type === "Advanced")) {
+              processedSkills.push(advancedSkill);
             }
           }
+        }
+        
+        // When fusing to create a Tier 3 aura, add an Ultimate skill
+        if ((primaryAura.tier === 2 || (newLevel >= 3 && resultAura.tier === 3)) && 
+            (resultAura.tier === 3 || newLevel >= 3)) {
+          // Define ultimate skills for each element
+          const ultimateSkills = {
+            fire: {
+              name: "Supernova",
+              type: "Ultimate",
+              description: "All surrounding matter ignites in a cataclysmic blast of energy.",
+              damage: 1.8,
+              level: 3,
+              effect: "Apply Burn (5% HP damage per turn) to all enemies for 2 Turns",
+              targets: "All Enemies"
+            },
+            water: {
+              name: "Abyssal Depths",
+              type: "Ultimate",
+              description: "The crushing pressure of the deep ocean consumes all enemies.",
+              damage: 1.5,
+              level: 3,
+              effect: "Apply Slow (speed -40%) to all enemies for 2 Turns",
+              targets: "All Enemies"
+            },
+            earth: {
+              name: "Tectonic Shift",
+              type: "Ultimate",
+              description: "The battlefield fractures as massive stone pillars erupt from below.",
+              damage: 1.7,
+              level: 3,
+              effect: "50% chance to Stun each enemy for 1 Turn",
+              targets: "All Enemies"
+            },
+            wind: {
+              name: "Hurricane",
+              type: "Ultimate",
+              description: "A devastating storm tears through the battlefield with unmatched fury.",
+              damage: 1.6,
+              level: 3,
+              effect: "Reduce Turn Meter of all enemies by 30%",
+              targets: "All Enemies"
+            }
+          };
           
-          // Return the original skill if no upgrade happened
-          return newSkill;
-        });
+          // Safely get the element type
+          const elementTypeSafe = primaryAura.element as keyof typeof ultimateSkills;
+          
+          // Add the Ultimate skill if one doesn't already exist
+          if (!processedSkills.some(skill => skill.type === "Ultimate") && 
+              ultimateSkills[elementTypeSafe]) {
+            processedSkills.push(ultimateSkills[elementTypeSafe]);
+          }
+        }
         
         const resultAura = await storage.createAura({
           userId: req.session.userId!,
