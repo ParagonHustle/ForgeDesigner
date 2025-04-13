@@ -1274,12 +1274,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         };
         
-        // 50% chance to get either skill
+        // 50% chance to get either skill, but only add ONE skill (not both)
         const skillIndex = Math.random() < 0.5 ? 0 : 1;
         // Use type assertion to handle the element type safely
         const elementTypeSafe = elementType as keyof typeof elementSkills;
         if (elementSkills[elementTypeSafe]) {
-          skills.push(elementSkills[elementTypeSafe][skillIndex]);
+          // Only add one skill to the array (replacing any existing skills)
+          skills[0] = elementSkills[elementTypeSafe][skillIndex];
         }
         
         const newAura = await storage.createAura({
@@ -1390,8 +1391,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const processedSkills = [...(primaryAura.skills || [])];
         
         // When fusing to create a Tier 2 aura, add an Advanced skill
-        if ((primaryAura.tier === 1 || !primaryAura.tier) && 
-            (resultAura.tier === 2 || newLevel >= 2)) {
+        // Check if this will be a Tier 2 aura based on the primary aura's tier and the new level
+        if ((primaryAura.tier === 1 || !primaryAura.tier) && newLevel >= 2) {
           // Define advanced skills for each element
           const advancedSkills = {
             fire: [
@@ -1492,8 +1493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // When fusing to create a Tier 3 aura, add an Ultimate skill
-        if ((primaryAura.tier === 2 || (newLevel >= 3 && resultAura.tier === 3)) && 
-            (resultAura.tier === 3 || newLevel >= 3)) {
+        if ((primaryAura.tier === 2 || newLevel >= 3) && newLevel >= 3) {
           // Define ultimate skills for each element
           const ultimateSkills = {
             fire: {
