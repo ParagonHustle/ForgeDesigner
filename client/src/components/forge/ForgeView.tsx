@@ -63,7 +63,9 @@ const ForgeView = () => {
   // Get forging tasks
   const { data: forgingTasks = [], isLoading: isTasksLoading } = useQuery<ForgingTask[]>({ 
     queryKey: ['/api/forge/tasks'],
-    refetchInterval: 10000 // Refresh every 10 seconds
+    refetchInterval: 2000, // Refresh every 2 seconds for more immediate updates
+    staleTime: 1000, // Consider data stale after 1 second
+    refetchOnWindowFocus: true // Refresh when window gets focus
   });
   
   // Get currently available characters (not assigned to any active tasks)
