@@ -108,6 +108,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               let statusEffectDamage = 0;
               let statusMessages: string[] = [];
               
+              // Debug current status effects
+              console.log(`${unit.name}'s status effects BEFORE processing:`, 
+                unit.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
+              
               // Create a copy of status effects to process
               const updatedStatusEffects = [...unit.statusEffects];
               
@@ -122,6 +126,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   statusMessages.push(`${unit.name} took ${dotDamage} damage from ${effect.name}`);
                 }
                 
+                console.log(`Decrementing ${unit.name}'s ${effect.name} effect from ${effect.duration} to ${effect.duration-1} turns`);
+                
                 // Reduce duration by 1 for ALL effect types
                 updatedStatusEffects[j] = {
                   ...effect,
@@ -130,12 +136,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 
                 // Log status effect duration change for debugging
                 if (updatedStatusEffects[j].duration <= 0) {
+                  console.log(`${effect.name} has EXPIRED on ${unit.name}`);
                   statusMessages.push(`${effect.name} has expired on ${unit.name}`);
                 } else if (effect.effect === "ReduceAtk" || effect.effect === "ReduceSpd") {
                   // Only log debuff duration for non-damaging effects
+                  console.log(`${unit.name}'s ${effect.name} effect has ${updatedStatusEffects[j].duration} turns remaining`);
                   statusMessages.push(`${unit.name}'s ${effect.name} effect: ${updatedStatusEffects[j].duration} turns remaining`);
                 }
               }
+              
+              // Debug updated status effects
+              console.log(`${unit.name}'s status effects AFTER processing:`, 
+                updatedStatusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
               
               // Apply damage from status effects
               if (statusEffectDamage > 0) {
@@ -497,6 +509,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       // Apply the status effect to the target (will be added when the unit's state is updated)
       if (!target.statusEffects) target.statusEffects = [];
+      
+      // Debug status effects
+      console.log(`Status effects before update for ${target.name}:`, 
+        target.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
+      
       // Check if target already has this effect, if so, extend duration rather than adding new
       const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
       if (existingEffectIndex >= 0) {
@@ -505,10 +522,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           target.statusEffects[existingEffectIndex].duration,
           effect.duration
         );
+        console.log(`Extended ${effect.name} duration to ${target.statusEffects[existingEffectIndex].duration} turns`);
       } else {
         // Add new effect
         target.statusEffects.push(effect);
+        console.log(`Added new effect ${effect.name} with ${effect.duration} turns duration`);
       }
+      
+      // Debug updated status effects
+      console.log(`Status effects after update for ${target.name}:`, 
+        target.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
     }
     
     // Add healing effect text for Soothing Current
@@ -847,9 +870,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           <TabsContent value="log">
             <div className="h-[400px] overflow-y-auto space-y-1">
               {actionLog.map((log, index) => {
-                // Check if this is an ally or enemy action
-                const isAllyAction = log.includes("G-Wolf used") || log.includes("Kleos used");
-                const isEnemyAction = log.includes("Boss") || log.includes("Minion");
+                // Improved ally detection - check for ANY ally character in The Forge
+                const allyNames = ["G-Wolf", "Kleos", "Brawler Frank", "Gideon", "Albus Dumbleboom", "Grimmjaw"];
+                const isAllyAction = allyNames.some(name => log.includes(`${name} used`));
+                const isEnemyAction = (log.includes("Boss") || log.includes("Minion")) && log.includes(" used ");
                 
                 // Format damage numbers in red and bold
                 let formattedLog = log;
@@ -877,7 +901,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   }
                 }
                 
-                // Format healing amount in skill text
+                // Format healing amount in skill text with healing for X HP
+                if (formattedLog.includes("with healing for")) {
+                  const healMatch = formattedLog.match(/healing for (\d+) HP/);
+                  if (healMatch && healMatch[1]) {
+                    const healAmount = healMatch[1];
+                    formattedLog = formattedLog.replace(
+                      `healing for ${healAmount} HP`,
+                      `healing for <span class="text-green-500 font-bold">${healAmount}</span> HP`
+                    );
+                  }
+                }
+                
+                // Format healing amount in skill text with includes healing for X HP
                 if (formattedLog.includes("includes healing for")) {
                   const healMatch = formattedLog.match(/healing for (\d+) HP/);
                   if (healMatch && healMatch[1]) {
