@@ -15,7 +15,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import CharacterCard from '../characters/CharacterCard';
+import { CharacterCard } from '../characters/CharacterCard';
 import type { Character, Aura, Resource } from '@shared/schema';
 
 const InventoryView = () => {

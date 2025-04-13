@@ -62,6 +62,7 @@ const CharacterCard = ({
   equippedAura
 }: CharacterCardProps) => {
   const [equipAuraDialogOpen, setEquipAuraDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedAuraId, setSelectedAuraId] = useState<number | null>(null);
   const [isEquipping, setIsEquipping] = useState(false);
   const { toast } = useToast();
@@ -189,8 +190,7 @@ const CharacterCard = ({
     return classColors[characterClass.toLowerCase()] || 'bg-gray-700/30 text-gray-400';
   };
 
-  // Removed rarity-related function as per new requirements
-
+  // Function to get activity text
   const getActivityText = () => {
     if (!character.isActive) return null;
 
@@ -304,7 +304,7 @@ const CharacterCard = ({
                             {selectedAura.attack !== 0 && (
                               <div className="flex justify-between">
                                 <span>Attack:</span>
-                                <span className={selectedAura.attack > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.attack && selectedAura.attack > 0 ? "text-green-400" : "text-red-400"}>
                                   {selectedAura.attack}%
                                 </span>
                               </div>
@@ -312,7 +312,7 @@ const CharacterCard = ({
                             {selectedAura.accuracy !== 0 && (
                               <div className="flex justify-between">
                                 <span>Accuracy:</span>
-                                <span className={selectedAura.accuracy > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.accuracy && selectedAura.accuracy > 0 ? "text-green-400" : "text-red-400"}>
                                   {selectedAura.accuracy}%
                                 </span>
                               </div>
@@ -320,7 +320,7 @@ const CharacterCard = ({
                             {selectedAura.defense !== 0 && (
                               <div className="flex justify-between">
                                 <span>Defense:</span>
-                                <span className={selectedAura.defense > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.defense && selectedAura.defense > 0 ? "text-green-400" : "text-red-400"}>
                                   {selectedAura.defense}%
                                 </span>
                               </div>
@@ -328,7 +328,7 @@ const CharacterCard = ({
                             {selectedAura.vitality !== 0 && (
                               <div className="flex justify-between">
                                 <span>Vitality:</span>
-                                <span className={selectedAura.vitality > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.vitality && selectedAura.vitality > 0 ? "text-green-400" : "text-red-400"}>
                                   {selectedAura.vitality}%
                                 </span>
                               </div>
@@ -336,7 +336,7 @@ const CharacterCard = ({
                             {selectedAura.speed !== 0 && (
                               <div className="flex justify-between">
                                 <span>Speed:</span>
-                                <span className={selectedAura.speed > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.speed && selectedAura.speed > 0 ? "text-green-400" : "text-red-400"}>
                                   {selectedAura.speed}%
                                 </span>
                               </div>
@@ -344,7 +344,7 @@ const CharacterCard = ({
                             {selectedAura.focus !== 0 && (
                               <div className="flex justify-between">
                                 <span>Focus:</span>
-                                <span className={selectedAura.focus > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.focus && selectedAura.focus > 0 ? "text-green-400" : "text-red-400"}>
                                   {selectedAura.focus}%
                                 </span>
                               </div>
@@ -352,7 +352,7 @@ const CharacterCard = ({
                             {selectedAura.resilience !== 0 && (
                               <div className="flex justify-between">
                                 <span>Resilience:</span>
-                                <span className={selectedAura.resilience > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.resilience && selectedAura.resilience > 0 ? "text-green-400" : "text-red-400"}>
                                   {selectedAura.resilience}%
                                 </span>
                               </div>
@@ -386,92 +386,189 @@ const CharacterCard = ({
         </DialogContent>
       </Dialog>
 
-      <motion.div
-        className="bg-[#1A1A2E] rounded-xl overflow-hidden border border-[#432874]/30 relative"
-        whileHover={{ y: -5, boxShadow: '0 5px 20px rgba(67, 40, 116, 0.3)' }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* Activity Indicator */}
-        {getActivityText()}
-
-        <div className="p-4">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <img
-                src={character.avatarUrl}
-                alt={character.name}
-                className="w-16 h-16 rounded-full object-cover border-2 border-[#432874]"
-              />
-              <div className="absolute -bottom-1 -right-1 bg-[#1A1A2E] rounded-full p-0.5 border border-[#432874]">
-                <div className="bg-[#432874] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                  {character.level}
+      {/* Character Details Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel">
+              {character.name} - Level {character.level} {character.class}
+            </DialogTitle>
+            <DialogDescription className="text-[#C8B8DB]/80">
+              Character details and equipped aura information
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="my-4 space-y-6">
+            {/* Character stats and details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <img
+                      src={character.avatarUrl}
+                      alt={character.name}
+                      className="w-24 h-24 rounded-full object-cover border-2 border-[#432874]"
+                    />
+                    <div className="absolute -bottom-1 -right-1 bg-[#1A1A2E] rounded-full p-0.5 border border-[#432874]">
+                      <div className="bg-[#432874] text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold">
+                        {character.level}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-cinzel font-bold text-xl text-[#C8B8DB]">
+                      {character.name}
+                    </h3>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <Badge className={`font-normal ${getClassColor(character.class)}`}>
+                        {character.class}
+                      </Badge>
+                      <span className="text-sm text-[#C8B8DB]/80">
+                        Level {character.level || 1}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 bg-[#432874]/20 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Swords className="h-4 w-4 text-red-400" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#C8B8DB]/60">Attack</span>
+                      <span className="font-medium">{character.attack}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Target className="h-4 w-4 text-yellow-400" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#C8B8DB]/60">Accuracy</span>
+                      <span className="font-medium">{character.accuracy}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4 text-blue-400" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#C8B8DB]/60">Defense</span>
+                      <span className="font-medium">{character.defense}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Heart className="h-4 w-4 text-red-500" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#C8B8DB]/60">Vitality</span>
+                      <span className="font-medium">{character.vitality}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Zap className="h-4 w-4 text-cyan-400" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#C8B8DB]/60">Speed</span>
+                      <span className="font-medium">{character.speed}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Brain className="h-4 w-4 text-purple-400" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#C8B8DB]/60">Focus</span>
+                      <span className="font-medium">{character.focus || 0}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <CircleOff className="h-4 w-4 text-purple-400" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#C8B8DB]/60">Resilience</span>
+                      <span className="font-medium">{character.resilience || 0}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div>
-              <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB]">
-                {character.name}
-              </h3>
-              <div className="flex items-center space-x-2 mt-1">
-                <Badge className={`font-normal ${getClassColor(character.class)}`}>
-                  {character.class}
-                </Badge>
-                <span className="text-xs text-[#C8B8DB]/80">
-                  Level {character.level || 1}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
-            <div className="flex items-center">
-              <Swords className="h-3 w-3 mr-1 text-red-400" />
-              <span>ATK: {character.attack}</span>
-            </div>
-            <div className="flex items-center">
-              <Target className="h-3 w-3 mr-1 text-yellow-400" />
-              <span>ACC: {character.accuracy}</span>
-            </div>
-            <div className="flex items-center">
-              <Shield className="h-3 w-3 mr-1 text-blue-400" />
-              <span>DEF: {character.defense}</span>
-            </div>
-            <div className="flex items-center">
-              <Heart className="h-3 w-3 mr-1 text-red-500" />
-              <span>VIT: {character.vitality}</span>
-            </div>
-            <div className="flex items-center">
-              <Zap className="h-3 w-3 mr-1 text-cyan-400" />
-              <span>SPD: {character.speed}</span>
-            </div>
-            <div className="flex items-center">
-              <Brain className="h-3 w-3 mr-1 text-purple-400" />
-              <span>FOC: {character.focus || 0}</span>
-            </div>
-            <div className="flex items-center">
-              <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
-              <span>RES: {character.resilience || 0}</span>
-            </div>
-            {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
-              <div className="flex items-center">
-                <Check className="h-3 w-3 mr-1 text-green-400" />
-                <span>
-                  {character.passiveSkills.length} passive{character.passiveSkills.length > 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {showDetailed && (
-            <div className="mt-4 space-y-4">
+              
               <div className="space-y-4">
                 {aura || equippedAura ? (
                   <>
-                    {/* Equipped Aura Details */}
-                    <div className="bg-[#432874]/20 rounded-lg p-3 mb-4">
+                    <div className="bg-[#432874]/20 rounded-lg p-4">
+                      <h4 className="font-semibold text-sm mb-2 text-[#00B9AE]">Equipped Aura</h4>
+                      <div className="flex items-center mb-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${getAuraElementClass((aura || equippedAura)?.element)}`}>
+                          {getElementIcon((aura || equippedAura)?.element)}
+                        </div>
+                        <div>
+                          <div className="text-[#00B9AE] font-semibold">{(aura || equippedAura)?.name}</div>
+                          <div className="text-xs text-[#C8B8DB]/80">
+                            Level {(aura || equippedAura)?.level} • Tier {(aura || equippedAura)?.tier} • {(aura || equippedAura)?.element}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Swords className="h-3 w-3 mr-1 text-red-400" />
+                            <span className="text-xs">Attack</span>
+                          </div>
+                          <div className="text-xs">
+                            {getStatModifierText((aura || equippedAura)?.attack || null)}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                            <span className="text-xs">Accuracy</span>
+                          </div>
+                          <div className="text-xs">
+                            {getStatModifierText((aura || equippedAura)?.accuracy || null)}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                            <span className="text-xs">Defense</span>
+                          </div>
+                          <div className="text-xs">
+                            {getStatModifierText((aura || equippedAura)?.defense || null)}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Heart className="h-3 w-3 mr-1 text-red-500" />
+                            <span className="text-xs">Vitality</span>
+                          </div>
+                          <div className="text-xs">
+                            {getStatModifierText((aura || equippedAura)?.vitality || null)}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                            <span className="text-xs">Speed</span>
+                          </div>
+                          <div className="text-xs">
+                            {getStatModifierText((aura || equippedAura)?.speed || null)}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                            <span className="text-xs">Focus</span>
+                          </div>
+                          <div className="text-xs">
+                            {getStatModifierText((aura || equippedAura)?.focus || null)}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                            <span className="text-xs">Resilience</span>
+                          </div>
+                          <div className="text-xs">
+                            {getStatModifierText((aura || equippedAura)?.resilience || null)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-[#432874]/20 rounded-lg p-4">
                       <h4 className="font-semibold text-sm mb-2 text-[#00B9AE]">Aura Skills</h4>
                       <div className="space-y-2">
                         {auraSkills.length > 0 ? (
@@ -490,146 +587,285 @@ const CharacterCard = ({
                         )}
                       </div>
                     </div>
+                  </>
+                ) : (
+                  <div className="bg-[#432874]/20 rounded-lg p-6 text-center">
+                    <Info className="h-8 w-8 text-[#C8B8DB]/60 mx-auto mb-2" />
+                    <p className="text-sm text-[#C8B8DB]/80">No Aura Equipped</p>
+                    <p className="text-xs text-[#C8B8DB]/60 mt-1">Equip an aura to enhance your character's abilities</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              {!character.isActive && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
+                    onClick={() => {
+                      setDetailDialogOpen(false);
+                      setEquipAuraDialogOpen(true);
+                    }}
+                  >
+                    Equip Aura
+                  </Button>
+                  <Button className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]">
+                    Assign Task
+                  </Button>
+                </>
+              )}
+              {character.isActive && (
+                <div className="flex items-center text-[#DC143C]">
+                  <Lock className="h-4 w-4 mr-1" />
+                  <span>
+                    Busy: {character.activityType} 
+                    {character.activityEndTime && (
+                      <span className="ml-1">
+                        (<CountdownTimer endTime={character.activityEndTime} />)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-                    {/* Equipped Aura Stats */}
-                    <div className="bg-[#432874]/20 rounded-lg p-3">
-                      <h4 className="font-semibold text-sm mb-2">Equipped Aura</h4>
-                      <div>
-                        <div className="flex items-center mb-2">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${getAuraElementClass((aura || equippedAura)?.element)}`}>
-                            {getElementIcon((aura || equippedAura)?.element)}
-                          </div>
-                          <div>
-                            <div className="text-sm text-[#00B9AE]">
-                              {(aura || equippedAura)?.name}
-                            </div>
-                            <div className="text-xs text-[#C8B8DB]/60">
-                              {(aura || equippedAura)?.element} • 
-                              Level {(aura || equippedAura)?.level} • 
-                              Tier {(aura || equippedAura)?.tier || 1}
-                            </div>
-                          </div>
+      {/* The clickable character card */}
+      <div onClick={() => setDetailDialogOpen(true)}>
+        <motion.div
+          className="bg-[#1A1A2E] rounded-xl overflow-hidden border border-[#432874]/30 relative cursor-pointer"
+          whileHover={{ y: -5, boxShadow: '0 5px 20px rgba(67, 40, 116, 0.3)' }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Activity Indicator */}
+          {getActivityText()}
+          
+          <div className="p-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <img
+                  src={character.avatarUrl}
+                  alt={character.name}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-[#432874]"
+                />
+                <div className="absolute -bottom-1 -right-1 bg-[#1A1A2E] rounded-full p-0.5 border border-[#432874]">
+                  <div className="bg-[#432874] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                    {character.level}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB]">
+                  {character.name}
+                </h3>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Badge className={`font-normal ${getClassColor(character.class)}`}>
+                    {character.class}
+                  </Badge>
+                  <span className="text-xs text-[#C8B8DB]/80">
+                    Level {character.level || 1}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
+              <div className="flex items-center">
+                <Swords className="h-3 w-3 mr-1 text-red-400" />
+                <span>ATK: {character.attack}</span>
+              </div>
+              <div className="flex items-center">
+                <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                <span>ACC: {character.accuracy}</span>
+              </div>
+              <div className="flex items-center">
+                <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                <span>DEF: {character.defense}</span>
+              </div>
+              <div className="flex items-center">
+                <Heart className="h-3 w-3 mr-1 text-red-500" />
+                <span>VIT: {character.vitality}</span>
+              </div>
+              <div className="flex items-center">
+                <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                <span>SPD: {character.speed}</span>
+              </div>
+              <div className="flex items-center">
+                <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                <span>FOC: {character.focus || 0}</span>
+              </div>
+              <div className="flex items-center">
+                <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                <span>RES: {character.resilience || 0}</span>
+              </div>
+              {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
+                <div className="flex items-center">
+                  <Check className="h-3 w-3 mr-1 text-green-400" />
+                  <span>
+                    {character.passiveSkills.length} passive{character.passiveSkills.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {showDetailed && (
+              <div className="mt-4 space-y-4">
+                <div className="space-y-4">
+                  {aura || equippedAura ? (
+                    <>
+                      {/* Equipped Aura Details */}
+                      <div className="bg-[#432874]/20 rounded-lg p-3 mb-4">
+                        <h4 className="font-semibold text-sm mb-2 text-[#00B9AE]">Aura Skills</h4>
+                        <div className="space-y-2">
+                          {auraSkills.length > 0 ? (
+                            auraSkills.map((skill, index) => (
+                              <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
+                                <div className="text-xs font-medium text-[#00B9AE]">{skill.name}</div>
+                                <div className="text-xs text-[#C8B8DB]/80">{skill.description}</div>
+                                <div className="flex justify-between mt-1 text-xs text-[#C8B8DB]/60">
+                                  <span>Type: {skill.type}</span>
+                                  <span>Targets: {skill.targets || 1}</span>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-xs text-[#C8B8DB]/60">No skills available</div>
+                          )}
                         </div>
+                      </div>
 
-                        <div className="mt-2 border-t border-[#432874]/30 pt-2">
-                          <div className="text-xs font-medium text-[#00B9AE] mb-1">Stats:</div>
-                          <div className="space-y-2">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <Swords className="h-3 w-3 mr-1 text-red-400" />
-                                  <span className="text-xs">Attack</span>
-                                </div>
-                                <div className="text-xs">
-                                  {getStatModifierText((aura || equippedAura)?.attack)}
-                                </div>
+                      {/* Equipped Aura Stats */}
+                      <div className="bg-[#432874]/20 rounded-lg p-3">
+                        <h4 className="font-semibold text-sm mb-2">Equipped Aura</h4>
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${getAuraElementClass((aura || equippedAura)?.element)}`}>
+                              {getElementIcon((aura || equippedAura)?.element)}
+                            </div>
+                            <div>
+                              <div className="text-[#00B9AE] text-sm">{(aura || equippedAura)?.name}</div>
+                              <div className="text-xs text-[#C8B8DB]/80">
+                                Level {(aura || equippedAura)?.level} • Tier {(aura || equippedAura)?.tier}
                               </div>
+                            </div>
+                          </div>
 
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <Target className="h-3 w-3 mr-1 text-yellow-400" />
-                                  <span className="text-xs">Accuracy</span>
-                                </div>
-                                <div className="text-xs">
-                                  {getStatModifierText((aura || equippedAura)?.accuracy)}
-                                </div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <Swords className="h-3 w-3 mr-1 text-red-400" />
+                                <span className="text-xs">Attack</span>
                               </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                                  <span className="text-xs">Defense</span>
-                                </div>
-                                <div className="text-xs">
-                                  {getStatModifierText((aura || equippedAura)?.defense)}
-                                </div>
+                              <div className="text-xs">
+                                {getStatModifierText((aura || equippedAura)?.attack || null)}
                               </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <Heart className="h-3 w-3 mr-1 text-red-500" />
-                                  <span className="text-xs">Vitality</span>
-                                </div>
-                                <div className="text-xs">
-                                  {getStatModifierText((aura || equippedAura)?.vitality)}
-                                </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                                <span className="text-xs">Accuracy</span>
                               </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <Zap className="h-3 w-3 mr-1 text-cyan-400" />
-                                  <span className="text-xs">Speed</span>
-                                </div>
-                                <div className="text-xs">
-                                  {getStatModifierText((aura || equippedAura)?.speed)}
-                                </div>
+                              <div className="text-xs">
+                                {getStatModifierText((aura || equippedAura)?.accuracy || null)}
                               </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <Brain className="h-3 w-3 mr-1 text-purple-400" />
-                                  <span className="text-xs">Focus</span>
-                                </div>
-                                <div className="text-xs">
-                                  {getStatModifierText((aura || equippedAura)?.focus)}
-                                </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                                <span className="text-xs">Defense</span>
                               </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
-                                  <span className="text-xs">Resilience</span>
-                                </div>
-                                <div className="text-xs">
-                                  {getStatModifierText((aura || equippedAura)?.resilience)}
-                                </div>
+                              <div className="text-xs">
+                                {getStatModifierText((aura || equippedAura)?.defense || null)}
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <Heart className="h-3 w-3 mr-1 text-red-500" />
+                                <span className="text-xs">Vitality</span>
+                              </div>
+                              <div className="text-xs">
+                                {getStatModifierText((aura || equippedAura)?.vitality || null)}
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                                <span className="text-xs">Speed</span>
+                              </div>
+                              <div className="text-xs">
+                                {getStatModifierText((aura || equippedAura)?.speed || null)}
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                                <span className="text-xs">Focus</span>
+                              </div>
+                              <div className="text-xs">
+                                {getStatModifierText((aura || equippedAura)?.focus || null)}
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                                <span className="text-xs">Resilience</span>
+                              </div>
+                              <div className="text-xs">
+                                {getStatModifierText((aura || equippedAura)?.resilience || null)}
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-sm text-[#C8B8DB]/60">No Aura Equipped</div>
-                )}
-
-                <div className="mt-4 flex justify-end space-x-2">
-                  {!character.isActive && (
-                    <>
-                      <Button 
-                        variant="outline" 
-                        className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
-                        onClick={() => setEquipAuraDialogOpen(true)}
-                      >
-                        Equip Aura
-                      </Button>
-                      <Button className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]">
-                        Assign Task
-                      </Button>
                     </>
+                  ) : (
+                    <div className="text-sm text-[#C8B8DB]/60">No Aura Equipped</div>
                   )}
-                  {character.isActive && (
-                    <div className="flex items-center text-[#DC143C]">
-                      <Lock className="h-4 w-4 mr-1" />
-                      <span>
-                        Busy: {character.activityType} 
-                        {character.activityEndTime && (
-                          <span className="ml-1">
-                            (<CountdownTimer endTime={character.activityEndTime} />)
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  )}
+
+                  <div className="mt-4 flex justify-end space-x-2">
+                    {!character.isActive && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
+                          onClick={() => setEquipAuraDialogOpen(true)}
+                        >
+                          Equip Aura
+                        </Button>
+                        <Button className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]">
+                          Assign Task
+                        </Button>
+                      </>
+                    )}
+                    {character.isActive && (
+                      <div className="flex items-center text-[#DC143C]">
+                        <Lock className="h-4 w-4 mr-1" />
+                        <span>
+                          Busy: {character.activityType} 
+                          {character.activityEndTime && (
+                            <span className="ml-1">
+                              (<CountdownTimer endTime={character.activityEndTime} />)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      </motion.div>
+            )}
+          </div>
+        </motion.div>
+      </div>
     </>
   );
 };
 
-export default CharacterCard;
+export { CharacterCard };
