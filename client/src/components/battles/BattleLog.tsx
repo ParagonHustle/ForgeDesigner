@@ -17,11 +17,25 @@ interface BattleUnit {
     vitality: number;
     speed: number;
   };
+  // Add aura bonuses 
+  auraBonus?: {
+    attack: number;
+    vitality: number;
+    speed: number;
+    element?: string;
+  };
   skills: {
-    basic: { name: string; damage: number };
+    basic: { name: string; damage: number }; // damage is a multiplier (e.g. 0.8 means 80% of attack)
     advanced?: { name: string; damage: number; cooldown: number };
     ultimate?: { name: string; damage: number; cooldown: number };
   };
+  // Status effects that can be applied
+  statusEffects?: Array<{
+    name: string;
+    duration: number;
+    effect: string;
+    value: number;
+  }>;
   lastSkillUse: number;
   totalDamageDealt: number;
   totalDamageReceived: number;
@@ -140,9 +154,35 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               skillType = 'advanced';
             }
             
-            // Calculate damage
-            const damage = Math.floor(skill.damage * (attacker.stats.attack / 100));
-            const actionMessage = `${attacker.name} used ${skill.name} (${skillType}) on ${target.name} for ${damage} damage!`;
+            // Calculate damage: Attack * Damage Multiplier
+            // Apply aura bonus if available
+            let attackValue = attacker.stats.attack;
+            if (attacker.auraBonus?.attack) {
+              // Add percentage bonus from aura
+              attackValue = Math.floor(attackValue * (1 + attacker.auraBonus.attack / 100));
+            }
+            
+            // Damage = Attack * Skill Damage Multiplier
+            const damage = Math.floor(attackValue * skill.damage);
+            
+            // Format the action message with more details
+            let statusEffectText = "";
+            if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
+              const possibleEffects = [
+                {name: "Burning", effect: "DoT", value: Math.floor(damage * 0.1)},
+                {name: "Weakened", effect: "ReduceAtk", value: 10},
+                {name: "Slowed", effect: "ReduceSpd", value: 15}
+              ];
+              
+              const effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
+              statusEffectText = ` [${effect.name} applied]`;
+              
+              // Apply the status effect to the target
+              if (!target.statusEffects) target.statusEffects = [];
+              target.statusEffects.push({...effect, duration: 2});
+            }
+            
+            const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}`;
             console.log(actionMessage);
             
             // Update action log
@@ -228,9 +268,35 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       skillType = 'advanced';
     }
 
-    // Calculate damage based on attacker's attack stat
-    const damage = Math.floor(skill.damage * (attacker.stats.attack / 100));
-    const actionMessage = `${attacker.name} used ${skill.name} (${skillType}) on ${target.name} for ${damage} damage!`;
+    // Calculate damage: Attack * Damage Multiplier
+    // Apply aura bonus if available
+    let attackValue = attacker.stats.attack;
+    if (attacker.auraBonus?.attack) {
+      // Add percentage bonus from aura
+      attackValue = Math.floor(attackValue * (1 + attacker.auraBonus.attack / 100));
+    }
+    
+    // Damage = Attack * Skill Damage Multiplier
+    const damage = Math.floor(attackValue * skill.damage);
+    
+    // Format the action message with more details
+    let statusEffectText = "";
+    if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
+      const possibleEffects = [
+        {name: "Burning", effect: "DoT", value: Math.floor(damage * 0.1)},
+        {name: "Weakened", effect: "ReduceAtk", value: 10},
+        {name: "Slowed", effect: "ReduceSpd", value: 15}
+      ];
+      
+      const effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
+      statusEffectText = ` [${effect.name} applied]`;
+      
+      // Apply the status effect to the target
+      if (!target.statusEffects) target.statusEffects = [];
+      target.statusEffects.push({...effect, duration: 2});
+    }
+    
+    const actionMessage = `${attacker.name} used ${skill.name} (${skillType} - ${skill.damage.toFixed(2)}x) on ${target.name} for ${damage} damage!${statusEffectText}`;
 
     setActionLog(prev => [...prev, actionMessage]);
 
@@ -238,10 +304,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       prevUnits.map(u => {
         if (u.id === target.id) {
           const newHp = Math.max(0, u.hp - damage);
+          
+          // Check if target is defeated
+          if (newHp <= 0 && u.hp > 0) {
+            setActionLog(prev => [...prev, `${target.name} has been defeated!`]);
+          }
+          
           return {
             ...u,
             hp: newHp,
-            totalDamageReceived: u.totalDamageReceived + damage
+            totalDamageReceived: u.totalDamageReceived + damage,
+            statusEffects: u.id === target.id && statusEffectText ? 
+              [...(u.statusEffects || []), ...target.statusEffects || []] : 
+              u.statusEffects
           };
         }
         if (u.id === attacker.id) {
@@ -275,26 +350,52 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   };
 
-  const renderUnitStats = (unit: BattleUnit) => (
-    <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-      <div className="flex items-center">
-        <Swords className="h-3 w-3 mr-1 text-red-400" />
-        <span>ATK: {unit.stats.attack}</span>
+  const renderUnitStats = (unit: BattleUnit) => {
+    // Check if unit has aura bonuses
+    const hasAuraBonuses = unit.auraBonus && (
+      unit.auraBonus.attack !== 0 || 
+      unit.auraBonus.vitality !== 0 || 
+      unit.auraBonus.speed !== 0
+    );
+    
+    return (
+      <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+        <div className="flex items-center">
+          <Swords className="h-3 w-3 mr-1 text-red-400" />
+          <span>
+            ATK: {unit.stats.attack}
+            {hasAuraBonuses && unit.auraBonus?.attack !== 0 && (
+              <span className={unit.auraBonus?.attack > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                {unit.auraBonus?.attack > 0 ? "+" : ""}{unit.auraBonus?.attack}%
+              </span>
+            )}
+          </span>
+        </div>
+        <div className="flex items-center">
+          <Heart className="h-3 w-3 mr-1 text-red-500" />
+          <span>
+            VIT: {unit.stats.vitality}
+            {hasAuraBonuses && unit.auraBonus?.vitality !== 0 && (
+              <span className={unit.auraBonus?.vitality > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                {unit.auraBonus?.vitality > 0 ? "+" : ""}{unit.auraBonus?.vitality}%
+              </span>
+            )}
+          </span>
+        </div>
+        <div className="flex items-center">
+          <Zap className="h-3 w-3 mr-1 text-yellow-400" />
+          <span>
+            SPD: {unit.stats.speed}
+            {hasAuraBonuses && unit.auraBonus?.speed !== 0 && (
+              <span className={unit.auraBonus?.speed > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                {unit.auraBonus?.speed > 0 ? "+" : ""}{unit.auraBonus?.speed}%
+              </span>
+            )}
+          </span>
+        </div>
       </div>
-      <div className="flex items-center">
-        <Heart className="h-3 w-3 mr-1 text-red-500" />
-        <span>VIT: {unit.stats.vitality}</span>
-      </div>
-      <div className="flex items-center">
-        <Shield className="h-3 w-3 mr-1 text-blue-400" />
-        <span>DEF: {unit.stats.vitality * 8}</span>
-      </div>
-      <div className="flex items-center">
-        <Zap className="h-3 w-3 mr-1 text-yellow-400" />
-        <span>SPD: {unit.stats.speed}</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
