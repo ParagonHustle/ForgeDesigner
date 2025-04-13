@@ -704,85 +704,77 @@ const CharacterCard = ({ character }: CharacterCardProps) => {
                           <span className="text-sm text-[#00B9AE]">Aura Bonuses</span>
                         </div>
                         <div className="text-xs text-[#C8B8DB]/80 space-y-1">
-                          {/* Display direct stat values */}
+                          {/* Always display all 7 stat values */}
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
-                            {(aura?.attack !== null && aura?.attack !== undefined && aura?.attack !== 0) || 
-                             (equippedAura?.attack !== null && equippedAura?.attack !== undefined && equippedAura?.attack !== 0) && (
-                              <div className="flex items-center">
-                                <Swords className="h-3 w-3 mr-1 text-red-400" />
-                                <span>
-                                  Attack: <span className={(aura?.attack || equippedAura?.attack || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                                    {(aura?.attack || equippedAura?.attack || 0) > 0 ? "+" : ""}{aura?.attack || equippedAura?.attack || 0}%
-                                  </span>
+                            {/* Attack */}
+                            <div className="flex items-center">
+                              <Swords className="h-3 w-3 mr-1 text-red-400" />
+                              <span>
+                                Attack: <span className={(aura?.attack || equippedAura?.attack || 0) > 0 ? "text-green-400" : (aura?.attack || equippedAura?.attack || 0) < 0 ? "text-red-400" : "text-gray-500"}>
+                                  {(aura?.attack || equippedAura?.attack || 0) > 0 ? "+" : (aura?.attack || equippedAura?.attack || 0) < 0 ? "" : "±"}{aura?.attack || equippedAura?.attack || 0}%
                                 </span>
-                              </div>
-                            )}
-                            {(aura?.accuracy !== null && aura?.accuracy !== undefined && aura?.accuracy !== 0) ||
-                             (equippedAura?.accuracy !== null && equippedAura?.accuracy !== undefined && equippedAura?.accuracy !== 0) && (
-                              <div className="flex items-center">
-                                <Target className="h-3 w-3 mr-1 text-yellow-400" />
-                                <span>
-                                  Accuracy: <span className={(aura?.accuracy || equippedAura?.accuracy || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                                    {(aura?.accuracy || equippedAura?.accuracy || 0) > 0 ? "+" : ""}{aura?.accuracy || equippedAura?.accuracy || 0}%
-                                  </span>
+                              </span>
+                            </div>
+                            
+                            {/* Accuracy */}
+                            <div className="flex items-center">
+                              <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                              <span>
+                                Accuracy: <span className={(aura?.accuracy || equippedAura?.accuracy || 0) > 0 ? "text-green-400" : (aura?.accuracy || equippedAura?.accuracy || 0) < 0 ? "text-red-400" : "text-gray-500"}>
+                                  {(aura?.accuracy || equippedAura?.accuracy || 0) > 0 ? "+" : (aura?.accuracy || equippedAura?.accuracy || 0) < 0 ? "" : "±"}{aura?.accuracy || equippedAura?.accuracy || 0}%
                                 </span>
-                              </div>
-                            )}
-                            {(aura?.defense !== null && aura?.defense !== undefined && aura?.defense !== 0) ||
-                             (equippedAura?.defense !== null && equippedAura?.defense !== undefined && equippedAura?.defense !== 0) && (
-                              <div className="flex items-center">
-                                <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                                <span>
-                                  Defense: <span className={(aura?.defense || equippedAura?.defense || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                                    {(aura?.defense || equippedAura?.defense || 0) > 0 ? "+" : ""}{aura?.defense || equippedAura?.defense || 0}%
-                                  </span>
+                              </span>
+                            </div>
+                            
+                            {/* Defense */}
+                            <div className="flex items-center">
+                              <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                              <span>
+                                Defense: <span className={(aura?.defense || equippedAura?.defense || 0) > 0 ? "text-green-400" : (aura?.defense || equippedAura?.defense || 0) < 0 ? "text-red-400" : "text-gray-500"}>
+                                  {(aura?.defense || equippedAura?.defense || 0) > 0 ? "+" : (aura?.defense || equippedAura?.defense || 0) < 0 ? "" : "±"}{aura?.defense || equippedAura?.defense || 0}%
                                 </span>
-                              </div>
-                            )}
-                            {(aura?.vitality !== null && aura?.vitality !== undefined && aura?.vitality !== 0) ||
-                             (equippedAura?.vitality !== null && equippedAura?.vitality !== undefined && equippedAura?.vitality !== 0) && (
-                              <div className="flex items-center">
-                                <Heart className="h-3 w-3 mr-1 text-red-500" />
-                                <span>
-                                  Vitality: <span className={(aura?.vitality || equippedAura?.vitality || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                                    {(aura?.vitality || equippedAura?.vitality || 0) > 0 ? "+" : ""}{aura?.vitality || equippedAura?.vitality || 0}%
-                                  </span>
+                              </span>
+                            </div>
+                            
+                            {/* Vitality */}
+                            <div className="flex items-center">
+                              <Heart className="h-3 w-3 mr-1 text-red-500" />
+                              <span>
+                                Vitality: <span className={(aura?.vitality || equippedAura?.vitality || 0) > 0 ? "text-green-400" : (aura?.vitality || equippedAura?.vitality || 0) < 0 ? "text-red-400" : "text-gray-500"}>
+                                  {(aura?.vitality || equippedAura?.vitality || 0) > 0 ? "+" : (aura?.vitality || equippedAura?.vitality || 0) < 0 ? "" : "±"}{aura?.vitality || equippedAura?.vitality || 0}%
                                 </span>
-                              </div>
-                            )}
-                            {((aura?.speed !== null && aura?.speed !== undefined && aura?.speed !== 0) ||
-                             (equippedAura?.speed !== null && equippedAura?.speed !== undefined && equippedAura?.speed !== 0)) && (
-                              <div className="flex items-center">
-                                <Zap className="h-3 w-3 mr-1 text-cyan-400" />
-                                <span>
-                                  Speed: <span className={(aura?.speed || equippedAura?.speed || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                                    {(aura?.speed || equippedAura?.speed || 0) > 0 ? "+" : ""}{aura?.speed || equippedAura?.speed || 0}%
-                                  </span>
+                              </span>
+                            </div>
+                            
+                            {/* Speed */}
+                            <div className="flex items-center">
+                              <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                              <span>
+                                Speed: <span className={(aura?.speed || equippedAura?.speed || 0) > 0 ? "text-green-400" : (aura?.speed || equippedAura?.speed || 0) < 0 ? "text-red-400" : "text-gray-500"}>
+                                  {(aura?.speed || equippedAura?.speed || 0) > 0 ? "+" : (aura?.speed || equippedAura?.speed || 0) < 0 ? "" : "±"}{aura?.speed || equippedAura?.speed || 0}%
                                 </span>
-                              </div>
-                            )}
-                            {((aura?.focus !== null && aura?.focus !== undefined && aura?.focus !== 0) ||
-                             (equippedAura?.focus !== null && equippedAura?.focus !== undefined && equippedAura?.focus !== 0)) && (
-                              <div className="flex items-center">
-                                <Brain className="h-3 w-3 mr-1 text-purple-400" />
-                                <span>
-                                  Focus: <span className={(aura?.focus || equippedAura?.focus || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                                    {(aura?.focus || equippedAura?.focus || 0) > 0 ? "+" : ""}{aura?.focus || equippedAura?.focus || 0}%
-                                  </span>
+                              </span>
+                            </div>
+                            
+                            {/* Focus */}
+                            <div className="flex items-center">
+                              <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                              <span>
+                                Focus: <span className={(aura?.focus || equippedAura?.focus || 0) > 0 ? "text-green-400" : (aura?.focus || equippedAura?.focus || 0) < 0 ? "text-red-400" : "text-gray-500"}>
+                                  {(aura?.focus || equippedAura?.focus || 0) > 0 ? "+" : (aura?.focus || equippedAura?.focus || 0) < 0 ? "" : "±"}{aura?.focus || equippedAura?.focus || 0}%
                                 </span>
-                              </div>
-                            )}
-                            {((aura?.resilience !== null && aura?.resilience !== undefined && aura?.resilience !== 0) ||
-                             (equippedAura?.resilience !== null && equippedAura?.resilience !== undefined && equippedAura?.resilience !== 0)) && (
-                              <div className="flex items-center">
-                                <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
-                                <span>
-                                  Resilience: <span className={(aura?.resilience || equippedAura?.resilience || 0) > 0 ? "text-green-400" : "text-red-400"}>
-                                    {(aura?.resilience || equippedAura?.resilience || 0) > 0 ? "+" : ""}{aura?.resilience || equippedAura?.resilience || 0}%
-                                  </span>
+                              </span>
+                            </div>
+                            
+                            {/* Resilience */}
+                            <div className="flex items-center">
+                              <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                              <span>
+                                Resilience: <span className={(aura?.resilience || equippedAura?.resilience || 0) > 0 ? "text-green-400" : (aura?.resilience || equippedAura?.resilience || 0) < 0 ? "text-red-400" : "text-gray-500"}>
+                                  {(aura?.resilience || equippedAura?.resilience || 0) > 0 ? "+" : (aura?.resilience || equippedAura?.resilience || 0) < 0 ? "" : "±"}{aura?.resilience || equippedAura?.resilience || 0}%
                                 </span>
-                              </div>
-                            )}
+                              </span>
+                            </div>
                           </div>
 
                           {/* Note: Stat bonuses are now displayed directly in the attributes above */}
