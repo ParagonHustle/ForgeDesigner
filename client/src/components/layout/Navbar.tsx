@@ -1,6 +1,7 @@
 import { useDiscordAuth } from '@/lib/discordAuth';
 import { useGameStore } from '@/lib/zustandStore';
 import { Zap } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 const Navbar = () => {
   const { user, logout } = useDiscordAuth();
