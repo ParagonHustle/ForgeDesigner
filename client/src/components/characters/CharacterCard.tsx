@@ -99,6 +99,16 @@ const CharacterCard = ({
       return <span className="text-gray-500">±0%</span>;
     }
   };
+  
+  // Calculate stat values with aura modifiers applied
+  const getAdjustedStat = (baseStat: number | null, auraStat: number | null): number => {
+    if (!baseStat) return 0;
+    if (!auraStat) return baseStat;
+    
+    // Apply percentage modifier from aura
+    const adjustedValue = Math.round(baseStat * (1 + auraStat / 100));
+    return adjustedValue;
+  };
 
   const unequippedAuras = availableAuras 
     ? availableAuras
@@ -494,49 +504,98 @@ const CharacterCard = ({
                     <Swords className="h-4 w-4 text-red-400" />
                     <div className="flex flex-col">
                       <span className="text-xs text-[#C8B8DB]/60">Attack</span>
-                      <span className="font-medium">{character.attack}</span>
+                      <span className="font-medium">
+                        {aura ? getAdjustedStat(character.attack, aura.attack) : character.attack}
+                        {aura && aura.attack !== 0 && (
+                          <span className="ml-1 text-xs text-[#C8B8DB]/60">
+                            ({getStatModifierText(aura.attack)})
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Target className="h-4 w-4 text-yellow-400" />
                     <div className="flex flex-col">
                       <span className="text-xs text-[#C8B8DB]/60">Accuracy</span>
-                      <span className="font-medium">{character.accuracy}</span>
+                      <span className="font-medium">
+                        {aura ? getAdjustedStat(character.accuracy, aura.accuracy) : character.accuracy}
+                        {aura && aura.accuracy !== 0 && (
+                          <span className="ml-1 text-xs text-[#C8B8DB]/60">
+                            ({getStatModifierText(aura.accuracy)})
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Shield className="h-4 w-4 text-blue-400" />
                     <div className="flex flex-col">
                       <span className="text-xs text-[#C8B8DB]/60">Defense</span>
-                      <span className="font-medium">{character.defense}</span>
+                      <span className="font-medium">
+                        {aura ? getAdjustedStat(character.defense, aura.defense) : character.defense}
+                        {aura && aura.defense !== 0 && (
+                          <span className="ml-1 text-xs text-[#C8B8DB]/60">
+                            ({getStatModifierText(aura.defense)})
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Heart className="h-4 w-4 text-red-500" />
                     <div className="flex flex-col">
                       <span className="text-xs text-[#C8B8DB]/60">Vitality</span>
-                      <span className="font-medium">{character.vitality}</span>
+                      <span className="font-medium">
+                        {aura ? getAdjustedStat(character.vitality, aura.vitality) : character.vitality}
+                        {aura && aura.vitality !== 0 && (
+                          <span className="ml-1 text-xs text-[#C8B8DB]/60">
+                            ({getStatModifierText(aura.vitality)})
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Zap className="h-4 w-4 text-cyan-400" />
                     <div className="flex flex-col">
                       <span className="text-xs text-[#C8B8DB]/60">Speed</span>
-                      <span className="font-medium">{character.speed}</span>
+                      <span className="font-medium">
+                        {aura ? getAdjustedStat(character.speed, aura.speed) : character.speed}
+                        {aura && aura.speed !== 0 && (
+                          <span className="ml-1 text-xs text-[#C8B8DB]/60">
+                            ({getStatModifierText(aura.speed)})
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Brain className="h-4 w-4 text-purple-400" />
                     <div className="flex flex-col">
                       <span className="text-xs text-[#C8B8DB]/60">Focus</span>
-                      <span className="font-medium">{character.focus || 0}</span>
+                      <span className="font-medium">
+                        {aura ? getAdjustedStat(character.focus || 0, aura.focus) : character.focus || 0}
+                        {aura && aura.focus !== 0 && (
+                          <span className="ml-1 text-xs text-[#C8B8DB]/60">
+                            ({getStatModifierText(aura.focus)})
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <CircleOff className="h-4 w-4 text-purple-400" />
                     <div className="flex flex-col">
                       <span className="text-xs text-[#C8B8DB]/60">Resilience</span>
-                      <span className="font-medium">{character.resilience || 0}</span>
+                      <span className="font-medium">
+                        {aura ? getAdjustedStat(character.resilience || 0, aura.resilience) : character.resilience || 0}
+                        {aura && aura.resilience !== 0 && (
+                          <span className="ml-1 text-xs text-[#C8B8DB]/60">
+                            ({getStatModifierText(aura.resilience)})
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
