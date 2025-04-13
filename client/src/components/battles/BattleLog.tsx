@@ -237,10 +237,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             let healAmount = 0;
             
             // NOTE: We will handle healing in the performAction function only to avoid duplicate healing
-            // This block will only prepare the healing text for the action message
+            // This block will prepare the healing text for the action message with the exact amount
             if (skill.name === "Soothing Current") {
-              // Just set a generic healing effect text - actual healing will be applied in performAction
-              healingEffectText = " (with healing)";
+              // Calculate healing amount to show in the log
+              const healAmount = Math.floor(800 * 0.05); // 5% of 800 = 40 HP
+              healingEffectText = ` (with healing for ${healAmount} HP)`;
               
               // We now include healing information in the action message via healingEffectText
               // so we don't need a separate message here
