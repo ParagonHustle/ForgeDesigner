@@ -144,18 +144,21 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               // Process status effects - this only happens once per round
               // Status effects should only decrement when it's the unit's turn
               // This ensures effects last the proper number of full rounds
-              // We'll track if this is the unit's turn to act
-              const isUnitsTurn = unitsToAttack.some(u => u.attacker.id === unit.id);
-              const shouldDecrement = isUnitsTurn;
               
-              console.log(`Processing ${unit.name}'s status effects - Current round: ${battleRound}, Is unit's turn: ${isUnitsTurn}, Should decrement: ${shouldDecrement}`);
+              // Check if the attack meter is full, which means it's the unit's turn
+              // To fix the issue, we need to check the meter directly rather than unitsToAttack
+              const isAttackMeterFull = unit.attackMeter + ((unit.stats.speed / 40) * playbackSpeed) >= 100;
+              const shouldDecrement = isAttackMeterFull;
+              
+              console.log(`Processing ${unit.name}'s status effects - Current round: ${battleRound}, Is attack meter full: ${isAttackMeterFull}, Should decrement: ${shouldDecrement}`);
               
               // First, create new effects with decremented durations and collect messages
               for (let j = 0; j < updatedStatusEffects.length; j++) {
                 const effect = updatedStatusEffects[j];
                 
                 // Apply burn and poison effects (damage over time)
-                if (effect.effect === "Burn" || effect.effect === "Poison") {
+                // Only apply damage when it's the unit's turn (when attack meter will be full)
+                if ((effect.effect === "Burn" || effect.effect === "Poison") && isAttackMeterFull) {
                   const dotDamage = effect.value;
                   statusEffectDamage += dotDamage;
                   statusMessages.push(`${unit.name} took ${dotDamage} damage from ${effect.name}`);
