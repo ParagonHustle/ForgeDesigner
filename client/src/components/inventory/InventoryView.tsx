@@ -607,24 +607,67 @@ const InventoryView = () => {
                                 <div className="mt-1 space-y-2">
                                   {selectedAura.skills.map((skill: any, index: number) => (
                                     <div key={index} className="bg-[#432874]/20 p-2 rounded-lg">
-                                      <div className="flex items-center">
-                                        <Sparkles className="h-3 w-3 mr-1 text-yellow-400 flex-shrink-0" />
-                                        <span className="font-semibold text-xs">{skill.name}</span>
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                          <Sparkles className="h-3 w-3 mr-1 text-yellow-400 flex-shrink-0" />
+                                          <span className="font-semibold text-xs">{skill.name}</span>
+                                        </div>
+                                        {skill.type && (
+                                          <Badge className={`
+                                            ${skill.type === 'Ultimate' ? 'bg-[#FF9D00]/20 text-[#FF9D00]' : 
+                                              skill.type === 'Advanced' ? 'bg-[#00B9AE]/20 text-[#00B9AE]' : 
+                                              'bg-[#C8B8DB]/20 text-[#C8B8DB]'}
+                                          `}>
+                                            {skill.type}
+                                          </Badge>
+                                        )}
                                       </div>
+                                      
                                       {skill.description && (
                                         <div className="ml-4 mt-1 text-xs text-[#C8B8DB]/80">
                                           {skill.description}
                                         </div>
                                       )}
-                                      {skill.tier && (
-                                        <div className="ml-4 mt-1 text-xs">
-                                          <Badge className={`
-                                            ${skill.tier === 'Ultimate' ? 'bg-[#FF9D00]/20 text-[#FF9D00]' : 
-                                              skill.tier === 'Advanced' ? 'bg-[#00B9AE]/20 text-[#00B9AE]' : 
-                                              'bg-[#C8B8DB]/20 text-[#C8B8DB]'}
-                                          `}>
-                                            {skill.tier}
-                                          </Badge>
+                                      
+                                      <div className="grid grid-cols-2 gap-2 ml-4 mt-2">
+                                        {/* Damage Multiplier */}
+                                        {skill.damage !== undefined && (
+                                          <div className="flex items-center">
+                                            <Sword className="h-3 w-3 mr-1 text-red-400 flex-shrink-0" />
+                                            <span className="text-xs">Damage: x{skill.damage}</span>
+                                          </div>
+                                        )}
+                                        
+                                        {/* Targets */}
+                                        {skill.targets !== undefined && (
+                                          <div className="flex items-center">
+                                            <Target className="h-3 w-3 mr-1 text-blue-400 flex-shrink-0" />
+                                            <span className="text-xs">Targets: {skill.targets}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      {/* Special Effect */}
+                                      {skill.effect && (
+                                        <div className="flex items-start ml-4 mt-2">
+                                          <Activity className="h-3 w-3 mr-1 text-purple-400 flex-shrink-0 mt-0.5" />
+                                          <span className="text-xs text-[#00B9AE]">Effect: {skill.effect}</span>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Cooldown if applicable */}
+                                      {skill.cooldown && (
+                                        <div className="flex items-center ml-4 mt-1">
+                                          <Zap className="h-3 w-3 mr-1 text-yellow-400 flex-shrink-0" />
+                                          <span className="text-xs">Cooldown: {skill.cooldown} turn{skill.cooldown !== 1 ? 's' : ''}</span>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Level/Tier Info */}
+                                      {skill.level && (
+                                        <div className="flex items-center ml-4 mt-1">
+                                          <ArrowUpToLine className="h-3 w-3 mr-1 text-green-400 flex-shrink-0" />
+                                          <span className="text-xs">Required Level: {skill.level}</span>
                                         </div>
                                       )}
                                     </div>
