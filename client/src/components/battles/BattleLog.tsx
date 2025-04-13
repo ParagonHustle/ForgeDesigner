@@ -192,17 +192,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               console.log(`${unit.name}'s status effects AFTER processing:`, 
                 updatedStatusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
               
-              // Apply damage from status effects
+              // Apply damage and keep updated status effect durations
+              // Even if no damage was taken, we need to update durations
+              updatedUnits[i] = {
+                ...unit,
+                hp: Math.max(0, statusEffectDamage > 0 ? unit.hp - statusEffectDamage : unit.hp),
+                totalDamageReceived: statusEffectDamage > 0 ? unit.totalDamageReceived + statusEffectDamage : unit.totalDamageReceived,
+                // Keep all status effects but with their updated durations, filter out expired ones
+                statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0),
+                lastStatusUpdate: battleRound // Mark this unit as having its status effects processed this round
+              };
+              
+              // Add status effect messages to the action log (only if damage was taken)
               if (statusEffectDamage > 0) {
-                updatedUnits[i] = {
-                  ...unit,
-                  hp: Math.max(0, unit.hp - statusEffectDamage),
-                  totalDamageReceived: unit.totalDamageReceived + statusEffectDamage,
-                  statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0), // Remove expired effects
-                  lastStatusUpdate: battleRound // Mark this unit as having its status effects processed this round
-                };
-                
-                // Add status effect messages to the action log
                 setTimeout(() => {
                   statusMessages.forEach(message => {
                     setActionLog(prev => [...prev, message]);
@@ -362,7 +364,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             
             // Format the action message with more details
             let statusEffectText = "";
-            if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
+            // Check for special basic skills that can apply effects (like Ember)
+            const isEmberSkill = skill.name === "Ember";
+            // Apply status effects in two cases:
+            // 1. Non-basic skills with 30% chance
+            // 2. Ember basic skill with 10% chance to apply burn
+            if ((skillType !== 'basic' && Math.random() < 0.3) || (isEmberSkill && Math.random() < 0.1)) {
               // Determine the type of status effect based on skill name/type
               let effectType = "general";
               if (skill.name.toLowerCase().includes("burn") || skill.name.toLowerCase().includes("fire") || 
