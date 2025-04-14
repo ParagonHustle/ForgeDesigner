@@ -196,12 +196,17 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     if (!isPaused && !isComplete && units.length > 0) {
       // Add debug logging
       console.log("Battle simulation running with", units.length, "units");
+      // Ensure the battle starts at Turn 1
+      setBattleRound(1);
+      console.log("Forcing battle to start at Turn 1");
 
       const interval = setInterval(() => {
         // Increment battle round on each interval - this ensures status effects decrement properly
         setBattleRound(prevRound => {
-          console.log(`Advancing to battle round ${prevRound + 1}`);
-          return prevRound + 1;
+          // Only increment if not already at a high number (possible race condition)
+          const nextRound = prevRound < 5 ? prevRound + 1 : prevRound;
+          console.log(`Advancing to battle round ${nextRound}`);
+          return nextRound;
         });
 
         // First pass: update meters and track which units should attack
@@ -924,7 +929,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Apply special status effects for specific skills
     // For Gust skill, do a single roll when the skill is used to determine if effect is applied
     if (skill.name === "Gust") {
-      // Always update attempts counter
+      // Log the effect attempt to debug console to make sure the game system recognizes the effect attempt
+      console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${battleRound}`);
+      
+      // Always update attempts counter and add to summary stats
       setUnits(prevUnits => {
         return prevUnits.map(u => {
           if (u.id === attacker.id) {
@@ -937,8 +945,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Add to detailed action log about attempt
+      // Add to detailed action log about attempt - add it to both arrays to ensure visibility
       setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted SLOW on ${target.name}`, ...prev]);
+      setActionLog(prev => [`Turn ${battleRound}: ${attacker.name} attempted to SLOW ${target.name}!`, ...prev]);
 
       // Roll once for effect application - 10% chance
       const effectRoll = Math.random();
@@ -964,7 +973,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           });
         });
         
-        // Add to detailed action log
+        // Add to detailed action log and actionLog (main log)
         setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
         
         // Apply Minor Slow (20% Speed reduction) for 1 turn
@@ -999,6 +1008,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
       statusEffectText = " [Turn Meter reduced by 10%]";
     } else if (skill.name === "Stone Slam" || skill.name === "Boss Strike") { // 20% chance to apply Weakness
+      // Log the effect attempt to debug console to make sure the game system recognizes the effect attempt
+      console.log(`${attacker.name} attempting to apply WEAKEN with ${skill.name} on ${target.name} - Turn ${battleRound}`);
+      
       // Always update attempts counter
       setUnits(prevUnits => {
         return prevUnits.map(u => {
@@ -1012,8 +1024,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Add to detailed action log about attempt
+      // Add to detailed action log about attempt AND to main action log for visibility
       setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted WEAKEN on ${target.name}`, ...prev]);
+      setActionLog(prev => [`Turn ${battleRound}: ${attacker.name} attempted to WEAKEN ${target.name}!`, ...prev]);
 
       // Roll once for effect application - 20% chance
       const effectRoll = Math.random();
@@ -1039,8 +1052,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           });
         });
         
-        // Add to detailed action log
+        // Add to both logs when effect is applied
         setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied WEAKEN to ${target.name}`, ...prev]);
+        setActionLog(prev => [`Turn ${battleRound}: ${attacker.name} successfully applied WEAKEN to ${target.name}!`, ...prev]);
         
         // Apply Weakness (10% Attack reduction) for 2 turns
         const effect: StatusEffect = {
