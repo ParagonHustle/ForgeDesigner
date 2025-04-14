@@ -1034,40 +1034,118 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const vitalityBonus = unit.auraBonus?.vitality ?? 0;
     const speedBonus = unit.auraBonus?.speed ?? 0;
     
+    // Helper function to render a skill with tooltip
+    const renderSkill = (skillName: string, damage: number, cooldown?: number) => {
+      // Determine skill color/style based on type
+      let skillStyle = "bg-blue-600/40";
+      let skillIcon = "⚔️";
+      
+      if (skillName.toLowerCase().includes("flame") || skillName.toLowerCase().includes("fire") || 
+          skillName.toLowerCase().includes("inferno") || skillName.toLowerCase().includes("ember")) {
+        skillStyle = "bg-red-600/40";
+        skillIcon = "🔥";
+      } else if (skillName.toLowerCase().includes("frost") || skillName.toLowerCase().includes("ice") || 
+                skillName.toLowerCase().includes("freeze")) {
+        skillStyle = "bg-blue-600/40";
+        skillIcon = "❄️";
+      } else if (skillName.toLowerCase().includes("shock") || skillName.toLowerCase().includes("lightning") || 
+                skillName.toLowerCase().includes("thunder")) {
+        skillStyle = "bg-yellow-600/40";
+        skillIcon = "⚡";
+      } else if (skillName.toLowerCase().includes("earth") || skillName.toLowerCase().includes("rock") || 
+                skillName.toLowerCase().includes("stone")) {
+        skillStyle = "bg-amber-800/40";
+        skillIcon = "🪨";
+      } else if (skillName.toLowerCase().includes("water") || skillName.toLowerCase().includes("wave") || 
+                skillName.toLowerCase().includes("current")) {
+        skillStyle = "bg-sky-600/40";
+        skillIcon = "💧";
+      } else if (skillName.toLowerCase().includes("wind") || skillName.toLowerCase().includes("gust") || 
+                skillName.toLowerCase().includes("storm")) {
+        skillStyle = "bg-teal-600/40";
+        skillIcon = "🌪️";
+      }
+      
+      // Format the tooltip details
+      const damagePercent = Math.round(damage * 100);
+      const description = cooldown 
+        ? `Deals ${damagePercent}% of ATK damage. Cooldown: ${cooldown} turns.`
+        : `Deals ${damagePercent}% of ATK damage.`;
+      
+      return (
+        <TooltipProvider>
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <div 
+                className={`text-xs px-1.5 py-0.5 rounded text-white ${skillStyle} flex items-center cursor-help gap-0.5 leading-none`}
+              >
+                <span>{skillIcon}</span>
+                <span>{skillName}</span>
+                {cooldown && <span className="opacity-80 ml-1">({cooldown}t)</span>}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              align="center"
+              className="bg-gray-900/95 border-purple-900 text-white p-1.5 max-w-[180px] rounded-lg shadow-xl z-50"
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-1">
+                  <Info className="text-yellow-400 flex-shrink-0" size={14} />
+                  <h4 className="font-semibold text-yellow-400 text-xs">{skillName}</h4>
+                </div>
+                <p className="text-xs leading-tight">{description}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    };
+    
     return (
-      <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-        <div className="flex items-center">
-          <Swords className="h-3 w-3 mr-1 text-red-400" />
-          <span>
-            ATK: {unit.stats.attack}
-            {hasAuraBonuses && attackBonus !== 0 && (
-              <span className={attackBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
-                {attackBonus > 0 ? "+" : ""}{attackBonus}%
-              </span>
-            )}
-          </span>
+      <div className="mt-2 text-xs">
+        {/* Stats section */}
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <div className="flex items-center">
+            <Swords className="h-3 w-3 mr-1 text-red-400" />
+            <span>
+              ATK: {unit.stats.attack}
+              {hasAuraBonuses && attackBonus !== 0 && (
+                <span className={attackBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                  {attackBonus > 0 ? "+" : ""}{attackBonus}%
+                </span>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center">
+            <Heart className="h-3 w-3 mr-1 text-red-500" />
+            <span>
+              VIT: {unit.stats.vitality}
+              {hasAuraBonuses && vitalityBonus !== 0 && (
+                <span className={vitalityBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                  {vitalityBonus > 0 ? "+" : ""}{vitalityBonus}%
+                </span>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center">
+            <Zap className="h-3 w-3 mr-1 text-yellow-400" />
+            <span>
+              SPD: {unit.stats.speed}
+              {hasAuraBonuses && speedBonus !== 0 && (
+                <span className={speedBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
+                  {speedBonus > 0 ? "+" : ""}{speedBonus}%
+                </span>
+              )}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center">
-          <Heart className="h-3 w-3 mr-1 text-red-500" />
-          <span>
-            VIT: {unit.stats.vitality}
-            {hasAuraBonuses && vitalityBonus !== 0 && (
-              <span className={vitalityBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
-                {vitalityBonus > 0 ? "+" : ""}{vitalityBonus}%
-              </span>
-            )}
-          </span>
-        </div>
-        <div className="flex items-center">
-          <Zap className="h-3 w-3 mr-1 text-yellow-400" />
-          <span>
-            SPD: {unit.stats.speed}
-            {hasAuraBonuses && speedBonus !== 0 && (
-              <span className={speedBonus > 0 ? "text-green-400 ml-1" : "text-red-400 ml-1"}>
-                {speedBonus > 0 ? "+" : ""}{speedBonus}%
-              </span>
-            )}
-          </span>
+        
+        {/* Skills section */}
+        <div className="mt-1 flex flex-wrap gap-1">
+          {unit.skills.basic && renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
+          {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
+          {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
         </div>
       </div>
     );
