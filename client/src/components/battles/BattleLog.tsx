@@ -89,6 +89,134 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [isComplete, setIsComplete] = useState(false);
   const [battleRound, setBattleRound] = useState(1);
   
+  // Forward declare checkBattleEnd to handle hoisting issues
+  const checkBattleEnd = () => {
+    const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+    if (!battleEntry) {
+      console.error("No battle entry found with allies array");
+      return;
+    }
+
+    const allies = units.filter(u => battleEntry.allies.some((a: any) => a.id === u.id));
+    const enemies = units.filter(u => battleEntry.enemies.some((e: any) => e.id === u.id));
+
+    const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
+    const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
+
+    console.log(`Checking battle end conditions:
+      - All allies defeated: ${allAlliesDefeated} (${allies.length} allies)
+      - All enemies defeated: ${allEnemiesDefeated} (${enemies.length} enemies)
+      - Current stage: ${currentStage + 1} of 8
+      - Is battle complete: ${isComplete}
+    `);
+
+    // If all allies are defeated, the dungeon run is over
+    if (allAlliesDefeated) {
+      setIsComplete(true);
+      setActionLog(prev => [
+        ...prev,
+        `Battle ended! Your party has been defeated at stage ${currentStage + 1}.`
+      ]);
+      console.log(`Dungeon ended - party defeated at stage ${currentStage + 1}`);
+    } 
+    // If all enemies are defeated and we haven't reached the final stage (8), progress to next stage
+    else if (allEnemiesDefeated && !isComplete) {
+      // Final stage is 7 (index 0-7 for 8 total stages)
+      const isFinalStage = currentStage >= 7;
+
+      if (isFinalStage) {
+        // Complete dungeon if this is the final stage
+        setIsComplete(true);
+        setActionLog(prev => [
+          ...prev,
+          `Congratulations! You've completed all stages of the dungeon!`
+        ]);
+        console.log(`Dungeon completed - all 8 stages cleared!`);
+      } else {
+        // Progress to next stage
+        const nextStage = currentStage + 1;
+
+        // First update the action log to show progression
+        setActionLog(prev => [
+          ...prev,
+          `Stage ${currentStage + 1} completed! Moving to stage ${nextStage + 1}...`
+        ]);
+        console.log(`Moving to stage ${nextStage + 1}`);
+
+        // Reset enemy units for the next stage
+        setTimeout(() => {
+          // Reset the enemy units with new stats and HP
+          setUnits(prevUnits => {
+            const updatedUnits = prevUnits.map(unit => {
+              // Check if this is an enemy
+              const isEnemy = battleEntry.enemies.some((e: any) => e.id === unit.id);
+
+              if (isEnemy) {
+                // Generate new enemy based on next stage
+                const stageMultiplier = 1 + (nextStage * 0.12); // 12% increase per stage
+                const baseMaxHp = unit.maxHp > 0 ? 
+                  Math.floor(unit.maxHp / (1 + (currentStage * 0.12))) : // Reverse calculate base HP if available
+                  unit.maxHp; // Fallback to current maxHp
+
+                const newMaxHp = Math.floor(baseMaxHp * stageMultiplier);
+                const newAttack = Math.floor(unit.stats.attack * stageMultiplier);
+                const newVitality = Math.floor(unit.stats.vitality * stageMultiplier);
+                const newSpeed = Math.floor(unit.stats.speed * (1 + (nextStage * 0.05))); // 5% speed increase per stage
+
+                return {
+                  ...unit,
+                  hp: newMaxHp,
+                  maxHp: newMaxHp,
+                  stats: {
+                    ...unit.stats,
+                    attack: newAttack,
+                    vitality: newVitality,
+                    speed: newSpeed
+                  },
+                  attackMeter: 0, // Reset attack meter
+                  statusEffects: [], // Clear status effects from enemies
+                  totalDamageDealt: 0,  // Reset statistics for the new stage
+                  totalDamageReceived: 0
+                };
+              } 
+              // If it's an ally, do NOT heal but do clear debuffs
+              else {
+                // Per user requirement: No healing between dungeon stages
+                // Only keep beneficial status effects for allies between stages
+                const filteredEffects = unit.statusEffects?.filter(
+                  effect => !["Weakened", "Slowed", "Burning", "Poisoned"].includes(effect.name)
+                ) || [];
+
+                // Add a message to the action log that negative effects were removed
+                if ((unit.statusEffects?.length || 0) > (filteredEffects.length || 0)) {
+                  setActionLog(prev => [
+                    ...prev,
+                    `${unit.name} had negative status effects removed after completing stage ${currentStage + 1}.`
+                  ]);
+                }
+
+                return {
+                  ...unit,
+                  // hp remains unchanged - no healing
+                  statusEffects: filteredEffects,
+                  attackMeter: Math.min(unit.attackMeter, 95) // Cap attack meter at 95% to prevent immediate attacks
+                };
+              }
+            });
+
+            // After updating all units, now set the stage
+            setTimeout(() => {
+              setCurrentStage(nextStage); // Update stage AFTER all units are reset
+              console.log(`Stage ${nextStage + 1} is ready to begin`);
+            }, 100);
+
+            return updatedUnits;
+          });
+        }, 1000);
+      }
+    }
+  };
+  
   // Reset to 1 when a new battle starts
   useEffect(() => {
     if (battleLog && battleLog.length > 0) {
@@ -1356,150 +1484,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     });
 
     checkBattleEnd();
-  };
-
-  const checkBattleEnd = () => {
-    const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-    if (!battleEntry) {
-      console.error("No battle entry found with allies array");
-      return;
-    }
-
-    const allies = units.filter(u => battleEntry.allies.some((a: any) => a.id === u.id));
-    const enemies = units.filter(u => battleEntry.enemies.some((e: any) => e.id === u.id));
-
-    const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
-    const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
-
-    console.log(`Checking battle end conditions:
-      - All allies defeated: ${allAlliesDefeated} (${allies.length} allies)
-      - All enemies defeated: ${allEnemiesDefeated} (${enemies.length} enemies)
-      - Current stage: ${currentStage + 1} of 8
-      - Is battle complete: ${isComplete}
-    `);
-
-    // If all allies are defeated, the dungeon run is over
-    if (allAlliesDefeated) {
-      setIsComplete(true);
-      setActionLog(prev => [
-        ...prev,
-        `Battle ended! Your party has been defeated at stage ${currentStage + 1}.`
-      ]);
-      console.log(`Dungeon ended - party defeated at stage ${currentStage + 1}`);
-    } 
-    // If all enemies are defeated and we haven't reached the final stage (8), progress to next stage
-    else if (allEnemiesDefeated && !isComplete) {
-      // Final stage is 7 (index 0-7 for 8 total stages)
-      const isFinalStage = currentStage >= 7;
-
-      if (isFinalStage) {
-        // Complete dungeon if this is the final stage
-        setIsComplete(true);
-        setActionLog(prev => [
-          ...prev,
-          `Congratulations! You've completed all stages of the dungeon!`
-        ]);
-        console.log(`Dungeon completed - all 8 stages cleared!`);
-      } else {
-        // Progress to next stage
-        const nextStage = currentStage + 1;
-
-        // First update the action log to show progression
-        setActionLog(prev => [
-          ...prev,
-          `Stage ${currentStage + 1} completed! Moving to stage ${nextStage + 1}...`
-        ]);
-        console.log(`Moving to stage ${nextStage + 1}`);
-
-        // IMPORTANT: Update the current stage AFTER setting up the new units to avoid race conditions
-        // This ensures that components displaying the stage number use the updated value
-
-        // Reset enemy units for the next stage
-        setTimeout(() => {
-          // Reset the enemy units with new stats and HP
-          setUnits(prevUnits => {
-            const updatedUnits = prevUnits.map(unit => {
-              // Check if this is an enemy
-              const isEnemy = battleEntry.enemies.some((e: any) => e.id === unit.id);
-
-              if (isEnemy) {
-                // Generate new enemy based on next stage
-                const stageMultiplier = 1 + (nextStage * 0.12); // 12% increase per stage
-                const baseMaxHp = unit.maxHp > 0 ? 
-                  Math.floor(unit.maxHp / (1 + (currentStage * 0.12))) : // Reverse calculate base HP if available
-                  unit.maxHp; // Fallback to current maxHp
-
-                const newMaxHp = Math.floor(baseMaxHp * stageMultiplier);
-                const newAttack = Math.floor(unit.stats.attack * stageMultiplier);
-                const newVitality = Math.floor(unit.stats.vitality * stageMultiplier);
-                const newSpeed = Math.floor(unit.stats.speed * (1 + (nextStage * 0.05))); // 5% speed increase per stage
-
-                console.log(`Resetting enemy ${unit.name} for stage ${nextStage + 1}:
-                  - HP: ${newMaxHp}
-                  - Attack: ${newAttack}
-                  - Vitality: ${newVitality}
-                  - Speed: ${newSpeed}
-                `);
-
-                return {
-                  ...unit,
-                  hp: newMaxHp,
-                  maxHp: newMaxHp,
-                  stats: {
-                    ...unit.stats,
-                    attack: newAttack,
-                    vitality: newVitality,
-                    speed: newSpeed
-                  },
-                  attackMeter: 0, // Reset attack meter
-                  statusEffects: [], // Clear status effects from enemies
-                  totalDamageDealt: 0,  // Reset statistics for the new stage
-                  totalDamageReceived: 0
-                };
-              } 
-              // If it's an ally, do NOT heal but do clear debuffs
-              else {
-                // Per user requirement: No healing between dungeon stages
-                // Only keep beneficial status effects for allies between stages
-                const filteredEffects = unit.statusEffects?.filter(
-                  effect => !["Weakened", "Slowed", "Burning", "Poisoned"].includes(effect.name)
-                ) || [];
-
-                console.log(`Processing ally ${unit.name} after stage clear:
-                  - Current HP: ${unit.hp}/${unit.maxHp} (no healing between stages)
-                  - Cleared negative effects: ${
-                    (unit.statusEffects?.length || 0) - (filteredEffects.length || 0)
-                  } effects removed
-                `);
-
-                // Add a message to the action log that negative effects were removed
-                if ((unit.statusEffects?.length || 0) > (filteredEffects.length || 0)) {
-                  setActionLog(prev => [
-                    ...prev,
-                    `${unit.name} had negative status effects removed after completing stage ${currentStage + 1}.`
-                  ]);
-                }
-
-                return {
-                  ...unit,
-                  // hp remains unchanged - no healing
-                  statusEffects: filteredEffects,
-                  attackMeter: Math.min(unit.attackMeter, 95) // Cap attack meter at 95% to prevent immediate attacks
-                };
-              }
-            });
-
-            // After updating all units, now set the stage
-            setTimeout(() => {
-              setCurrentStage(nextStage); // Update stage AFTER all units are reset
-              console.log(`Stage ${nextStage + 1} is ready to begin`);
-            }, 100);
-
-            return updatedUnits;
-          });
-        }, 1000);
-      }
-    }
   };
 
   // Helper function to render a skill with tooltip
