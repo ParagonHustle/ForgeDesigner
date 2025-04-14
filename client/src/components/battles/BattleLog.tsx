@@ -1176,9 +1176,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       }
     }
     
-    // *** IMPORTANT FIX: Changed to ALWAYS apply Minor Slow when Gust is used ***
-    // For Gust skill, ALWAYS apply Minor Slow (instead of rolling)
-    // Try with exact match, case-insensitive match, and by checking if the name includes "gust"
+    // *** IMPORTANT FIX: Connect Gust to status effect system ***
     const isGustSkill = skill.name === "Gust" || 
                        skill.name.toLowerCase() === "gust".toLowerCase() || 
                        skill.name.toLowerCase().includes("gust");
@@ -1186,8 +1184,41 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     if (isGustSkill) {
       console.log(`💨 GUARANTEED GUST EFFECT: ${attacker.name} will apply Minor Slow to ${target.name}`);
       setActionLog(prev => [`GUST DETECTED: ${skill.name} by ${attacker.name} - Will apply Minor Slow!`, ...prev]);
+      
       // Track attempt to apply Slow effect
       console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${turnCountRef.current}`);
+      
+      // Directly apply Minor Slow effect
+      const slowEffect: StatusEffect = {
+        name: "Minor Slow",
+        effect: "ReduceSpd",
+        value: 20,
+        duration: 1,
+        source: attacker.id
+      };
+      
+      // Initialize status effects array if needed
+      if (!target.statusEffects) target.statusEffects = [];
+      
+      // Add effect and update counters
+      target.statusEffects.push(slowEffect);
+      console.log(`Applied Minor Slow effect to ${target.name} with ${slowEffect.duration} turn duration`);
+      
+      // Update success counter
+      setUnits(prevUnits => {
+        return prevUnits.map(u => {
+          if (u.id === attacker.id) {
+            return {
+              ...u,
+              slowAttempts: (u.slowAttempts || 0) + 1,
+              slowSuccess: (u.slowSuccess || 0) + 1
+            };
+          }
+          return u;
+        });
+      });
+      
+      statusEffectText = " [Minor Slow applied]";
       
       // Update attempts counter
       setUnits(prevUnits => {
