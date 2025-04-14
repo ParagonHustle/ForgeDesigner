@@ -1099,6 +1099,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     setActionLog(prev => [`Turn ${turnCountRef.current}: ${basicMessage}`, ...prev]);
     
     // Apply special status effects for specific skills
+    // Debug to check if the skill name is recognized correctly
+    console.log(`SKILL DEBUG: Checking skill: "${skill.name}" against "Gust" - Match: ${skill.name === "Gust"}`);
+    console.log(`SKILL DEBUG: Skill type: ${skillType}, Attacker: ${attacker.name}, Skills available:`, attacker.skills);
+    
     // For Gust skill, do a single roll when the skill is used to determine if effect is applied
     if (skill.name === "Gust") {
       // Track attempt to apply Slow effect
