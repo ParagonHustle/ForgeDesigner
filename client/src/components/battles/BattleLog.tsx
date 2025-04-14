@@ -1647,22 +1647,33 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   <div className="mt-3 border-t border-[#432874]/40 pt-2">
                     <h5 className="text-sm font-medium text-yellow-400 mb-1">Status Effect Statistics</h5>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="text-purple-300">Burn Attempts:</span> {unit.burnAttempts || 0}
-                        <span className="text-green-400 ml-1">({unit.burnSuccess || 0} successful)</span>
-                      </div>
-                      <div>
-                        <span className="text-purple-300">Poison Attempts:</span> {unit.poisonAttempts || 0}
-                        <span className="text-green-400 ml-1">({unit.poisonSuccess || 0} successful)</span>
-                      </div>
-                      <div>
-                        <span className="text-purple-300">Slow Attempts:</span> {unit.slowAttempts || 0}
-                        <span className="text-green-400 ml-1">({unit.slowSuccess || 0} successful)</span>
-                      </div>
-                      <div>
-                        <span className="text-purple-300">Weaken Attempts:</span> {unit.weakenAttempts || 0}
-                        <span className="text-green-400 ml-1">({unit.weakenSuccess || 0} successful)</span>
-                      </div>
+                      {(unit.burnAttempts || 0) > 0 && (
+                        <div>
+                          <span className="text-purple-300">Burn Attempts:</span> {unit.burnAttempts}
+                          <span className="text-green-400 ml-1">({unit.burnSuccess || 0} successful)</span>
+                        </div>
+                      )}
+                      {(unit.poisonAttempts || 0) > 0 && (
+                        <div>
+                          <span className="text-purple-300">Poison Attempts:</span> {unit.poisonAttempts}
+                          <span className="text-green-400 ml-1">({unit.poisonSuccess || 0} successful)</span>
+                        </div>
+                      )}
+                      {(unit.slowAttempts || 0) > 0 && (
+                        <div>
+                          <span className="text-purple-300">Slow Attempts:</span> {unit.slowAttempts}
+                          <span className="text-green-400 ml-1">({unit.slowSuccess || 0} successful)</span>
+                        </div>
+                      )}
+                      {(unit.weakenAttempts || 0) > 0 && (
+                        <div>
+                          <span className="text-purple-300">Weaken Attempts:</span> {unit.weakenAttempts}
+                          <span className="text-green-400 ml-1">({unit.weakenSuccess || 0} successful)</span>
+                        </div>
+                      )}
+                      {!unit.burnAttempts && !unit.poisonAttempts && !unit.slowAttempts && !unit.weakenAttempts && (
+                        <div className="text-xs italic text-[#C8B8DB]/40 col-span-2">No status effects attempted</div>
+                      )}
                     </div>
                   </div>
                 </div>
