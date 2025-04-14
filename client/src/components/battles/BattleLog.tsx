@@ -1216,6 +1216,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         
         // Format a plain text success message with an icon
         const successMessage = `${attacker.name} successfully applied Minor Slow to ${target.name}! 🌪️`;
+        console.log("Adding success message to action log:", successMessage);
         setActionLog(prev => [`Turn ${turnCountRef.current}: ${successMessage}`, ...prev]);
         
         // Apply Minor Slow (20% Speed reduction) for 1 turn
@@ -1229,8 +1230,20 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
         // Apply the status effect to the target
         if (!target.statusEffects) target.statusEffects = [];
-        target.statusEffects.push(effect);
-        console.log(`Added Minor Slow effect to ${target.name} with ${effect.duration} turn duration`);
+        // Check if target already has this effect
+        const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
+        if (existingEffectIndex >= 0) {
+          // Extend existing effect duration
+          target.statusEffects[existingEffectIndex].duration = Math.max(
+            target.statusEffects[existingEffectIndex].duration,
+            effect.duration
+          );
+          console.log(`Extended Minor Slow duration on ${target.name} to ${target.statusEffects[existingEffectIndex].duration} turns`);
+        } else {
+          // Add new effect
+          target.statusEffects.push(effect);
+          console.log(`Added Minor Slow effect to ${target.name} with ${effect.duration} turn duration`);
+        }
 
         statusEffectText = " [Minor Slow applied]";
       }
@@ -1501,9 +1514,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       healingEffectText = ` (includes healing for ${healAmount} HP)`;
     }
 
+    // Create a combined message with damage and status effect, but only when no separate status message was added
     const actionMessage = `Turn ${turnCountRef.current}: ${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
-
+    
+    // Add to action log, making sure it appears in the right order
     setActionLog(prev => [actionMessage, ...prev]);
+    console.log("Added action message to log:", actionMessage);
     // Also add to detailed log for admin view
     setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: Action - ${attacker.name} used ${skill.name}`, ...prev]);
 
