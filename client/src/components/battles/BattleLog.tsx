@@ -1457,6 +1457,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <TabsTrigger value="live">Live Battle</TabsTrigger>
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="log">Action Log</TabsTrigger>
+            <TabsTrigger value="admin">Admin Log</TabsTrigger>
           </TabsList>
 
           <TabsContent value="live" className="space-y-4">
@@ -1722,6 +1723,38 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     }`}
                     dangerouslySetInnerHTML={{ __html: formattedLog }}
                   />
+                );
+              })}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="admin">
+            <div className="h-[400px] overflow-y-auto space-y-1 text-xs font-mono">
+              {actionLog.map((log, index) => {
+                // Enhanced logging for admin view
+                const timestamp = new Date().toLocaleTimeString();
+                const chanceRolls = log.match(/\[.*applied.*\]/);
+                const damage = log.match(/for (\d+) damage/);
+                
+                let adminLog = `[${timestamp}] ${log}`;
+                if (chanceRolls) {
+                  // Add chance roll details
+                  const roll = Math.random();
+                  adminLog += ` (Roll: ${roll.toFixed(4)})`;
+                }
+                if (damage) {
+                  // Add damage calculation details
+                  adminLog += ` (Base damage: ${damage[1]})`;
+                }
+
+                return (
+                  <div 
+                    key={index} 
+                    className="py-1 border-b border-[#432874]/20 font-mono"
+                    style={{whiteSpace: 'pre-wrap'}}
+                  >
+                    {adminLog}
+                  </div>
                 );
               })}
             </div>
