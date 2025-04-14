@@ -77,6 +77,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [detailedActionLog, setDetailedActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   
+  // Animation states for smooth transitions
+  const [activeAttacker, setActiveAttacker] = useState<string | null>(null);
+  const [activeTarget, setActiveTarget] = useState<string | null>(null);
+  const [showAttackAnimation, setShowAttackAnimation] = useState(false);
+  const [showDamageAnimation, setShowDamageAnimation] = useState(false);
+  const [attackAnimationType, setAttackAnimationType] = useState<'basic' | 'advanced' | 'ultimate'>('basic');
+  const [currentSkillName, setCurrentSkillName] = useState<string>('');
+  const [animationInProgress, setAnimationInProgress] = useState(false);
+  
   // Using useRef for turn count to avoid re-render issues
   const turnCountRef = useRef<number>(1);
   // Keep state for displaying in the UI when needed
