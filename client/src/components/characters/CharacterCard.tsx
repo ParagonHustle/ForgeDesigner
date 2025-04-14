@@ -23,6 +23,9 @@ import {
   Wind,
   Check,
   Target,
+  ChevronRight,
+  Sparkles,
+  Loader2,
   CircleOff
 } from 'lucide-react';
 import { 
@@ -295,6 +298,49 @@ const CharacterCard = ({
     }
     
     return logic || 'Attack a single target';
+  };
+  
+  // Function to upgrade character level
+  const upgradeCharacter = async () => {
+    setIsUpgrading(true);
+    try {
+      // Calculate requirements based on character level
+      const currentLevel = character.level || 1;
+      const requiredShards = currentLevel * 5;
+      const requiredEssence = currentLevel * 100;
+      
+      // Mock API call for now - will be replaced with actual API endpoint
+      console.log(`Upgrading character ${character.name} from level ${currentLevel} to ${currentLevel + 1}`);
+      console.log(`Required: ${requiredShards} Soul Shards, ${requiredEssence} Essence`);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Update character level locally for immediate feedback
+      character.level = currentLevel + 1;
+      
+      // Update local state for soul shards
+      setSoulShardCount(prev => prev - requiredShards);
+      
+      // Force refresh of characters data
+      queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
+      
+      toast({
+        title: "Character Upgraded",
+        description: `${character.name} is now level ${character.level}!`,
+      });
+      
+      setUpgradeDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to upgrade character:', error);
+      toast({
+        title: "Upgrade Failed",
+        description: "There was an error upgrading the character. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpgrading(false);
+    }
   };
 
   return (
@@ -785,39 +831,289 @@ const CharacterCard = ({
               </div>
             </div>
             
-            <div className="flex justify-end space-x-3">
-              {!character.isActive && (
-                <>
-                  <Button
-                    variant="outline"
-                    className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
-                    onClick={() => {
-                      setDetailDialogOpen(false);
-                      setEquipAuraDialogOpen(true);
-                    }}
-                  >
-                    Equip Aura
-                  </Button>
-                  <Button className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]">
-                    Assign Task
-                  </Button>
-                </>
-              )}
-              {character.isActive && (
-                <div className="flex items-center text-[#DC143C]">
-                  <Lock className="h-4 w-4 mr-1" />
-                  <span>
-                    Busy: {character.activityType} 
-                    {character.activityEndTime && (
-                      <span className="ml-1">
-                        (<CountdownTimer endTime={character.activityEndTime} />)
-                      </span>
-                    )}
-                  </span>
+            {/* Character management section */}
+            <div className="flex flex-col space-y-4">
+              {/* Soul shard & duplicate info */}
+              <div className="bg-[#432874]/20 p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <Star className="h-4 w-4 text-purple-400" />
+                    <span className="text-sm">Soul Shards: <span className="text-purple-400 font-semibold">{soulShardCount}</span></span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">Duplicates: <span className="text-blue-400 font-semibold">{duplicateCount}</span></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex justify-end space-x-3">
+                {!character.isActive && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
+                      onClick={() => setDuplicatesDialogOpen(true)}
+                    >
+                      View Duplicates
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
+                      onClick={() => setUpgradeDialogOpen(true)}
+                    >
+                      Upgrade Level
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
+                      onClick={() => {
+                        setDetailDialogOpen(false);
+                        setEquipAuraDialogOpen(true);
+                      }}
+                    >
+                      Equip Aura
+                    </Button>
+                    <Button className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]">
+                      Assign Task
+                    </Button>
+                  </>
+                )}
+                {character.isActive && (
+                  <div className="flex items-center text-[#DC143C]">
+                    <Lock className="h-4 w-4 mr-1" />
+                    <span>
+                      Busy: {character.activityType} 
+                      {character.activityEndTime && (
+                        <span className="ml-1">
+                          (<CountdownTimer endTime={character.activityEndTime} />)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicates Dialog */}
+      <Dialog open={duplicatesDialogOpen} onOpenChange={setDuplicatesDialogOpen}>
+        <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel">
+              {character.name} - Duplicates
+            </DialogTitle>
+            <DialogDescription className="text-[#C8B8DB]/80">
+              View and manage character duplicates to obtain Soul Shards
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="my-4 space-y-4">
+            {/* Soul Shard Summary */}
+            <div className="flex items-center justify-between bg-[#432874]/20 p-3 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-purple-900/50 flex items-center justify-center">
+                  <Star className="h-5 w-5 text-purple-400" />
+                </div>
+                <div>
+                  <div className="text-sm text-[#C8B8DB]/80">Total Soul Shards</div>
+                  <div className="text-xl font-bold text-purple-400">{soulShardCount}</div>
+                </div>
+              </div>
+              
+              <div className="text-sm text-[#C8B8DB]/60">
+                Soul Shards are used to upgrade character levels.<br />
+                Convert duplicates to gain more Soul Shards.
+              </div>
+            </div>
+            
+            {/* Character Duplicates List */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-[#C8B8DB]">
+                Character Duplicates ({duplicateCount})
+              </h3>
+              
+              {duplicateCount > 0 ? (
+                <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                  {/* This would be mapped from actual duplicates - using example for now */}
+                  {Array.from({ length: duplicateCount }).map((_, index) => (
+                    <div key={index} className="flex items-center justify-between bg-[#432874]/10 p-3 rounded-lg border border-[#432874]/20">
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={character.avatarUrl}
+                          alt={character.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-[#432874]"
+                        />
+                        <div>
+                          <div className="font-medium">{character.name}</div>
+                          <div className="flex items-center space-x-2 text-xs text-[#C8B8DB]/80">
+                            <Badge className={`font-normal ${getClassColor(character.class)}`}>
+                              {character.class}
+                            </Badge>
+                            <span>Level {character.level}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="bg-transparent border-purple-500/30 hover:bg-purple-900/20 text-purple-400"
+                      >
+                        <Sparkles className="h-4 w-4 mr-1" />
+                        Convert to Shards
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-[#C8B8DB]/60 bg-[#432874]/10 rounded-lg">
+                  No duplicates available for this character.
                 </div>
               )}
             </div>
           </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setDuplicatesDialogOpen(false)}
+              className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Upgrade Character Dialog */}
+      <Dialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen}>
+        <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel">
+              Upgrade {character.name}
+            </DialogTitle>
+            <DialogDescription className="text-[#C8B8DB]/80">
+              Upgrade your character to increase their stats and abilities
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="my-4 space-y-5">
+            {/* Current Level */}
+            <div className="flex items-center justify-center space-x-4">
+              <div className="flex flex-col items-center">
+                <div className="text-[#C8B8DB]/60 text-sm">Current Level</div>
+                <div className="bg-[#432874]/40 h-16 w-16 rounded-full flex items-center justify-center border border-[#432874]/60">
+                  <span className="text-2xl font-bold">{character.level}</span>
+                </div>
+              </div>
+              
+              <ChevronRight className="h-6 w-6 text-[#C8B8DB]/40" />
+              
+              <div className="flex flex-col items-center">
+                <div className="text-[#C8B8DB]/60 text-sm">Next Level</div>
+                <div className="bg-gradient-to-br from-[#432874] to-[#9370DB] h-16 w-16 rounded-full flex items-center justify-center shadow-lg shadow-purple-900/30">
+                  <span className="text-2xl font-bold text-white">{(character.level || 1) + 1}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Resource Requirements */}
+            <div className="bg-[#432874]/20 p-4 rounded-lg space-y-3">
+              <h3 className="text-sm font-semibold text-[#C8B8DB]">Upgrade Requirements</h3>
+              
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <Star className="h-5 w-5 text-purple-400" />
+                  <span>Soul Shards</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span className={soulShardCount >= (character.level || 1) * 5 ? "text-green-400" : "text-red-400"}>
+                    {soulShardCount}
+                  </span>
+                  <span className="text-[#C8B8DB]/60">/</span>
+                  <span>{(character.level || 1) * 5}</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="h-5 w-5 text-blue-400" />
+                  <span>Essence</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span className="text-blue-400">???</span>
+                  <span className="text-[#C8B8DB]/60">/</span>
+                  <span>{(character.level || 1) * 100}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Stat Improvements */}
+            <div className="bg-[#432874]/20 p-4 rounded-lg">
+              <h3 className="text-sm font-semibold text-[#C8B8DB] mb-2">Stat Improvements</h3>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <Swords className="h-4 w-4 text-red-400" />
+                    <span className="text-sm">Attack</span>
+                  </div>
+                  <div className="text-sm text-green-400">+{Math.ceil(character.attack * 0.1)}</div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4 text-blue-400" />
+                    <span className="text-sm">Defense</span>
+                  </div>
+                  <div className="text-sm text-green-400">+{Math.ceil(character.defense * 0.1)}</div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <Heart className="h-4 w-4 text-red-500" />
+                    <span className="text-sm">Vitality</span>
+                  </div>
+                  <div className="text-sm text-green-400">+{Math.ceil(character.vitality * 0.1)}</div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <Target className="h-4 w-4 text-yellow-400" />
+                    <span className="text-sm">Accuracy</span>
+                  </div>
+                  <div className="text-sm text-green-400">+{Math.ceil(character.accuracy * 0.1)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setUpgradeDialogOpen(false)}
+              className="bg-transparent border-[#432874]/50 hover:bg-[#432874]/20"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={upgradeCharacter}
+              disabled={isUpgrading || soulShardCount < (character.level || 1) * 5}
+              className="bg-gradient-to-r from-[#432874] to-[#9370DB] text-white hover:from-[#9370DB] hover:to-[#432874]"
+            >
+              {isUpgrading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Upgrading...
+                </>
+              ) : (
+                "Upgrade Character"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -864,54 +1160,40 @@ const CharacterCard = ({
             </div>
 
             <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
-              <TooltipWrapper id="attack-stat" content="Attack determines your character's damage output in combat. Higher Attack means more damage dealt with skills and abilities.">
-                <div className="flex items-center">
-                  <Swords className="h-3 w-3 mr-1 text-red-400" />
-                  <span>ATK: {character.attack}</span>
-                </div>
-              </TooltipWrapper>
+              <div className="flex items-center">
+                <Swords className="h-3 w-3 mr-1 text-red-400" />
+                <span>ATK: {character.attack}</span>
+              </div>
               
-              <TooltipWrapper id="accuracy-stat" content="Accuracy affects your character's chance to hit enemies. Higher Accuracy reduces the chance of missing attacks.">
-                <div className="flex items-center">
-                  <Target className="h-3 w-3 mr-1 text-yellow-400" />
-                  <span>ACC: {character.accuracy}</span>
-                </div>
-              </TooltipWrapper>
+              <div className="flex items-center">
+                <Target className="h-3 w-3 mr-1 text-yellow-400" />
+                <span>ACC: {character.accuracy}</span>
+              </div>
               
-              <TooltipWrapper id="defense-stat" content="Defense reduces the damage your character takes from enemy attacks. Higher Defense means less damage taken.">
-                <div className="flex items-center">
-                  <Shield className="h-3 w-3 mr-1 text-blue-400" />
-                  <span>DEF: {character.defense}</span>
-                </div>
-              </TooltipWrapper>
+              <div className="flex items-center">
+                <Shield className="h-3 w-3 mr-1 text-blue-400" />
+                <span>DEF: {character.defense}</span>
+              </div>
               
-              <TooltipWrapper id="vitality-stat" content="Vitality determines your character's health points (HP). Higher Vitality means more HP and better survival.">
-                <div className="flex items-center">
-                  <Heart className="h-3 w-3 mr-1 text-red-500" />
-                  <span>VIT: {character.vitality}</span>
-                </div>
-              </TooltipWrapper>
+              <div className="flex items-center">
+                <Heart className="h-3 w-3 mr-1 text-red-500" />
+                <span>VIT: {character.vitality}</span>
+              </div>
               
-              <TooltipWrapper id="speed-stat" content="Speed determines how quickly your character's action gauge fills. Higher Speed means more frequent turns in combat.">
-                <div className="flex items-center">
-                  <Zap className="h-3 w-3 mr-1 text-cyan-400" />
-                  <span>SPD: {character.speed}</span>
-                </div>
-              </TooltipWrapper>
+              <div className="flex items-center">
+                <Zap className="h-3 w-3 mr-1 text-cyan-400" />
+                <span>SPD: {character.speed}</span>
+              </div>
               
-              <TooltipWrapper id="focus-stat" content="Focus increases critical hit chance and effectiveness of elemental skills. Higher Focus means more frequent and powerful critical hits.">
-                <div className="flex items-center">
-                  <Brain className="h-3 w-3 mr-1 text-purple-400" />
-                  <span>FOC: {character.focus || 0}</span>
-                </div>
-              </TooltipWrapper>
+              <div className="flex items-center">
+                <Brain className="h-3 w-3 mr-1 text-purple-400" />
+                <span>FOC: {character.focus || 0}</span>
+              </div>
               
-              <TooltipWrapper id="resilience-stat" content="Resilience reduces the duration and effect of negative status effects. Higher Resilience means better resistance to debuffs.">
-                <div className="flex items-center">
-                  <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
-                  <span>RES: {character.resilience || 0}</span>
-                </div>
-              </TooltipWrapper>
+              <div className="flex items-center">
+                <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
+                <span>RES: {character.resilience || 0}</span>
+              </div>
               {character.passiveSkills && Array.isArray(character.passiveSkills) && character.passiveSkills.length > 0 && (
                 <div className="flex items-center">
                   <Check className="h-3 w-3 mr-1 text-green-400" />
