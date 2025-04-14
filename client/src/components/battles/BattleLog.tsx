@@ -967,12 +967,26 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted SLOW on ${target.name}`, ...prev]);
       setActionLog(prev => [`Turn ${battleRound}: ${attacker.name} attempted to SLOW ${target.name}!`, ...prev]);
 
-      // Roll once for effect application - 10% chance
+      // Roll once for effect application - 20% chance (improved)
       const effectRoll = Math.random();
-      const effectSuccess = effectRoll < 0.1;
+      const effectSuccess = effectRoll < 0.2; // 20% chance
       
-      // Add detailed log about the roll
+      // Record the last roll for UI display in the summary tab
+      setUnits(prevUnits => {
+        return prevUnits.map(u => {
+          if (u.id === attacker.id) {
+            return {
+              ...u,
+              lastSlowRoll: effectRoll
+            };
+          }
+          return u;
+        });
+      });
+      
+      // Add detailed log about the roll - include the exact percentage rolled
       setDetailedActionLog(prev => [
+        `Turn ${battleRound}: EFFECT ROLL - ${attacker.name}'s Gust - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
         `Turn ${battleRound}: EFFECT ROLL - Value: ${(effectRoll * 100).toFixed(2)}%, Threshold: 10%, Success: ${effectSuccess ? "YES" : "NO"}`,
         ...prev
       ]);
