@@ -1118,9 +1118,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
 
-      // Roll for effect application - 20% chance
+      // Roll for effect application - 50% chance for testing (increased from 20%)
       const effectRoll = Math.random() * 100;
-      const effectSuccess = effectRoll <= 20; // 20% chance
+      const effectSuccess = effectRoll < 50; // Increased chance for testing
       
       // Store the roll value
       setUnits(prevUnits => {
@@ -1143,8 +1143,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // For testing/debugging - add a very clear message that will be visible in the action log
       console.log("TESTING STATUS EFFECT: Attempting to apply Slow with Gust!");
       
-      // Add a more visible attempt message with color and formatting
-      const rollAttemptMessage = `${attacker.name} used <span class="text-cyan-300 font-bold">Gust</span> - 20% chance to apply Minor Slow on ${target.name}`;
+      // Add a more visible attempt message without HTML formatting
+      const rollAttemptMessage = `${attacker.name} used Gust - 50% chance to apply Minor Slow on ${target.name}`;
       
       // Always add the attempt to the action log for visibility
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollAttemptMessage}`, ...prev]);
@@ -1152,9 +1152,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // Add to detailed log too - this is what we see in debug logs
       console.log("Adding Gust attempt to detailed log");
       setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${rollAttemptMessage}`, ...prev]);
-      
-      // TEMPORARY: Update success chance to 50% for testing
-      effectSuccess = effectRoll < 50; // Increased from 20% to 50% for testing
       
       // Store the last roll value on the attacker for reporting
       setUnits(prevUnits => {
@@ -1169,16 +1166,17 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Create a simple text-based roll result message that doesn't use HTML
-      const resultText = effectSuccess ? "SUCCESS!" : "FAILED";
-      const icon = effectSuccess ? '🌪️' : '';
+      // Use the updated result
+      const updatedSuccess = effectRoll < 50; // Re-calculating the success state with increased chance
+      const resultText = updatedSuccess ? "SUCCESS!" : "FAILED";
+      const icon = updatedSuccess ? '🌪️' : '';
       const rollResultMessage = `${attacker.name}'s Gust roll: ${effectRoll.toFixed(1)}% - ${resultText} ${icon}`;
       
       // Add roll result to action log - using HTML markup that will be rendered with dangerouslySetInnerHTML
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
       
       // Also add to detailed log for Debug tab
-      const rollDetailedMessage = `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Gust - Rolled: ${effectRoll.toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`;
+      const rollDetailedMessage = `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Gust - Rolled: ${effectRoll.toFixed(1)}% vs 50.0% threshold - ${updatedSuccess ? 'SUCCESS' : 'FAILED'}`;
       console.log("Adding Gust roll result to detailed log:", rollDetailedMessage);
       setDetailedActionLog(prev => [rollDetailedMessage, ...prev]);
       
@@ -1197,7 +1195,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       // This detailed log entry is now redundant - already added above
       
-      if (effectSuccess) { // 20% chance for Minor Slow
+      if (updatedSuccess) { // 50% chance for Minor Slow (updated for testing)
         // Update success counter only if effect lands
         setUnits(prevUnits => {
           return prevUnits.map(u => {
