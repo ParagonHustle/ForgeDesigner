@@ -468,395 +468,480 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // After another delay, apply the actual damage and continue
       setTimeout(() => {
         setShowDamageAnimation(false);
-      }, 500);
-    }, 500);
-    
-    // Determine if we should apply status effects based on the skill
-    let statusEffectApplied = false;
-    let statusEffectMessage = "";
-    let newStatusEffect: StatusEffect | null = null;
-    
-    // Check skill name to determine potential status effects
-    if (skill.name === "Gust") {
-      // Gust has 50% chance to apply Minor Slow (20% Speed reduction)
-      const effectRoll = Math.random() * 100;
-      if (effectRoll <= 50) {
-        statusEffectApplied = true;
-        newStatusEffect = {
-          name: "Minor Slow",
-          duration: 3, // lasts for 3 turns
-          effect: "ReduceSpd",
-          value: 20, // 20% reduction
-          source: attacker.id
-        };
-        statusEffectMessage = `${attacker.name}'s Gust applied Minor Slow to ${target.name}! (Speed -20% for 3 turns)`;
-      }
-    } else if (skill.name === "Stone Slam") {
-      // Stone Slam has 20% chance to apply Minor Weakness (10% Attack reduction)
-      const effectRoll = Math.random() * 100;
-      // Increase chance for testing
-      if (effectRoll <= 50) { // 50% for testing instead of 20%
-        statusEffectApplied = true;
-        newStatusEffect = {
-          name: "Minor Weakness",
-          duration: 2, // lasts for 2 turns
-          effect: "ReduceAtk",
-          value: 10, // 10% reduction
-          source: attacker.id
-        };
-        statusEffectMessage = `${attacker.name}'s Stone Slam weakened ${target.name}! (Attack -10% for 2 turns)`;
         
-        // Debug log for testing
-        console.log(`Applied Minor Weakness to ${target.name} from ${attacker.name}: Duration ${newStatusEffect.duration} turns`);
-      }
-    } else if (skill.name === "Ember") {
-      // Ember has 30% chance to apply Burning effect
-      const effectRoll = Math.random() * 100;
-      // Increase chance for testing
-      if (effectRoll <= 60) { // 60% for testing instead of 30%
-        statusEffectApplied = true;
-        newStatusEffect = {
-          name: "Burning",
-          duration: 3, // lasts for 3 turns
-          effect: "Burn",
-          value: 2, // 2 damage per turn
-          source: attacker.id
-        };
-        statusEffectMessage = `${attacker.name}'s Ember set ${target.name} on fire! (2 damage per turn for 3 turns)`;
-        
-        // Debug log for testing
-        console.log(`Applied Burning to ${target.name} from ${attacker.name}: Duration ${newStatusEffect.duration} turns, Damage ${newStatusEffect.value}/turn`);
-      }
-    }
-    
-    // Apply damage and status effects to target
-    setUnits(prevUnits => {
-      return prevUnits.map(u => {
-        // Update target with damage and new status effects
-        if (u.id === target.id) {
-          const newHp = Math.max(0, u.hp - damage);
-          
-          // Check if target is defeated
-          if (newHp <= 0 && u.hp > 0) {
-            setActionLog(prev => [`${target.name} has been defeated!`, ...prev]);
-          }
-          
-          // Apply new status effect if any
-          let updatedStatusEffects = u.statusEffects ? [...u.statusEffects] : [];
-          if (statusEffectApplied && newStatusEffect) {
-            // Check if we already have this type of effect
-            const existingEffectIndex = updatedStatusEffects.findIndex(
-              effect => effect.effect === newStatusEffect!.effect
-            );
-            
-            if (existingEffectIndex >= 0) {
-              // Replace existing effect with new one (refresh duration)
-              updatedStatusEffects[existingEffectIndex] = newStatusEffect;
-            } else {
-              // Add new effect
-              updatedStatusEffects.push(newStatusEffect);
+        // Apply the damage to the target unit (update UI)
+        setUnits(prevUnits => {
+          return prevUnits.map(unit => {
+            if (unit.id === target.id) {
+              // Update target unit's HP
+              return { 
+                ...unit, 
+                hp: Math.max(0, unit.hp - damage),
+                totalDamageReceived: (unit.totalDamageReceived || 0) + damage
+              };
+            } else if (unit.id === attacker.id) {
+              // Update attacker's damage dealt stat
+              return {
+                ...unit,
+                totalDamageDealt: (unit.totalDamageDealt || 0) + damage
+              };
             }
-          }
-          
-          return {
-            ...u,
-            hp: newHp,
-            totalDamageReceived: u.totalDamageReceived + damage,
-            statusEffects: updatedStatusEffects
-          };
-        }
-        
-        // Update attacker and reduce durations of their status effects
-        if (u.id === attacker.id) {
-          // When a unit acts, their status effects should have their duration reduced by 1
-          let updatedStatusEffects: StatusEffect[] = [];
-          let statusEffectsExpired: string[] = [];
-          
-          // Process each status effect on the attacker
-          if (u.statusEffects && u.statusEffects.length > 0) {
-            u.statusEffects.forEach(effect => {
-              // Decrease duration by 1 since this unit just took an action
-              const newDuration = effect.duration - 1;
-              
-              // If effect still has duration, keep it
-              if (newDuration > 0) {
-                updatedStatusEffects.push({
-                  ...effect,
-                  duration: newDuration
-                });
-              } else {
-                // Effect has expired
-                statusEffectsExpired.push(effect.name);
-              }
-            });
-            
-            // Log expired effects
-            statusEffectsExpired.forEach(effectName => {
-              setActionLog(prev => [`${effectName} has worn off from ${attacker.name}!`, ...prev]);
-            });
-          }
-          
-          return {
-            ...u,
-            attackMeter: 0, // Reset attack meter after action
-            totalDamageDealt: u.totalDamageDealt + damage,
-            statusEffects: updatedStatusEffects
-          };
-        }
-        
-        return u;
-      });
-    });
-    
-    // Log the attack
-    const actionMessage = `Turn ${turnCountRef.current}: ${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!`;
-    setActionLog(prev => [actionMessage, ...prev]);
-    
-    // Log status effect application if any
-    if (statusEffectApplied) {
-      setActionLog(prev => [statusEffectMessage, ...prev]);
-    }
-    
-    // Check if battle has ended
-    setTimeout(() => {
-      checkBattleEnd();
-      
-      // Clear animation states
-      setActiveAttacker(null);
-      setActiveTarget(null);
-      setShowAttackAnimation(false);
-      setShowDamageAnimation(false);
-      setAnimationInProgress(false);
-    }, 300);
-  };
-  
-  // Function to apply damage from DoT status effects
-  // This should run every few ticks, but NOT decrease durations
-  const processStatusEffectDamage = () => {
-    // Create a timestamp to ensure this only processes once per cycle
-    const processingTime = Date.now();
-    
-    // Track which units have had DoT effects applied this cycle 
-    // to prevent double-processing
-    const processedUnits = new Set<string>();
-    
-    setUnits(prevUnits => {
-      const updatedUnits = [...prevUnits];
-      
-      // Process each unit
-      for (let i = 0; i < updatedUnits.length; i++) {
-        const unit = updatedUnits[i];
-        
-        // Skip dead units
-        if (unit.hp <= 0) continue;
-        
-        // Skip units with no status effects
-        if (!unit.statusEffects || unit.statusEffects.length === 0) continue;
-        
-        // Skip if this unit was already processed in this cycle
-        if (processedUnits.has(unit.id)) {
-          console.log(`Skipping duplicate DoT processing for ${unit.name}`);
-          continue;
-        }
-        
-        // Mark this unit as processed
-        processedUnits.add(unit.id);
-        
-        let totalDoTDamage = 0;
-        
-        // Process each status effect for damage only
-        unit.statusEffects.forEach(effect => {
-          // Calculate damage based on effect type
-          if (effect.effect === "Burn") {
-            totalDoTDamage += effect.value;
-            console.log(`Applying Burn damage to ${unit.name}: ${effect.value} damage, ${effect.duration} turns remaining`);
-          }
-          
-          // Add any other DoT effect processing here
-          if (effect.effect === "Poison") {
-            totalDoTDamage += effect.value;
-            console.log(`Applying Poison damage to ${unit.name}: ${effect.value} damage, ${effect.duration} turns remaining`);
-          }
+            return unit;
+          });
         });
         
-        // Apply DoT damage if any
-        if (totalDoTDamage > 0) {
-          const newHp = Math.max(0, unit.hp - totalDoTDamage);
+        // Add attack to the action log
+        const attackString = `Turn ${turnCountRef.current}: <span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> used <span class="font-semibold">${skill.name}</span> on <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> for <span class="text-yellow-400">${damage} damage</span>!`;
+        
+        setActionLog(prev => [attackString, ...prev]);
+        
+        // Reset attack meter for attacker
+        setUnits(prevUnits => {
+          return prevUnits.map(unit => {
+            if (unit.id === attacker.id) {
+              return { ...unit, attackMeter: 0 };
+            }
+            return unit;
+          });
+        });
+        
+        // Determine if we should apply status effects based on the skill
+        let statusEffectApplied = false;
+        let statusEffectMessage = "";
+        let newStatusEffect: StatusEffect | null = null;
+        
+        // Check skill name to determine potential status effects
+        if (skill.name === "Gust") {
+          // 50% chance to apply Minor Slow (20% speed reduction) for 3 turns
+          const slowRoll = Math.random() * 100;
+          const slowChance = 50;
           
-          // Log the damage with status effect details
-          let statusEffectNames = unit.statusEffects
-            ?.filter(effect => effect.effect === "Burn" || effect.effect === "Poison")
-            .map(effect => `${effect.name} (${effect.duration} turns left)`)
-            .join(" and ");
+          // Update stats for reporting
+          setUnits(prevUnits => {
+            return prevUnits.map(unit => {
+              if (unit.id === attacker.id) {
+                return { 
+                  ...unit, 
+                  slowAttempts: (unit.slowAttempts || 0) + 1,
+                  lastSlowRoll: slowRoll
+                };
+              }
+              return unit;
+            });
+          });
+          
+          if (slowRoll <= slowChance) {
+            statusEffectApplied = true;
             
-          setActionLog(prev => [`${unit.name} takes ${totalDoTDamage} damage from ${statusEffectNames}!`, ...prev]);
-          
-          // Add debug log to track damage-over-time effects
-          console.log(`DoT damage to ${unit.name}: ${totalDoTDamage} damage from status effects at ${processingTime}. Current HP: ${unit.hp} -> ${newHp}`);
-          
-          // Check if unit died from DoT
-          if (newHp <= 0 && unit.hp > 0) {
-            setActionLog(prev => [`${unit.name} has been defeated by status effects!`, ...prev]);
+            // Create status effect
+            newStatusEffect = {
+              name: "Minor Slow",
+              duration: 3,
+              effect: "ReduceSpd",
+              value: 20, // 20% speed reduction
+              source: attacker.id
+            };
+            
+            // Add to target's status effects
+            setUnits(prevUnits => {
+              return prevUnits.map(unit => {
+                if (unit.id === target.id) {
+                  // Add status effect and update success counter
+                  let existingEffects = unit.statusEffects || [];
+                  
+                  // Check if an existing effect of the same type exists
+                  const existingEffectIndex = existingEffects.findIndex(e => e.effect === "ReduceSpd");
+                  
+                  if (existingEffectIndex >= 0) {
+                    // Replace existing effect with the new one if it's stronger or has longer duration
+                    if (existingEffects[existingEffectIndex].value < newStatusEffect!.value || 
+                        existingEffects[existingEffectIndex].duration < newStatusEffect!.duration) {
+                      
+                      existingEffects = [
+                        ...existingEffects.slice(0, existingEffectIndex),
+                        newStatusEffect!,
+                        ...existingEffects.slice(existingEffectIndex + 1)
+                      ];
+                      
+                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-blue-400">Minor Slow</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (replaces weaker effect)!`;
+                    } else {
+                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-blue-400">Minor Slow</span> was resisted by <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (already has stronger effect)!`;
+                      statusEffectApplied = false;
+                    }
+                  } else {
+                    // Add new effect
+                    existingEffects = [...existingEffects, newStatusEffect!];
+                    statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-blue-400">Minor Slow</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (Speed -20% for 3 turns)!`;
+                  }
+                  
+                  return { 
+                    ...unit, 
+                    statusEffects: existingEffects,
+                    slowSuccess: statusEffectApplied ? (unit.slowSuccess || 0) + 1 : (unit.slowSuccess || 0)
+                  };
+                } else if (unit.id === attacker.id) {
+                  return {
+                    ...unit,
+                    slowSuccess: statusEffectApplied ? (unit.slowSuccess || 0) + 1 : (unit.slowSuccess || 0)
+                  };
+                }
+                return unit;
+              });
+            });
+          } else {
+            statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-blue-400">Minor Slow</span> failed to affect <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (${slowRoll.toFixed(1)}% > ${slowChance}%)!`;
           }
+        } else if (skill.name === "Stone Slam") {
+          // 20% chance to apply Minor Weakness (10% attack reduction) for 2 turns
+          const weakenRoll = Math.random() * 100;
+          const weakenChance = 20;
           
-          updatedUnits[i] = {
-            ...unit,
-            hp: newHp,
-            totalDamageReceived: unit.totalDamageReceived + totalDoTDamage
-          };
+          // Update stats for reporting
+          setUnits(prevUnits => {
+            return prevUnits.map(unit => {
+              if (unit.id === attacker.id) {
+                return { 
+                  ...unit, 
+                  weakenAttempts: (unit.weakenAttempts || 0) + 1,
+                  lastWeakenRoll: weakenRoll
+                };
+              }
+              return unit;
+            });
+          });
+          
+          if (weakenRoll <= weakenChance) {
+            statusEffectApplied = true;
+            
+            // Create status effect
+            newStatusEffect = {
+              name: "Minor Weakness",
+              duration: 2,
+              effect: "ReduceAtk",
+              value: 10, // 10% attack reduction
+              source: attacker.id
+            };
+            
+            // Add to target's status effects
+            setUnits(prevUnits => {
+              return prevUnits.map(unit => {
+                if (unit.id === target.id) {
+                  // Add status effect and update success counter
+                  let existingEffects = unit.statusEffects || [];
+                  
+                  // Check if an existing effect of the same type exists
+                  const existingEffectIndex = existingEffects.findIndex(e => e.effect === "ReduceAtk");
+                  
+                  if (existingEffectIndex >= 0) {
+                    // Replace existing effect with the new one if it's stronger or has longer duration
+                    if (existingEffects[existingEffectIndex].value < newStatusEffect!.value || 
+                        existingEffects[existingEffectIndex].duration < newStatusEffect!.duration) {
+                      
+                      existingEffects = [
+                        ...existingEffects.slice(0, existingEffectIndex),
+                        newStatusEffect!,
+                        ...existingEffects.slice(existingEffectIndex + 1)
+                      ];
+                      
+                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-orange-400">Minor Weakness</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (replaces weaker effect)!`;
+                    } else {
+                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-orange-400">Minor Weakness</span> was resisted by <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (already has stronger effect)!`;
+                      statusEffectApplied = false;
+                    }
+                  } else {
+                    // Add new effect
+                    existingEffects = [...existingEffects, newStatusEffect!];
+                    statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-orange-400">Minor Weakness</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (Attack -10% for 2 turns)!`;
+                  }
+                  
+                  return { 
+                    ...unit, 
+                    statusEffects: existingEffects,
+                    weakenSuccess: statusEffectApplied ? (unit.weakenSuccess || 0) + 1 : (unit.weakenSuccess || 0)
+                  };
+                } else if (unit.id === attacker.id) {
+                  return {
+                    ...unit,
+                    weakenSuccess: statusEffectApplied ? (unit.weakenSuccess || 0) + 1 : (unit.weakenSuccess || 0)
+                  };
+                }
+                return unit;
+              });
+            });
+          } else {
+            statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-orange-400">Minor Weakness</span> failed to affect <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (${weakenRoll.toFixed(1)}% > ${weakenChance}%)!`;
+          }
+        } else if (skill.name === "Ember") {
+          // 30% chance to apply Burning effect for 2 turns
+          const burnRoll = Math.random() * 100;
+          const burnChance = 30;
+          
+          // Update stats for reporting
+          setUnits(prevUnits => {
+            return prevUnits.map(unit => {
+              if (unit.id === attacker.id) {
+                return { 
+                  ...unit, 
+                  burnAttempts: (unit.burnAttempts || 0) + 1,
+                  lastBurnRoll: burnRoll
+                };
+              }
+              return unit;
+            });
+          });
+          
+          if (burnRoll <= burnChance) {
+            statusEffectApplied = true;
+            
+            // Burning damage is based on a percentage of target's max HP
+            const burnDamage = Math.max(1, Math.floor(target.maxHp * 0.05)); // 5% of max HP
+            
+            // Create status effect
+            newStatusEffect = {
+              name: "Burning",
+              duration: 2,
+              effect: "Burn",
+              value: burnDamage,
+              source: attacker.id
+            };
+            
+            // Add to target's status effects
+            setUnits(prevUnits => {
+              return prevUnits.map(unit => {
+                if (unit.id === target.id) {
+                  // Add status effect and update success counter
+                  let existingEffects = unit.statusEffects || [];
+                  
+                  // Check if an existing effect of the same type exists
+                  const existingEffectIndex = existingEffects.findIndex(e => e.effect === "Burn");
+                  
+                  if (existingEffectIndex >= 0) {
+                    // Replace existing effect with the new one if it's stronger or has longer duration
+                    if (existingEffects[existingEffectIndex].value < newStatusEffect!.value || 
+                        existingEffects[existingEffectIndex].duration < newStatusEffect!.duration) {
+                      
+                      existingEffects = [
+                        ...existingEffects.slice(0, existingEffectIndex),
+                        newStatusEffect!,
+                        ...existingEffects.slice(existingEffectIndex + 1)
+                      ];
+                      
+                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-red-400">Burning</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (replaces weaker burning)!`;
+                    } else {
+                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-red-400">Burning</span> was resisted by <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (already has stronger effect)!`;
+                      statusEffectApplied = false;
+                    }
+                  } else {
+                    // Add new effect
+                    existingEffects = [...existingEffects, newStatusEffect!];
+                    statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-red-400">Burning</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (${burnDamage} damage per turn for 2 turns)!`;
+                  }
+                  
+                  return { 
+                    ...unit, 
+                    statusEffects: existingEffects,
+                    burnSuccess: statusEffectApplied ? (unit.burnSuccess || 0) + 1 : (unit.burnSuccess || 0)
+                  };
+                } else if (unit.id === attacker.id) {
+                  return {
+                    ...unit,
+                    burnSuccess: statusEffectApplied ? (unit.burnSuccess || 0) + 1 : (unit.burnSuccess || 0)
+                  };
+                }
+                return unit;
+              });
+            });
+          } else {
+            statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-red-400">Burning</span> failed to affect <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (${burnRoll.toFixed(1)}% > ${burnChance}%)!`;
+          }
         }
-      }
-      
-      return updatedUnits;
-    });
+        
+        // Log status effect application if any
+        if (statusEffectApplied) {
+          setActionLog(prev => [statusEffectMessage, ...prev]);
+        }
+        
+        // Check if battle has ended
+        setTimeout(() => {
+          checkBattleEnd();
+          
+          // Clear animation states
+          setActiveAttacker(null);
+          setActiveTarget(null);
+          setShowAttackAnimation(false);
+          setShowDamageAnimation(false);
+          setAnimationInProgress(false);
+        }, 300);
+        
+      }, 500);
+    }, 500);
   };
 
-  // Counter for status effect processing (only process every 4 ticks)
-  const statusEffectTickRef = useRef(0);
-
-  // Function to reset attack meters and apply status effects each tick
-  const simulationTick = () => {
-    if (isPaused || isComplete || units.length === 0) return;
-    
-    // Increment status effect counter
-    statusEffectTickRef.current += 1;
-    
-    // Process DOT damage every 8 ticks (reduced frequency to make it less frequent)
-    if (statusEffectTickRef.current >= 8) {
-      processStatusEffectDamage();
-      statusEffectTickRef.current = 0;
-      console.log("Processing DoT damage at tick cycle " + turnCountRef.current);
-    }
-    
-    // Update all units
-    setUnits(prevUnits => {
-      // Find battle entry
-      const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-      if (!battleEntry) return prevUnits;
-      
-      // Make a copy of the units to update
-      const updatedUnits = [...prevUnits];
-      
-      // Track which units should attack this tick
-      const attackingUnits: BattleUnit[] = [];
-      
-      // Update each unit's attack meter
-      for (let i = 0; i < updatedUnits.length; i++) {
-        const unit = updatedUnits[i];
-        
-        // Skip defeated units
-        if (unit.hp <= 0) continue;
-        
-        // Calculate speed with our fixed calculation that includes status effects
-        const effectiveSpeed = calculateEffectiveSpeed(unit);
-        
-        // Increase attack meter based on effective speed
-        const meterIncrease = (effectiveSpeed / 40) * playbackSpeed;
-        const newMeter = unit.attackMeter + meterIncrease;
-        
-        // If meter is full, unit should attack
-        if (newMeter >= 100) {
-          attackingUnits.push(unit);
-        }
-        
-        // Update the unit with new meter value
-        updatedUnits[i] = {
-          ...unit,
-          attackMeter: Math.min(newMeter, 100) // Cap at 100
-        };
-      }
-      
-      return updatedUnits;
-    });
-    
-    // Process actions for units that are ready to attack
-    units.forEach(unit => {
-      if (unit.hp <= 0 || unit.attackMeter < 100) return;
-      
-      // Determine if unit is ally or enemy
-      const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-      const isAlly = battleEntry?.allies?.some((a: any) => a.id === unit.id) || false;
-      
-      // Find a target
-      const possibleTargets = units.filter(u => {
-        // Units must be alive
-        if (u.hp <= 0) return false;
-        
-        // Target opposite side
-        if (isAlly) {
-          return battleEntry?.enemies?.some((e: any) => e.id === u.id);
-        } else {
-          return battleEntry?.allies?.some((a: any) => a.id === u.id);
-        }
-      });
-      
-      // If there are targets, perform the action
-      if (possibleTargets.length > 0) {
-        // Pick a random target
-        const targetIndex = Math.floor(Math.random() * possibleTargets.length);
-        const target = possibleTargets[targetIndex];
-        
-        // Perform the action
-        performAction(unit, target);
-      }
-    });
-  };
-  
-  // Set up a timer to advance the battle simulation
   useEffect(() => {
-    if (isPaused || isComplete) return;
-    
-    const interval = setInterval(() => {
-      simulationTick();
-    }, 300); // Tick every 300ms
-    
-    return () => clearInterval(interval);
-  }, [isPaused, isComplete, units, playbackSpeed]);
-  
-  // Initialize battle units
-  useEffect(() => {
-    if (battleLog && battleLog.length > 0) {
-      const initialUnits = [...battleLog[0].allies, ...battleLog[0].enemies].map(unit => {
-        // Calculate vitality with aura bonus if available
-        let vitalityStat = unit.stats.vitality;
-        if (unit.auraBonus?.vitality) {
-          // Apply percentage bonus from aura
-          vitalityStat = Math.floor(vitalityStat * (1 + unit.auraBonus.vitality / 100));
-        }
-
-        // Calculate HP based on adjusted vitality
-        const hpValue = vitalityStat * 8;
-
-        return {
+    // Initialize units from battle log on first render
+    if (battleLog.length > 0 && isOpen) {
+      const battleEntry = battleLog[0];
+      
+      if (battleEntry && battleEntry.allies && battleEntry.enemies) {
+        const allUnits = [...battleEntry.allies, ...battleEntry.enemies];
+        setUnits(allUnits.map((unit: any) => ({
           ...unit,
-          attackMeter: 0,
-          lastSkillUse: 0,
+          // Initialize tracking counters for display purposes
           totalDamageDealt: 0,
           totalDamageReceived: 0,
           totalHealingDone: 0,
           totalHealingReceived: 0,
-          hp: hpValue,
-          maxHp: hpValue
-        };
-      });
-      setUnits(initialUnits);
+          // Add attack meter for each unit (starts between 70-90%)
+          attackMeter: Math.floor(Math.random() * 20) + 70
+        })));
+      }
+    }
+  }, [battleLog, isOpen]);
+
+  useEffect(() => {
+    // Battle simulation loop - only runs when not paused and there are units
+    if (!isPaused && units.length > 0 && !isComplete) {
+      const battleTimer = setInterval(() => {
+        // Increment attack meters for all units
+        setUnits(prevUnits => {
+          // Find the unit with the highest attack meter
+          let highestMeterUnit: BattleUnit | null = null;
+          let highestMeter = 0;
+          
+          const updatedUnits = prevUnits.map(unit => {
+            // Skip if unit is defeated
+            if (unit.hp <= 0) return unit;
+            
+            // Calculate effective speed after status effects
+            const effectiveSpeed = calculateEffectiveSpeed(unit);
+            
+            // Calculate meter increment based on speed
+            // Formula: faster units fill their attack meter faster
+            const increment = Math.max(1, Math.floor(effectiveSpeed / 5));
+            
+            // Increase attack meter
+            const newMeter = Math.min(100, unit.attackMeter + increment * playbackSpeed);
+            
+            // Update highest meter tracker
+            if (newMeter > highestMeter) {
+              highestMeter = newMeter;
+              highestMeterUnit = { ...unit, attackMeter: newMeter };
+            }
+            
+            return { ...unit, attackMeter: newMeter };
+          });
+          
+          // If any unit reached 100% attack meter
+          if (highestMeter >= 100 && highestMeterUnit) {
+            // Update status effect durations first
+            highestMeterUnit = { 
+              ...highestMeterUnit,
+              statusEffects: highestMeterUnit.statusEffects?.map(effect => ({
+                ...effect,
+                // Decrease duration by 1 when the unit takes a turn
+                duration: effect.duration - 1
+              })).filter(effect => effect.duration > 0)
+            };
+            
+            // Apply DoT effects (Burn, Poison, etc.) before the unit acts
+            if (highestMeterUnit.statusEffects && highestMeterUnit.statusEffects.length > 0) {
+              // Process Burn damage
+              const burnEffect = highestMeterUnit.statusEffects.find(effect => effect.effect === "Burn");
+              
+              if (burnEffect) {
+                const burnDamage = burnEffect.value;
+                
+                // Apply burning damage
+                highestMeterUnit = {
+                  ...highestMeterUnit,
+                  hp: Math.max(0, highestMeterUnit.hp - burnDamage),
+                  totalDamageReceived: (highestMeterUnit.totalDamageReceived || 0) + burnDamage
+                };
+                
+                // Log damage
+                const sourceUnit = prevUnits.find(u => u.id === burnEffect.source);
+                
+                // Update source unit's damage dealt if found
+                if (sourceUnit) {
+                  const sourceIndex = updatedUnits.findIndex(u => u.id === sourceUnit.id);
+                  if (sourceIndex >= 0) {
+                    updatedUnits[sourceIndex] = {
+                      ...updatedUnits[sourceIndex],
+                      totalDamageDealt: (updatedUnits[sourceIndex].totalDamageDealt || 0) + burnDamage
+                    };
+                  }
+                }
+                
+                // Log to action log
+                const attackerName = sourceUnit ? sourceUnit.name : "Unknown";
+                const isSourceAlly = battleLog[0]?.allies?.some((a: any) => a.id === burnEffect.source);
+                
+                setActionLog(prev => [
+                  `<span class="text-${isSourceAlly ? 'blue' : 'red'}-400">${attackerName}'s</span> <span class="text-red-400">Burning</span> dealt <span class="text-yellow-400">${burnDamage} damage</span> to <span class="text-${isSourceAlly ? 'red' : 'blue'}-400">${highestMeterUnit!.name}</span>!`,
+                  ...prev
+                ]);
+              }
+            }
+            
+            // Find a target - for simplicity, target a random unit from the opposite side
+            const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+            const isAlly = battleEntry?.allies?.some((a: any) => a.id === highestMeterUnit!.id) || false;
+            
+            // Get all valid targets (enemy units that are still alive)
+            const validTargets = prevUnits
+              .filter(u => u.hp > 0)
+              .filter(u => isAlly ? 
+                !battleEntry?.allies?.some((a: any) => a.id === u.id) : 
+                battleEntry?.allies?.some((a: any) => a.id === u.id)
+              );
+            
+            if (validTargets.length > 0) {
+              // Select random target
+              const targetIndex = Math.floor(Math.random() * validTargets.length);
+              const target = validTargets[targetIndex];
+              
+              // Update the unit in our local updatedUnits array to include status effect duration changes
+              const actingUnitIndex = updatedUnits.findIndex(u => u.id === highestMeterUnit!.id);
+              if (actingUnitIndex >= 0) {
+                updatedUnits[actingUnitIndex] = highestMeterUnit!;
+              }
+              
+              // Queue the action to occur after the state update
+              setTimeout(() => performAction(highestMeterUnit!, target), 50);
+            }
+          }
+          
+          return updatedUnits;
+        });
+      }, 100); // Update every 100ms
       
-      // Reset battle state
-      setActionLog([]);
-      setIsComplete(false);
+      return () => clearInterval(battleTimer);
+    }
+  }, [isPaused, units, isComplete, playbackSpeed, battleLog]);
+
+  useEffect(() => {
+    // Reset state when dialog is opened
+    if (isOpen) {
       setIsPaused(false);
+      setIsComplete(false);
+      setActionLog([]);
+      setDetailedActionLog([]);
       turnCountRef.current = 1;
       setBattleRound(1);
     }
-  }, [battleLog]);
+  }, [isOpen]);
 
-  // Return the component
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#1A1A2E] border-[#432874] text-[#C8B8DB] max-w-6xl max-h-[90vh] overflow-y-auto p-6">
+      <DialogContent className="w-full max-w-5xl bg-[#241045] text-[#C8B8DB] border-[#432874] overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="text-[#FF9D00] font-cinzel">
-            Battle Log - Stage {currentStage + 1}
+          <DialogTitle className="text-xl">
+            <div className="flex items-center gap-2">
+              <span className="text-[#FF9D00]">Battle Log</span>
+              <span className="text-sm font-normal opacity-60 mt-1">
+                {isComplete ? "Battle Completed" : "Battle in Progress..."}
+              </span>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
@@ -894,7 +979,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               <div className="space-y-2">
                 <h3 className="font-semibold">Allies</h3>
                 {units.filter(u => battleLog[0]?.allies?.some((a: any) => a.id === u.id)).map(unit => (
-                  <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
+                  <motion.div 
+                    key={unit.id} 
+                    className={`bg-[#432874]/20 p-2 rounded ${activeAttacker === unit.id ? 'ring-2 ring-yellow-400' : ''} ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
+                    animate={{
+                      scale: (activeAttacker === unit.id && showAttackAnimation) ? [1, 1.05, 1] : 1,
+                      x: (activeAttacker === unit.id && showAttackAnimation) ? [0, -5, 0] : 0
+                    }}
+                    transition={{ duration: 0.5 }}
+                  >
                     <div className="flex items-center gap-2">
                       <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#7855FF]/30 flex items-center justify-center overflow-hidden border border-[#7855FF]/50">
                         <span className="text-lg">{unit.name.charAt(0)}</span>
@@ -902,12 +995,24 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                       <div className="flex-1">
                         <div className="flex justify-between">
                           <span>{unit.name}</span>
-                          <span>{Math.ceil(unit.hp)}/{unit.maxHp} HP</span>
+                          <motion.span 
+                            animate={{ 
+                              scale: (activeTarget === unit.id && showDamageAnimation) ? [1, 1.2, 1] : 1,
+                              color: (activeTarget === unit.id && showDamageAnimation) ? ['#C8B8DB', '#ff0000', '#C8B8DB'] : '#C8B8DB' 
+                            }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            {Math.ceil(unit.hp)}/{unit.maxHp} HP
+                          </motion.span>
                         </div>
                         <div className="w-full bg-[#432874]/30 h-2 rounded">
                           <motion.div
                             className="bg-[#00B9AE] h-full rounded"
                             style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
+                            animate={{ 
+                              backgroundColor: (activeTarget === unit.id && showDamageAnimation) ? ['#00B9AE', '#ff0000', '#00B9AE'] : '#00B9AE'
+                            }}
+                            transition={{ duration: 0.5 }}
                           />
                         </div>
                       </div>
@@ -953,14 +1058,22 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
               <div className="space-y-2">
                 <h3 className="font-semibold">Enemies</h3>
                 {units.filter(u => battleLog[0]?.enemies?.some((e: any) => e.id === u.id)).map(unit => (
-                  <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
+                  <motion.div 
+                    key={unit.id} 
+                    className={`bg-[#432874]/20 p-2 rounded ${activeAttacker === unit.id ? 'ring-2 ring-yellow-400' : ''} ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
+                    animate={{
+                      scale: (activeAttacker === unit.id && showAttackAnimation) ? [1, 1.05, 1] : 1,
+                      x: (activeAttacker === unit.id && showAttackAnimation) ? [0, 5, 0] : 0
+                    }}
+                    transition={{ duration: 0.5 }}
+                  >
                     <div className="flex items-center gap-2">
                       <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#DC143C]/30 flex items-center justify-center overflow-hidden border border-[#DC143C]/50">
                         <span className="text-lg">{unit.name.charAt(0)}</span>
@@ -968,12 +1081,24 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                       <div className="flex-1">
                         <div className="flex justify-between">
                           <span>{unit.name}</span>
-                          <span>{Math.ceil(unit.hp)}/{unit.maxHp} HP</span>
+                          <motion.span 
+                            animate={{ 
+                              scale: (activeTarget === unit.id && showDamageAnimation) ? [1, 1.2, 1] : 1,
+                              color: (activeTarget === unit.id && showDamageAnimation) ? ['#C8B8DB', '#ff0000', '#C8B8DB'] : '#C8B8DB' 
+                            }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            {Math.ceil(unit.hp)}/{unit.maxHp} HP
+                          </motion.span>
                         </div>
                         <div className="w-full bg-[#432874]/30 h-2 rounded">
                           <motion.div
                             className="bg-[#DC143C] h-full rounded"
                             style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
+                            animate={{ 
+                              backgroundColor: (activeTarget === unit.id && showDamageAnimation) ? ['#DC143C', '#ff0000', '#DC143C'] : '#DC143C'
+                            }}
+                            transition={{ duration: 0.5 }}
                           />
                         </div>
                       </div>
@@ -1019,7 +1144,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -1067,6 +1192,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   <li>✓ Fixed bug where status effects weren't actually affecting character stats</li>
                   <li>✓ Added code to apply speed reduction effects when calculating unit speed</li>
                   <li>✓ Added code to apply attack reduction effects when calculating attack damage</li>
+                  <li>✓ Added animation states to visualize attack and damage actions</li>
                 </ul>
               </div>
             </div>
