@@ -1095,7 +1095,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     console.log(`Skill used: ${skill.name} by ${attacker.name}`);
 
     // Add direct combat log for the damage that will display even if special effects fail
-    const basicMessage = `<span>${attacker.name} used <span class="text-purple-400 font-semibold">${skill.name}</span> on ${target.name} for <span class="text-red-400 font-semibold">${damage}</span> damage!</span>`;
+    const basicMessage = `${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!`;
     setActionLog(prev => [`Turn ${turnCountRef.current}: ${basicMessage}`, ...prev]);
     
     // Apply special status effects for specific skills
@@ -1230,6 +1230,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         // Apply the status effect to the target
         if (!target.statusEffects) target.statusEffects = [];
         target.statusEffects.push(effect);
+        console.log(`Added Minor Slow effect to ${target.name} with ${effect.duration} turn duration`);
 
         statusEffectText = " [Minor Slow applied]";
       }
