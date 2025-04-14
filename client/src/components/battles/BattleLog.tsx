@@ -1055,9 +1055,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         setUnits(prevUnits => {
           return prevUnits.map(u => {
             if (u.id === attacker.id) {
+              // Make sure we properly initialize and increment the counter
+              const currentSuccesses = typeof u.weakenSuccess === 'number' ? u.weakenSuccess : 0;
               return {
                 ...u,
-                weakenSuccess: (u.weakenSuccess || 0) + 1
+                weakenSuccess: currentSuccesses + 1
               };
             }
             return u;
