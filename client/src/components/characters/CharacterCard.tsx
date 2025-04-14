@@ -386,43 +386,43 @@ const CharacterCard = ({
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 text-xs mt-3">
-                      {aura.attack !== null && aura.attack !== 0 && (
+                      {aura.attack !== null && (
                         <div className="flex items-center">
                           <Swords className="h-3 w-3 mr-1 text-red-400" />
                           <span>ATK: {aura.attack && aura.attack > 0 ? '+' : ''}{aura.attack}%</span>
                         </div>
                       )}
-                      {aura.vitality !== null && aura.vitality !== 0 && (
+                      {aura.vitality !== null && (
                         <div className="flex items-center">
                           <Heart className="h-3 w-3 mr-1 text-red-400" />
                           <span>VIT: {aura.vitality && aura.vitality > 0 ? '+' : ''}{aura.vitality}%</span>
                         </div>
                       )}
-                      {aura.speed !== null && aura.speed !== 0 && (
+                      {aura.speed !== null && (
                         <div className="flex items-center">
                           <Zap className="h-3 w-3 mr-1 text-yellow-400" />
                           <span>SPD: {aura.speed && aura.speed > 0 ? '+' : ''}{aura.speed}%</span>
                         </div>
                       )}
-                      {aura.accuracy !== null && aura.accuracy !== 0 && (
+                      {aura.accuracy !== null && (
                         <div className="flex items-center">
                           <Target className="h-3 w-3 mr-1 text-blue-400" />
                           <span>ACC: {aura.accuracy && aura.accuracy > 0 ? '+' : ''}{aura.accuracy}%</span>
                         </div>
                       )}
-                      {aura.defense !== null && aura.defense !== 0 && (
+                      {aura.defense !== null && (
                         <div className="flex items-center">
                           <Shield className="h-3 w-3 mr-1 text-green-400" />
                           <span>DEF: {aura.defense && aura.defense > 0 ? '+' : ''}{aura.defense}%</span>
                         </div>
                       )}
-                      {aura.focus !== null && aura.focus !== 0 && (
+                      {aura.focus !== null && (
                         <div className="flex items-center">
                           <Eye className="h-3 w-3 mr-1 text-indigo-400" />
                           <span>FOC: {aura.focus && aura.focus > 0 ? '+' : ''}{aura.focus}%</span>
                         </div>
                       )}
-                      {aura.resilience !== null && aura.resilience !== 0 && (
+                      {aura.resilience !== null && (
                         <div className="flex items-center">
                           <Anchor className="h-3 w-3 mr-1 text-purple-400" />
                           <span>RES: {aura.resilience && aura.resilience > 0 ? '+' : ''}{aura.resilience}%</span>
@@ -440,13 +440,17 @@ const CharacterCard = ({
                         if (skills && skills.length > 0) {
                           return (
                             <div className="mt-2 border-t border-[#432874]/30 pt-2">
-                              <div className="flex items-center text-xs text-[#FF9D00]">
+                              <div className="flex items-center text-xs text-[#FF9D00] mb-1">
                                 <Sparkles className="h-3 w-3 mr-1" />
                                 <span>Aura Skills</span>
                               </div>
-                              <div className="text-xs mt-1 text-[#C8B8DB]/80">
+                              <div className="text-xs text-[#C8B8DB]/80 space-y-1">
                                 {skills.map((skill: any, index: number) => (
-                                  <div key={index} className="truncate">• {skill.name}</div>
+                                  <div key={index} className="border-b border-[#432874]/20 last:border-b-0 pb-1 last:pb-0">
+                                    <div className="font-medium text-[#00B9AE]">• {skill.name}</div>
+                                    {skill.description && <div className="text-[#C8B8DB]/70 text-2xs ml-2">{skill.description}</div>}
+                                    {!skill.description && skill.logic && <div className="text-[#C8B8DB]/70 text-2xs ml-2">{generateSkillLogic(skill)}</div>}
+                                  </div>
                                 ))}
                               </div>
                             </div>
@@ -507,67 +511,68 @@ const CharacterCard = ({
                         </div>
                       )}
 
-                      {(selectedAura.attack !== 0 || selectedAura.accuracy !== 0 || selectedAura.defense !== 0 || 
-                        selectedAura.vitality !== 0 || selectedAura.speed !== 0 || selectedAura.focus !== 0 || 
-                        selectedAura.resilience !== 0) && (
+                      {/* Always show stat bonuses, even if all are 0 */}
+                      {(selectedAura.attack !== null || selectedAura.accuracy !== null || selectedAura.defense !== null || 
+                        selectedAura.vitality !== null || selectedAura.speed !== null || selectedAura.focus !== null || 
+                        selectedAura.resilience !== null) && (
                         <div className="mt-3">
                           <div className="flex items-center mb-2 text-xs">
                             <Info className="h-3 w-3 mr-1 text-[#FF9D00]" />
                             <h5 className="font-semibold text-[#FF9D00]">Total Stat Bonuses</h5>
                           </div>
                           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs bg-[#1A1A2E]/50 p-2 border border-[#432874]/40 rounded-md">
-                            {selectedAura.attack !== 0 && (
+                            {selectedAura.attack !== null && (
                               <div className="flex justify-between">
                                 <span>Attack:</span>
-                                <span className={selectedAura.attack && selectedAura.attack > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.attack && selectedAura.attack > 0 ? "text-green-400" : selectedAura.attack < 0 ? "text-red-400" : "text-[#C8B8DB]/60"}>
                                   {selectedAura.attack}%
                                 </span>
                               </div>
                             )}
-                            {selectedAura.accuracy !== 0 && (
+                            {selectedAura.accuracy !== null && (
                               <div className="flex justify-between">
                                 <span>Accuracy:</span>
-                                <span className={selectedAura.accuracy && selectedAura.accuracy > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.accuracy && selectedAura.accuracy > 0 ? "text-green-400" : selectedAura.accuracy < 0 ? "text-red-400" : "text-[#C8B8DB]/60"}>
                                   {selectedAura.accuracy}%
                                 </span>
                               </div>
                             )}
-                            {selectedAura.defense !== 0 && (
+                            {selectedAura.defense !== null && (
                               <div className="flex justify-between">
                                 <span>Defense:</span>
-                                <span className={selectedAura.defense && selectedAura.defense > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.defense && selectedAura.defense > 0 ? "text-green-400" : selectedAura.defense < 0 ? "text-red-400" : "text-[#C8B8DB]/60"}>
                                   {selectedAura.defense}%
                                 </span>
                               </div>
                             )}
-                            {selectedAura.vitality !== 0 && (
+                            {selectedAura.vitality !== null && (
                               <div className="flex justify-between">
                                 <span>Vitality:</span>
-                                <span className={selectedAura.vitality && selectedAura.vitality > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.vitality && selectedAura.vitality > 0 ? "text-green-400" : selectedAura.vitality < 0 ? "text-red-400" : "text-[#C8B8DB]/60"}>
                                   {selectedAura.vitality}%
                                 </span>
                               </div>
                             )}
-                            {selectedAura.speed !== 0 && (
+                            {selectedAura.speed !== null && (
                               <div className="flex justify-between">
                                 <span>Speed:</span>
-                                <span className={selectedAura.speed && selectedAura.speed > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.speed && selectedAura.speed > 0 ? "text-green-400" : selectedAura.speed < 0 ? "text-red-400" : "text-[#C8B8DB]/60"}>
                                   {selectedAura.speed}%
                                 </span>
                               </div>
                             )}
-                            {selectedAura.focus !== 0 && (
+                            {selectedAura.focus !== null && (
                               <div className="flex justify-between">
                                 <span>Focus:</span>
-                                <span className={selectedAura.focus && selectedAura.focus > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.focus && selectedAura.focus > 0 ? "text-green-400" : selectedAura.focus < 0 ? "text-red-400" : "text-[#C8B8DB]/60"}>
                                   {selectedAura.focus}%
                                 </span>
                               </div>
                             )}
-                            {selectedAura.resilience !== 0 && (
+                            {selectedAura.resilience !== null && (
                               <div className="flex justify-between">
                                 <span>Resilience:</span>
-                                <span className={selectedAura.resilience && selectedAura.resilience > 0 ? "text-green-400" : "text-red-400"}>
+                                <span className={selectedAura.resilience && selectedAura.resilience > 0 ? "text-green-400" : selectedAura.resilience < 0 ? "text-red-400" : "text-[#C8B8DB]/60"}>
                                   {selectedAura.resilience}%
                                 </span>
                               </div>

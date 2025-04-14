@@ -191,22 +191,28 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   }, [battleLog]);
 
+  // Ensure the battle always starts at Turn 1 when initialized
+  useEffect(() => {
+    if (units.length > 0) {
+      console.log("Initial battle setup: Setting turn to 1");
+      setBattleRound(1);
+      setActionLog(prev => [...prev.map(item => 
+        item.startsWith("Turn") ? item.replace(/Turn \d+/, "Turn 1") : item
+      )]);
+    }
+  }, [units.length > 0]);
+
   // Battle simulation loop - using a more direct approach
   useEffect(() => {
     if (!isPaused && !isComplete && units.length > 0) {
       // Add debug logging
       console.log("Battle simulation running with", units.length, "units");
-      // Ensure the battle starts at Turn 1
-      setBattleRound(1);
-      console.log("Forcing battle to start at Turn 1");
 
       const interval = setInterval(() => {
         // Increment battle round on each interval - this ensures status effects decrement properly
         setBattleRound(prevRound => {
-          // Only increment if not already at a high number (possible race condition)
-          const nextRound = prevRound < 5 ? prevRound + 1 : prevRound;
-          console.log(`Advancing to battle round ${nextRound}`);
-          return nextRound;
+          console.log(`Advancing to battle round ${prevRound + 1}`);
+          return prevRound + 1;
         });
 
         // First pass: update meters and track which units should attack
