@@ -490,6 +490,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Apply damage and status effects to target
     setUnits(prevUnits => {
       return prevUnits.map(u => {
+        // Update target with damage and new status effects
         if (u.id === target.id) {
           const newHp = Math.max(0, u.hp - damage);
           
@@ -522,13 +523,45 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             statusEffects: updatedStatusEffects
           };
         }
+        
+        // Update attacker and reduce durations of their status effects
         if (u.id === attacker.id) {
+          // When a unit acts, their status effects should have their duration reduced by 1
+          let updatedStatusEffects: StatusEffect[] = [];
+          let statusEffectsExpired: string[] = [];
+          
+          // Process each status effect on the attacker
+          if (u.statusEffects && u.statusEffects.length > 0) {
+            u.statusEffects.forEach(effect => {
+              // Decrease duration by 1 since this unit just took an action
+              const newDuration = effect.duration - 1;
+              
+              // If effect still has duration, keep it
+              if (newDuration > 0) {
+                updatedStatusEffects.push({
+                  ...effect,
+                  duration: newDuration
+                });
+              } else {
+                // Effect has expired
+                statusEffectsExpired.push(effect.name);
+              }
+            });
+            
+            // Log expired effects
+            statusEffectsExpired.forEach(effectName => {
+              setActionLog(prev => [`${effectName} has worn off from ${attacker.name}!`, ...prev]);
+            });
+          }
+          
           return {
             ...u,
             attackMeter: 0, // Reset attack meter after action
-            totalDamageDealt: u.totalDamageDealt + damage
+            totalDamageDealt: u.totalDamageDealt + damage,
+            statusEffects: updatedStatusEffects
           };
         }
+        
         return u;
       });
     });
@@ -546,8 +579,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     setTimeout(checkBattleEnd, 300);
   };
   
-  // Function to process status effect damage and reduce durations
-  const processStatusEffects = () => {
+  // Function to apply damage from DoT status effects
+  // This should run every few ticks, but NOT decrease durations
+  const processStatusEffectDamage = () => {
     setUnits(prevUnits => {
       const updatedUnits = [...prevUnits];
       
@@ -562,9 +596,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         if (!unit.statusEffects || unit.statusEffects.length === 0) continue;
         
         let totalDoTDamage = 0;
-        const newStatusEffects: StatusEffect[] = [];
         
-        // Process each status effect
+        // Process each status effect for damage only
         unit.statusEffects.forEach(effect => {
           // Calculate damage based on effect type
           if (effect.effect === "Burn") {
@@ -574,20 +607,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           // Add any other DoT effect processing here
           if (effect.effect === "Poison") {
             totalDoTDamage += effect.value;
-          }
-          
-          // Decrease duration by 1
-          const newDuration = effect.duration - 1;
-          
-          // If effect still has duration, keep it
-          if (newDuration > 0) {
-            newStatusEffects.push({
-              ...effect,
-              duration: newDuration
-            });
-          } else {
-            // Log status effect expiration
-            setActionLog(prev => [`${effect.name} has worn off from ${unit.name}!`, ...prev]);
           }
         });
         
@@ -606,14 +625,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           updatedUnits[i] = {
             ...unit,
             hp: newHp,
-            totalDamageReceived: unit.totalDamageReceived + totalDoTDamage,
-            statusEffects: newStatusEffects
-          };
-        } else {
-          // Just update status effects
-          updatedUnits[i] = {
-            ...unit,
-            statusEffects: newStatusEffects
+            totalDamageReceived: unit.totalDamageReceived + totalDoTDamage
           };
         }
       }
@@ -632,9 +644,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Increment status effect counter
     statusEffectTickRef.current += 1;
     
-    // Process status effects every 4 ticks
+    // Process DOT damage every 4 ticks
     if (statusEffectTickRef.current >= 4) {
-      processStatusEffects();
+      processStatusEffectDamage();
       statusEffectTickRef.current = 0;
     }
     
