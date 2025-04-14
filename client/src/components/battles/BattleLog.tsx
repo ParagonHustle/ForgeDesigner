@@ -1091,11 +1091,22 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Format the action message with more details
     let statusEffectText = "";
 
+    // Use a direct debug message for testing 
+    console.log(`Skill used: ${skill.name} by ${attacker.name}`);
+
+    // Add direct combat log for the damage that will display even if special effects fail
+    const basicMessage = `<span>${attacker.name} used <span class="text-purple-400 font-semibold">${skill.name}</span> on ${target.name} for <span class="text-red-400 font-semibold">${damage}</span> damage!</span>`;
+    setActionLog(prev => [`Turn ${turnCountRef.current}: ${basicMessage}`, ...prev]);
+    
     // Apply special status effects for specific skills
     // For Gust skill, do a single roll when the skill is used to determine if effect is applied
     if (skill.name === "Gust") {
-      // Log the effect attempt to debug console to make sure the game system recognizes the effect attempt
-      console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${turnCountRef.current}`);
+      // TEMPORARY TEST - Always add a status effect attempt and roll message for Gust
+      // Add a debug hook to see this function execution
+      console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${turnCountRef.current} [STATUS EFFECT TEST]`);
+      
+      // Force status effect messages to appear for testing
+      setActionLog(prev => [`**STATUS EFFECT TEST** - Gust should apply Slow effect`, ...prev]);
       
       // Always update attempts counter and add to summary stats
       setUnits(prevUnits => {
@@ -1112,8 +1123,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Format a user-friendly action message about the attempt with relevant info for tooltips
-      const rollAttemptMessage = `${attacker.name} used Gust - 20% chance to apply Minor Slow on ${target.name}`;
+      // For testing/debugging - add a very clear message that will be visible in the action log
+      console.log("TESTING STATUS EFFECT: Attempting to apply Slow with Gust!");
+      
+      // Add a more visible attempt message with color and formatting
+      const rollAttemptMessage = `${attacker.name} used <span class="text-cyan-300 font-bold">Gust</span> - 20% chance to apply Minor Slow on ${target.name}`;
       
       // Always add the attempt to the action log for visibility
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollAttemptMessage}`, ...prev]);
