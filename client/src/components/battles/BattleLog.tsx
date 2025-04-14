@@ -902,6 +902,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   };
   
   const performAction = (attacker: BattleUnit, target: BattleUnit) => {
+    console.log("performAction called with:", {
+      attacker: attacker.name,
+      skills: attacker.skills,
+      target: target.name
+    });
+    
     // We no longer increment turns here - turns are incremented once per interval
     // before processing all actions for that turn
     // Simply sync the battle round display with the current turn count
@@ -910,6 +916,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const attackCount = attacker.lastSkillUse + 1;
     let skill = attacker.skills.basic;
     let skillType = 'basic';
+    
+    console.log("Initial skill selection:", {
+      skillName: skill?.name,
+      skillType,
+      attackCount
+    });
 
     // Check for ultimate/advanced skill usage based on cooldown
     if (attacker.skills.ultimate && attackCount % attacker.skills.ultimate.cooldown === 0) {
