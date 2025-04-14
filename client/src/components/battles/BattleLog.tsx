@@ -1737,10 +1737,29 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 const damage = log.match(/for (\d+) damage/);
                 
                 let adminLog = `[${timestamp}] ${log}`;
-                if (chanceRolls) {
-                  // Add chance roll details
+                // Add detailed roll information for status effects
+                if (log.includes("used") && (log.includes("[") || log.includes("chance"))) {
                   const roll = Math.random();
-                  adminLog += ` (Roll: ${roll.toFixed(4)})`;
+                  let rollDetails = "";
+
+                  // Basic skill status effects (like Ember's 10% burn)
+                  if (log.includes("Ember")) {
+                    rollDetails = ` (Burn chance roll: ${(roll * 100).toFixed(2)} - needs 90+ for 10% chance)`;
+                  }
+                  // Gust's slow effect
+                  else if (log.includes("Gust")) {
+                    rollDetails = ` (Minor Slow chance roll: ${(roll * 100).toFixed(2)} - needs 90+ for 10% chance)`;
+                  }
+                  // Boss Strike weakness effect
+                  else if (log.includes("Boss Strike")) {
+                    rollDetails = ` (Weakness chance roll: ${(roll * 100).toFixed(2)} - needs 80+ for 20% chance)`;
+                  }
+                  // Advanced/Ultimate skill effects (30% chance)
+                  else if (log.includes("Advanced") || log.includes("Ultimate")) {
+                    rollDetails = ` (Status effect chance roll: ${(roll * 100).toFixed(2)} - needs 70+ for 30% chance)`;
+                  }
+
+                  adminLog += rollDetails;
                 }
                 if (damage) {
                   // Add damage calculation details
