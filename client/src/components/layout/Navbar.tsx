@@ -142,7 +142,13 @@ const Navbar = () => {
 
           {/* Dropdown menu */}
           <div className="absolute right-0 mt-2 w-48 bg-[#1A1A2E] border border-[#432874]/50 rounded-lg shadow-lg overflow-hidden transform scale-0 group-hover:scale-100 transition-transform origin-top-right">
-            <div className="p-2">
+            <div className="p-2 space-y-1">
+              <button 
+                onClick={() => window.location.reload()}
+                className="w-full text-left p-2 hover:bg-[#432874]/20 rounded-md text-sm"
+              >
+                Refresh User Data
+              </button>
               <button 
                 onClick={() => logout()}
                 className="w-full text-left p-2 hover:bg-[#432874]/20 rounded-md text-sm"

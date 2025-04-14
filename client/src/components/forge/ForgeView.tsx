@@ -254,6 +254,13 @@ const completeForging = async (taskId: number) => {
         <p className="text-[#C8B8DB]/80">
           Craft new Auras and fuse existing ones to create more powerful versions.
         </p>
+        
+        {isAdmin && (
+          <div className="mt-2 bg-[#FF9D00]/10 border border-[#FF9D00]/30 rounded-md p-2 flex items-center">
+            <Sparkles className="h-4 w-4 text-[#FF9D00] mr-2" />
+            <span className="text-sm text-[#FF9D00]">Admin Mode: Unlimited crafting slots unlocked</span>
+          </div>
+        )}
       </div>
       
       {/* Active Tasks */}
@@ -486,7 +493,9 @@ const completeForging = async (taskId: number) => {
                       </span>
                     </div>
                     <p className="text-xs text-[#C8B8DB]/60">
-                      Upgrade your Forge building to increase capacity.
+                      {isAdmin 
+                        ? "Admin buff: Unlimited crafting slots available!" 
+                        : "Upgrade your Forge building to increase capacity."}
                     </p>
                   </div>
                 </div>
@@ -726,7 +735,9 @@ const completeForging = async (taskId: number) => {
                           </span>
                         </div>
                         <p className="text-xs text-[#C8B8DB]/60">
-                          Upgrade your Forge building to increase capacity.
+                          {isAdmin 
+                            ? "Admin buff: Unlimited crafting slots available!" 
+                            : "Upgrade your Forge building to increase capacity."}
                         </p>
                       </div>
                     </div>
