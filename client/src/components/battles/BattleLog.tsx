@@ -1233,12 +1233,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         style={{ width: `${unit.attackMeter}%` }}
                       />
                     </div>
-                    {renderUnitStats(unit)}
+                    <div className="flex">
+                      {/* Avatar placeholder */}
+                      <div className="mr-3 flex-shrink-0">
+                        <div className="w-16 h-16 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB]/40 text-xs">
+                          Avatar
+                        </div>
+                      </div>
+                      
+                      <div className="flex-grow">
+                        {renderUnitStats(unit)}
+                      </div>
+                    </div>
                     
-                    <div className="mt-2">
-                      {/* Skills Section */}
-                      <div className="mt-1">
-                        <div className="text-xs font-semibold text-[#FF9D00] mb-1">Skills</div>
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {/* Skills Section - Now in its own dedicated container */}
+                      <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                        <div className="text-xs font-semibold text-[#FF9D00] mb-1">Combat Skills</div>
                         <div className="flex flex-wrap gap-1">
                           {unit.skills.basic && renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
                           {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
@@ -1246,17 +1257,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         </div>
                       </div>
                       
-                      {/* Status Effects Section - only visible if unit has effects */}
-                      {unit.statusEffects && unit.statusEffects.length > 0 && (
-                        <div className="mt-2 border-t border-[#432874]/30 pt-1">
-                          <div className="text-xs font-semibold text-yellow-300 mb-1">Status Effects</div>
+                      {/* Status Effects Section - in its own container, always showing for consistency */}
+                      <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                        <div className="text-xs font-semibold text-yellow-300 mb-1">Status Effects</div>
+                        {unit.statusEffects && unit.statusEffects.length > 0 ? (
                           <div className="flex flex-wrap gap-0.5">
                             {unit.statusEffects.map((effect, index) => 
                               renderStatusEffect(effect, index, true)
                             )}
                           </div>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="text-xs italic text-[#C8B8DB]/40">No active effects</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1290,12 +1303,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         style={{ width: `${unit.attackMeter}%` }}
                       />
                     </div>
-                    {renderUnitStats(unit)}
+                    <div className="flex">
+                      {/* Avatar placeholder */}
+                      <div className="mr-3 flex-shrink-0">
+                        <div className="w-16 h-16 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB]/40 text-xs">
+                          Enemy
+                        </div>
+                      </div>
+                      
+                      <div className="flex-grow">
+                        {renderUnitStats(unit)}
+                      </div>
+                    </div>
                     
-                    <div className="mt-2">
-                      {/* Skills Section */}
-                      <div className="mt-1">
-                        <div className="text-xs font-semibold text-[#FF9D00] mb-1">Skills</div>
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {/* Skills Section - Now in its own dedicated container */}
+                      <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                        <div className="text-xs font-semibold text-[#FF9D00] mb-1">Combat Skills</div>
                         <div className="flex flex-wrap gap-1">
                           {unit.skills.basic && renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
                           {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
@@ -1303,17 +1327,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         </div>
                       </div>
                       
-                      {/* Status Effects Section - only visible if unit has effects */}
-                      {unit.statusEffects && unit.statusEffects.length > 0 && (
-                        <div className="mt-2 border-t border-[#432874]/30 pt-1">
-                          <div className="text-xs font-semibold text-yellow-300 mb-1">Status Effects</div>
+                      {/* Status Effects Section - in its own container, always showing for consistency */}
+                      <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                        <div className="text-xs font-semibold text-yellow-300 mb-1">Status Effects</div>
+                        {unit.statusEffects && unit.statusEffects.length > 0 ? (
                           <div className="flex flex-wrap gap-0.5">
                             {unit.statusEffects.map((effect, index) => 
                               renderStatusEffect(effect, index, false)
                             )}
                           </div>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="text-xs italic text-[#C8B8DB]/40">No active effects</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
