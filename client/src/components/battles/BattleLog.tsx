@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -87,6 +87,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [actionLog, setActionLog] = useState<string[]>([]);
   const [detailedActionLog, setDetailedActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
+  
+  // Using useRef for turn count to avoid re-render issues
+  const turnCountRef = useRef<number>(1);
+  // Keep state for displaying in the UI when needed
   const [battleRound, setBattleRound] = useState(1);
   
   // Forward declare checkBattleEnd to handle hoisting issues
@@ -705,7 +709,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               }
             }
 
-            const actionMessage = `Turn ${battleRound}: ${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
+            // Use the current turn number from our ref counter
+            const actionMessage = `Turn ${turnCountRef.current}: ${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
             console.log(actionMessage);
 
             // Update action log
@@ -850,10 +855,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       possibleTargets[Math.floor(Math.random() * possibleTargets.length)] : 
       null;
   };
-
+  
   const performAction = (attacker: BattleUnit, target: BattleUnit) => {
     // Increment battle turn - each ACTION is a new turn (not each interval tick)
-    setBattleRound(prevRound => prevRound + 1);
+    // Always increment the turn counter when an action happens
+    turnCountRef.current += 1;
+    
+    // Also update the state version for UI
+    setBattleRound(turnCountRef.current);
     
     const attackCount = attacker.lastSkillUse + 1;
     let skill = attacker.skills.basic;
