@@ -1103,16 +1103,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // ALWAYS track status effect attempts in detailed logs
-      // This line needs to come before the conditional check to ensure it's always logged
-      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted to apply SLOW effect on ${target.name} with Gust`, ...prev]);
+      // DIRECTLY ADD TO MAIN ACTION LOG with more details
+      // Format a user-friendly action message about the attempt
+      const rollAttemptMessage = `${attacker.name} used Gust - 20% chance to apply Minor Slow on ${target.name}`;
       
-      // Also add to the main action log for visibility
-      setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} attempted to SLOW ${target.name} with Gust!`, ...prev]);
+      // Always add the attempt to both logs for visibility
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollAttemptMessage}`, ...prev]);
       
       // Roll once for effect application - 20% chance
-      const effectRoll = Math.random();
-      const effectSuccess = effectRoll < 0.2; // 20% chance
+      const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
+      const effectSuccess = effectRoll < 20; // 20% chance
+      
+      // Create a roll result message with the exact roll value for better user feedback
+      const rollResultMessage = `${attacker.name}'s Gust roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
+      
+      // Add roll result to both logs
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
+      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ROLL - ${rollAttemptMessage} - ${rollResultMessage}`, ...prev]);
       
       // Record the last roll for UI display in the summary tab
       setUnits(prevUnits => {
@@ -1127,11 +1134,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Add detailed log about the roll - include the exact percentage rolled
-      setDetailedActionLog(prev => [
-        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Gust - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
-        ...prev
-      ]);
+      // This detailed log entry is now redundant - already added above
       
       if (effectSuccess) { // 10% chance for Minor Slow
         // Update success counter only if effect lands
@@ -2285,24 +2288,32 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   const turnNumber = turnMatch ? turnMatch[1] : "?";
                   
                   // Highlight different types of logs
-                  const isEffectAttempt = log.includes('EFFECT ATTEMPT');
-                  const isEffectRoll = log.includes('EFFECT ROLL');
-                  const isStatusApplied = log.includes('STATUS -');
+                  const isEffectAttempt = log.includes('EFFECT ATTEMPT') || log.includes('used Gust - 20% chance');
+                  const isEffectRoll = log.includes('EFFECT ROLL') || log.includes('roll:');
+                  const isStatusApplied = log.includes('STATUS -') || log.includes('successfully applied');
                   const isActionLog = log.includes('Action -');
                   
-                  // Extract roll information for effect rolls
+                  // Extract roll information for effect rolls with new format for Gust
                   let rollInfo = null;
                   let successStatus = null;
                   let rollValue = null;
                   let thresholdValue = null;
                   
                   if (isEffectRoll) {
-                    // Try to parse roll details
+                    // Try to parse roll details - first try the standard format
                     const rollMatch = log.match(/Rolled: ([\d.]+)% vs ([\d.]+)% threshold - (SUCCESS|FAILED)/);
+                    
+                    // Also try the new Gust format
+                    const gustRollMatch = log.match(/roll: ([\d.]+)% - (SUCCESS!|FAILED)/);
+                    
                     if (rollMatch) {
                       rollValue = parseFloat(rollMatch[1]);
                       thresholdValue = parseFloat(rollMatch[2]);
                       successStatus = rollMatch[3];
+                    } else if (gustRollMatch) {
+                      rollValue = parseFloat(gustRollMatch[1]);
+                      thresholdValue = 20.0; // Gust has 20% chance
+                      successStatus = gustRollMatch[2].includes('SUCCESS') ? 'SUCCESS' : 'FAILED';
                     }
                   }
                   
@@ -2316,7 +2327,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     borderStyle = 'border-l-4 border-l-blue-500';
                     icon = '🎲';
                   } else if (isEffectRoll) {
-                    if (successStatus === 'SUCCESS') {
+                    if (successStatus === 'SUCCESS' || log.includes('SUCCESS!')) {
                       logStyle = 'bg-green-900/20 text-green-300';
                       borderStyle = 'border-l-4 border-l-green-500';
                       icon = '✓';
@@ -2337,15 +2348,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   // Format the log string for better readability
                   let formattedLog = log.replace(`Turn ${turnNumber}: `, '');
                   
-                  // If it's an effect roll, create a prettier formatted display
+                  // If it's an effect roll with parsed data, create a prettier formatted display
                   if (isEffectRoll && rollValue !== null && thresholdValue !== null) {
                     // Extract skill name if possible
-                    const skillMatch = formattedLog.match(/'s ([^-]+) -/);
-                    const skillName = skillMatch ? skillMatch[1] : '';
+                    const skillMatch = formattedLog.match(/'s ([^-]+) -/) || formattedLog.match(/([A-Za-z-]+)'s Gust roll/);
+                    const skillName = skillMatch ? skillMatch[1] : 'Gust';
                     
-                    // Extract effect type if possible
-                    const effectTypeMatch = formattedLog.match(/EFFECT ROLL - ([^']+)'s/);
-                    const effectType = effectTypeMatch ? effectTypeMatch[1] : '';
+                    // Extract character name for Gust rolls
+                    const nameMatch = formattedLog.match(/([A-Za-z -]+)'s Gust roll/);
+                    const charName = nameMatch ? nameMatch[1] : '';
+                    
+                    // Extract effect type
+                    let effectType = '';
+                    if (formattedLog.includes('SLOW')) {
+                      effectType = 'SLOW';
+                    } else if (formattedLog.includes('WEAKEN')) {
+                      effectType = 'WEAKEN';
+                    } else if (skillName === 'Gust') {
+                      effectType = 'SLOW';
+                    }
                     
                     return (
                       <div 
@@ -2355,7 +2376,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{icon}</span>
                           <span className="font-semibold">[Turn {turnNumber}]</span>
-                          <span>{effectType} roll {skillName ? `(${skillName})` : ''}:</span>
+                          <span>{charName || effectType} roll {skillName && !skillName.includes('Gust') ? `(${skillName})` : ''}:</span>
                         </div>
                         <div className="mt-1 pl-8 flex items-center gap-2">
                           <div className="w-full bg-gray-800 h-4 rounded-full overflow-hidden">
