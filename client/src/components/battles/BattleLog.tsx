@@ -1139,6 +1139,42 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Format the action message with more details
     let statusEffectText = "";
 
+    // Direct Gust skill handling - force Minor Slow application
+    if (skill.name === "Gust") {
+        console.log(`💨 Applying Minor Slow from Gust: ${attacker.name} -> ${target.name}`);
+        
+        // Apply Minor Slow (20% Speed reduction) for 1 turn
+        const effect: StatusEffect = {
+            name: "Minor Slow",
+            effect: "ReduceSpd",
+            value: 20,
+            duration: 1,
+            source: attacker.id
+        };
+
+        // Initialize status effects array if needed
+        if (!target.statusEffects) target.statusEffects = [];
+        
+        // Add effect and update counters
+        target.statusEffects.push(effect);
+        console.log(`✅ Added Minor Slow effect to ${target.name} with ${effect.duration} turn duration`);
+        statusEffectText = " [Minor Slow applied]";
+        
+        // Update success counter
+        setUnits(prevUnits => {
+            return prevUnits.map(u => {
+                if (u.id === attacker.id) {
+                    return {
+                        ...u,
+                        slowAttempts: (u.slowAttempts || 0) + 1,
+                        slowSuccess: (u.slowSuccess || 0) + 1
+                    };
+                }
+                return u;
+            });
+        });
+    }
+
     // Use a direct debug message for testing 
     console.log(`Skill used: ${skill.name} by ${attacker.name}`);
 
