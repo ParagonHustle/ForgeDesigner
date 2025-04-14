@@ -198,14 +198,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
   // Ensure the battle always starts at Turn 1 when initialized
   useEffect(() => {
-    if (units.length > 0) {
+    if (battleLog && battleLog.length > 0 && units.length > 0) {
       console.log("Initial battle setup: Setting turn to 1");
+      
+      // Reset to turn 1
       setBattleRound(1);
-      setActionLog(prev => [...prev.map(item => 
-        item.startsWith("Turn") ? item.replace(/Turn \d+/, "Turn 1") : item
-      )]);
+      
+      // Clear existing logs - this ensures we don't have logs from previous battles
+      setActionLog([]);
+      setDetailedActionLog([]);
+      
+      console.log("Battle log and action log reset. Starting from Turn 1");
     }
-  }, [units.length > 0]);
+  }, [battleLog, units.length]);
 
   // Battle simulation loop - using a more direct approach
   useEffect(() => {
