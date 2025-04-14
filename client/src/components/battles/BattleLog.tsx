@@ -1155,8 +1155,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Create a roll result message with the exact roll value and HTML formatting
-      const rollResultMessage = `${attacker.name}'s Gust roll: <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectRoll.toFixed(1)}%</span> - <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectSuccess ? "SUCCESS!" : "FAILED"}</span> ${effectSuccess ? '🌪️' : ''}`;
+      // Create a simple text-based roll result message that doesn't use HTML
+      const resultText = effectSuccess ? "SUCCESS!" : "FAILED";
+      const icon = effectSuccess ? '🌪️' : '';
+      const rollResultMessage = `${attacker.name}'s Gust roll: ${effectRoll.toFixed(1)}% - ${resultText} ${icon}`;
       
       // Add roll result to action log - using HTML markup that will be rendered with dangerouslySetInnerHTML
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
@@ -1228,8 +1230,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
       const effectSuccess = effectRoll < 10; // 10% chance
       
-      // Create an HTML formatted roll result message with colored success/failure
-      const rollResultMessage = `${attacker.name}'s Breeze roll: <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectRoll.toFixed(1)}%</span> - <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectSuccess ? "SUCCESS!" : "FAILED"}</span> ${effectSuccess ? '🌪️' : ''}`;
+      // Create a plain text result message with emoji
+      const resultText = effectSuccess ? "SUCCESS!" : "FAILED";
+      const icon = effectSuccess ? '🌪️' : '';
+      const rollResultMessage = `${attacker.name}'s Breeze roll: ${effectRoll.toFixed(1)}% - ${resultText} ${icon}`;
       
       // Add roll result to action log for player visibility
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
@@ -1298,8 +1302,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Create a formatted message with HTML styling for the roll result
-      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectRoll.toFixed(1)}%</span> - <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectSuccess ? "SUCCESS!" : "FAILED"}</span> ${effectSuccess ? '🪨' : ''}`;
+      // Create a plain text result message with emoji
+      const resultText = effectSuccess ? "SUCCESS!" : "FAILED";
+      const icon = effectSuccess ? '🪨' : '';
+      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: ${effectRoll.toFixed(1)}% - ${resultText} ${icon}`;
       
       // Add roll result to action log
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
@@ -1370,8 +1376,21 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
       const effectSuccess = effectRoll < 30; // 30% chance
       
-      // Create a formatted message with HTML styling for roll result
-      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectRoll.toFixed(1)}%</span> - <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectSuccess ? "SUCCESS!" : "FAILED"}</span> ${effectSuccess ? (skill.name.toLowerCase().includes("fire") ? '🔥' : '💧') : ''}`;
+      // Create a plain text result message with emoji
+      const resultText = effectSuccess ? "SUCCESS!" : "FAILED";
+      let icon = '';
+      if (effectSuccess) {
+        if (skill.name.toLowerCase().includes("fire") || skill.name.toLowerCase().includes("flame") || skill.name.toLowerCase().includes("ember")) {
+          icon = '🔥';
+        } else if (skill.name.toLowerCase().includes("water") || skill.name.toLowerCase().includes("wave")) {
+          icon = '💧';
+        } else if (skill.name.toLowerCase().includes("stone") || skill.name.toLowerCase().includes("rock")) {
+          icon = '🪨';
+        } else if (skill.name.toLowerCase().includes("wind") || skill.name.toLowerCase().includes("gust")) {
+          icon = '🌪️';
+        }
+      }
+      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: ${effectRoll.toFixed(1)}% - ${resultText} ${icon}`;
       
       // Add roll result to action log for player visibility
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
