@@ -1102,7 +1102,17 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Debug to check if the skill name is recognized correctly
     console.log(`SKILL DEBUG: Checking skill: "${skill.name}" against "Gust" - Match: ${skill.name === "Gust"}`);
     console.log(`SKILL DEBUG: Case insensitive match: ${skill.name.toLowerCase() === "gust".toLowerCase()}`);
-    console.log(`SKILL DEBUG: Skill type: ${skillType}, Attacker: ${attacker.name}, Skills available:`, attacker.skills);
+    console.log(`SKILL DEBUG: Includes match: ${skill.name.toLowerCase().includes("gust")}`);
+    console.log(`SKILL DEBUG: Skill type: ${skillType}, Attacker: ${attacker.name}`);
+    console.log(`SKILL DEBUG: Attacker ID: ${attacker.id}, Basic Skill: ${attacker.skills.basic.name}`);
+    
+    // Log G-Wolf's skills specifically if it's the one attacking
+    if (attacker.name === "G-Wolf") {
+      console.log("G-WOLF SKILL DEBUG:");
+      console.log("Basic skill:", attacker.skills.basic);
+      console.log("Advanced skill:", attacker.skills.advanced);
+      console.log("Ultimate skill:", attacker.skills.ultimate);
+    }
     
     // For Gust skill, do a single roll when the skill is used to determine if effect is applied
     // Try with exact match, case-insensitive match, and by checking if the name includes "gust"
