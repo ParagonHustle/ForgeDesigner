@@ -1066,11 +1066,35 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         skillIcon = "🌪️";
       }
       
-      // Format the tooltip details
+      // Format the tooltip details with special effects
       const damagePercent = Math.round(damage * 100);
-      const description = cooldown 
-        ? `Deals ${damagePercent}% of ATK damage. Cooldown: ${cooldown} turns.`
-        : `Deals ${damagePercent}% of ATK damage.`;
+      let description = '';
+      
+      // Special skill descriptions
+      if (skillName === "Soothing Current") {
+        description = `Deals ${damagePercent}% of ATK damage and heals the ally with lowest HP for 5% of caster's max HP.`;
+        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+      } else if (skillName === "Ember") {
+        description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Burning for 1 turn.`;
+        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+      } else if (skillName === "Flame Whip") {
+        description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 2 turns.`;
+        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+      } else if (skillName === "Inferno") {
+        description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 3 turns.`;
+        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+      } else if (skillName === "Venom Strike") {
+        description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Poison for 3 turns.`;
+        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+      } else if (skillName === "Boss Strike") {
+        description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Weakened (-10% ATK) for 2 turns.`;
+        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+      } else {
+        // Default description for other skills
+        description = cooldown 
+          ? `Deals ${damagePercent}% of ATK damage. Cooldown: ${cooldown} turns.`
+          : `Deals ${damagePercent}% of ATK damage.`;
+      }
       
       return (
         <TooltipProvider>
@@ -1192,15 +1216,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 <h3 className="font-semibold">Allies</h3>
                 {units.filter(u => battleLog[0]?.allies?.some((a: any) => a.id === u.id)).map(unit => (
                   <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
-                    <div className="flex justify-between">
-                      <span>{unit.name}</span>
-                      <span>{Math.ceil(unit.hp)}/{unit.maxHp} HP</span>
-                    </div>
-                    <div className="w-full bg-[#432874]/30 h-2 rounded">
-                      <motion.div
-                        className="bg-[#00B9AE] h-full rounded"
-                        style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
-                      />
+                    <div className="flex items-center gap-2">
+                      {/* Character avatar space - default placeholder until proper avatars are added */}
+                      <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#7855FF]/30 flex items-center justify-center overflow-hidden border border-[#7855FF]/50">
+                        <span className="text-lg">{unit.name.charAt(0)}</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <span>{unit.name}</span>
+                          <span>{Math.ceil(unit.hp)}/{unit.maxHp} HP</span>
+                        </div>
+                        <div className="w-full bg-[#432874]/30 h-2 rounded">
+                          <motion.div
+                            className="bg-[#00B9AE] h-full rounded"
+                            style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
                     <div className="w-full bg-[#432874]/30 h-1 rounded mt-1">
                       <motion.div
@@ -1226,15 +1258,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 <h3 className="font-semibold">Enemies</h3>
                 {units.filter(u => battleLog[0]?.enemies?.some((e: any) => e.id === u.id)).map(unit => (
                   <div key={unit.id} className="bg-[#432874]/20 p-2 rounded">
-                    <div className="flex justify-between">
-                      <span>{unit.name}</span>
-                      <span>{Math.ceil(unit.hp)}/{unit.maxHp} HP</span>
-                    </div>
-                    <div className="w-full bg-[#432874]/30 h-2 rounded">
-                      <motion.div
-                        className="bg-[#DC143C] h-full rounded"
-                        style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
-                      />
+                    <div className="flex items-center gap-2">
+                      {/* Enemy avatar space - default placeholder until proper avatars are added */}
+                      <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#DC143C]/30 flex items-center justify-center overflow-hidden border border-[#DC143C]/50">
+                        <span className="text-lg">{unit.name.charAt(0)}</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <span>{unit.name}</span>
+                          <span>{Math.ceil(unit.hp)}/{unit.maxHp} HP</span>
+                        </div>
+                        <div className="w-full bg-[#432874]/30 h-2 rounded">
+                          <motion.div
+                            className="bg-[#DC143C] h-full rounded"
+                            style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
                     <div className="w-full bg-[#432874]/30 h-1 rounded mt-1">
                       <motion.div
