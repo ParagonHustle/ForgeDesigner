@@ -2153,45 +2153,77 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           <TabsContent value="debug-logs">
             <div className="h-[400px] overflow-y-auto space-y-1 text-xs font-mono">
               {/* Show the detailed logs directly for better visibility of all status effect attempts */}
-              {detailedActionLog.map((log, index) => {
-                const turnMatch = log.match(/Turn (\d+):/);
-                const turnNumber = turnMatch ? turnMatch[1] : "?";
-                
-                // Highlight different types of logs
-                const isEffectAttempt = log.includes('EFFECT ATTEMPT');
-                const isEffectRoll = log.includes('EFFECT ROLL');
-                const isStatusApplied = log.includes('STATUS -') && log.includes('applied');
-                const isActionLog = log.includes('Action -');
-                
-                // Style based on log type
-                let logStyle = '';
-                let borderStyle = '';
-                if (isEffectAttempt) {
-                  logStyle = 'bg-blue-900/20 text-blue-300';
-                  borderStyle = 'border-l-4 border-l-blue-500';
-                } else if (isEffectRoll) {
-                  logStyle = 'bg-purple-900/20 text-purple-300';
-                  borderStyle = 'border-l-4 border-l-purple-500';
-                } else if (isStatusApplied) {
-                  logStyle = 'bg-green-900/20 text-green-300';
-                  borderStyle = 'border-l-4 border-l-green-500';
-                } else if (isActionLog) {
-                  logStyle = 'bg-gray-900/20 text-gray-300';
-                }
-                
-                // Format the log string for better readability
-                const formattedLog = log.replace(`Turn ${turnNumber}: `, '');
-                
-                return (
-                  <div 
-                    key={index} 
-                    className={`py-1 border-b border-[#432874]/20 font-mono ${logStyle} ${borderStyle}`}
-                    style={{whiteSpace: 'pre-wrap'}}
-                  >
-                    {`[Turn ${turnNumber}] ${formattedLog}`}
+              {detailedActionLog.length > 0 ? (
+                // When we have logs, display them with proper formatting
+                detailedActionLog.map((log, index) => {
+                  const turnMatch = log.match(/Turn (\d+):/);
+                  const turnNumber = turnMatch ? turnMatch[1] : "?";
+                  
+                  // Highlight different types of logs
+                  const isEffectAttempt = log.includes('EFFECT ATTEMPT');
+                  const isEffectRoll = log.includes('EFFECT ROLL');
+                  const isStatusApplied = log.includes('STATUS -') && log.includes('applied');
+                  const isActionLog = log.includes('Action -');
+                  
+                  // Style based on log type
+                  let logStyle = '';
+                  let borderStyle = '';
+                  if (isEffectAttempt) {
+                    logStyle = 'bg-blue-900/20 text-blue-300';
+                    borderStyle = 'border-l-4 border-l-blue-500';
+                  } else if (isEffectRoll) {
+                    logStyle = 'bg-purple-900/20 text-purple-300';
+                    borderStyle = 'border-l-4 border-l-purple-500';
+                  } else if (isStatusApplied) {
+                    logStyle = 'bg-green-900/20 text-green-300';
+                    borderStyle = 'border-l-4 border-l-green-500';
+                  } else if (isActionLog) {
+                    logStyle = 'bg-gray-900/20 text-gray-300';
+                  }
+                  
+                  // Format the log string for better readability
+                  const formattedLog = log.replace(`Turn ${turnNumber}: `, '');
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={`py-1 border-b border-[#432874]/20 font-mono ${logStyle} ${borderStyle}`}
+                      style={{whiteSpace: 'pre-wrap'}}
+                    >
+                      {`[Turn ${turnNumber}] ${formattedLog}`}
+                    </div>
+                  );
+                })
+              ) : (
+                // When no logs are available, show a helpful message
+                <div className="bg-[#1A1A2E]/70 p-4 border border-[#432874]/50 rounded-md mt-2">
+                  <h3 className="text-[#FF9D00] font-semibold mb-2">No Debug Logs Available</h3>
+                  <p className="text-[#C8B8DB]/80 mb-2">
+                    Debug logs will appear here when skills with status effects are used in battle.
+                  </p>
+                  <div className="bg-[#432874]/20 p-3 rounded-md">
+                    <h4 className="text-[#00B9AE] text-sm font-medium mb-1">Skills with Status Effects:</h4>
+                    <ul className="list-disc list-inside space-y-1 text-[#C8B8DB]/90">
+                      <li>Gust - Has chance to apply "Minor Slow" (20% Speed reduction)</li>
+                      <li>Stone Slam - Has chance to apply "Minor Weakness" (10% Attack reduction)</li>
+                      <li>Wildfire - Has chance for burn damage over time</li>
+                    </ul>
                   </div>
-                );
-              })}
+                </div>
+              )}
+              
+              {/* Add debug information about current battle state */}
+              {units.length > 0 && (
+                <div className="mt-4 p-3 bg-[#1A1A2E]/70 border border-[#432874]/50 rounded-md">
+                  <h4 className="text-[#FF9D00] font-medium mb-2">Battle Debug Information:</h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[#C8B8DB]/80">
+                    <div>Current Round: <span className="text-[#C8B8DB]">{battleRound}</span></div>
+                    <div>Units in Battle: <span className="text-[#C8B8DB]">{units.length}</span></div>
+                    <div>Action Log Entries: <span className="text-[#C8B8DB]">{actionLog.length}</span></div>
+                    <div>Detailed Log Entries: <span className="text-[#C8B8DB]">{detailedActionLog.length}</span></div>
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
