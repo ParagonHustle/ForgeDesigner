@@ -451,7 +451,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 totalDamageReceived: statusEffectDamage > 0 ? unit.totalDamageReceived + statusEffectDamage : unit.totalDamageReceived,
                 // Keep all status effects but with their updated durations, filter out expired ones
                 statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0),
-                lastStatusUpdate: battleRound // Mark this unit as having its status effects processed this round
+                lastStatusUpdate: turnCountRef.current // Mark this unit as having its status effects processed this round
               };
 
               // Add status effect messages to the action log (only if damage was taken)
@@ -493,7 +493,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 updatedUnits[i] = {
                   ...unit,
                   statusEffects: filteredEffects,
-                  lastStatusUpdate: battleRound // Mark this unit as having its status effects processed this round
+                  lastStatusUpdate: turnCountRef.current // Mark this unit as having its status effects processed this round
                 };
               }
             }
@@ -2339,7 +2339,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 <div className="mt-4 p-3 bg-[#1A1A2E]/70 border border-[#432874]/50 rounded-md">
                   <h4 className="text-[#FF9D00] font-medium mb-2">Battle Debug Information:</h4>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[#C8B8DB]/80">
-                    <div>Current Round: <span className="text-[#C8B8DB]">{battleRound}</span></div>
+                    <div>Current Turn: <span className="text-[#C8B8DB]">{turnCountRef.current}</span></div>
+                    <div>Battle Round State: <span className="text-[#C8B8DB]">{battleRound}</span></div>
                     <div>Units in Battle: <span className="text-[#C8B8DB]">{units.length}</span></div>
                     <div>Action Log Entries: <span className="text-[#C8B8DB]">{actionLog.length}</span></div>
                     <div>Detailed Log Entries: <span className="text-[#C8B8DB]">{detailedActionLog.length}</span></div>
