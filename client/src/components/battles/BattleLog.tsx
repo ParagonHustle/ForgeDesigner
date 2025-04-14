@@ -1101,10 +1101,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Apply special status effects for specific skills
     // Debug to check if the skill name is recognized correctly
     console.log(`SKILL DEBUG: Checking skill: "${skill.name}" against "Gust" - Match: ${skill.name === "Gust"}`);
+    console.log(`SKILL DEBUG: Case insensitive match: ${skill.name.toLowerCase() === "gust".toLowerCase()}`);
     console.log(`SKILL DEBUG: Skill type: ${skillType}, Attacker: ${attacker.name}, Skills available:`, attacker.skills);
     
     // For Gust skill, do a single roll when the skill is used to determine if effect is applied
-    if (skill.name === "Gust") {
+    // Try with exact match, case-insensitive match, and by checking if the name includes "gust"
+    if (skill.name === "Gust" || 
+        skill.name.toLowerCase() === "gust".toLowerCase() || 
+        skill.name.toLowerCase().includes("gust")) {
       // Track attempt to apply Slow effect
       console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${turnCountRef.current}`);
       
