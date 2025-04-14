@@ -221,14 +221,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   };
   
-  // Reset to 1 when a new battle starts
-  useEffect(() => {
-    if (battleLog && battleLog.length > 0) {
-      setBattleRound(1);
-      setActionLog([]); // Clear action log when a new battle starts
-      setDetailedActionLog([]); // Clear detailed log when a new battle starts
-    }
-  }, [battleLog]);
+  // Removed redundant useEffect - battle initialization is now handled in a single place below
 
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
