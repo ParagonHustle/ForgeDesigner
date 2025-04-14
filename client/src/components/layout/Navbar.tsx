@@ -133,6 +133,11 @@ const Navbar = () => {
               className="w-7 h-7 rounded-full border border-[#FF9D00]"
             />
             <span className="ml-2 text-sm hidden md:block">{user?.username || "ForgeHero"}</span>
+            {user?.isAdmin && (
+              <span className="ml-2 bg-[#FF9D00] text-black text-xs px-2 py-0.5 rounded-full font-semibold">
+                ADMIN
+              </span>
+            )}
           </div>
 
           {/* Dropdown menu */}

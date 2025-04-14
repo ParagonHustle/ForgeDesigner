@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useGameStore } from "@/lib/zustandStore";
+import { useDiscordAuth } from "@/lib/discordAuth";
 import { motion } from "framer-motion";
 import { Clock, Flame, Hammer, Sparkles, User, Info } from "lucide-react";
 import {
@@ -52,7 +53,11 @@ const ForgeView = () => {
   // Determine available crafting slots based on forge level (1 by default, +1 per level)
   const forgeUpgrade = buildingUpgrades.find(u => u.buildingType === 'forge');
   const forgeLevel = forgeUpgrade?.currentLevel || 1;
-  const maxCraftingSlots = forgeLevel;
+  
+  // Use the admin status from the user to determine if unlimited slots are available
+  const { user } = useDiscordAuth();
+  const isAdmin = user?.isAdmin || false;
+  const maxCraftingSlots = isAdmin ? 999 : forgeLevel; // Admin gets unlimited slots (999)
   const [selectedTab, setSelectedTab] = useState('craft');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
