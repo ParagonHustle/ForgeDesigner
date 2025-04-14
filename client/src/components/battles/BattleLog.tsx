@@ -3,14 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
-import { Shield, Swords, Heart, Zap, Info, Clock, Table, Calculator } from 'lucide-react';
+import { Shield, Swords, Heart, Zap, Info } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAuthStore } from "@/lib/zustandStore";
 
 interface StatusEffect {
   name: string;
@@ -73,63 +72,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [currentStage, setCurrentStage] = useState(0);
   const [units, setUnits] = useState<BattleUnit[]>([]);
   const [actionLog, setActionLog] = useState<string[]>([]);
-  const [detailedActionLog, setDetailedActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [battleRound, setBattleRound] = useState(1);
-  
-  // Get user info to check if admin
-  const { user } = useAuthStore();
-  
+
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
     setPlaybackSpeed(newSpeed);
-  };
-  
-  // Helper function to get detailed skill descriptions with mechanics
-  const getSkillDescription = (skillName: string, damagePercent: number = 100, cooldown?: number): string => {
-    let description = '';
-    
-    if (skillName === "Gust") {
-      description = `Deals ${damagePercent}% of ATK damage with a 10% chance to apply Minor Slow (-20% SPD) for 1 turn.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Breeze") {
-      description = `Deals ${damagePercent}% of ATK damage with a 15% chance to reduce target's Attack Meter by 10%.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Stone Slam") {
-      description = `Deals ${damagePercent}% of ATK damage with a 15% chance to apply Minor Weakness (-10% ATK) for 2 turns.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Wildfire") {
-      description = `Deals ${damagePercent}% of ATK damage to 2 random enemies, with a 20% chance to hit an additional target.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Dust Spikes") {
-      description = `Deals ${damagePercent}% of ATK damage to 2 random targets.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Cleansing Tide") {
-      description = `Removes all debuffs from a random ally with status effects.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Ember") {
-      description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Burning for 1 turn.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Flame Whip") {
-      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 2 turns.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Inferno") {
-      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 3 turns.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Venom Strike") {
-      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Poison for 3 turns.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else if (skillName === "Boss Strike") {
-      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Weakened (-10% ATK) for 2 turns.`;
-      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-    } else {
-      // Default description for other skills
-      description = cooldown 
-        ? `Deals ${damagePercent}% of ATK damage. Cooldown: ${cooldown} turns.`
-        : `Deals ${damagePercent}% of ATK damage.`;
-    }
-    
-    return description;
   };
 
   // Helper function to render status effects with tooltips
@@ -139,11 +87,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     if (effect.effect === "Poison") statusColor = "bg-green-600";
     if (effect.effect === "ReduceAtk") statusColor = "bg-orange-600";
     if (effect.effect === "ReduceSpd") statusColor = "bg-blue-600";
-    
+
     // Create tooltip title and description based on effect type
     let title = '';
     let description = '';
-    
+
     if (effect.effect === "Burn") {
       title = "Burning";
       description = `${effect.value} fire dmg/turn. ${effect.duration} turns left.`;
@@ -165,7 +113,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         `${effect.value} dmg/turn` : 
         `-${effect.value}%`} (${effect.duration} turns left)`;
     }
-    
+
     return (
       <TooltipProvider key={index}>
         <Tooltip delayDuration={300}>
@@ -205,10 +153,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           // Apply percentage bonus from aura
           vitalityStat = Math.floor(vitalityStat * (1 + unit.auraBonus.vitality / 100));
         }
-        
+
         // Calculate HP based on adjusted vitality
         const hpValue = vitalityStat * 8;
-        
+
         return {
           ...unit,
           attackMeter: 0,
@@ -230,7 +178,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     if (!isPaused && !isComplete && units.length > 0) {
       // Add debug logging
       console.log("Battle simulation running with", units.length, "units");
-      
+
       const interval = setInterval(() => {
         // Increment battle round on each interval - this ensures status effects decrement properly
         setBattleRound(prevRound => {
@@ -240,47 +188,47 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
         // First pass: update meters and track which units should attack
         const unitsToAttack: { attacker: BattleUnit, target: BattleUnit }[] = [];
-        
+
         setUnits(prevUnits => {
           const updatedUnits = [...prevUnits];
-          
+
           // Process each unit's turn
           for (let i = 0; i < updatedUnits.length; i++) {
             const unit = updatedUnits[i];
             if (unit.hp <= 0) continue;
-            
+
             // Process status effects before the unit takes their turn
             if (unit.statusEffects && unit.statusEffects.length > 0) {
               let statusEffectDamage = 0;
               let statusMessages: string[] = [];
-              
+
               // Debug current status effects
               console.log(`${unit.name}'s status effects BEFORE processing:`, 
                 unit.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
-              
+
               // Create a copy of status effects to process
               const updatedStatusEffects = [...unit.statusEffects];
-              
+
               // Process each status effect
               // Track effects that will be removed after processing
               const expiringEffects = [];
               const remainingEffects = [];
-              
+
               // Process status effects - this only happens once per round
               // Status effects should only decrement when it's the unit's turn
               // This ensures effects last the proper number of full rounds
-              
+
               // Check if the attack meter is full, which means it's the unit's turn
               // To fix the issue, we need to check the meter directly rather than unitsToAttack
               const isAttackMeterFull = unit.attackMeter + ((unit.stats.speed / 40) * playbackSpeed) >= 100;
               const shouldDecrement = isAttackMeterFull;
-              
+
               console.log(`Processing ${unit.name}'s status effects - Current round: ${battleRound}, Is attack meter full: ${isAttackMeterFull}, Should decrement: ${shouldDecrement}`);
-              
+
               // First, create new effects with decremented durations and collect messages
               for (let j = 0; j < updatedStatusEffects.length; j++) {
                 const effect = updatedStatusEffects[j];
-                
+
                 // Apply burn and poison effects (damage over time)
                 // Only apply damage when it's the unit's turn (when attack meter will be full)
                 if ((effect.effect === "Burn" || effect.effect === "Poison") && isAttackMeterFull) {
@@ -288,7 +236,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   statusEffectDamage += dotDamage;
                   statusMessages.push(`${unit.name} took ${dotDamage} damage from ${effect.name}`);
                 }
-                
+
                 // Only decrement duration if it's a new round for this unit
                 let newDuration = effect.duration;
                 if (shouldDecrement) {
@@ -297,12 +245,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 } else {
                   console.log(`Skipping decrement for ${unit.name}'s ${effect.name} - already processed this round`);
                 }
-                
+
                 const updatedEffect = {
                   ...effect,
                   duration: newDuration
                 };
-                
+
                 // Sort effects into expiring or remaining
                 if (newDuration <= 0) {
                   expiringEffects.push(effect.name);
@@ -314,11 +262,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   console.log(`${unit.name}'s ${effect.name} effect has ${newDuration} turns remaining`);
                   statusMessages.push(`${unit.name}'s ${effect.name} effect: ${newDuration} turns remaining`);
                 }
-                
+
                 // Update the effect in the array with the decremented duration
                 updatedStatusEffects[j] = updatedEffect;
               }
-              
+
               // Log summary of effects
               if (expiringEffects.length > 0) {
                 console.log(`Effects expiring on ${unit.name}:`, expiringEffects.join(", "));
@@ -327,11 +275,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 console.log(`Effects remaining on ${unit.name}:`, 
                   remainingEffects.map(e => `${e.name} (${e.duration})`).join(", "));
               }
-              
+
               // Debug updated status effects
               console.log(`${unit.name}'s status effects AFTER processing:`, 
                 updatedStatusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
-              
+
               // Apply damage and keep updated status effect durations
               // Even if no damage was taken, we need to update durations
               updatedUnits[i] = {
@@ -342,25 +290,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 statusEffects: updatedStatusEffects.filter(effect => effect.duration > 0),
                 lastStatusUpdate: battleRound // Mark this unit as having its status effects processed this round
               };
-              
+
               // Add status effect messages to the action log (only if damage was taken)
               if (statusEffectDamage > 0) {
                 setTimeout(() => {
                   statusMessages.forEach(message => {
                     setActionLog(prev => [message, ...prev]);
                   });
-                  
+
                   // Check if unit was defeated by status effects
                   if (updatedUnits[i].hp <= 0 && unit.hp > 0) {
                     setActionLog(prev => [`${unit.name} has been defeated by status effects!`, ...prev]);
-                    
+
                     // Check if this was the last alive ally
                     const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
                     if (battleEntry) {
                       const updatedAllies = updatedUnits.filter(u => 
                         battleEntry.allies.some((a: any) => a.id === u.id)
                       );
-                      
+
                       // If this defeat means all allies are now defeated, end the battle
                       const allAlliesDefeated = updatedAllies.every(a => a.hp <= 0);
                       if (allAlliesDefeated && !isComplete) {
@@ -378,7 +326,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 const filteredEffects = updatedStatusEffects.filter(effect => effect.duration > 0);
                 console.log(`${unit.name} status effects after filtering expired:`, 
                   filteredEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
-                  
+
                 updatedUnits[i] = {
                   ...unit,
                   statusEffects: filteredEffects,
@@ -386,7 +334,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 };
               }
             }
-            
+
             // Update attack meter based on speed (120 speed = 3x faster than 40 speed)
             // Apply aura speed bonus if available
             let speedValue = unit.stats.speed;
@@ -394,7 +342,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               // Apply percentage bonus from aura
               speedValue = Math.floor(speedValue * (1 + unit.auraBonus.speed / 100));
             }
-            
+
             const meterIncrease = (speedValue / 40) * playbackSpeed;
             let newMeter = updatedUnits[i].attackMeter + meterIncrease;
 
@@ -403,18 +351,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               console.log(`${unit.name}'s attack meter is full!`);
               // Reset meter
               newMeter = 0;
-              
+
               // Find a target
               const possibleTargets = updatedUnits.filter(u => {
                 if (u.hp <= 0) return false;
-                
+
                 // Allies target enemies, enemies target allies
                 const isAttackerAlly = battleLog[0]?.allies?.some((a: any) => a.id === unit.id);
                 const isTargetAlly = battleLog[0]?.allies?.some((a: any) => a.id === u.id);
-                
+
                 return isAttackerAlly !== isTargetAlly; // Target must be on opposite side
               });
-              
+
               if (possibleTargets.length > 0) {
                 const target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
                 console.log(`${unit.name} will attack ${target.name}`);
@@ -427,15 +375,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               attackMeter: newMeter
             };
           }
-          
+
           // Check for battle completion
           const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
           const allies = updatedUnits.filter(u => battleEntry?.allies.some((a: any) => a.id === u.id));
           const enemies = updatedUnits.filter(u => battleEntry?.enemies.some((e: any) => e.id === u.id));
-          
+
           const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
           const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
-          
+
           // Check for battle end conditions - either all allies or all enemies defeated
           if ((allEnemiesDefeated && !allAlliesDefeated && !isComplete) || (allAlliesDefeated && !isComplete)) {
             console.log(allAlliesDefeated 
@@ -443,10 +391,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               : "All enemies defeated, should progress to next stage!");
             checkBattleEnd();
           }
-          
+
           return updatedUnits;
         });
-        
+
         // Second pass: Process attacks after state update
         setTimeout(() => {
           unitsToAttack.forEach(({ attacker, target }) => {
@@ -454,7 +402,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             const attackCount = attacker.lastSkillUse + 1;
             let skill = attacker.skills.basic;
             let skillType = 'basic';
-            
+
             // Check for ultimate/advanced skill usage based on cooldown
             if (attacker.skills.ultimate && attackCount % attacker.skills.ultimate.cooldown === 0) {
               skill = attacker.skills.ultimate;
@@ -463,7 +411,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               skill = attacker.skills.advanced;
               skillType = 'advanced';
             }
-            
+
             // Calculate damage: Attack * Damage Multiplier
             // Apply aura bonus if available
             let attackValue = attacker.stats.attack;
@@ -471,36 +419,36 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               // Add percentage bonus from aura
               attackValue = Math.floor(attackValue * (1 + attacker.auraBonus.attack / 100));
             }
-            
+
             // Damage = Attack * Skill Damage Multiplier
             const damage = Math.floor(attackValue * skill.damage);
-            
+
             // Check for special skills with healing effects (like Soothing Current)
             let healingEffectText = "";
             let healingTarget: BattleUnit | null = null;
             let healAmount = 0;
-            
+
             // NOTE: We will handle healing in the performAction function only to avoid duplicate healing
             // This block will prepare the healing text for the action message with the exact amount
             if (skill.name === "Soothing Current") {
               // Calculate healing amount based on 5% of the caster's max HP
               const healAmount = Math.floor(attacker.maxHp * 0.05);
-              
+
               // Get all living allies (hp > 0) to find who we'll be healing
               const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
               const allies = units.filter(u => 
                 battleEntry?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
               );
-              
+
               if (allies.length > 0) {
                 // Sort allies by HP percentage (lowest first)
                 const sortedAllies = [...allies].sort((a, b) => 
                   (a.hp / a.maxHp) - (b.hp / b.maxHp)
                 );
-                
+
                 // Always pick the ally with the lowest HP percentage
                 const healTarget = sortedAllies[0];
-                
+
                 // Include the heal target's name in the message
                 healingEffectText = ` (healing ${healTarget.name} for ${healAmount} HP)`;
               } else {
@@ -508,7 +456,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 healingEffectText = ` (with healing for ${healAmount} HP)`;
               }
             }
-            
+
             // Format the action message with more details
             let statusEffectText = "";
             // Check for special basic skills that can apply effects (like Ember)
@@ -519,7 +467,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             if ((skillType !== 'basic' && Math.random() < 0.3) || (isEmberSkill && Math.random() < 0.1)) {
               // Determine the type of status effect based on skill name/type
               let effectType = "general";
-              
+
               // Special handling for Ember - always applies Burn
               if (isEmberSkill) {
                 effectType = "burn";
@@ -532,7 +480,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         skill.name.toLowerCase().includes("toxic")) {
                 effectType = "poison";
               }
-              
+
               let effect: StatusEffect;
               if (effectType === "burn") {
                 // Burn effect: 5% of max HP damage per turn
@@ -563,18 +511,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   source: attacker.id
                 };
                 statusEffectText = ` [Poisoned applied - ${poisonDamage} damage per turn]`;
-              } else if (skill.name === "Boss Strike") {
-                // Boss Strike always applies Weakened effect
-                effect = {
-                  name: "Weakened", 
-                  effect: "ReduceAtk", 
-                  value: 10, 
-                  duration: 2, 
-                  source: attacker.id
-                };
-                statusEffectText = ` [Weakened applied - 10% Attack reduction]`;
               } else {
-                // General status effects for other skills
+                // General status effects
                 const possibleEffects = [
                   {name: "Weakened", effect: "ReduceAtk", value: 10, duration: 2, source: attacker.id},
                   {name: "Slowed", effect: "ReduceSpd", value: 15, duration: 2, source: attacker.id}
@@ -582,10 +520,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
                 statusEffectText = ` [${effect.name} applied]`;
               }
-              
+
               // Apply the status effect to the target
               if (!target.statusEffects) target.statusEffects = [];
-              
+
               // Check if target already has this effect - if so, extend duration rather than adding new
               const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
               if (existingEffectIndex >= 0) {
@@ -601,13 +539,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 console.log(`Added new ${effect.name} effect to ${target.name} with ${effect.duration} turns duration`);
               }
             }
-            
+
             const actionMessage = `${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
             console.log(actionMessage);
-            
+
             // Update action log
             setActionLog(prev => [actionMessage, ...prev]);
-            
+
             // Apply damage to the target first
             setUnits(prevUnits => {
               const updatedUnits = prevUnits.map(u => {
@@ -632,37 +570,37 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 }
                 return u;
               });
-              
+
               // If skill is Soothing Current, apply healing effect
               if (skill.name === "Soothing Current") {
                 // Get all living allies (hp > 0)
                 const allies = updatedUnits.filter(u => 
                   battleLog[0]?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
                 );
-                
+
                 // Debug
                 console.log("SECOND LOCATION - Initial allies:");
                 allies.forEach(ally => {
                   console.log(`Ally ${ally.name}: ${ally.hp}/${ally.maxHp} = ${(ally.hp / ally.maxHp * 100).toFixed(1)}%`);
                 });
-                
+
                 if (allies.length > 0) {
                   // Sort allies by HP percentage (lowest first)
                   const sortedAllies = [...allies].sort((a, b) => 
                     (a.hp / a.maxHp) - (b.hp / b.maxHp)
                   );
-                  
+
                   // Always pick the ally with the lowest HP percentage
                   const healTarget = sortedAllies[0];
-                  
+
                   // Debug the selected heal target
                   console.log(`SECOND LOCATION - Selected heal target: ${healTarget.name} with ${healTarget.hp}/${healTarget.maxHp} = ${(healTarget.hp / healTarget.maxHp * 100).toFixed(1)}%`);
-                  
+
                   // Calculate healing amount (5% of attacker's max HP)
                   const healAmount = Math.floor(attacker.maxHp * 0.05);
-                  
+
                   // We won't add a separate log message here - only one will be shown in the action message
-                  
+
                   // Apply healing
                   return updatedUnits.map(u => {
                     if (u.id === healTarget.id) {
@@ -683,20 +621,20 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   });
                 }
               }
-              
+
               return updatedUnits;
             });
           });
-          
+
           // Check if battle has ended after all attacks
           if (unitsToAttack.length > 0) {
             setTimeout(() => {
               const allies = units.filter(u => battleLog[0]?.allies?.some((a: any) => a.id === u.id));
               const enemies = units.filter(u => battleLog[0]?.enemies?.some((e: any) => e.id === u.id));
-              
+
               const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
               const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
-              
+
               if (allAlliesDefeated || allEnemiesDefeated) {
                 setIsComplete(true);
                 setActionLog(prev => [
@@ -708,7 +646,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             }, 100);
           }
         }, 50);
-        
+
       }, 200); // Slower interval to make attacks more visible
 
       return () => clearInterval(interval);
@@ -725,7 +663,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       u.hp > 0 &&
       (isAlly ? battleEntry?.enemies?.some((e: any) => e.id === u.id) : battleEntry?.allies?.some((a: any) => a.id === u.id))
     );
-    
+
     // Special case: Cleansing Tide - find allies with debuffs
     if (skillName === "Cleansing Tide" && isAlly) {
       const alliesWithDebuffs = allUnits.filter(u => 
@@ -734,13 +672,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         u.statusEffects && 
         u.statusEffects.length > 0
       );
-      
+
       // If we have allies with debuffs, select one randomly
       if (alliesWithDebuffs.length > 0) {
         return possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
       }
     }
-    
+
     // Special case: For multi-target attacks, we'll handle this differently
     // but still return a single target here for the initial attack
     return possibleTargets.length > 0 ? 
@@ -761,7 +699,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       skill = attacker.skills.advanced;
       skillType = 'advanced';
     }
-    
+
     // Get battle entries for targeting
     const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
     const isAlly = battleEntry?.allies?.some((a: any) => a.id === attacker.id) || false;
@@ -769,55 +707,21 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Calculate damage: Attack * Damage Multiplier
     // Apply aura bonus if available
     let attackValue = attacker.stats.attack;
-    let attackWithBonus = attackValue;
-    let auraBonus = 0;
-    
     if (attacker.auraBonus?.attack) {
       // Add percentage bonus from aura
-      auraBonus = attacker.auraBonus.attack;
-      attackWithBonus = Math.floor(attackValue * (1 + auraBonus / 100));
+      attackValue = Math.floor(attackValue * (1 + attacker.auraBonus.attack / 100));
     }
-    
-    // Check for "Weakened" status effect (-10% attack)
-    const hasWeakenedEffect = attacker.statusEffects?.some(effect => 
-      effect.effect === "ReduceAtk"
-    );
-    
-    let weakenedMultiplier = 1.0;
-    if (hasWeakenedEffect) {
-      // Find the weakened effect to get exact reduction percentage
-      const weakenEffect = attacker.statusEffects?.find(effect => effect.effect === "ReduceAtk");
-      if (weakenEffect) {
-        weakenedMultiplier = 1 - (weakenEffect.value / 100);
-        attackWithBonus = Math.floor(attackWithBonus * weakenedMultiplier);
-      }
-    }
-    
+
     // Damage = Attack * Skill Damage Multiplier
-    const damage = Math.floor(attackWithBonus * skill.damage);
-    
-    // Log detailed calculations for admin view
-    const calculationLog = `
-=== DAMAGE CALCULATION ===
-${attacker.name} using ${skill.name} against ${target.name}
-Base Attack: ${attackValue}
-Aura Bonus: ${auraBonus > 0 ? `+${auraBonus}%` : 'None'} 
-Attack with Aura: ${attackValue !== attackWithBonus ? attackWithBonus : attackValue}
-Weakened Effect: ${hasWeakenedEffect ? `Yes (-${(1-weakenedMultiplier)*100}%)` : 'No'}
-Skill Multiplier: ${skill.damage * 100}%
-Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
-`;
-    
-    // Add to detailed log for admin view
-    setDetailedActionLog(prev => [calculationLog, ...prev]);
-    
+    const damage = Math.floor(attackValue * skill.damage);
+
     // Handle special skill behaviors
     const applySpecialSkillBehavior = () => {
       // Get all enemies or allies (opposite of attacker side)
       const possibleTargets = units.filter(u => {
         // Units must be alive
         if (u.hp <= 0) return false;
-        
+
         // Target opposite side of the attacker (allies target enemies, enemies target allies)
         if (isAlly) {
           return battleEntry?.enemies?.some((e: any) => e.id === u.id);
@@ -825,7 +729,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
           return battleEntry?.allies?.some((a: any) => a.id === u.id);
         }
       });
-      
+
       // Cleansing Tide behavior (remove 1 debuff from random ally)
       if (skill.name === "Cleansing Tide" && isAlly && Math.random() < 0.1) { // 10% chance
         // Find allies with debuffs
@@ -835,15 +739,15 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
           u.statusEffects && 
           u.statusEffects.length > 0
         );
-        
+
         if (alliesWithDebuffs.length > 0) {
           // Select random ally with debuffs
           const targetAlly = alliesWithDebuffs[Math.floor(Math.random() * alliesWithDebuffs.length)];
-          
+
           // Remove one random debuff
           if (targetAlly.statusEffects && targetAlly.statusEffects.length > 0) {
             const randomEffect = targetAlly.statusEffects[Math.floor(Math.random() * targetAlly.statusEffects.length)];
-            
+
             // Update units state to remove the debuff
             setUnits(prevUnits => {
               return prevUnits.map(u => {
@@ -858,7 +762,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                 return u;
               });
             });
-            
+
             // Log the cleanse effect
             setActionLog(prev => [
               `${attacker.name}'s Cleansing Tide removed ${randomEffect.name} from ${targetAlly.name}!`,
@@ -867,24 +771,24 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
           }
         }
       }
-      
+
       // Wildfire (target 2 enemies with chance for 3rd)
       if (skill.name === "Wildfire" && possibleTargets.length > 1) {
         // Always hit 2 targets
         const secondTarget = possibleTargets.find(u => u.id !== target.id) || possibleTargets[0]; 
-        
+
         // Apply damage to second target if found
         if (secondTarget) {
           setUnits(prevUnits => {
             return prevUnits.map(u => {
               if (u.id === secondTarget.id) {
                 const newHp = Math.max(0, u.hp - damage);
-                
+
                 // Check if target is defeated
                 if (newHp <= 0 && u.hp > 0) {
                   setActionLog(prev => [`${secondTarget.name} has been defeated!`, ...prev]);
                 }
-                
+
                 return {
                   ...u,
                   hp: newHp,
@@ -900,30 +804,30 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
               return u;
             });
           });
-          
+
           // Log the second hit
           setActionLog(prev => [
             `${attacker.name}'s Wildfire also hit ${secondTarget.name} for ${damage} damage!`,
             ...prev
           ]);
-          
+
           // 25% chance to hit a 3rd target
           if (Math.random() < 0.25 && possibleTargets.length > 2) {
             const thirdTargetOptions = possibleTargets.filter(u => u.id !== target.id && u.id !== secondTarget.id);
             if (thirdTargetOptions.length > 0) {
               const thirdTarget = thirdTargetOptions[Math.floor(Math.random() * thirdTargetOptions.length)];
-              
+
               // Apply damage to third target
               setUnits(prevUnits => {
                 return prevUnits.map(u => {
                   if (u.id === thirdTarget.id) {
                     const newHp = Math.max(0, u.hp - damage);
-                    
+
                     // Check if target is defeated
                     if (newHp <= 0 && u.hp > 0) {
                       setActionLog(prev => [`${thirdTarget.name} has been defeated!`, ...prev]);
                     }
-                    
+
                     return {
                       ...u,
                       hp: newHp,
@@ -939,7 +843,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                   return u;
                 });
               });
-              
+
               // Log the third hit
               setActionLog(prev => [
                 `${attacker.name}'s Wildfire spread to ${thirdTarget.name} for ${damage} damage!`,
@@ -949,25 +853,25 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
           }
         }
       }
-      
+
       // Dust Spikes (attack 2 random targets)
       if (skill.name === "Dust Spikes" && possibleTargets.length > 1) {
         // Find a second random target different from the primary
         const secondTargetOptions = possibleTargets.filter(u => u.id !== target.id);
         if (secondTargetOptions.length > 0) {
           const secondTarget = secondTargetOptions[Math.floor(Math.random() * secondTargetOptions.length)];
-          
+
           // Apply damage to second target
           setUnits(prevUnits => {
             return prevUnits.map(u => {
               if (u.id === secondTarget.id) {
                 const newHp = Math.max(0, u.hp - damage);
-                
+
                 // Check if target is defeated
                 if (newHp <= 0 && u.hp > 0) {
                   setActionLog(prev => [`${secondTarget.name} has been defeated!`, ...prev]);
                 }
-                
+
                 return {
                   ...u,
                   hp: newHp,
@@ -983,7 +887,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
               return u;
             });
           });
-          
+
           // Log the second hit
           setActionLog(prev => [
             `${attacker.name}'s Dust Spikes also hit ${secondTarget.name} for ${damage} damage!`,
@@ -992,13 +896,13 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
         }
       }
     };
-    
+
     // Apply special skill behaviors
     applySpecialSkillBehavior();
-    
+
     // Format the action message with more details
     let statusEffectText = "";
-    
+
     // Apply special status effects for specific skills
     if (skill.name === "Gust" && Math.random() < 0.1) { // 10% chance for Minor Slow
       // Apply Minor Slow (20% Speed reduction) for 1 turn
@@ -1009,11 +913,11 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
         duration: 1,
         source: attacker.id
       };
-      
+
       // Apply the status effect to the target
       if (!target.statusEffects) target.statusEffects = [];
       target.statusEffects.push(effect);
-      
+
       statusEffectText = " [Minor Slow applied]";
     } 
     else if (skill.name === "Breeze" && Math.random() < 0.1) { // 10% chance to reduce Turn Meter
@@ -1029,26 +933,39 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
           return u;
         });
       });
-      
+
       statusEffectText = " [Turn Meter reduced by 10%]";
-    }
-    else if (skill.name === "Stone Slam" && Math.random() < 0.2) { // 20% chance to apply Minor Weakness
-      // Apply Minor Weakness (10% Attack reduction) for 1 turn
+    } else if ((skill.name === "Stone Slam" || skill.name === "Boss Strike") && Math.random() < 0.2) { // 20% chance to apply Weakness
+      // Apply Weakness (10% Attack reduction) for 2 turns
       const effect: StatusEffect = {
-        name: "Minor Weakness",
+        name: "Weakened",
         effect: "ReduceAtk",
         value: 10,
-        duration: 1,
+        duration: 2,
         source: attacker.id
       };
-      
+
       // Apply the status effect to the target
       if (!target.statusEffects) target.statusEffects = [];
-      target.statusEffects.push(effect);
-      
-      statusEffectText = " [Minor Weakness applied]";
+
+      // Check if target already has this effect, if so, extend duration rather than adding new
+      const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
+      if (existingEffectIndex >= 0) {
+        // Extend existing effect duration
+        target.statusEffects[existingEffectIndex].duration = Math.max(
+          target.statusEffects[existingEffectIndex].duration,
+          effect.duration
+        );
+        console.log(`Extended ${effect.name} duration to ${target.statusEffects[existingEffectIndex].duration} turns`);
+      } else {
+        // Add new effect
+        target.statusEffects.push(effect);
+        console.log(`Added new effect ${effect.name} with ${effect.duration} turns duration`);
+      }
+
+      statusEffectText = " [Weakened applied]";
     }
-    
+
     // Regular effect chances based on skill type
     else if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
       // Determine the type of status effect based on skill name/type
@@ -1060,7 +977,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                 skill.name.toLowerCase().includes("toxic")) {
         effectType = "poison";
       }
-      
+
       let effect: StatusEffect;
       if (effectType === "burn") {
         // Burn effect: 5% of max HP damage per turn
@@ -1100,14 +1017,14 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
         effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
         statusEffectText = ` [${effect.name} applied]`;
       }
-      
+
       // Apply the status effect to the target (will be added when the unit's state is updated)
       if (!target.statusEffects) target.statusEffects = [];
-      
+
       // Debug status effects
       console.log(`Status effects before update for ${target.name}:`, 
         target.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
-      
+
       // Check if target already has this effect, if so, extend duration rather than adding new
       const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
       if (existingEffectIndex >= 0) {
@@ -1122,12 +1039,12 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
         target.statusEffects.push(effect);
         console.log(`Added new effect ${effect.name} with ${effect.duration} turns duration`);
       }
-      
+
       // Debug updated status effects
       console.log(`Status effects after update for ${target.name}:`, 
         target.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
     }
-    
+
     // Add healing effect text for Soothing Current
     let healingEffectText = "";
     if (skill.name === "Soothing Current") {
@@ -1135,7 +1052,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
       const healAmount = Math.floor(attacker.maxHp * 0.05);
       healingEffectText = ` (includes healing for ${healAmount} HP)`;
     }
-    
+
     const actionMessage = `${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
 
     setActionLog(prev => [actionMessage, ...prev]);
@@ -1145,12 +1062,12 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
       const updatedUnits = prevUnits.map(u => {
         if (u.id === target.id) {
           const newHp = Math.max(0, u.hp - damage);
-          
+
           // Check if target is defeated
           if (newHp <= 0 && u.hp > 0) {
             setActionLog(prev => [`${target.name} has been defeated!`, ...prev]);
           }
-          
+
           // Preserve status effects that were just added to the target
           return {
             ...u,
@@ -1168,7 +1085,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
         }
         return u;
       });
-      
+
       // If the skill is Soothing Current, apply healing to the lowest HP ally
       if (skill.name === "Soothing Current") {
         // Get all living allies
@@ -1176,38 +1093,38 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
         const allies = updatedUnits.filter(u => 
           battleEntry?.allies?.some((a: any) => a.id === u.id) && u.hp > 0
         );
-        
+
         if (allies.length > 0) {
           // Debug allies HP percentages
           allies.forEach(ally => {
             console.log(`Ally ${ally.name}: ${ally.hp}/${ally.maxHp} = ${(ally.hp / ally.maxHp * 100).toFixed(1)}%`);
           });
-          
+
           // Sort allies by HP percentage (lowest first)
           const sortedAllies = [...allies].sort((a, b) => 
             (a.hp / a.maxHp) - (b.hp / b.maxHp)
           );
-          
+
           // Debug sorted order
           console.log("Sorted allies by HP percentage:");
           sortedAllies.forEach(ally => {
             console.log(`Sorted Ally ${ally.name}: ${ally.hp}/${ally.maxHp} = ${(ally.hp / ally.maxHp * 100).toFixed(1)}%`);
           });
-          
+
           // Always pick the ally with the lowest HP percentage, 
           // only consider the attacker's ID if we actually need to find a different target
           let healTarget = sortedAllies[0];
-          
+
           // Debug the selected heal target
           console.log(`Selected heal target: ${healTarget.name} with ${healTarget.hp}/${healTarget.maxHp} = ${(healTarget.hp / healTarget.maxHp * 100).toFixed(1)}%`);
-          
+
           // Calculate healing amount (5% of attacker's max HP)
           const healAmount = Math.floor(attacker.maxHp * 0.05);
-          
+
           // Add a single healing message
           const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP with Soothing Current!`;
           setActionLog(prev => [healMessage, ...prev]);
-          
+
           // Apply healing
           return updatedUnits.map(u => {
             if (u.id === healTarget.id) {
@@ -1228,7 +1145,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
           });
         }
       }
-      
+
       return updatedUnits;
     });
 
@@ -1241,13 +1158,13 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
       console.error("No battle entry found with allies array");
       return;
     }
-    
+
     const allies = units.filter(u => battleEntry.allies.some((a: any) => a.id === u.id));
     const enemies = units.filter(u => battleEntry.enemies.some((e: any) => e.id === u.id));
 
     const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
     const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
-    
+
     console.log(`Checking battle end conditions:
       - All allies defeated: ${allAlliesDefeated} (${allies.length} allies)
       - All enemies defeated: ${allEnemiesDefeated} (${enemies.length} enemies)
@@ -1268,7 +1185,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
     else if (allEnemiesDefeated && !isComplete) {
       // Final stage is 7 (index 0-7 for 8 total stages)
       const isFinalStage = currentStage >= 7;
-      
+
       if (isFinalStage) {
         // Complete dungeon if this is the final stage
         setIsComplete(true);
@@ -1280,17 +1197,17 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
       } else {
         // Progress to next stage
         const nextStage = currentStage + 1;
-        
+
         // First update the action log to show progression
         setActionLog(prev => [
           ...prev,
           `Stage ${currentStage + 1} completed! Moving to stage ${nextStage + 1}...`
         ]);
         console.log(`Moving to stage ${nextStage + 1}`);
-        
+
         // IMPORTANT: Update the current stage AFTER setting up the new units to avoid race conditions
         // This ensures that components displaying the stage number use the updated value
-        
+
         // Reset enemy units for the next stage
         setTimeout(() => {
           // Reset the enemy units with new stats and HP
@@ -1298,26 +1215,26 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
             const updatedUnits = prevUnits.map(unit => {
               // Check if this is an enemy
               const isEnemy = battleEntry.enemies.some((e: any) => e.id === unit.id);
-              
+
               if (isEnemy) {
                 // Generate new enemy based on next stage
                 const stageMultiplier = 1 + (nextStage * 0.12); // 12% increase per stage
                 const baseMaxHp = unit.maxHp > 0 ? 
                   Math.floor(unit.maxHp / (1 + (currentStage * 0.12))) : // Reverse calculate base HP if available
                   unit.maxHp; // Fallback to current maxHp
-                
+
                 const newMaxHp = Math.floor(baseMaxHp * stageMultiplier);
                 const newAttack = Math.floor(unit.stats.attack * stageMultiplier);
                 const newVitality = Math.floor(unit.stats.vitality * stageMultiplier);
                 const newSpeed = Math.floor(unit.stats.speed * (1 + (nextStage * 0.05))); // 5% speed increase per stage
-                
+
                 console.log(`Resetting enemy ${unit.name} for stage ${nextStage + 1}:
                   - HP: ${newMaxHp}
                   - Attack: ${newAttack}
                   - Vitality: ${newVitality}
                   - Speed: ${newSpeed}
                 `);
-                
+
                 return {
                   ...unit,
                   hp: newMaxHp,
@@ -1341,14 +1258,14 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                 const filteredEffects = unit.statusEffects?.filter(
                   effect => !["Weakened", "Slowed", "Burning", "Poisoned"].includes(effect.name)
                 ) || [];
-                
+
                 console.log(`Processing ally ${unit.name} after stage clear:
                   - Current HP: ${unit.hp}/${unit.maxHp} (no healing between stages)
                   - Cleared negative effects: ${
                     (unit.statusEffects?.length || 0) - (filteredEffects.length || 0)
                   } effects removed
                 `);
-                
+
                 // Add a message to the action log that negative effects were removed
                 if ((unit.statusEffects?.length || 0) > (filteredEffects.length || 0)) {
                   setActionLog(prev => [
@@ -1356,7 +1273,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                     `${unit.name} had negative status effects removed after completing stage ${currentStage + 1}.`
                   ]);
                 }
-                
+
                 return {
                   ...unit,
                   // hp remains unchanged - no healing
@@ -1365,13 +1282,13 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                 };
               }
             });
-            
+
             // After updating all units, now set the stage
             setTimeout(() => {
               setCurrentStage(nextStage); // Update stage AFTER all units are reset
               console.log(`Stage ${nextStage + 1} is ready to begin`);
             }, 100);
-            
+
             return updatedUnits;
           });
         }, 1000);
@@ -1384,7 +1301,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
     // Determine skill color/style based on type
     let skillStyle = "bg-blue-600/40";
     let skillIcon = "⚔️";
-    
+
     if (skillName.toLowerCase().includes("flame") || skillName.toLowerCase().includes("fire") || 
         skillName.toLowerCase().includes("inferno") || skillName.toLowerCase().includes("ember")) {
       skillStyle = "bg-red-600/40";
@@ -1410,11 +1327,11 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
       skillStyle = "bg-teal-600/40";
       skillIcon = "🌪️";
     }
-    
+
     // Format the tooltip details with special effects
     const damagePercent = Math.round(damage * 100);
     let description = '';
-    
+
     // Special skill descriptions
     if (skillName === "Soothing Current") {
       description = `Deals ${damagePercent}% of ATK damage and heals the ally with lowest HP for 5% of caster's max HP.`;
@@ -1440,7 +1357,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
         ? `Deals ${damagePercent}% of ATK damage. Cooldown: ${cooldown} turns.`
         : `Deals ${damagePercent}% of ATK damage.`;
     }
-    
+
     return (
       <TooltipProvider>
         <Tooltip delayDuration={300}>
@@ -1478,12 +1395,12 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
       (unit.auraBonus.vitality !== undefined && unit.auraBonus.vitality !== 0) || 
       (unit.auraBonus.speed !== undefined && unit.auraBonus.speed !== 0)
     );
-    
+
     // Get aura bonus values safely
     const attackBonus = unit.auraBonus?.attack ?? 0;
     const vitalityBonus = unit.auraBonus?.vitality ?? 0;
     const speedBonus = unit.auraBonus?.speed ?? 0;
-    
+
     return (
       <div className="mt-2 text-xs">
         {/* Stats section */}
@@ -1540,11 +1457,6 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
             <TabsTrigger value="live">Live Battle</TabsTrigger>
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="log">Action Log</TabsTrigger>
-            {user?.isAdmin && (
-              <TabsTrigger value="admin-log" className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/30">
-                <Calculator size={14} className="mr-1" /> Admin Log
-              </TabsTrigger>
-            )}
           </TabsList>
 
           <TabsContent value="live" className="space-y-4">
@@ -1603,12 +1515,12 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                           Avatar
                         </div>
                       </div>
-                      
+
                       <div className="flex-grow">
                         {renderUnitStats(unit)}
                       </div>
                     </div>
-                    
+
                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
                       {/* Skills Section - Now in its own dedicated container */}
                       <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
@@ -1619,7 +1531,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                           {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
                         </div>
                       </div>
-                      
+
                       {/* Status Effects Section - in its own container, always showing for consistency */}
                       <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
                         <div className="text-xs font-semibold text-yellow-300 mb-1">Status Effects</div>
@@ -1673,12 +1585,12 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                           Enemy
                         </div>
                       </div>
-                      
+
                       <div className="flex-grow">
                         {renderUnitStats(unit)}
                       </div>
                     </div>
-                    
+
                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
                       {/* Skills Section - Now in its own dedicated container */}
                       <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
@@ -1689,7 +1601,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                           {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
                         </div>
                       </div>
-                      
+
                       {/* Status Effects Section - in its own container, always showing for consistency */}
                       <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
                         <div className="text-xs font-semibold text-yellow-300 mb-1">Status Effects</div>
@@ -1734,7 +1646,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                 const allyNames = ["G-Wolf", "Kleos", "Brawler Frank", "Gideon", "Albus Dumbleboom", "Grimmjaw"];
                 const isAllyAction = allyNames.some(name => log.includes(`${name} used`));
                 const isEnemyAction = (log.includes("Boss") || log.includes("Minion")) && log.includes(" used ");
-                
+
                 // Format damage numbers in red and bold
                 let formattedLog = log;
                 if (log.includes("damage")) {
@@ -1748,7 +1660,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                     );
                   }
                 }
-                
+
                 // Format healing numbers in green and bold
                 if (log.includes("healed")) {
                   const healMatch = log.match(/for (\d+) HP/);
@@ -1760,7 +1672,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                     );
                   }
                 }
-                
+
                 // Format all healing in messages - supports multiple formats:
                 // "with healing for X HP"
                 // "includes healing for X HP"
@@ -1788,7 +1700,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                     }
                   }
                 }
-                
+
                 // Highlight status effects in yellow and underline them
                 const statusEffects = ["Burning", "Poisoned", "Weakened", "Slowed"];
                 statusEffects.forEach(effect => {
@@ -1799,7 +1711,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                     );
                   }
                 });
-                
+
                 return (
                   <div 
                     key={index} 
@@ -1814,130 +1726,6 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
               })}
             </div>
           </TabsContent>
-
-          {/* Admin Battle Log - Only visible to admins */}
-          {user?.isAdmin && (
-            <TabsContent value="admin-log">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between bg-amber-500/10 p-2 rounded border border-amber-500/30">
-                  <div className="flex items-center gap-2">
-                    <Calculator className="text-amber-500" size={16} />
-                    <h3 className="font-semibold text-amber-500">Admin Battle Analytics</h3>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="text-xs border-amber-500/30 hover:bg-amber-500/10"
-                    onClick={() => {
-                      // Add battle data to the detailed log for debugging
-                      const debugInfo = `Battle Round: ${battleRound}\nTotal Units: ${units.length}\nAllies: ${units.filter(u => battleLog[0]?.allies?.some((a: any) => a.id === u.id)).length}\nEnemies: ${units.filter(u => battleLog[0]?.enemies?.some((e: any) => e.id === u.id)).length}`;
-                      setDetailedActionLog(prev => [`=== BATTLE DEBUG INFO ===\n${debugInfo}`, ...prev]);
-                    }}
-                  >
-                    Log Battle State
-                  </Button>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Combat Calculation Analysis */}
-                  <div className="bg-gray-800/50 rounded shadow-inner p-3 border border-gray-700">
-                    <h4 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-1">
-                      <Table size={14} /> Damage Calculations
-                    </h4>
-                    <div className="space-y-2">
-                      {/* Sample Calculation Preview */}
-                      <div className="text-xs bg-gray-900/50 p-2 rounded border border-gray-800 font-mono">
-                        <div className="text-green-400 border-b border-gray-700 pb-1 mb-1">Base Attack Calculation</div>
-                        <div>
-                          attacker.stats.attack: <span className="text-blue-400">100</span><br />
-                          skill.damage (multiplier): <span className="text-purple-400">0.8</span><br />
-                          base_damage = <span className="text-blue-400">100</span> * <span className="text-purple-400">0.8</span> = <span className="text-yellow-300">80</span>
-                        </div>
-                      </div>
-                      
-                      <div className="text-xs bg-gray-900/50 p-2 rounded border border-gray-800 font-mono">
-                        <div className="text-green-400 border-b border-gray-700 pb-1 mb-1">Status Effect Modifier</div>
-                        <div>
-                          If Weakened (-10% ATK):<br />
-                          modified_damage = <span className="text-yellow-300">80</span> * 0.9 = <span className="text-red-400">72</span>
-                        </div>
-                      </div>
-                      
-                      <div className="text-xs bg-gray-900/50 p-2 rounded border border-gray-800 font-mono">
-                        <div className="text-green-400 border-b border-gray-700 pb-1 mb-1">Attack Speed Formula</div>
-                        <div>
-                          base_speed: <span className="text-blue-400">50</span><br />
-                          meter_increase = (<span className="text-blue-400">50</span> / 40) * playbackSpeed<br />
-                          meter_increase = <span className="text-yellow-300">1.25</span> * <span className="text-purple-400">1</span> = <span className="text-red-400">1.25</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Detailed Debug Log */}
-                  <div className="bg-gray-800/50 rounded shadow-inner border border-gray-700">
-                    <div className="flex items-center justify-between p-2 border-b border-gray-700">
-                      <h4 className="text-sm font-semibold text-amber-400 flex items-center gap-1">
-                        <Info size={14} /> Detailed System Log
-                      </h4>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setDetailedActionLog([])}
-                        className="h-6 px-2 text-xs"
-                      >
-                        Clear
-                      </Button>
-                    </div>
-                    <div className="h-[300px] overflow-y-auto p-2 font-mono text-xs">
-                      {detailedActionLog.length > 0 ? (
-                        detailedActionLog.map((log, index) => (
-                          <div key={index} className="mb-1 border-b border-gray-800/50 pb-1 whitespace-pre-wrap break-all">
-                            {log}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-gray-500 italic">No detailed logs captured yet. Actions will be logged here during battle.</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Battle Status Effect Analytics */}
-                <div className="bg-gray-800/50 rounded shadow-inner p-3 border border-gray-700">
-                  <h4 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-1">
-                    <Swords size={14} /> Status Effect Analysis
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div className="bg-red-900/20 p-2 rounded border border-red-900/30">
-                      <div className="text-xs font-medium text-red-400">Burn</div>
-                      <div className="text-xs">Chance: 10-30%</div>
-                      <div className="text-xs">Duration: 1-3 turns</div>
-                      <div className="text-xs">Effect: Fixed damage per turn</div>
-                    </div>
-                    <div className="bg-green-900/20 p-2 rounded border border-green-900/30">
-                      <div className="text-xs font-medium text-green-400">Poison</div>
-                      <div className="text-xs">Chance: 30%</div>
-                      <div className="text-xs">Duration: 3 turns</div>
-                      <div className="text-xs">Effect: Fixed damage per turn</div>
-                    </div>
-                    <div className="bg-orange-900/20 p-2 rounded border border-orange-900/30">
-                      <div className="text-xs font-medium text-orange-400">Weakened</div>
-                      <div className="text-xs">Chance: 15-30%</div>
-                      <div className="text-xs">Duration: 2 turns</div>
-                      <div className="text-xs">Effect: -10% Attack</div>
-                    </div>
-                    <div className="bg-blue-900/20 p-2 rounded border border-blue-900/30">
-                      <div className="text-xs font-medium text-blue-400">Slowed</div>
-                      <div className="text-xs">Chance: 10%</div>
-                      <div className="text-xs">Duration: 1 turn</div>
-                      <div className="text-xs">Effect: -20% Speed</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          )}
         </Tabs>
 
         <DialogFooter className="flex flex-col gap-2 sm:gap-0">
@@ -1948,13 +1736,13 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
                 {(() => {
                   const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
                   if (!battleEntry) return `Dungeon Completed! Cleared ${currentStage + 1} of 8 stages`;
-                  
+
                   // Then check if all allies are defeated
                   const allAlliesDefeated = battleEntry?.allies?.every((a: any) => {
                     const unit = units.find(u => u.id === a.id);
                     return unit ? unit.hp <= 0 : true; // Consider missing units as defeated
                   }) || false;
-                  
+
                   return allAlliesDefeated 
                     ? `Your party was defeated on Stage ${currentStage + 1}` 
                     : `Dungeon Completed! Cleared ${currentStage + 1} of 8 stages`;
@@ -1969,7 +1757,7 @@ Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
               </div>
             </div>
           )}
-          
+
           {isComplete ? (
             <Button
               className="bg-[#FF9D00] hover:bg-[#FF9D00]/80"
