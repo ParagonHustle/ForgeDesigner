@@ -510,9 +510,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             // Update attack meter based on speed (120 speed = 3x faster than 40 speed)
             // Apply aura speed bonus if available
             let speedValue = unit.stats.speed;
+            
+            // Apply aura speed bonus if available
             if (unit.auraBonus?.speed) {
               // Apply percentage bonus from aura
               speedValue = Math.floor(speedValue * (1 + unit.auraBonus.speed / 100));
+            }
+            
+            // Apply speed reduction status effects if present
+            if (unit.statusEffects && unit.statusEffects.length > 0) {
+              // Find all speed reduction effects
+              const speedReductionEffects = unit.statusEffects.filter(effect => effect.effect === "ReduceSpd");
+              
+              // Apply each effect (multiplicatively)
+              for (const effect of speedReductionEffects) {
+                // Calculate reduction percentage (20% reduction = multiply by 0.8)
+                const reductionMultiplier = 1 - (effect.value / 100);
+                speedValue = Math.floor(speedValue * reductionMultiplier);
+                console.log(`Applied ${effect.name} to ${unit.name}: Speed reduced by ${effect.value}% to ${speedValue}`);
+              }
             }
 
             const meterIncrease = (speedValue / 40) * playbackSpeed;
@@ -597,9 +613,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             // Calculate damage: Attack * Damage Multiplier
             // Apply aura bonus if available
             let attackValue = attacker.stats.attack;
+            
+            // Apply aura attack bonus if available
             if (attacker.auraBonus?.attack) {
               // Add percentage bonus from aura
               attackValue = Math.floor(attackValue * (1 + attacker.auraBonus.attack / 100));
+            }
+            
+            // Apply attack reduction status effects if present
+            if (attacker.statusEffects && attacker.statusEffects.length > 0) {
+              // Find all attack reduction effects
+              const attackReductionEffects = attacker.statusEffects.filter(effect => effect.effect === "ReduceAtk");
+              
+              // Apply each effect (multiplicatively)
+              for (const effect of attackReductionEffects) {
+                // Calculate reduction percentage (10% reduction = multiply by 0.9)
+                const reductionMultiplier = 1 - (effect.value / 100);
+                attackValue = Math.floor(attackValue * reductionMultiplier);
+                console.log(`Applied ${effect.name} to ${attacker.name}: Attack reduced by ${effect.value}% to ${attackValue}`);
+              }
             }
 
             // Damage = Attack * Skill Damage Multiplier
@@ -895,9 +927,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Calculate damage: Attack * Damage Multiplier
     // Apply aura bonus if available
     let attackValue = attacker.stats.attack;
+    
+    // Apply aura attack bonus if available
     if (attacker.auraBonus?.attack) {
       // Add percentage bonus from aura
       attackValue = Math.floor(attackValue * (1 + attacker.auraBonus.attack / 100));
+    }
+    
+    // Apply attack reduction status effects if present
+    if (attacker.statusEffects && attacker.statusEffects.length > 0) {
+      // Find all attack reduction effects
+      const attackReductionEffects = attacker.statusEffects.filter(effect => effect.effect === "ReduceAtk");
+      
+      // Apply each effect (multiplicatively)
+      for (const effect of attackReductionEffects) {
+        // Calculate reduction percentage (10% reduction = multiply by 0.9)
+        const reductionMultiplier = 1 - (effect.value / 100);
+        attackValue = Math.floor(attackValue * reductionMultiplier);
+        console.log(`Applied ${effect.name} to ${attacker.name}: Attack reduced by ${effect.value}% to ${attackValue}`);
+      }
     }
 
     // Damage = Attack * Skill Damage Multiplier
