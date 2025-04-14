@@ -80,6 +80,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [currentStage, setCurrentStage] = useState(0);
   const [units, setUnits] = useState<BattleUnit[]>([]);
   const [actionLog, setActionLog] = useState<string[]>([]);
+  const [detailedActionLog, setDetailedActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [battleRound, setBattleRound] = useState(1);
 
@@ -548,7 +549,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               }
             }
 
-            const actionMessage = `${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
+            const actionMessage = `Turn ${battleRound}: ${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
             console.log(actionMessage);
 
             // Update action log
@@ -1061,9 +1062,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       healingEffectText = ` (includes healing for ${healAmount} HP)`;
     }
 
-    const actionMessage = `${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
+    const actionMessage = `Turn ${battleRound}: ${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
 
     setActionLog(prev => [actionMessage, ...prev]);
+    // Also add to detailed log for admin view
+    setDetailedActionLog(prev => [`Turn ${battleRound}: Action - ${attacker.name} used ${skill.name}`, ...prev]);
 
     // First apply damage to the target
     setUnits(prevUnits => {
@@ -1453,7 +1456,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#1A1A2E] border-[#432874] text-[#C8B8DB] max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="bg-[#1A1A2E] border-[#432874] text-[#C8B8DB] max-w-6xl max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <DialogTitle className="text-[#FF9D00] font-cinzel">
             Battle Log - Stage {currentStage + 1}
