@@ -1200,9 +1200,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // Initialize status effects array if needed
       if (!target.statusEffects) target.statusEffects = [];
       
+      // Add detailed debug logs
+      console.log("💨 ATTEMPTING TO ADD MINOR SLOW");
+      console.log("Target:", target.name);
+      console.log("Current status effects:", target.statusEffects);
+      console.log("Effect to add:", slowEffect);
+      
       // Add effect and update counters
       target.statusEffects.push(slowEffect);
-      console.log(`Applied Minor Slow effect to ${target.name} with ${slowEffect.duration} turn duration`);
+      console.log(`✅ Successfully added Minor Slow effect to ${target.name} with ${slowEffect.duration} turn duration`);
+      console.log("Updated status effects:", target.statusEffects);
       
       // Update success counter
       setUnits(prevUnits => {
