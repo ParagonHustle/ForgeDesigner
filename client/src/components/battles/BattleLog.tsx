@@ -460,7 +460,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     } else if (skill.name === "Stone Slam") {
       // Stone Slam has 20% chance to apply Minor Weakness (10% Attack reduction)
       const effectRoll = Math.random() * 100;
-      if (effectRoll <= 20) {
+      // Increase chance for testing
+      if (effectRoll <= 50) { // 50% for testing instead of 20%
         statusEffectApplied = true;
         newStatusEffect = {
           name: "Minor Weakness",
@@ -470,11 +471,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           source: attacker.id
         };
         statusEffectMessage = `${attacker.name}'s Stone Slam weakened ${target.name}! (Attack -10% for 2 turns)`;
+        
+        // Debug log for testing
+        console.log(`Applied Minor Weakness to ${target.name} from ${attacker.name}: Duration ${newStatusEffect.duration} turns`);
       }
     } else if (skill.name === "Ember") {
       // Ember has 30% chance to apply Burning effect
       const effectRoll = Math.random() * 100;
-      if (effectRoll <= 30) {
+      // Increase chance for testing
+      if (effectRoll <= 60) { // 60% for testing instead of 30%
         statusEffectApplied = true;
         newStatusEffect = {
           name: "Burning",
@@ -484,6 +489,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           source: attacker.id
         };
         statusEffectMessage = `${attacker.name}'s Ember set ${target.name} on fire! (2 damage per turn for 3 turns)`;
+        
+        // Debug log for testing
+        console.log(`Applied Burning to ${target.name} from ${attacker.name}: Duration ${newStatusEffect.duration} turns, Damage ${newStatusEffect.value}/turn`);
       }
     }
     
@@ -614,8 +622,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         if (totalDoTDamage > 0) {
           const newHp = Math.max(0, unit.hp - totalDoTDamage);
           
-          // Log the damage
-          setActionLog(prev => [`${unit.name} takes ${totalDoTDamage} damage from status effects!`, ...prev]);
+          // Log the damage with status effect details
+          let statusEffectNames = unit.statusEffects
+            ?.filter(effect => effect.effect === "Burn" || effect.effect === "Poison")
+            .map(effect => `${effect.name} (${effect.duration} turns left)`)
+            .join(" and ");
+            
+          setActionLog(prev => [`${unit.name} takes ${totalDoTDamage} damage from ${statusEffectNames}!`, ...prev]);
+          
+          // Add debug log to track damage-over-time effects
+          console.log(`DoT damage to ${unit.name}: ${totalDoTDamage} damage from status effects. Current HP: ${unit.hp} -> ${newHp}`);
           
           // Check if unit died from DoT
           if (newHp <= 0 && unit.hp > 0) {
