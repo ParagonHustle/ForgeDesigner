@@ -431,8 +431,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             // NOTE: We will handle healing in the performAction function only to avoid duplicate healing
             // This block will prepare the healing text for the action message with the exact amount
             if (skill.name === "Soothing Current") {
-              // Calculate healing amount to show in the log
-              const healAmount = Math.floor(800 * 0.05); // 5% of 800 = 40 HP
+              // Calculate healing amount based on 5% of the caster's max HP
+              const healAmount = Math.floor(attacker.maxHp * 0.05);
               
               // Get all living allies (hp > 0) to find who we'll be healing
               const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
@@ -597,8 +597,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   console.log(`SECOND LOCATION - Selected heal target: ${healTarget.name} with ${healTarget.hp}/${healTarget.maxHp} = ${(healTarget.hp / healTarget.maxHp * 100).toFixed(1)}%`);
                   
                   // Calculate healing amount (5% of attacker's max HP)
-                  const attackerMaxHp = 800; // Standard base value for G-Wolf, the healer
-                  const healAmount = Math.floor(attackerMaxHp * 0.05); // Should heal for 40 HP
+                  const healAmount = Math.floor(attacker.maxHp * 0.05);
                   
                   // We won't add a separate log message here - only one will be shown in the action message
                   
@@ -774,8 +773,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Add healing effect text for Soothing Current
     let healingEffectText = "";
     if (skill.name === "Soothing Current") {
-      // Calculate healing amount to show in the log
-      const healAmount = Math.floor(800 * 0.05); // 5% of 800 = 40 HP
+      // Calculate healing amount based on 5% of attacker's max HP
+      const healAmount = Math.floor(attacker.maxHp * 0.05);
       healingEffectText = ` (includes healing for ${healAmount} HP)`;
     }
     
@@ -845,8 +844,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           console.log(`Selected heal target: ${healTarget.name} with ${healTarget.hp}/${healTarget.maxHp} = ${(healTarget.hp / healTarget.maxHp * 100).toFixed(1)}%`);
           
           // Calculate healing amount (5% of attacker's max HP)
-          const attackerMaxHp = 800; // Standard base value for G-Wolf, the healer
-          const healAmount = Math.floor(attackerMaxHp * 0.05); // Should heal for 40 HP
+          const healAmount = Math.floor(attacker.maxHp * 0.05);
           
           // Add a single healing message
           const healMessage = `${attacker.name} healed ${healTarget.name} for ${healAmount} HP with Soothing Current!`;
@@ -1103,7 +1101,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => handleSpeedChange(playbackSpeed === 1 ? 2 : playbackSpeed === 2 ? 4 : 1)}
+                  onClick={() => handleSpeedChange(playbackSpeed === 1 ? 2 : playbackSpeed === 2 ? 4 : playbackSpeed === 4 ? 8 : 1)}
                   className="w-24"
                 >
                   {playbackSpeed}x Speed
@@ -1260,6 +1258,17 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     }
                   }
                 }
+                
+                // Highlight status effects in yellow and underline them
+                const statusEffects = ["Burning", "Poisoned", "Weakened", "Slowed"];
+                statusEffects.forEach(effect => {
+                  if (formattedLog.includes(effect)) {
+                    formattedLog = formattedLog.replace(
+                      new RegExp(`${effect}`, 'g'),
+                      `<span class="text-yellow-300 underline">${effect}</span>`
+                    );
+                  }
+                });
                 
                 return (
                   <div 
