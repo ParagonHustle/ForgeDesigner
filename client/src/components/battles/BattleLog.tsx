@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { Shield, Swords, Heart, Zap } from 'lucide-react';
+import TooltipWrapper from '@/components/common/TooltipWrapper';
 
 interface StatusEffect {
   name: string;
