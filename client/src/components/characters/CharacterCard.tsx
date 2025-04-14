@@ -1456,6 +1456,55 @@ const CharacterCard = ({
                               </div>
                             </div>
                           </div>
+                          
+                          {/* Display Aura Skills */}
+                          {(() => {
+                            try {
+                              const currentAura = aura || equippedAura;
+                              if (!currentAura) return null;
+                              
+                              const skills = currentAura.skills ? 
+                                (typeof currentAura.skills === 'string' ? 
+                                  JSON.parse(currentAura.skills as string) : 
+                                  currentAura.skills) : 
+                                [];
+                                
+                              if (skills && skills.length > 0) {
+                                return (
+                                  <div className="mb-3 border-b border-[#432874]/30 pb-2">
+                                    <div className="flex items-center mb-1 text-xs text-[#FF9D00]">
+                                      <Sparkles className="h-3 w-3 mr-1" />
+                                      <span>Aura Skills</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-1 text-xs">
+                                      {skills.map((skill: any, index: number) => (
+                                        <div key={index} className="flex items-start">
+                                          <div className="text-[#C8B8DB]/60 mr-1">•</div>
+                                          <div className="flex-1 overflow-hidden">
+                                            <span className="text-[#C8B8DB]">{skill.name}</span>
+                                            {skill.description && (
+                                              <div className="text-[#C8B8DB]/60 text-xs truncate">
+                                                {skill.description}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            } catch (e) {
+                              console.error('Failed to parse aura skills in character card view:', e);
+                            }
+                            return null;
+                          })()}
+
+                          {/* Total Stat Bonuses Header */}
+                          <div className="flex items-center mb-1 text-xs text-[#FF9D00]">
+                            <Info className="h-3 w-3 mr-1" />
+                            <span>Total Stat Bonuses</span>
+                          </div>
 
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                             <div className="flex justify-between items-center">
