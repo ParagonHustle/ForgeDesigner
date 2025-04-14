@@ -77,7 +77,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [detailedActionLog, setDetailedActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   
-  // Animation states for smooth transitions
+  // Animation states for battle transitions
   const [activeAttacker, setActiveAttacker] = useState<string | null>(null);
   const [activeTarget, setActiveTarget] = useState<string | null>(null);
   const [showAttackAnimation, setShowAttackAnimation] = useState(false);
@@ -416,8 +416,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
   // Function for a unit to perform an action
   const performAction = (attacker: BattleUnit, target: BattleUnit) => {
-    // Skip if either unit is defeated
+    // Skip if either unit is defeated or if an animation is already in progress
     if (attacker.hp <= 0 || target.hp <= 0) return;
+    if (animationInProgress) return;
+    
+    // Set animation in progress to prevent multiple actions at once
+    setAnimationInProgress(true);
     
     // Increment turn count for this action
     turnCountRef.current += 1;
@@ -446,6 +450,26 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     
     // Damage = Attack * Skill Damage Multiplier
     const damage = Math.floor(attackValue * skill.damage);
+    
+    // Set animation states for visual feedback
+    setActiveAttacker(attacker.id);
+    setActiveTarget(target.id);
+    setAttackAnimationType(skillType as 'basic' | 'advanced' | 'ultimate');
+    setCurrentSkillName(skill.name);
+    
+    // Show attack animation
+    setShowAttackAnimation(true);
+    
+    // After a delay, show damage animation
+    setTimeout(() => {
+      setShowAttackAnimation(false);
+      setShowDamageAnimation(true);
+      
+      // After another delay, apply the actual damage and continue
+      setTimeout(() => {
+        setShowDamageAnimation(false);
+      }, 500);
+    }, 500);
     
     // Determine if we should apply status effects based on the skill
     let statusEffectApplied = false;
@@ -594,7 +618,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
     
     // Check if battle has ended
-    setTimeout(checkBattleEnd, 300);
+    setTimeout(() => {
+      checkBattleEnd();
+      
+      // Clear animation states
+      setActiveAttacker(null);
+      setActiveTarget(null);
+      setShowAttackAnimation(false);
+      setShowDamageAnimation(false);
+      setAnimationInProgress(false);
+    }, 300);
   };
   
   // Function to apply damage from DoT status effects
