@@ -351,13 +351,13 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                 <Progress value={taskProgress} className="h-2 bg-[#1F1D36] border-[#432874]/20" />
               </div>
               {new Date(task.endTime) <= new Date() && (
-                <Button 
-                  className="w-full mt-2 bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
-                  onClick={() => handleCompleteForging(task.id)}
-                  disabled={completingTask === task.id}
-                >
-                  {completingTask === task.id ? "Completing..." : "Complete Forging"}
-                </Button>
+                <Link href="/forge">
+                  <Button 
+                    className="w-full mt-2 bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+                  >
+                    Go to Forge
+                  </Button>
+                </Link>
               )}
             </motion.div>
           );

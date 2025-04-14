@@ -653,16 +653,37 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   }, [isPaused, playbackSpeed, isComplete, units, battleLog]);
 
-  const selectTarget = (attacker: BattleUnit, allUnits: BattleUnit[]) => {
+  const selectTarget = (attacker: BattleUnit, allUnits: BattleUnit[], skillName?: string) => {
     // Get first log entry that has allies defined
     const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
     const isAlly = battleEntry?.allies?.some((a: any) => a.id === attacker.id) || false;
 
+    // Standard target selection (enemies for allies, allies for enemies)
     const possibleTargets = allUnits.filter(u =>
       u.hp > 0 &&
       (isAlly ? battleEntry?.enemies?.some((e: any) => e.id === u.id) : battleEntry?.allies?.some((a: any) => a.id === u.id))
     );
-    return possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+    
+    // Special case: Cleansing Tide - find allies with debuffs
+    if (skillName === "Cleansing Tide" && isAlly) {
+      const alliesWithDebuffs = allUnits.filter(u => 
+        u.hp > 0 && 
+        battleEntry?.allies?.some((a: any) => a.id === u.id) && 
+        u.statusEffects && 
+        u.statusEffects.length > 0
+      );
+      
+      // If we have allies with debuffs, select one randomly
+      if (alliesWithDebuffs.length > 0) {
+        return possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+      }
+    }
+    
+    // Special case: For multi-target attacks, we'll handle this differently
+    // but still return a single target here for the initial attack
+    return possibleTargets.length > 0 ? 
+      possibleTargets[Math.floor(Math.random() * possibleTargets.length)] : 
+      null;
   };
 
   const performAction = (attacker: BattleUnit, target: BattleUnit) => {
@@ -678,6 +699,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       skill = attacker.skills.advanced;
       skillType = 'advanced';
     }
+    
+    // Get battle entries for targeting
+    const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
+    const isAlly = battleEntry?.allies?.some((a: any) => a.id === attacker.id) || false;
 
     // Calculate damage: Attack * Damage Multiplier
     // Apply aura bonus if available
@@ -690,9 +715,246 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Damage = Attack * Skill Damage Multiplier
     const damage = Math.floor(attackValue * skill.damage);
     
+    // Handle special skill behaviors
+    const applySpecialSkillBehavior = () => {
+      // Get all enemies or allies (opposite of attacker side)
+      const possibleTargets = units.filter(u => {
+        // Units must be alive
+        if (u.hp <= 0) return false;
+        
+        // Target opposite side of the attacker (allies target enemies, enemies target allies)
+        if (isAlly) {
+          return battleEntry?.enemies?.some((e: any) => e.id === u.id);
+        } else {
+          return battleEntry?.allies?.some((a: any) => a.id === u.id);
+        }
+      });
+      
+      // Cleansing Tide behavior (remove 1 debuff from random ally)
+      if (skill.name === "Cleansing Tide" && isAlly && Math.random() < 0.1) { // 10% chance
+        // Find allies with debuffs
+        const alliesWithDebuffs = units.filter(u => 
+          u.hp > 0 && 
+          battleEntry?.allies?.some((a: any) => a.id === u.id) && 
+          u.statusEffects && 
+          u.statusEffects.length > 0
+        );
+        
+        if (alliesWithDebuffs.length > 0) {
+          // Select random ally with debuffs
+          const targetAlly = alliesWithDebuffs[Math.floor(Math.random() * alliesWithDebuffs.length)];
+          
+          // Remove one random debuff
+          if (targetAlly.statusEffects && targetAlly.statusEffects.length > 0) {
+            const randomEffect = targetAlly.statusEffects[Math.floor(Math.random() * targetAlly.statusEffects.length)];
+            
+            // Update units state to remove the debuff
+            setUnits(prevUnits => {
+              return prevUnits.map(u => {
+                if (u.id === targetAlly.id) {
+                  return {
+                    ...u,
+                    statusEffects: u.statusEffects?.filter(e => 
+                      e.name !== randomEffect.name || e.duration !== randomEffect.duration
+                    ) || []
+                  };
+                }
+                return u;
+              });
+            });
+            
+            // Log the cleanse effect
+            setActionLog(prev => [
+              `${attacker.name}'s Cleansing Tide removed ${randomEffect.name} from ${targetAlly.name}!`,
+              ...prev
+            ]);
+          }
+        }
+      }
+      
+      // Wildfire (target 2 enemies with chance for 3rd)
+      if (skill.name === "Wildfire" && possibleTargets.length > 1) {
+        // Always hit 2 targets
+        const secondTarget = possibleTargets.find(u => u.id !== target.id) || possibleTargets[0]; 
+        
+        // Apply damage to second target if found
+        if (secondTarget) {
+          setUnits(prevUnits => {
+            return prevUnits.map(u => {
+              if (u.id === secondTarget.id) {
+                const newHp = Math.max(0, u.hp - damage);
+                
+                // Check if target is defeated
+                if (newHp <= 0 && u.hp > 0) {
+                  setActionLog(prev => [`${secondTarget.name} has been defeated!`, ...prev]);
+                }
+                
+                return {
+                  ...u,
+                  hp: newHp,
+                  totalDamageReceived: u.totalDamageReceived + damage
+                };
+              }
+              if (u.id === attacker.id) {
+                return {
+                  ...u,
+                  totalDamageDealt: u.totalDamageDealt + damage
+                };
+              }
+              return u;
+            });
+          });
+          
+          // Log the second hit
+          setActionLog(prev => [
+            `${attacker.name}'s Wildfire also hit ${secondTarget.name} for ${damage} damage!`,
+            ...prev
+          ]);
+          
+          // 25% chance to hit a 3rd target
+          if (Math.random() < 0.25 && possibleTargets.length > 2) {
+            const thirdTargetOptions = possibleTargets.filter(u => u.id !== target.id && u.id !== secondTarget.id);
+            if (thirdTargetOptions.length > 0) {
+              const thirdTarget = thirdTargetOptions[Math.floor(Math.random() * thirdTargetOptions.length)];
+              
+              // Apply damage to third target
+              setUnits(prevUnits => {
+                return prevUnits.map(u => {
+                  if (u.id === thirdTarget.id) {
+                    const newHp = Math.max(0, u.hp - damage);
+                    
+                    // Check if target is defeated
+                    if (newHp <= 0 && u.hp > 0) {
+                      setActionLog(prev => [`${thirdTarget.name} has been defeated!`, ...prev]);
+                    }
+                    
+                    return {
+                      ...u,
+                      hp: newHp,
+                      totalDamageReceived: u.totalDamageReceived + damage
+                    };
+                  }
+                  if (u.id === attacker.id) {
+                    return {
+                      ...u,
+                      totalDamageDealt: u.totalDamageDealt + damage
+                    };
+                  }
+                  return u;
+                });
+              });
+              
+              // Log the third hit
+              setActionLog(prev => [
+                `${attacker.name}'s Wildfire spread to ${thirdTarget.name} for ${damage} damage!`,
+                ...prev
+              ]);
+            }
+          }
+        }
+      }
+      
+      // Dust Spikes (attack 2 random targets)
+      if (skill.name === "Dust Spikes" && possibleTargets.length > 1) {
+        // Find a second random target different from the primary
+        const secondTargetOptions = possibleTargets.filter(u => u.id !== target.id);
+        if (secondTargetOptions.length > 0) {
+          const secondTarget = secondTargetOptions[Math.floor(Math.random() * secondTargetOptions.length)];
+          
+          // Apply damage to second target
+          setUnits(prevUnits => {
+            return prevUnits.map(u => {
+              if (u.id === secondTarget.id) {
+                const newHp = Math.max(0, u.hp - damage);
+                
+                // Check if target is defeated
+                if (newHp <= 0 && u.hp > 0) {
+                  setActionLog(prev => [`${secondTarget.name} has been defeated!`, ...prev]);
+                }
+                
+                return {
+                  ...u,
+                  hp: newHp,
+                  totalDamageReceived: u.totalDamageReceived + damage
+                };
+              }
+              if (u.id === attacker.id) {
+                return {
+                  ...u,
+                  totalDamageDealt: u.totalDamageDealt + damage
+                };
+              }
+              return u;
+            });
+          });
+          
+          // Log the second hit
+          setActionLog(prev => [
+            `${attacker.name}'s Dust Spikes also hit ${secondTarget.name} for ${damage} damage!`,
+            ...prev
+          ]);
+        }
+      }
+    };
+    
+    // Apply special skill behaviors
+    applySpecialSkillBehavior();
+    
     // Format the action message with more details
     let statusEffectText = "";
-    if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
+    
+    // Apply special status effects for specific skills
+    if (skill.name === "Gust" && Math.random() < 0.1) { // 10% chance for Minor Slow
+      // Apply Minor Slow (20% Speed reduction) for 1 turn
+      const effect: StatusEffect = {
+        name: "Minor Slow",
+        effect: "ReduceSpd",
+        value: 20,
+        duration: 1,
+        source: attacker.id
+      };
+      
+      // Apply the status effect to the target
+      if (!target.statusEffects) target.statusEffects = [];
+      target.statusEffects.push(effect);
+      
+      statusEffectText = " [Minor Slow applied]";
+    } 
+    else if (skill.name === "Breeze" && Math.random() < 0.1) { // 10% chance to reduce Turn Meter
+      // Apply Turn Meter reduction (10%)
+      setUnits(prevUnits => {
+        return prevUnits.map(u => {
+          if (u.id === target.id) {
+            return {
+              ...u,
+              attackMeter: Math.max(0, u.attackMeter - 10) // Reduce by 10%
+            };
+          }
+          return u;
+        });
+      });
+      
+      statusEffectText = " [Turn Meter reduced by 10%]";
+    }
+    else if (skill.name === "Stone Slam" && Math.random() < 0.2) { // 20% chance to apply Minor Weakness
+      // Apply Minor Weakness (10% Attack reduction) for 1 turn
+      const effect: StatusEffect = {
+        name: "Minor Weakness",
+        effect: "ReduceAtk",
+        value: 10,
+        duration: 1,
+        source: attacker.id
+      };
+      
+      // Apply the status effect to the target
+      if (!target.statusEffects) target.statusEffects = [];
+      target.statusEffects.push(effect);
+      
+      statusEffectText = " [Minor Weakness applied]";
+    }
+    
+    // Regular effect chances based on skill type
+    else if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
       // Determine the type of status effect based on skill name/type
       let effectType = "general";
       if (skill.name.toLowerCase().includes("burn") || skill.name.toLowerCase().includes("fire") || 
