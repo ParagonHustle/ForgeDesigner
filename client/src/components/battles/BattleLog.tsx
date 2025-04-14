@@ -126,13 +126,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               className={`text-xs px-1.5 py-0.5 rounded text-white ${statusColor} flex items-center cursor-help gap-0.5 leading-none`}
             >
               <span>{effect.name}</span>
-              <span className="opacity-80">({effect.duration})</span>
+              <span className="opacity-80 bg-black/20 rounded px-0.5 ml-0.5">({effect.duration})</span>
             </div>
           </TooltipTrigger>
           <TooltipContent
-            side="right"
+            side={isAlly ? "right" : "left"}
             align="center"
-            className="bg-gray-900/95 border-purple-900 text-white p-1.5 max-w-[180px] rounded-lg shadow-xl z-50"
+            className="bg-gray-900/95 border-purple-900 text-white p-1.5 max-w-[220px] rounded-lg shadow-xl z-50"
           >
             <div className="space-y-1">
               <div className="flex items-center gap-1">
@@ -140,6 +140,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 <h4 className="font-semibold text-yellow-400 text-xs">{title}</h4>
               </div>
               <p className="text-xs leading-tight">{description}</p>
+              <p className="text-xs leading-tight text-gray-400 italic mt-1">Duration decreases when unit takes an action</p>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -590,6 +591,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   // Function to apply damage from DoT status effects
   // This should run every few ticks, but NOT decrease durations
   const processStatusEffectDamage = () => {
+    // Create a timestamp to ensure this only processes once per cycle
+    const processingTime = Date.now();
+    
+    // Track which units have had DoT effects applied this cycle 
+    // to prevent double-processing
+    const processedUnits = new Set<string>();
+    
     setUnits(prevUnits => {
       const updatedUnits = [...prevUnits];
       
@@ -603,6 +611,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         // Skip units with no status effects
         if (!unit.statusEffects || unit.statusEffects.length === 0) continue;
         
+        // Skip if this unit was already processed in this cycle
+        if (processedUnits.has(unit.id)) {
+          console.log(`Skipping duplicate DoT processing for ${unit.name}`);
+          continue;
+        }
+        
+        // Mark this unit as processed
+        processedUnits.add(unit.id);
+        
         let totalDoTDamage = 0;
         
         // Process each status effect for damage only
@@ -610,11 +627,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           // Calculate damage based on effect type
           if (effect.effect === "Burn") {
             totalDoTDamage += effect.value;
+            console.log(`Applying Burn damage to ${unit.name}: ${effect.value} damage, ${effect.duration} turns remaining`);
           }
           
           // Add any other DoT effect processing here
           if (effect.effect === "Poison") {
             totalDoTDamage += effect.value;
+            console.log(`Applying Poison damage to ${unit.name}: ${effect.value} damage, ${effect.duration} turns remaining`);
           }
         });
         
@@ -631,7 +650,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           setActionLog(prev => [`${unit.name} takes ${totalDoTDamage} damage from ${statusEffectNames}!`, ...prev]);
           
           // Add debug log to track damage-over-time effects
-          console.log(`DoT damage to ${unit.name}: ${totalDoTDamage} damage from status effects. Current HP: ${unit.hp} -> ${newHp}`);
+          console.log(`DoT damage to ${unit.name}: ${totalDoTDamage} damage from status effects at ${processingTime}. Current HP: ${unit.hp} -> ${newHp}`);
           
           // Check if unit died from DoT
           if (newHp <= 0 && unit.hp > 0) {
@@ -660,10 +679,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Increment status effect counter
     statusEffectTickRef.current += 1;
     
-    // Process DOT damage every 4 ticks
-    if (statusEffectTickRef.current >= 4) {
+    // Process DOT damage every 8 ticks (reduced frequency to make it less frequent)
+    if (statusEffectTickRef.current >= 8) {
       processStatusEffectDamage();
       statusEffectTickRef.current = 0;
+      console.log("Processing DoT damage at tick cycle " + turnCountRef.current);
     }
     
     // Update all units
