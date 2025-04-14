@@ -347,7 +347,7 @@ const CharacterCard = ({
     <>
       {/* Equip Aura Dialog */}
       <Dialog open={equipAuraDialogOpen} onOpenChange={setEquipAuraDialogOpen}>
-        <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB]">
+        <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[#FF9D00] font-cinzel">
               Equip Aura to {character.name}
@@ -363,21 +363,72 @@ const CharacterCard = ({
                 No available auras to equip. Craft new auras in the Forge.
               </div>
             ) : (
-              <Select onValueChange={(value) => setSelectedAuraId(Number(value))}>
-                <SelectTrigger className="w-full bg-[#1A1A2E] border-[#432874]">
-                  <SelectValue placeholder="Select an aura to equip" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1A1A2E] border-[#432874]">
-                  {unequippedAuras.map((aura) => (
-                    <SelectItem key={aura.id} value={aura.id.toString()}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {unequippedAuras.map((aura) => (
+                  <div
+                    key={aura.id}
+                    className={`p-4 rounded-lg border transition-all cursor-pointer ${
+                      selectedAuraId === aura.id
+                        ? "border-[#FF9D00] bg-[#432874]/40"
+                        : "border-[#432874]/40 bg-[#1A1A2E] hover:bg-[#432874]/20"
+                    }`}
+                    onClick={() => setSelectedAuraId(aura.id)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center">
                         {getElementIcon(aura.element)} 
-                        <span className="ml-2">{aura.name} (Lv.{aura.level})</span>
+                        <span className="ml-2 font-semibold text-[#FF9D00]">{aura.name}</span>
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                      <span className="text-xs px-2 py-0.5 bg-[#432874]/60 rounded-full">Level {aura.level}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-xs mt-3">
+                      {aura.attack !== 0 && (
+                        <div className="flex items-center">
+                          <Swords className="h-3 w-3 mr-1 text-red-400" />
+                          <span>ATK: {aura.attack > 0 ? '+' : ''}{aura.attack}%</span>
+                        </div>
+                      )}
+                      {aura.vitality !== 0 && (
+                        <div className="flex items-center">
+                          <Heart className="h-3 w-3 mr-1 text-red-400" />
+                          <span>VIT: {aura.vitality > 0 ? '+' : ''}{aura.vitality}%</span>
+                        </div>
+                      )}
+                      {aura.speed !== 0 && (
+                        <div className="flex items-center">
+                          <Zap className="h-3 w-3 mr-1 text-yellow-400" />
+                          <span>SPD: {aura.speed > 0 ? '+' : ''}{aura.speed}%</span>
+                        </div>
+                      )}
+                      {aura.accuracy !== 0 && (
+                        <div className="flex items-center">
+                          <Target className="h-3 w-3 mr-1 text-blue-400" />
+                          <span>ACC: {aura.accuracy > 0 ? '+' : ''}{aura.accuracy}%</span>
+                        </div>
+                      )}
+                      {aura.defense !== 0 && (
+                        <div className="flex items-center">
+                          <Shield className="h-3 w-3 mr-1 text-green-400" />
+                          <span>DEF: {aura.defense > 0 ? '+' : ''}{aura.defense}%</span>
+                        </div>
+                      )}
+                      {aura.focus !== 0 && (
+                        <div className="flex items-center">
+                          <Eye className="h-3 w-3 mr-1 text-indigo-400" />
+                          <span>FOC: {aura.focus > 0 ? '+' : ''}{aura.focus}%</span>
+                        </div>
+                      )}
+                      {aura.resilience !== 0 && (
+                        <div className="flex items-center">
+                          <Anchor className="h-3 w-3 mr-1 text-purple-400" />
+                          <span>RES: {aura.resilience > 0 ? '+' : ''}{aura.resilience}%</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
 
             {selectedAuraId && (

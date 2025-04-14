@@ -83,6 +83,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [detailedActionLog, setDetailedActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [battleRound, setBattleRound] = useState(1);
+  
+  // Reset to 1 when a new battle starts
+  useEffect(() => {
+    if (battleLog && battleLog.length > 0) {
+      setBattleRound(1);
+    }
+  }, [battleLog]);
 
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
@@ -913,38 +920,66 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     let statusEffectText = "";
 
     // Apply special status effects for specific skills
-    if (skill.name === "Gust" && Math.random() < 0.1) { // 10% chance for Minor Slow
-      // Update status effect statistics
+    // For Gust skill, do a single roll when the skill is used to determine if effect is applied
+    if (skill.name === "Gust") {
+      // Always update attempts counter
       setUnits(prevUnits => {
         return prevUnits.map(u => {
           if (u.id === attacker.id) {
             return {
               ...u,
-              slowAttempts: (u.slowAttempts || 0) + 1,
-              slowSuccess: (u.slowSuccess || 0) + 1
+              slowAttempts: (u.slowAttempts || 0) + 1
             };
           }
           return u;
         });
       });
       
-      // Add to detailed action log
-      setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
+      // Add to detailed action log about attempt
+      setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted SLOW on ${target.name}`, ...prev]);
+
+      // Roll once for effect application - 10% chance
+      const effectRoll = Math.random();
+      const effectSuccess = effectRoll < 0.1;
       
-      // Apply Minor Slow (20% Speed reduction) for 1 turn
-      const effect: StatusEffect = {
-        name: "Minor Slow",
-        effect: "ReduceSpd",
-        value: 20,
-        duration: 1,
-        source: attacker.id
-      };
+      // Add detailed log about the roll
+      setDetailedActionLog(prev => [
+        `Turn ${battleRound}: EFFECT ROLL - Value: ${(effectRoll * 100).toFixed(2)}%, Threshold: 10%, Success: ${effectSuccess ? "YES" : "NO"}`,
+        ...prev
+      ]);
+      
+      if (effectSuccess) { // 10% chance for Minor Slow
+        // Update success counter only if effect lands
+        setUnits(prevUnits => {
+          return prevUnits.map(u => {
+            if (u.id === attacker.id) {
+              return {
+                ...u,
+                slowSuccess: (u.slowSuccess || 0) + 1
+              };
+            }
+            return u;
+          });
+        });
+        
+        // Add to detailed action log
+        setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
+        
+        // Apply Minor Slow (20% Speed reduction) for 1 turn
+        const effect: StatusEffect = {
+          name: "Minor Slow",
+          effect: "ReduceSpd",
+          value: 20,
+          duration: 1,
+          source: attacker.id
+        };
 
-      // Apply the status effect to the target
-      if (!target.statusEffects) target.statusEffects = [];
-      target.statusEffects.push(effect);
+        // Apply the status effect to the target
+        if (!target.statusEffects) target.statusEffects = [];
+        target.statusEffects.push(effect);
 
-      statusEffectText = " [Minor Slow applied]";
+        statusEffectText = " [Minor Slow applied]";
+      }
     } 
     else if (skill.name === "Breeze" && Math.random() < 0.1) { // 10% chance to reduce Turn Meter
       // Apply Turn Meter reduction (10%)
@@ -961,52 +996,79 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       });
 
       statusEffectText = " [Turn Meter reduced by 10%]";
-    } else if ((skill.name === "Stone Slam" || skill.name === "Boss Strike") && Math.random() < 0.2) { // 20% chance to apply Weakness
-      // Update status effect statistics
+    } else if (skill.name === "Stone Slam" || skill.name === "Boss Strike") { // 20% chance to apply Weakness
+      // Always update attempts counter
       setUnits(prevUnits => {
         return prevUnits.map(u => {
           if (u.id === attacker.id) {
             return {
               ...u,
-              weakenAttempts: (u.weakenAttempts || 0) + 1,
-              weakenSuccess: (u.weakenSuccess || 0) + 1
+              weakenAttempts: (u.weakenAttempts || 0) + 1
             };
           }
           return u;
         });
       });
       
-      // Add to detailed action log
-      setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied WEAKEN to ${target.name}`, ...prev]);
+      // Add to detailed action log about attempt
+      setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted WEAKEN on ${target.name}`, ...prev]);
+
+      // Roll once for effect application - 20% chance
+      const effectRoll = Math.random();
+      const effectSuccess = effectRoll < 0.2;
       
-      // Apply Weakness (10% Attack reduction) for 2 turns
-      const effect: StatusEffect = {
-        name: "Weakened",
-        effect: "ReduceAtk",
-        value: 10,
-        duration: 2,
-        source: attacker.id
-      };
+      // Add detailed log about the roll
+      setDetailedActionLog(prev => [
+        `Turn ${battleRound}: EFFECT ROLL - Value: ${(effectRoll * 100).toFixed(2)}%, Threshold: 20%, Success: ${effectSuccess ? "YES" : "NO"}`,
+        ...prev
+      ]);
+      
+      if (effectSuccess) { // 20% chance to apply Weakness
+        // Update success counter only if effect lands
+        setUnits(prevUnits => {
+          return prevUnits.map(u => {
+            if (u.id === attacker.id) {
+              return {
+                ...u,
+                weakenSuccess: (u.weakenSuccess || 0) + 1
+              };
+            }
+            return u;
+          });
+        });
+        
+        // Add to detailed action log
+        setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied WEAKEN to ${target.name}`, ...prev]);
+        
+        // Apply Weakness (10% Attack reduction) for 2 turns
+        const effect: StatusEffect = {
+          name: "Weakened",
+          effect: "ReduceAtk",
+          value: 10,
+          duration: 2,
+          source: attacker.id
+        };
 
-      // Apply the status effect to the target
-      if (!target.statusEffects) target.statusEffects = [];
+        // Apply the status effect to the target
+        if (!target.statusEffects) target.statusEffects = [];
 
-      // Check if target already has this effect, if so, extend duration rather than adding new
-      const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
-      if (existingEffectIndex >= 0) {
-        // Extend existing effect duration
-        target.statusEffects[existingEffectIndex].duration = Math.max(
-          target.statusEffects[existingEffectIndex].duration,
-          effect.duration
-        );
-        console.log(`Extended ${effect.name} duration to ${target.statusEffects[existingEffectIndex].duration} turns`);
-      } else {
-        // Add new effect
-        target.statusEffects.push(effect);
-        console.log(`Added new effect ${effect.name} with ${effect.duration} turns duration`);
+        // Check if target already has this effect, if so, extend duration rather than adding new
+        const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
+        if (existingEffectIndex >= 0) {
+          // Extend existing effect duration
+          target.statusEffects[existingEffectIndex].duration = Math.max(
+            target.statusEffects[existingEffectIndex].duration,
+            effect.duration
+          );
+          console.log(`Extended ${effect.name} duration to ${target.statusEffects[existingEffectIndex].duration} turns`);
+        } else {
+          // Add new effect
+          target.statusEffects.push(effect);
+          console.log(`Added new effect ${effect.name} with ${effect.duration} turns duration`);
+        }
+
+        statusEffectText = " [Weakened applied]";
       }
-
-      statusEffectText = " [Weakened applied]";
     }
 
     // Regular effect chances based on skill type
@@ -1894,37 +1956,45 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           <TabsContent value="debug-logs">
             <div className="h-[400px] overflow-y-auto space-y-1 text-xs font-mono">
               {actionLog.map((log, index) => {
-                // Enhanced logging for admin view
+                // Enhanced logging for admin view with correct turn numbers
+                // Extract turn number from log if it exists
+                const turnMatch = log.match(/Turn (\d+):/);
+                const turnNumber = turnMatch ? turnMatch[1] : "?";
+                
                 const timestamp = new Date().toLocaleTimeString();
-                let adminLog = `[${timestamp}] ${log}`;
+                let adminLog = `[Turn ${turnNumber}] [${timestamp}] ${log}`;
 
                 // Add detailed status effect and combat information
                 if (log.includes("used")) {
-                  const roll = Math.random() * 100;
+                  // Don't generate random rolls here anymore - use stored detailed action log instead
                   const attackMatch = log.match(/(\w+) used (\w+( \w+)*) on (\w+( \w+)*) for (\d+) damage/);
                   
                   if (attackMatch) {
                     const [_, attacker, skill, __, target, ___, damage] = attackMatch;
-                    adminLog = `[${timestamp}] COMBAT: ${attacker} -> ${target}\n`;
+                    adminLog = `[Turn ${turnNumber}] COMBAT: ${attacker} -> ${target}\n`;
                     adminLog += `  Skill: ${skill}\n`;
                     adminLog += `  Base Damage: ${damage}\n`;
                     
-                    // Add effect chance information based on skill
-                    if (skill === "Ember") {
-                      adminLog += `  Effect Roll: ${roll.toFixed(2)} | Burn (10% chance, needs 90+)\n`;
-                      adminLog += `  Result: ${roll >= 90 ? "BURN APPLIED" : "No Effect"}\n`;
+                    // Instead of random rolls, get this information from latest status effect logs
+                    // which should already be stored in detailedActionLog
+                    const relevantLogs = detailedActionLog.filter(dl => 
+                      dl.includes(`Turn ${turnNumber}:`) && 
+                      dl.includes(attacker) && 
+                      dl.includes(target)
+                    );
+                    
+                    // Include any status effect roll information
+                    const effectRollLog = relevantLogs.find(l => l.includes('EFFECT ROLL'));
+                    if (effectRollLog) {
+                      adminLog += `  ${effectRollLog.replace(`Turn ${turnNumber}: `, '')}\n`;
                     }
-                    else if (skill === "Gust") {
-                      adminLog += `  Effect Roll: ${roll.toFixed(2)} | Minor Slow (10% chance, needs 90+)\n`;
-                      adminLog += `  Result: ${roll >= 90 ? "SLOW APPLIED" : "No Effect"}\n`;
-                    }
-                    else if (skill === "Boss Strike") {
-                      adminLog += `  Effect Roll: ${roll.toFixed(2)} | Weaken (20% chance, needs 80+)\n`;
-                      adminLog += `  Result: ${roll >= 80 ? "WEAKEN APPLIED" : "No Effect"}\n`;
-                    }
-                    else if (skill.includes("Ultimate") || skill === "Stone Slam" || skill === "Flame Whip") {
-                      adminLog += `  Effect Roll: ${roll.toFixed(2)} | Status Effect (30% chance, needs 70+)\n`;
-                      adminLog += `  Result: ${roll >= 70 ? "EFFECT APPLIED" : "No Effect"}\n`;
+                    
+                    // Include success/failure information
+                    const statusLog = relevantLogs.find(l => l.includes('STATUS -'));
+                    if (statusLog) {
+                      adminLog += `  Result: EFFECT APPLIED\n`;
+                    } else if (effectRollLog) {
+                      adminLog += `  Result: No Effect\n`;
                     }
                   }
                 }
