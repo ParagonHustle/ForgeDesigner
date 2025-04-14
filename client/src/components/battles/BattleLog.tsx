@@ -914,6 +914,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
     // Apply special status effects for specific skills
     if (skill.name === "Gust" && Math.random() < 0.1) { // 10% chance for Minor Slow
+      // Update status effect statistics
+      setUnits(prevUnits => {
+        return prevUnits.map(u => {
+          if (u.id === attacker.id) {
+            return {
+              ...u,
+              slowAttempts: (u.slowAttempts || 0) + 1,
+              slowSuccess: (u.slowSuccess || 0) + 1
+            };
+          }
+          return u;
+        });
+      });
+      
+      // Add to detailed action log
+      setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
+      
       // Apply Minor Slow (20% Speed reduction) for 1 turn
       const effect: StatusEffect = {
         name: "Minor Slow",
@@ -945,6 +962,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
       statusEffectText = " [Turn Meter reduced by 10%]";
     } else if ((skill.name === "Stone Slam" || skill.name === "Boss Strike") && Math.random() < 0.2) { // 20% chance to apply Weakness
+      // Update status effect statistics
+      setUnits(prevUnits => {
+        return prevUnits.map(u => {
+          if (u.id === attacker.id) {
+            return {
+              ...u,
+              weakenAttempts: (u.weakenAttempts || 0) + 1,
+              weakenSuccess: (u.weakenSuccess || 0) + 1
+            };
+          }
+          return u;
+        });
+      });
+      
+      // Add to detailed action log
+      setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied WEAKEN to ${target.name}`, ...prev]);
+      
       // Apply Weakness (10% Attack reduction) for 2 turns
       const effect: StatusEffect = {
         name: "Weakened",
@@ -1343,24 +1377,42 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const damagePercent = Math.round(damage * 100);
     let description = '';
 
-    // Special skill descriptions
+    // Special skill descriptions with complete logic for all skills
     if (skillName === "Soothing Current") {
       description = `Deals ${damagePercent}% of ATK damage and heals the ally with lowest HP for 5% of caster's max HP.`;
       if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
     } else if (skillName === "Ember") {
-      description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Burning for 1 turn.`;
+      description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Burning (DoT) for 1 turn.`;
       if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
     } else if (skillName === "Flame Whip") {
-      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 2 turns.`;
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning (DoT) for 2 turns.`;
       if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
     } else if (skillName === "Inferno") {
-      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 3 turns.`;
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning (DoT) for 3 turns.`;
       if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
     } else if (skillName === "Venom Strike") {
-      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Poison for 3 turns.`;
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Poison (DoT) for 3 turns.`;
       if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
     } else if (skillName === "Boss Strike") {
       description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Weakened (-10% ATK) for 2 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Cleansing Tide") {
+      description = `Deals ${damagePercent}% of ATK damage with 10% chance to remove a random debuff from a random ally.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Gust") {
+      description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Minor Slow (-20% SPD) for 1 turn.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Breeze") {
+      description = `Deals ${damagePercent}% of ATK damage with 10% chance to reduce target's Attack Meter by 10%.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Stone Slam") {
+      description = `Deals ${damagePercent}% of ATK damage with 20% chance to apply Weakened (-10% ATK) for 2 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Wildfire") {
+      description = `Deals ${damagePercent}% of ATK damage to 2 targets, with 25% chance to hit a 3rd target.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Dust Spikes") {
+      description = `Deals ${damagePercent}% of ATK damage to 2 random targets.`;
       if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
     } else {
       // Default description for other skills
@@ -1469,6 +1521,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="log">Action Log</TabsTrigger>
             <TabsTrigger value="admin">Admin Log</TabsTrigger>
+            <TabsTrigger value="debug-logs">Debug Logs</TabsTrigger>
           </TabsList>
 
           <TabsContent value="live" className="space-y-4">
@@ -1773,6 +1826,72 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           </TabsContent>
 
           <TabsContent value="admin">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-green-400">Damage Calculations</h3>
+                <div className="bg-[#432874]/20 p-3 rounded text-sm space-y-2 max-h-[400px] overflow-y-auto">
+                  <p>- ATK * Skill Damage% = Base Damage</p>
+                  <p>- Status effects like Weaken reduce ATK by %</p>
+                  <p>- Critical hits deal 50% more damage</p>
+                  <p>- Element advantages add 20% damage</p>
+                  <div className="border-t border-[#432874] my-2 pt-2">
+                    <p className="font-semibold text-green-300">Example:</p>
+                    <p>100 ATK * 0.8 (80% skill) = 80 damage</p>
+                    <p>With -10% Weaken: 90 ATK * 0.8 = 72 damage</p>
+                    <p>With crit: 80 * 1.5 = 120 damage</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h3 className="font-semibold text-blue-400">Detailed System Log</h3>
+                <div className="bg-[#432874]/20 p-3 rounded text-sm max-h-[400px] overflow-y-auto font-mono">
+                  <div className="text-gray-400">// Real-time battle information</div>
+                  {detailedActionLog.map((log, index) => (
+                    <div 
+                      key={index}
+                      className={`mt-1 ${
+                        log.includes('ATTACK ROLL') ? 'text-green-400' :
+                        log.includes('DAMAGE CALC') ? 'text-yellow-300' :
+                        log.includes('STATUS') ? 'text-red-400' :
+                        log.includes('SPEED') ? 'text-blue-400' :
+                        'text-white'
+                      }`}
+                    >
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h3 className="font-semibold text-purple-400">Status Effect Analysis</h3>
+                <div className="bg-[#432874]/20 p-3 rounded text-sm max-h-[400px] overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                    <div className="col-span-2 font-semibold text-purple-300">Chance to Apply:</div>
+                    <div>Burning: 10-30%</div>
+                    <div>Poison: 30%</div>
+                    <div>Weakened: 20-30%</div>
+                    <div>Slowed: 10-20%</div>
+                    
+                    <div className="col-span-2 font-semibold text-purple-300 mt-2">Effect Duration:</div>
+                    <div>Burning: 1-3 turns</div>
+                    <div>Poison: 3 turns</div>
+                    <div>Weakened: 2 turns</div>
+                    <div>Slowed: 1-2 turns</div>
+                    
+                    <div className="col-span-2 font-semibold text-purple-300 mt-2">Effect Power:</div>
+                    <div>Burning: 5% max HP damage/turn</div>
+                    <div>Poison: 3% max HP damage/turn</div>
+                    <div>Weakened: -10% Attack</div>
+                    <div>Slowed: -20% Speed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="debug-logs">
             <div className="h-[400px] overflow-y-auto space-y-1 text-xs font-mono">
               {actionLog.map((log, index) => {
                 // Enhanced logging for admin view
