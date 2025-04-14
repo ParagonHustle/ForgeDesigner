@@ -2284,35 +2284,100 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   // Highlight different types of logs
                   const isEffectAttempt = log.includes('EFFECT ATTEMPT');
                   const isEffectRoll = log.includes('EFFECT ROLL');
-                  const isStatusApplied = log.includes('STATUS -') && log.includes('applied');
+                  const isStatusApplied = log.includes('STATUS -');
                   const isActionLog = log.includes('Action -');
+                  
+                  // Extract roll information for effect rolls
+                  let rollInfo = null;
+                  let successStatus = null;
+                  let rollValue = null;
+                  let thresholdValue = null;
+                  
+                  if (isEffectRoll) {
+                    // Try to parse roll details
+                    const rollMatch = log.match(/Rolled: ([\d.]+)% vs ([\d.]+)% threshold - (SUCCESS|FAILED)/);
+                    if (rollMatch) {
+                      rollValue = parseFloat(rollMatch[1]);
+                      thresholdValue = parseFloat(rollMatch[2]);
+                      successStatus = rollMatch[3];
+                    }
+                  }
                   
                   // Style based on log type
                   let logStyle = '';
                   let borderStyle = '';
+                  let icon = '';
+                  
                   if (isEffectAttempt) {
                     logStyle = 'bg-blue-900/20 text-blue-300';
                     borderStyle = 'border-l-4 border-l-blue-500';
+                    icon = '🎲';
                   } else if (isEffectRoll) {
-                    logStyle = 'bg-purple-900/20 text-purple-300';
-                    borderStyle = 'border-l-4 border-l-purple-500';
+                    if (successStatus === 'SUCCESS') {
+                      logStyle = 'bg-green-900/20 text-green-300';
+                      borderStyle = 'border-l-4 border-l-green-500';
+                      icon = '✓';
+                    } else {
+                      logStyle = 'bg-red-900/20 text-red-300';
+                      borderStyle = 'border-l-4 border-l-red-500';
+                      icon = '✗';
+                    }
                   } else if (isStatusApplied) {
                     logStyle = 'bg-green-900/20 text-green-300';
                     borderStyle = 'border-l-4 border-l-green-500';
+                    icon = '✨';
                   } else if (isActionLog) {
                     logStyle = 'bg-gray-900/20 text-gray-300';
+                    icon = '⚔️';
                   }
                   
                   // Format the log string for better readability
-                  const formattedLog = log.replace(`Turn ${turnNumber}: `, '');
+                  let formattedLog = log.replace(`Turn ${turnNumber}: `, '');
                   
+                  // If it's an effect roll, create a prettier formatted display
+                  if (isEffectRoll && rollValue !== null && thresholdValue !== null) {
+                    // Extract skill name if possible
+                    const skillMatch = formattedLog.match(/'s ([^-]+) -/);
+                    const skillName = skillMatch ? skillMatch[1] : '';
+                    
+                    // Extract effect type if possible
+                    const effectTypeMatch = formattedLog.match(/EFFECT ROLL - ([^']+)'s/);
+                    const effectType = effectTypeMatch ? effectTypeMatch[1] : '';
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`py-2 px-1 border-b border-[#432874]/20 font-mono ${logStyle} ${borderStyle}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{icon}</span>
+                          <span className="font-semibold">[Turn {turnNumber}]</span>
+                          <span>{effectType} roll {skillName ? `(${skillName})` : ''}:</span>
+                        </div>
+                        <div className="mt-1 pl-8 flex items-center gap-2">
+                          <div className="w-full bg-gray-800 h-4 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full ${successStatus === 'SUCCESS' ? 'bg-green-500' : 'bg-red-500'}`}
+                              style={{ width: `${Math.min(100, (rollValue / thresholdValue) * 100)}%` }}
+                            />
+                          </div>
+                          <span className={successStatus === 'SUCCESS' ? 'text-green-300' : 'text-red-300'}>
+                            {rollValue.toFixed(1)}% / {thresholdValue.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  // For non-roll logs
                   return (
                     <div 
                       key={index} 
                       className={`py-1 border-b border-[#432874]/20 font-mono ${logStyle} ${borderStyle}`}
                       style={{whiteSpace: 'pre-wrap'}}
                     >
-                      {`[Turn ${turnNumber}] ${formattedLog}`}
+                      <span className="inline-block mr-2">{icon}</span>
+                      <span className="font-semibold">[Turn {turnNumber}]</span> {formattedLog}
                     </div>
                   );
                 })
