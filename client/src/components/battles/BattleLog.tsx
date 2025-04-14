@@ -1103,11 +1103,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Add to detailed action log about attempt - add it to both arrays to ensure visibility
-      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted SLOW on ${target.name}`, ...prev]);
-      setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} attempted to SLOW ${target.name}!`, ...prev]);
-
-      // Roll once for effect application - 20% chance (improved)
+      // ALWAYS track status effect attempts in detailed logs
+      // This line needs to come before the conditional check to ensure it's always logged
+      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted to apply SLOW effect on ${target.name} with Gust`, ...prev]);
+      
+      // Also add to the main action log for visibility
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} attempted to SLOW ${target.name} with Gust!`, ...prev]);
+      
+      // Roll once for effect application - 20% chance
       const effectRoll = Math.random();
       const effectSuccess = effectRoll < 0.2; // 20% chance
       
@@ -1127,7 +1130,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // Add detailed log about the roll - include the exact percentage rolled
       setDetailedActionLog(prev => [
         `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Gust - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
-        `Turn ${turnCountRef.current}: EFFECT ROLL - Value: ${(effectRoll * 100).toFixed(2)}%, Threshold: 10%, Success: ${effectSuccess ? "YES" : "NO"}`,
         ...prev
       ]);
       
@@ -1149,6 +1151,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         
         // Add to detailed action log and actionLog (main log)
         setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
+        setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} successfully applied SLOW to ${target.name}!`, ...prev]);
         
         // Apply Minor Slow (20% Speed reduction) for 1 turn
         const effect: StatusEffect = {
