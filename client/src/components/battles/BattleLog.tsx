@@ -1140,6 +1140,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     let statusEffectText = "";
 
     // Direct Gust skill handling - force Minor Slow application
+    console.log("Skill name received:", skill.name)
     if (skill.name === "Gust") {
         console.log(`💨 Applying Minor Slow from Gust: ${attacker.name} -> ${target.name}`);
         
