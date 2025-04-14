@@ -1005,7 +1005,7 @@ const CharacterCard = ({
                           <div className="flex flex-wrap gap-1">
                             {character.passiveSkills?.map((skill, i) => (
                               <Badge key={i} variant="outline" className="bg-[#432874]/20 text-[#C8B8DB]">
-                                {skill}
+                                {typeof skill === 'string' ? skill : 'Passive Skill'}
                               </Badge>
                             ))}
                           </div>
@@ -1023,7 +1023,7 @@ const CharacterCard = ({
                             // Temporary implementation
                             toast({
                               title: "Character Converted",
-                              description: `Gained +${20 + (character.level * 5)} Soul Shards from conversion.`,
+                              description: `Gained +${20 + ((character.level || 1) * 5)} Soul Shards from conversion.`,
                               variant: "default",
                             });
                           }}
