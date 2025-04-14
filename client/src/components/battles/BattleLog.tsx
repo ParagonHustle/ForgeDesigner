@@ -1100,18 +1100,32 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     
     // Apply special status effects for specific skills
     // Debug to check if the skill name is recognized correctly
-    console.log(`SKILL DEBUG: Checking skill: "${skill.name}" against "Gust" - Match: ${skill.name === "Gust"}`);
-    console.log(`SKILL DEBUG: Case insensitive match: ${skill.name.toLowerCase() === "gust".toLowerCase()}`);
-    console.log(`SKILL DEBUG: Includes match: ${skill.name.toLowerCase().includes("gust")}`);
-    console.log(`SKILL DEBUG: Skill type: ${skillType}, Attacker: ${attacker.name}`);
-    console.log(`SKILL DEBUG: Attacker ID: ${attacker.id}, Basic Skill: ${attacker.skills.basic.name}`);
+    console.log(`SKILL DEBUG !!!: Checking skill: "${skill.name}" against "Gust" - Match: ${skill.name === "Gust"}`);
     
-    // Log G-Wolf's skills specifically if it's the one attacking
+    // Add explicit log entry visible in the battle log
+    setActionLog(prev => [`DEBUG - Skill Name: "${skill.name}" - Is Exact Gust Match: ${skill.name === "Gust"}`, ...prev]);
+    setDetailedActionLog(prev => [`DEBUG - Skill "${skill.name}" used by ${attacker.name}`, ...prev]);
+    
+    // Add a log entry specifically for ALL G-Wolf skill uses
     if (attacker.name === "G-Wolf") {
-      console.log("G-WOLF SKILL DEBUG:");
-      console.log("Basic skill:", attacker.skills.basic);
-      console.log("Advanced skill:", attacker.skills.advanced);
-      console.log("Ultimate skill:", attacker.skills.ultimate);
+      setActionLog(prev => [`G-WOLF USING SKILL: "${skill.name}" - Skill Type: ${skillType}`, ...prev]);
+      console.log("!!! G-WOLF SKILL !!!");
+      console.log("Skill being used:", skill);
+      
+      if (skill.name.toLowerCase().includes("gust")) {
+        setActionLog(prev => [`DETECTED GUST: G-Wolf is using a gust-like skill!`, ...prev]);
+      }
+    }
+    
+    // Same for Albus
+    if (attacker.name === "Albus Dumbleboom") {
+      setActionLog(prev => [`ALBUS USING SKILL: "${skill.name}" - Skill Type: ${skillType}`, ...prev]);
+      console.log("!!! ALBUS SKILL !!!");
+      console.log("Skill being used:", skill);
+      
+      if (skill.name.toLowerCase().includes("gust")) {
+        setActionLog(prev => [`DETECTED GUST: Albus is using a gust-like skill!`, ...prev]);
+      }
     }
     
     // For Gust skill, do a single roll when the skill is used to determine if effect is applied
