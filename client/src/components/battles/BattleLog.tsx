@@ -80,6 +80,53 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     setPlaybackSpeed(newSpeed);
   };
   
+  // Helper function to get detailed skill descriptions with mechanics
+  const getSkillDescription = (skillName: string, damagePercent: number = 100, cooldown?: number): string => {
+    let description = '';
+    
+    if (skillName === "Gust") {
+      description = `Deals ${damagePercent}% of ATK damage with a 10% chance to apply Minor Slow (-20% SPD) for 1 turn.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Breeze") {
+      description = `Deals ${damagePercent}% of ATK damage with a 15% chance to reduce target's Attack Meter by 10%.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Stone Slam") {
+      description = `Deals ${damagePercent}% of ATK damage with a 15% chance to apply Minor Weakness (-10% ATK) for 2 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Wildfire") {
+      description = `Deals ${damagePercent}% of ATK damage to 2 random enemies, with a 20% chance to hit an additional target.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Dust Spikes") {
+      description = `Deals ${damagePercent}% of ATK damage to 2 random targets.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Cleansing Tide") {
+      description = `Removes all debuffs from a random ally with status effects.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Ember") {
+      description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Burning for 1 turn.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Flame Whip") {
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 2 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Inferno") {
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 3 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Venom Strike") {
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Poison for 3 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Boss Strike") {
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Weakened (-10% ATK) for 2 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else {
+      // Default description for other skills
+      description = cooldown 
+        ? `Deals ${damagePercent}% of ATK damage. Cooldown: ${cooldown} turns.`
+        : `Deals ${damagePercent}% of ATK damage.`;
+    }
+    
+    return description;
+  };
+
   // Helper function to render status effects with tooltips
   const renderStatusEffect = (effect: StatusEffect, index: number, isAlly: boolean) => {
     let statusColor = "bg-gray-600";
