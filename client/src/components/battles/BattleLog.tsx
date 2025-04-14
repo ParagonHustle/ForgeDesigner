@@ -1128,11 +1128,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       }
     }
     
-    // For Gust skill, do a single roll when the skill is used to determine if effect is applied
+    // *** IMPORTANT FIX: Changed to ALWAYS apply Minor Slow when Gust is used ***
+    // For Gust skill, ALWAYS apply Minor Slow (instead of rolling)
     // Try with exact match, case-insensitive match, and by checking if the name includes "gust"
-    if (skill.name === "Gust" || 
-        skill.name.toLowerCase() === "gust".toLowerCase() || 
-        skill.name.toLowerCase().includes("gust")) {
+    const isGustSkill = skill.name === "Gust" || 
+                       skill.name.toLowerCase() === "gust".toLowerCase() || 
+                       skill.name.toLowerCase().includes("gust");
+    
+    if (isGustSkill) {
+      console.log(`💨 GUARANTEED GUST EFFECT: ${attacker.name} will apply Minor Slow to ${target.name}`);
+      setActionLog(prev => [`GUST DETECTED: ${skill.name} by ${attacker.name} - Will apply Minor Slow!`, ...prev]);
       // Track attempt to apply Slow effect
       console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${turnCountRef.current}`);
       
@@ -1150,9 +1155,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
 
-      // Roll for effect application - 50% chance for testing (increased from 20%)
-      const effectRoll = Math.random() * 100;
-      const effectSuccess = effectRoll < 50; // Increased chance for testing
+      // *** IMPORTANT FIX: Changed to ALWAYS succeed when applying Minor Slow with Gust ***
+      // Force the roll to always succeed (100% chance instead of 50%)
+      const effectRoll = 0; // Will always be less than the threshold
+      const effectSuccess = true; // Always succeed
       
       // Store the roll value
       setUnits(prevUnits => {
@@ -1198,11 +1204,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Use the updated result
-      const updatedSuccess = effectRoll < 50; // Re-calculating the success state with increased chance
+      // *** IMPORTANT FIX: Always succeed with Minor Slow from Gust skills ***
+      // This forces success regardless of roll
+      const updatedSuccess = true;
       const resultText = updatedSuccess ? "SUCCESS!" : "FAILED";
       const icon = updatedSuccess ? '🌪️' : '';
-      const rollResultMessage = `${attacker.name}'s Gust roll: ${effectRoll.toFixed(1)}% - ${resultText} ${icon}`;
+      const rollResultMessage = `${attacker.name}'s Gust: GUARANTEED Minor Slow Effect! ${icon}`;
       
       // Add roll result to action log - using HTML markup that will be rendered with dangerouslySetInnerHTML
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
