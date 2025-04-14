@@ -1146,17 +1146,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     };
 
     // Apply special skill behaviors
+    console.log("💡 applySpecialSkillBehavior() called");
+
     applySpecialSkillBehavior();
 
     // Format the action message with more details
     let statusEffectText = "";
 
+    console.log("🔥 CHECK skill2:", skill2);
+
+    console.log("📛 SKILL PROCESS STARTED:", skill?.name, "attacker:", attacker.name, "target:", target.name);
+
     // Direct Gust skill handling - force Minor Slow application
+    
     console.log("Skill name received:", skill.name)
+    console.log("SKILL DEBUG:", skill);
+
     if (skill.name === "Gust") {
-        console.log(`💨 Applying Minor Slow from Gust: ${attacker.name} -> ${target.name}`);
-        
-        // Apply Minor Slow (20% Speed reduction) for 1 turn
         const effect: StatusEffect = {
             name: "Minor Slow",
             effect: "ReduceSpd",
@@ -1165,11 +1171,29 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             source: attacker.id
         };
 
-        // Initialize status effects array if needed
-        if (!target.statusEffects) target.statusEffects = [];
-        
-        // Add effect and update counters
+        // Ensure target has a statusEffects array
+        if (!target.statusEffects) {
+            target.statusEffects = [];
+        }
+
+        // Add the new status effect
         target.statusEffects.push(effect);
+
+        // Create a new target object to avoid mutation issues
+        const updatedTarget = {
+            ...target,
+            statusEffects: [...target.statusEffects]
+        };
+
+        // Replace the updated target in updatedUnits
+        const targetIndex = updatedUnits.findIndex(u => u.id === target.id);
+        if (targetIndex !== -1) {
+            updatedUnits[targetIndex] = updatedTarget;
+        }
+
+        console.log(`✅ Gust applied Minor Slow to ${updatedTarget.name}`);
+    }
+
         console.log(`✅ Added Minor Slow effect to ${target.name} with ${effect.duration} turn duration`);
         statusEffectText = " [Minor Slow applied]";
         
@@ -1976,6 +2000,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     return extractTurnNumber(b) - extractTurnNumber(a);
   });
 
+  // Main component return
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-[#1A1A2E] border-[#432874] text-[#C8B8DB] max-w-6xl max-h-[90vh] overflow-y-auto p-6">
