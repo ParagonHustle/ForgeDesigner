@@ -939,32 +939,99 @@ const CharacterCard = ({
                 <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
                   {/* This would be mapped from actual duplicates - using example for now */}
                   {Array.from({ length: duplicateCount }).map((_, index) => (
-                    <div key={index} className="flex items-center justify-between bg-[#432874]/10 p-3 rounded-lg border border-[#432874]/20">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={character.avatarUrl}
-                          alt={character.name}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-[#432874]"
-                        />
-                        <div>
-                          <div className="font-medium">{character.name}</div>
-                          <div className="flex items-center space-x-2 text-xs text-[#C8B8DB]/80">
-                            <Badge className={`font-normal ${getClassColor(character.class)}`}>
-                              {character.class}
-                            </Badge>
-                            <span>Level {character.level}</span>
+                    <div key={index} className="bg-[#432874]/10 p-3 rounded-lg border border-[#432874]/20">
+                      {/* Header with image and basic info */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={character.avatarUrl}
+                            alt={character.name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-[#432874]"
+                          />
+                          <div>
+                            <div className="font-medium">{character.name}</div>
+                            <div className="flex items-center space-x-2 text-xs text-[#C8B8DB]/80">
+                              <Badge className={`font-normal ${getClassColor(character.class)}`}>
+                                {character.class}
+                              </Badge>
+                              <span>Level {character.level}</span>
+                            </div>
                           </div>
+                        </div>
+                        
+                        {/* Set as primary button */}
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="bg-transparent border-[#FF9D00]/30 hover:bg-[#FF9D00]/20 text-[#FF9D00]"
+                          onClick={() => {
+                            // Logic to set this duplicate as primary character
+                            toast({
+                              title: "Primary Character Changed",
+                              description: `${character.name} has been set as your primary character.`,
+                              variant: "default",
+                            });
+                          }}
+                        >
+                          <Zap className="h-4 w-4 mr-1" />
+                          Set as Primary
+                        </Button>
+                      </div>
+                      
+                      {/* Character stats summary */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 my-2 text-sm text-[#C8B8DB]/90">
+                        <div className="flex justify-between">
+                          <span>Attack:</span> 
+                          <span className="text-[#FF9D00]">{character.attack || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Defense:</span> 
+                          <span className="text-[#00B9AE]">{character.defense || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Vitality:</span> 
+                          <span className="text-green-500">{character.vitality || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Accuracy:</span> 
+                          <span className="text-blue-400">{character.accuracy || 0}</span>
                         </div>
                       </div>
                       
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="bg-transparent border-purple-500/30 hover:bg-purple-900/20 text-purple-400"
-                      >
-                        <Sparkles className="h-4 w-4 mr-1" />
-                        Convert to Shards
-                      </Button>
+                      {/* Passive skills if available */}
+                      {character.passiveSkills && character.passiveSkills.length > 0 && (
+                        <div className="mb-2 text-sm">
+                          <div className="text-xs font-semibold text-[#C8B8DB]/90 mb-1">Passive Skills:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {character.passiveSkills?.map((skill, i) => (
+                              <Badge key={i} variant="outline" className="bg-[#432874]/20 text-[#C8B8DB]">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Convert button */}
+                      <div className="flex justify-end mt-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="bg-transparent border-purple-500/30 hover:bg-purple-900/20 text-purple-400"
+                          onClick={() => {
+                            // Logic to convert duplicate to soul shards
+                            // Temporary implementation
+                            toast({
+                              title: "Character Converted",
+                              description: `Gained +${20 + (character.level * 5)} Soul Shards from conversion.`,
+                              variant: "default",
+                            });
+                          }}
+                        >
+                          <Sparkles className="h-4 w-4 mr-1" />
+                          Convert to Shards
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1061,7 +1128,7 @@ const CharacterCard = ({
                     <Swords className="h-4 w-4 text-red-400" />
                     <span className="text-sm">Attack</span>
                   </div>
-                  <div className="text-sm text-green-400">+{Math.ceil(character.attack * 0.1)}</div>
+                  <div className="text-sm text-green-400">+{Math.ceil((character.attack || 0) * 0.1)}</div>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -1069,7 +1136,7 @@ const CharacterCard = ({
                     <Shield className="h-4 w-4 text-blue-400" />
                     <span className="text-sm">Defense</span>
                   </div>
-                  <div className="text-sm text-green-400">+{Math.ceil(character.defense * 0.1)}</div>
+                  <div className="text-sm text-green-400">+{Math.ceil((character.defense || 0) * 0.1)}</div>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -1077,7 +1144,7 @@ const CharacterCard = ({
                     <Heart className="h-4 w-4 text-red-500" />
                     <span className="text-sm">Vitality</span>
                   </div>
-                  <div className="text-sm text-green-400">+{Math.ceil(character.vitality * 0.1)}</div>
+                  <div className="text-sm text-green-400">+{Math.ceil((character.vitality || 0) * 0.1)}</div>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -1085,7 +1152,7 @@ const CharacterCard = ({
                     <Target className="h-4 w-4 text-yellow-400" />
                     <span className="text-sm">Accuracy</span>
                   </div>
-                  <div className="text-sm text-green-400">+{Math.ceil(character.accuracy * 0.1)}</div>
+                  <div className="text-sm text-green-400">+{Math.ceil((character.accuracy || 0) * 0.1)}</div>
                 </div>
               </div>
             </div>
