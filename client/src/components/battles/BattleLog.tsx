@@ -1084,7 +1084,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // For Gust skill, do a single roll when the skill is used to determine if effect is applied
     if (skill.name === "Gust") {
       // Log the effect attempt to debug console to make sure the game system recognizes the effect attempt
-      console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${battleRound}`);
+      console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${turnCountRef.current}`);
       
       // Always update attempts counter and add to summary stats
       setUnits(prevUnits => {
@@ -1102,8 +1102,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       });
       
       // Add to detailed action log about attempt - add it to both arrays to ensure visibility
-      setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted SLOW on ${target.name}`, ...prev]);
-      setActionLog(prev => [`Turn ${battleRound}: ${attacker.name} attempted to SLOW ${target.name}!`, ...prev]);
+      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted SLOW on ${target.name}`, ...prev]);
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} attempted to SLOW ${target.name}!`, ...prev]);
 
       // Roll once for effect application - 20% chance (improved)
       const effectRoll = Math.random();
@@ -1124,8 +1124,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       // Add detailed log about the roll - include the exact percentage rolled
       setDetailedActionLog(prev => [
-        `Turn ${battleRound}: EFFECT ROLL - ${attacker.name}'s Gust - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
-        `Turn ${battleRound}: EFFECT ROLL - Value: ${(effectRoll * 100).toFixed(2)}%, Threshold: 10%, Success: ${effectSuccess ? "YES" : "NO"}`,
+        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Gust - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        `Turn ${turnCountRef.current}: EFFECT ROLL - Value: ${(effectRoll * 100).toFixed(2)}%, Threshold: 10%, Success: ${effectSuccess ? "YES" : "NO"}`,
         ...prev
       ]);
       
@@ -1146,7 +1146,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
         
         // Add to detailed action log and actionLog (main log)
-        setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
+        setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
         
         // Apply Minor Slow (20% Speed reduction) for 1 turn
         const effect: StatusEffect = {
@@ -1395,11 +1395,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       healingEffectText = ` (includes healing for ${healAmount} HP)`;
     }
 
-    const actionMessage = `Turn ${battleRound}: ${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
+    const actionMessage = `Turn ${turnCountRef.current}: ${attacker.name} used ${skill.name} on ${target.name} for ${damage} damage!${statusEffectText}${healingEffectText}`;
 
     setActionLog(prev => [actionMessage, ...prev]);
     // Also add to detailed log for admin view
-    setDetailedActionLog(prev => [`Turn ${battleRound}: Action - ${attacker.name} used ${skill.name}`, ...prev]);
+    setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: Action - ${attacker.name} used ${skill.name}`, ...prev]);
 
     // First apply damage to the target
     setUnits(prevUnits => {
