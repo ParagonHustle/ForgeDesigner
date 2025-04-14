@@ -1214,8 +1214,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         // Add to detailed action log
         setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
         
-        // Format a colorful success message with an icon
-        const successMessage = `${attacker.name} successfully applied <span class="text-cyan-300 font-bold">Minor Slow</span> to ${target.name}! 🌪️`;
+        // Format a plain text success message with an icon
+        const successMessage = `${attacker.name} successfully applied Minor Slow to ${target.name}! 🌪️`;
         setActionLog(prev => [`Turn ${turnCountRef.current}: ${successMessage}`, ...prev]);
         
         // Apply Minor Slow (20% Speed reduction) for 1 turn
@@ -1231,7 +1231,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         if (!target.statusEffects) target.statusEffects = [];
         target.statusEffects.push(effect);
 
-        statusEffectText = " [<span class='text-cyan-300 font-semibold'>Minor Slow</span> applied]";
+        statusEffectText = " [Minor Slow applied]";
       }
     } 
     else if (skill.name === "Breeze") { // 10% chance to reduce Turn Meter
@@ -1660,7 +1660,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       description = `Deals ${damagePercent}% of ATK damage with 10% chance to remove a random debuff from a random ally.`;
       if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
     } else if (skillName === "Gust") {
-      description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Minor Slow (-20% SPD) for 1 turn.`;
+      description = `Deals ${damagePercent}% of ATK damage with 50% chance to apply Minor Slow (-20% SPD) for 1 turn.`;
       if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
     } else if (skillName === "Breeze") {
       description = `Deals ${damagePercent}% of ATK damage with 10% chance to reduce target's Attack Meter by 10%.`;
