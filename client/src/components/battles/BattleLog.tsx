@@ -1757,7 +1757,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <div className="text-[#C8B8DB]/70 text-xs">Total Turns</div>
-                    <div className="font-semibold text-xl">{turns}</div>
+                    <div className="font-semibold text-xl">{actionLog.length}</div>
                   </div>
                   <div>
                     <div className="text-[#C8B8DB]/70 text-xs">Total Damage</div>
@@ -1919,7 +1919,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               <h3 className="font-semibold text-[#FF9D00] mt-4">Unit Performance</h3>
               {units.map(unit => (
                 <div key={unit.id} className="bg-[#432874]/20 p-3 rounded">
-                  <h4 className={`font-medium mb-2 ${isAlly(unit.id) ? 'text-[#00B9AE]' : 'text-[#E83B69]'}`}>
+                  <h4 className={`font-medium mb-2 ${battleLog[0]?.allies?.some((a: any) => a.id === unit.id) ? 'text-[#00B9AE]' : 'text-[#E83B69]'}`}>
                     {unit.name}
                   </h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1934,25 +1934,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {(unit.burnAttempts || 0) > 0 && (
                         <div>
-                          <span className="text-red-400">Burn:</span> <span className="text-green-400">{unit.burnSuccess || 0}</span>/{unit.burnAttempts}
+                          <span className="text-red-400">Burn:</span> <span className="text-green-400">{unit.burnSuccess || 0}</span>/{unit.burnAttempts || 0}
                           <span className="text-[#C8B8DB]/60 ml-1">
-                            ({Math.round(((unit.burnSuccess || 0) / unit.burnAttempts) * 100)}%)
+                            ({Math.round(((unit.burnSuccess || 0) / (unit.burnAttempts || 1)) * 100)}%)
                           </span>
                         </div>
                       )}
                       {(unit.poisonAttempts || 0) > 0 && (
                         <div>
-                          <span className="text-green-400">Poison:</span> <span className="text-green-400">{unit.poisonSuccess || 0}</span>/{unit.poisonAttempts}
+                          <span className="text-green-400">Poison:</span> <span className="text-green-400">{unit.poisonSuccess || 0}</span>/{unit.poisonAttempts || 0}
                           <span className="text-[#C8B8DB]/60 ml-1">
-                            ({Math.round(((unit.poisonSuccess || 0) / unit.poisonAttempts) * 100)}%)
+                            ({Math.round(((unit.poisonSuccess || 0) / (unit.poisonAttempts || 1)) * 100)}%)
                           </span>
                         </div>
                       )}
                       {(unit.slowAttempts || 0) > 0 && (
                         <div>
-                          <span className="text-blue-400">Slow:</span> <span className="text-green-400">{unit.slowSuccess || 0}</span>/{unit.slowAttempts}
+                          <span className="text-blue-400">Slow:</span> <span className="text-green-400">{unit.slowSuccess || 0}</span>/{unit.slowAttempts || 0}
                           <span className="text-[#C8B8DB]/60 ml-1">
-                            ({Math.round(((unit.slowSuccess || 0) / unit.slowAttempts) * 100)}%)
+                            ({Math.round(((unit.slowSuccess || 0) / (unit.slowAttempts || 1)) * 100)}%)
                           </span>
                         </div>
                       )}
