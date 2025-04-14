@@ -124,10 +124,39 @@ const CharacterCard = ({
     return adjustedValue;
   };
 
+  // Calculate total stat bonus for an aura (sum of all stat percentages)
+  const calculateTotalStats = (aura: Aura): number => {
+    let total = 0;
+    total += aura.attack || 0;
+    total += aura.vitality || 0;
+    total += aura.speed || 0;
+    total += aura.defense || 0;
+    total += aura.accuracy || 0;
+    total += aura.focus || 0;
+    total += aura.resilience || 0;
+    return total;
+  };
+
+  // State for filtering auras by class
+  const [classFilter, setClassFilter] = useState<string>("all");
+  
+  // Get a list of all unique aura classes
+  const auraClasses = [...new Set(availableAuras.map(a => a.compatibleClass || "Any"))];
+  
+  // Filter and sort auras
   const unequippedAuras = availableAuras 
     ? availableAuras
         .filter(a => !a.equippedByCharacterId && !a.isFusing)
-        .sort((a, b) => (b.level || 0) - (a.level || 0))
+        .filter(a => classFilter === "all" || a.compatibleClass === classFilter || a.compatibleClass === "Any")
+        // First sort by total stats (descending), then by level (descending)
+        .sort((a, b) => {
+          const totalStatsA = calculateTotalStats(a);
+          const totalStatsB = calculateTotalStats(b);
+          if (totalStatsB !== totalStatsA) {
+            return totalStatsB - totalStatsA;
+          }
+          return (b.level || 0) - (a.level || 0);
+        })
     : [];
 
   // Function to equip an aura to the character
