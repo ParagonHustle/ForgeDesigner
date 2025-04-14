@@ -1733,37 +1733,51 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               {actionLog.map((log, index) => {
                 // Enhanced logging for admin view
                 const timestamp = new Date().toLocaleTimeString();
-                const chanceRolls = log.match(/\[.*applied.*\]/);
-                const damage = log.match(/for (\d+) damage/);
-                
                 let adminLog = `[${timestamp}] ${log}`;
-                // Add detailed roll information for status effects
-                if (log.includes("used") && (log.includes("[") || log.includes("chance"))) {
-                  const roll = Math.random();
-                  let rollDetails = "";
 
-                  // Basic skill status effects (like Ember's 10% burn)
-                  if (log.includes("Ember")) {
-                    rollDetails = ` (Burn chance roll: ${(roll * 100).toFixed(2)} - needs 90+ for 10% chance)`;
+                // Add detailed status effect and combat information
+                if (log.includes("used")) {
+                  const roll = Math.random() * 100;
+                  const attackMatch = log.match(/(\w+) used (\w+( \w+)*) on (\w+( \w+)*) for (\d+) damage/);
+                  
+                  if (attackMatch) {
+                    const [_, attacker, skill, __, target, ___, damage] = attackMatch;
+                    adminLog = `[${timestamp}] COMBAT: ${attacker} -> ${target}\n`;
+                    adminLog += `  Skill: ${skill}\n`;
+                    adminLog += `  Base Damage: ${damage}\n`;
+                    
+                    // Add effect chance information based on skill
+                    if (skill === "Ember") {
+                      adminLog += `  Effect Roll: ${roll.toFixed(2)} | Burn (10% chance, needs 90+)\n`;
+                      adminLog += `  Result: ${roll >= 90 ? "BURN APPLIED" : "No Effect"}\n`;
+                    }
+                    else if (skill === "Gust") {
+                      adminLog += `  Effect Roll: ${roll.toFixed(2)} | Minor Slow (10% chance, needs 90+)\n`;
+                      adminLog += `  Result: ${roll >= 90 ? "SLOW APPLIED" : "No Effect"}\n`;
+                    }
+                    else if (skill === "Boss Strike") {
+                      adminLog += `  Effect Roll: ${roll.toFixed(2)} | Weaken (20% chance, needs 80+)\n`;
+                      adminLog += `  Result: ${roll >= 80 ? "WEAKEN APPLIED" : "No Effect"}\n`;
+                    }
+                    else if (skill.includes("Ultimate") || skill === "Stone Slam" || skill === "Flame Whip") {
+                      adminLog += `  Effect Roll: ${roll.toFixed(2)} | Status Effect (30% chance, needs 70+)\n`;
+                      adminLog += `  Result: ${roll >= 70 ? "EFFECT APPLIED" : "No Effect"}\n`;
+                    }
                   }
-                  // Gust's slow effect
-                  else if (log.includes("Gust")) {
-                    rollDetails = ` (Minor Slow chance roll: ${(roll * 100).toFixed(2)} - needs 90+ for 10% chance)`;
-                  }
-                  // Boss Strike weakness effect
-                  else if (log.includes("Boss Strike")) {
-                    rollDetails = ` (Weakness chance roll: ${(roll * 100).toFixed(2)} - needs 80+ for 20% chance)`;
-                  }
-                  // Advanced/Ultimate skill effects (30% chance)
-                  else if (log.includes("Advanced") || log.includes("Ultimate")) {
-                    rollDetails = ` (Status effect chance roll: ${(roll * 100).toFixed(2)} - needs 70+ for 30% chance)`;
-                  }
-
-                  adminLog += rollDetails;
                 }
-                if (damage) {
-                  // Add damage calculation details
-                  adminLog += ` (Base damage: ${damage[1]})`;
+                // Status effect processing
+                else if (log.includes("status effects")) {
+                  const statusMatch = log.match(/Processing ([\w\s-]+)'s status effects/);
+                  if (statusMatch) {
+                    adminLog = `[${timestamp}] STATUS UPDATE: ${statusMatch[1]}\n`;
+                    // Add any status effect processing details from the log
+                    if (log.includes("duration")) {
+                      const durationMatch = log.match(/(\w+): (\d+) turns/);
+                      if (durationMatch) {
+                        adminLog += `  Effect: ${durationMatch[1]} | Turns remaining: ${durationMatch[2]}\n`;
+                      }
+                    }
+                  }
                 }
 
                 return (
