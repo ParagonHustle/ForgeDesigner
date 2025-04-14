@@ -66,8 +66,15 @@ const CharacterCard = ({
 }: CharacterCardProps) => {
   const [equipAuraDialogOpen, setEquipAuraDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [duplicatesDialogOpen, setDuplicatesDialogOpen] = useState(false);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [selectedAuraId, setSelectedAuraId] = useState<number | null>(null);
   const [isEquipping, setIsEquipping] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  
+  // Mock data for character duplicates and soul shards - will need to be updated with real data later
+  const [duplicateCount, setDuplicateCount] = useState(Math.floor(Math.random() * 5)); // Placeholder
+  const [soulShardCount, setSoulShardCount] = useState(Math.floor(Math.random() * 100)); // Placeholder
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

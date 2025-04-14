@@ -1021,6 +1021,98 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   };
 
+  // Helper function to render a skill with tooltip
+  const renderSkill = (skillName: string, damage: number, cooldown?: number) => {
+    // Determine skill color/style based on type
+    let skillStyle = "bg-blue-600/40";
+    let skillIcon = "⚔️";
+    
+    if (skillName.toLowerCase().includes("flame") || skillName.toLowerCase().includes("fire") || 
+        skillName.toLowerCase().includes("inferno") || skillName.toLowerCase().includes("ember")) {
+      skillStyle = "bg-red-600/40";
+      skillIcon = "🔥";
+    } else if (skillName.toLowerCase().includes("frost") || skillName.toLowerCase().includes("ice") || 
+              skillName.toLowerCase().includes("freeze")) {
+      skillStyle = "bg-blue-600/40";
+      skillIcon = "❄️";
+    } else if (skillName.toLowerCase().includes("shock") || skillName.toLowerCase().includes("lightning") || 
+              skillName.toLowerCase().includes("thunder")) {
+      skillStyle = "bg-yellow-600/40";
+      skillIcon = "⚡";
+    } else if (skillName.toLowerCase().includes("earth") || skillName.toLowerCase().includes("rock") || 
+              skillName.toLowerCase().includes("stone")) {
+      skillStyle = "bg-amber-800/40";
+      skillIcon = "🪨";
+    } else if (skillName.toLowerCase().includes("water") || skillName.toLowerCase().includes("wave") || 
+              skillName.toLowerCase().includes("current")) {
+      skillStyle = "bg-sky-600/40";
+      skillIcon = "💧";
+    } else if (skillName.toLowerCase().includes("wind") || skillName.toLowerCase().includes("gust") || 
+              skillName.toLowerCase().includes("storm")) {
+      skillStyle = "bg-teal-600/40";
+      skillIcon = "🌪️";
+    }
+    
+    // Format the tooltip details with special effects
+    const damagePercent = Math.round(damage * 100);
+    let description = '';
+    
+    // Special skill descriptions
+    if (skillName === "Soothing Current") {
+      description = `Deals ${damagePercent}% of ATK damage and heals the ally with lowest HP for 5% of caster's max HP.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Ember") {
+      description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Burning for 1 turn.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Flame Whip") {
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 2 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Inferno") {
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 3 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Venom Strike") {
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Poison for 3 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else if (skillName === "Boss Strike") {
+      description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Weakened (-10% ATK) for 2 turns.`;
+      if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
+    } else {
+      // Default description for other skills
+      description = cooldown 
+        ? `Deals ${damagePercent}% of ATK damage. Cooldown: ${cooldown} turns.`
+        : `Deals ${damagePercent}% of ATK damage.`;
+    }
+    
+    return (
+      <TooltipProvider>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <div 
+              className={`text-xs px-1.5 py-0.5 rounded text-white ${skillStyle} flex items-center cursor-help gap-0.5 leading-none`}
+            >
+              <span>{skillIcon}</span>
+              <span>{skillName}</span>
+              {cooldown && <span className="opacity-80 ml-1">({cooldown}t)</span>}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent
+            side="bottom"
+            align="center"
+            className="bg-gray-900/95 border-purple-900 text-white p-1.5 max-w-[180px] rounded-lg shadow-xl z-50"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-1">
+                <Info className="text-yellow-400 flex-shrink-0" size={14} />
+                <h4 className="font-semibold text-yellow-400 text-xs">{skillName}</h4>
+              </div>
+              <p className="text-xs leading-tight">{description}</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   const renderUnitStats = (unit: BattleUnit) => {
     // Check if unit has aura bonuses
     const hasAuraBonuses = unit.auraBonus && (
@@ -1034,102 +1126,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const vitalityBonus = unit.auraBonus?.vitality ?? 0;
     const speedBonus = unit.auraBonus?.speed ?? 0;
     
-    // Helper function to render a skill with tooltip
-    const renderSkill = (skillName: string, damage: number, cooldown?: number) => {
-      // Determine skill color/style based on type
-      let skillStyle = "bg-blue-600/40";
-      let skillIcon = "⚔️";
-      
-      if (skillName.toLowerCase().includes("flame") || skillName.toLowerCase().includes("fire") || 
-          skillName.toLowerCase().includes("inferno") || skillName.toLowerCase().includes("ember")) {
-        skillStyle = "bg-red-600/40";
-        skillIcon = "🔥";
-      } else if (skillName.toLowerCase().includes("frost") || skillName.toLowerCase().includes("ice") || 
-                skillName.toLowerCase().includes("freeze")) {
-        skillStyle = "bg-blue-600/40";
-        skillIcon = "❄️";
-      } else if (skillName.toLowerCase().includes("shock") || skillName.toLowerCase().includes("lightning") || 
-                skillName.toLowerCase().includes("thunder")) {
-        skillStyle = "bg-yellow-600/40";
-        skillIcon = "⚡";
-      } else if (skillName.toLowerCase().includes("earth") || skillName.toLowerCase().includes("rock") || 
-                skillName.toLowerCase().includes("stone")) {
-        skillStyle = "bg-amber-800/40";
-        skillIcon = "🪨";
-      } else if (skillName.toLowerCase().includes("water") || skillName.toLowerCase().includes("wave") || 
-                skillName.toLowerCase().includes("current")) {
-        skillStyle = "bg-sky-600/40";
-        skillIcon = "💧";
-      } else if (skillName.toLowerCase().includes("wind") || skillName.toLowerCase().includes("gust") || 
-                skillName.toLowerCase().includes("storm")) {
-        skillStyle = "bg-teal-600/40";
-        skillIcon = "🌪️";
-      }
-      
-      // Format the tooltip details with special effects
-      const damagePercent = Math.round(damage * 100);
-      let description = '';
-      
-      // Special skill descriptions
-      if (skillName === "Soothing Current") {
-        description = `Deals ${damagePercent}% of ATK damage and heals the ally with lowest HP for 5% of caster's max HP.`;
-        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-      } else if (skillName === "Ember") {
-        description = `Deals ${damagePercent}% of ATK damage with 10% chance to apply Burning for 1 turn.`;
-        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-      } else if (skillName === "Flame Whip") {
-        description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 2 turns.`;
-        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-      } else if (skillName === "Inferno") {
-        description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Burning for 3 turns.`;
-        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-      } else if (skillName === "Venom Strike") {
-        description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Poison for 3 turns.`;
-        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-      } else if (skillName === "Boss Strike") {
-        description = `Deals ${damagePercent}% of ATK damage with 30% chance to apply Weakened (-10% ATK) for 2 turns.`;
-        if (cooldown) description += ` Cooldown: ${cooldown} turns.`;
-      } else {
-        // Default description for other skills
-        description = cooldown 
-          ? `Deals ${damagePercent}% of ATK damage. Cooldown: ${cooldown} turns.`
-          : `Deals ${damagePercent}% of ATK damage.`;
-      }
-      
-      return (
-        <TooltipProvider>
-          <Tooltip delayDuration={300}>
-            <TooltipTrigger asChild>
-              <div 
-                className={`text-xs px-1.5 py-0.5 rounded text-white ${skillStyle} flex items-center cursor-help gap-0.5 leading-none`}
-              >
-                <span>{skillIcon}</span>
-                <span>{skillName}</span>
-                {cooldown && <span className="opacity-80 ml-1">({cooldown}t)</span>}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent
-              side="bottom"
-              align="center"
-              className="bg-gray-900/95 border-purple-900 text-white p-1.5 max-w-[180px] rounded-lg shadow-xl z-50"
-            >
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <Info className="text-yellow-400 flex-shrink-0" size={14} />
-                  <h4 className="font-semibold text-yellow-400 text-xs">{skillName}</h4>
-                </div>
-                <p className="text-xs leading-tight">{description}</p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
-    };
-    
     return (
       <div className="mt-2 text-xs">
         {/* Stats section */}
-        <div className="grid grid-cols-2 gap-2 mb-2">
+        <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center">
             <Swords className="h-3 w-3 mr-1 text-red-400" />
             <span>
@@ -1163,13 +1163,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               )}
             </span>
           </div>
-        </div>
-        
-        {/* Skills section */}
-        <div className="mt-1 flex flex-wrap gap-1">
-          {unit.skills.basic && renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
-          {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
-          {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
         </div>
       </div>
     );
@@ -1242,14 +1235,32 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     </div>
                     {renderUnitStats(unit)}
                     
-                    {/* Status effects display for allies */}
-                    {unit.statusEffects && unit.statusEffects.length > 0 && (
-                      <div className="mt-0.5 flex flex-wrap gap-0.5 max-w-[200px]">
-                        {unit.statusEffects.map((effect, index) => 
-                          renderStatusEffect(effect, index, true)
+                    <div className="mt-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-xs font-semibold text-[#FF9D00]">Skills</div>
+                        {unit.statusEffects && unit.statusEffects.length > 0 && (
+                          <div className="text-xs font-semibold text-yellow-300">Status Effects</div>
                         )}
                       </div>
-                    )}
+                      
+                      <div className="flex justify-between">
+                        {/* Skills section - moved to its own distinct area */}
+                        <div className="flex flex-wrap gap-1 max-w-[60%]">
+                          {unit.skills.basic && renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
+                          {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
+                          {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
+                        </div>
+                        
+                        {/* Status effects display for allies */}
+                        {unit.statusEffects && unit.statusEffects.length > 0 && (
+                          <div className="flex flex-wrap gap-0.5 justify-end max-w-[40%]">
+                            {unit.statusEffects.map((effect, index) => 
+                              renderStatusEffect(effect, index, true)
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1284,14 +1295,32 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     </div>
                     {renderUnitStats(unit)}
                     
-                    {/* Status effects display for enemies */}
-                    {unit.statusEffects && unit.statusEffects.length > 0 && (
-                      <div className="mt-0.5 flex flex-wrap gap-0.5 max-w-[200px]">
-                        {unit.statusEffects.map((effect, index) => 
-                          renderStatusEffect(effect, index, false)
+                    <div className="mt-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="text-xs font-semibold text-[#FF9D00]">Skills</div>
+                        {unit.statusEffects && unit.statusEffects.length > 0 && (
+                          <div className="text-xs font-semibold text-yellow-300">Status Effects</div>
                         )}
                       </div>
-                    )}
+                      
+                      <div className="flex justify-between">
+                        {/* Skills section - moved to its own distinct area */}
+                        <div className="flex flex-wrap gap-1 max-w-[60%]">
+                          {unit.skills.basic && renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
+                          {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
+                          {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
+                        </div>
+                        
+                        {/* Status effects display for enemies */}
+                        {unit.statusEffects && unit.statusEffects.length > 0 && (
+                          <div className="flex flex-wrap gap-0.5 justify-end max-w-[40%]">
+                            {unit.statusEffects.map((effect, index) => 
+                              renderStatusEffect(effect, index, false)
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
