@@ -336,7 +336,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // Initialize detailed logs with skill descriptions if they're empty
       if (detailedActionLog.length === 0) {
         const skillDescriptions = [
-          "Turn 0: SKILL INFO - Gust has 20% chance to apply Minor Slow (20% Speed reduction)",
+          "Turn 0: SKILL INFO - Gust has 50% chance to apply Minor Slow (20% Speed reduction)",
           "Turn 0: SKILL INFO - Stone Slam has 20% chance to apply Minor Weakness (10% Attack reduction)",
           "Turn 0: SKILL INFO - Wildfire has chance to apply Burn damage over time"
         ];
@@ -2475,7 +2475,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   const turnNumber = turnMatch ? turnMatch[1] : "?";
                   
                   // Highlight different types of logs
-                  const isEffectAttempt = log.includes('EFFECT ATTEMPT') || log.includes('used Gust - 20% chance');
+                  const isEffectAttempt = log.includes('EFFECT ATTEMPT') || log.includes('used Gust - 50% chance');
                   const isEffectRoll = log.includes('EFFECT ROLL') || log.includes('roll:');
                   const isStatusApplied = log.includes('STATUS -') || log.includes('successfully applied');
                   const isActionLog = log.includes('Action -');
@@ -2499,7 +2499,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                       successStatus = rollMatch[3];
                     } else if (gustRollMatch) {
                       rollValue = parseFloat(gustRollMatch[1]);
-                      thresholdValue = 20.0; // Gust has 20% chance
+                      thresholdValue = 50.0; // Gust has 50% chance for testing
                       successStatus = gustRollMatch[2].includes('SUCCESS') ? 'SUCCESS' : 'FAILED';
                     }
                   }
@@ -2605,7 +2605,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   <div className="bg-[#432874]/20 p-3 rounded-md">
                     <h4 className="text-[#00B9AE] text-sm font-medium mb-1">Skills with Status Effects:</h4>
                     <ul className="list-disc list-inside space-y-1 text-[#C8B8DB]/90">
-                      <li>Gust - Has chance to apply "Minor Slow" (20% Speed reduction)</li>
+                      <li>Gust - Has chance to apply "Minor Slow" (20% Speed reduction, increased to 50% for testing)</li>
                       <li>Stone Slam - Has chance to apply "Minor Weakness" (10% Attack reduction)</li>
                       <li>Wildfire - Has chance for burn damage over time</li>
                     </ul>
