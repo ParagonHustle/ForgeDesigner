@@ -1958,9 +1958,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                       )}
                       {(unit.weakenAttempts || 0) > 0 && (
                         <div>
-                          <span className="text-purple-400">Weaken:</span> <span className="text-green-400">{unit.weakenSuccess || 0}</span>/{unit.weakenAttempts}
+                          <span className="text-purple-400">Weaken:</span> <span className="text-green-400">{unit.weakenSuccess || 0}</span>/{unit.weakenAttempts || 0}
                           <span className="text-[#C8B8DB]/60 ml-1">
-                            ({Math.round(((unit.weakenSuccess || 0) / unit.weakenAttempts) * 100)}%)
+                            ({Math.round(((unit.weakenSuccess || 0) / (unit.weakenAttempts || 1)) * 100)}%)
                           </span>
                         </div>
                       )}
