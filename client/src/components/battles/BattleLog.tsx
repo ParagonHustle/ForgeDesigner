@@ -74,6 +74,65 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const handleSpeedChange = (newSpeed: number) => {
     setPlaybackSpeed(newSpeed);
   };
+  
+  // Helper function to render status effects with tooltips
+  const renderStatusEffect = (effect: StatusEffect, index: number, isAlly: boolean) => {
+    let statusColor = "bg-gray-600";
+    if (effect.effect === "Burn") statusColor = "bg-red-600";
+    if (effect.effect === "Poison") statusColor = "bg-green-600";
+    if (effect.effect === "ReduceAtk") statusColor = "bg-orange-600";
+    if (effect.effect === "ReduceSpd") statusColor = "bg-blue-600";
+    
+    // Create tooltip title and description based on effect type
+    let title = '';
+    let description = '';
+    
+    if (effect.effect === "Burn") {
+      title = "Burning Status";
+      description = `Deals ${effect.value} fire damage at the start of each turn. Lasts for ${effect.duration} more turns.`;
+    } else if (effect.effect === "Poison") {
+      title = "Poisoned Status";
+      description = `Deals ${effect.value} poison damage at the start of each turn. Lasts for ${effect.duration} more turns.`;
+    } else if (effect.effect === "ReduceAtk") {
+      title = "Attack Reduced";
+      description = `Decreases Attack stat by ${effect.value}%. Lasts for ${effect.duration} more turns.`;
+    } else if (effect.effect === "ReduceSpd") {
+      title = "Speed Reduced";
+      description = `Decreases Speed stat by ${effect.value}%, making turns come less frequently. Lasts for ${effect.duration} more turns.`;
+    } else if (effect.effect === "Stun") {
+      title = "Stunned";
+      description = `Cannot take actions for ${effect.duration} more turns.`;
+    } else {
+      title = effect.name;
+      description = `${effect.effect === "Burn" || effect.effect === "Poison" ? 
+        `${effect.value} damage per turn` : 
+        `${effect.value}% reduction`} (${effect.duration} turns remaining)`;
+    }
+    
+    // Create a synthetic tooltip ID
+    const tooltipId = `status-effect-${effect.effect.toLowerCase()}`;
+    
+    // Create a tooltip for this effect
+    gameMechanicsTooltips.push({
+      id: tooltipId,
+      title: title,
+      description: description,
+      category: 'combat'
+    });
+    
+    return (
+      <TooltipWrapper 
+        key={index}
+        id={tooltipId}
+      >
+        <div 
+          className={`text-xs px-1 rounded text-white ${statusColor} flex items-center cursor-help`}
+        >
+          {effect.name} ({effect.duration})
+        </div>
+      </TooltipWrapper>
+    );
+  };
 
   // Initialize battle units
   useEffect(() => {
@@ -1069,25 +1128,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     {/* Status effects display for allies */}
                     {unit.statusEffects && unit.statusEffects.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
-                        {unit.statusEffects.map((effect, index) => {
-                          let statusColor = "bg-gray-600";
-                          if (effect.effect === "Burn") statusColor = "bg-red-600";
-                          if (effect.effect === "Poison") statusColor = "bg-green-600";
-                          if (effect.effect === "ReduceAtk") statusColor = "bg-orange-600";
-                          if (effect.effect === "ReduceSpd") statusColor = "bg-blue-600";
-                          
-                          return (
-                            <div 
-                              key={index}
-                              className={`text-xs px-1 rounded text-white ${statusColor} flex items-center`}
-                              title={`${effect.name}: ${effect.effect === "Burn" || effect.effect === "Poison" ? 
-                                `${effect.value} damage per turn` : 
-                                `${effect.value}% reduction`} (${effect.duration} turns remaining)`}
-                            >
-                              {effect.name} ({effect.duration})
-                            </div>
-                          );
-                        })}
+                        {unit.statusEffects.map((effect, index) => 
+                          renderStatusEffect(effect, index, true)
+                        )}
                       </div>
                     )}
                   </div>
@@ -1119,25 +1162,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     {/* Status effects display for enemies */}
                     {unit.statusEffects && unit.statusEffects.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
-                        {unit.statusEffects.map((effect, index) => {
-                          let statusColor = "bg-gray-600";
-                          if (effect.effect === "Burn") statusColor = "bg-red-600";
-                          if (effect.effect === "Poison") statusColor = "bg-green-600";
-                          if (effect.effect === "ReduceAtk") statusColor = "bg-orange-600";
-                          if (effect.effect === "ReduceSpd") statusColor = "bg-blue-600";
-                          
-                          return (
-                            <div 
-                              key={index}
-                              className={`text-xs px-1 rounded text-white ${statusColor} flex items-center`}
-                              title={`${effect.name}: ${effect.effect === "Burn" || effect.effect === "Poison" ? 
-                                `${effect.value} damage per turn` : 
-                                `${effect.value}% reduction`} (${effect.duration} turns remaining)`}
-                            >
-                              {effect.name} ({effect.duration})
-                            </div>
-                          );
-                        })}
+                        {unit.statusEffects.map((effect, index) => 
+                          renderStatusEffect(effect, index, false)
+                        )}
                       </div>
                     )}
                   </div>
