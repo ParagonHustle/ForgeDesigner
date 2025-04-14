@@ -1306,6 +1306,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         console.log("Adding success message to action log:", successMessage);
         setActionLog(prev => [`Turn ${turnCountRef.current}: ${successMessage}`, ...prev]);
         
+        // Debug log for Gust effect
+        console.log("💨 Applying Minor Slow from Gust:", attacker.name, "->", target.name);
+        
         // Apply Minor Slow (20% Speed reduction) for 1 turn
         const effect: StatusEffect = {
           name: "Minor Slow",
