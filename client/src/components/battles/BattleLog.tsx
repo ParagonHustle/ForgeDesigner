@@ -1153,9 +1153,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       console.log("Adding Gust attempt to detailed log");
       setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${rollAttemptMessage}`, ...prev]);
       
-      // Roll once for effect application - using existing effectRoll value
-      // TEMPORARY: Increase success chance to 50% for testing
-      const effectSuccess = effectRoll < 50; // Increased from 20% to 50% for testing
+      // TEMPORARY: Update success chance to 50% for testing
+      effectSuccess = effectRoll < 50; // Increased from 20% to 50% for testing
       
       // Store the last roll value on the attacker for reporting
       setUnits(prevUnits => {
