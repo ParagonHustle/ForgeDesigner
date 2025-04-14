@@ -137,17 +137,20 @@ const CharacterCard = ({
     return total;
   };
 
-  // State for filtering auras by class
-  const [classFilter, setClassFilter] = useState<string>("all");
+  // State for filtering auras by element
+  const [elementFilter, setElementFilter] = useState<string>("all");
   
-  // Get a list of all unique aura classes
-  const auraClasses = [...new Set(availableAuras.map(a => a.compatibleClass || "Any"))];
+  // Get a list of all unique aura elements
+  const uniqueElements = Array.from(new Set(availableAuras
+    .map(a => a.element)
+    .filter(element => element !== undefined && element !== null)
+  )) as string[];
   
   // Filter and sort auras
   const unequippedAuras = availableAuras 
     ? availableAuras
         .filter(a => !a.equippedByCharacterId && !a.isFusing)
-        .filter(a => classFilter === "all" || a.compatibleClass === classFilter || a.compatibleClass === "Any")
+        .filter(a => elementFilter === "all" || a.element === elementFilter)
         // First sort by total stats (descending), then by level (descending)
         .sort((a, b) => {
           const totalStatsA = calculateTotalStats(a);
@@ -390,6 +393,26 @@ const CharacterCard = ({
           </DialogHeader>
 
           <div className="my-4">
+            {/* Element filter dropdown */}
+            <div className="mb-4 flex items-center">
+              <div className="mr-2 text-sm font-medium">Filter by element:</div>
+              <select 
+                className="bg-[#1A1A2E] border border-[#432874] rounded px-2 py-1 text-sm text-[#C8B8DB]"
+                value={elementFilter}
+                onChange={(e) => setElementFilter(e.target.value)}
+              >
+                <option value="all">All Elements</option>
+                {uniqueElements.map(element => (
+                  <option key={element} value={element}>{element}</option>
+                ))}
+              </select>
+              
+              {/* Total stats indicator */}
+              <div className="ml-auto text-xs text-[#C8B8DB]/70">
+                Sorted by total stat bonuses
+              </div>
+            </div>
+            
             {unequippedAuras.length === 0 ? (
               <div className="py-8 text-center text-[#C8B8DB]/60">
                 No available auras to equip. Craft new auras in the Forge.
@@ -531,8 +554,10 @@ const CharacterCard = ({
                             {skills.map((skill: any, index: number) => (
                               <div key={index} className="border-b last:border-b-0 border-[#432874]/30 pb-2 last:pb-0">
                                 <div className="font-medium text-xs text-[#00B9AE]">{skill.name}</div>
-                                {skill.description && (
+                                {skill.description ? (
                                   <div className="text-xs text-[#C8B8DB]/80 mt-0.5">{skill.description}</div>
+                                ) : (
+                                  <div className="text-xs text-[#C8B8DB]/80 mt-0.5">{generateSkillLogic(skill)}</div>
                                 )}
                               </div>
                             ))}
