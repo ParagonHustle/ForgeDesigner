@@ -330,9 +330,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setBattleRound(1);
       turnCountRef.current = 1;
       
-      // Clear existing logs - this ensures we don't have logs from previous battles
+      // Clear existing basic logs but preserve detailed logs for status effects
       setActionLog([]);
-      setDetailedActionLog([]);
+      
+      // Initialize detailed logs with skill descriptions if they're empty
+      if (detailedActionLog.length === 0) {
+        const skillDescriptions = [
+          "Turn 0: SKILL INFO - Gust has 20% chance to apply Minor Slow (20% Speed reduction)",
+          "Turn 0: SKILL INFO - Stone Slam has 20% chance to apply Minor Weakness (10% Attack reduction)",
+          "Turn 0: SKILL INFO - Wildfire has chance to apply Burn damage over time"
+        ];
+        setDetailedActionLog(skillDescriptions);
+      }
       
       console.log("Battle log and action log reset. Starting from Turn 1");
     }
