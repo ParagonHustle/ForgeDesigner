@@ -26,6 +26,14 @@ interface BattleUnit {
   maxHp: number;
   speed: number;
   attackMeter: number;
+  burnAttempts?: number;
+  burnSuccess?: number;
+  poisonAttempts?: number;
+  poisonSuccess?: number;
+  slowAttempts?: number;
+  slowSuccess?: number;
+  weakenAttempts?: number;
+  weakenSuccess?: number;
   stats: {
     attack: number;
     vitality: number;
@@ -1635,6 +1643,28 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     <div>Healing Done: {unit.totalHealingDone}</div>
                     <div>Healing Received: {unit.totalHealingReceived}</div>
                   </div>
+                  
+                  <div className="mt-3 border-t border-[#432874]/40 pt-2">
+                    <h5 className="text-sm font-medium text-yellow-400 mb-1">Status Effect Statistics</h5>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-purple-300">Burn Attempts:</span> {unit.burnAttempts || 0}
+                        <span className="text-green-400 ml-1">({unit.burnSuccess || 0} successful)</span>
+                      </div>
+                      <div>
+                        <span className="text-purple-300">Poison Attempts:</span> {unit.poisonAttempts || 0}
+                        <span className="text-green-400 ml-1">({unit.poisonSuccess || 0} successful)</span>
+                      </div>
+                      <div>
+                        <span className="text-purple-300">Slow Attempts:</span> {unit.slowAttempts || 0}
+                        <span className="text-green-400 ml-1">({unit.slowSuccess || 0} successful)</span>
+                      </div>
+                      <div>
+                        <span className="text-purple-300">Weaken Attempts:</span> {unit.weakenAttempts || 0}
+                        <span className="text-green-400 ml-1">({unit.weakenSuccess || 0} successful)</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1780,10 +1810,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   }
                 }
 
+                // Highlight successful status effect applications
+                const isSuccessfulEffect = adminLog.includes("EFFECT APPLIED") || 
+                                        adminLog.includes("BURN APPLIED") ||
+                                        adminLog.includes("SLOW APPLIED") ||
+                                        adminLog.includes("WEAKEN APPLIED");
+
                 return (
                   <div 
                     key={index} 
-                    className="py-1 border-b border-[#432874]/20 font-mono"
+                    className={`py-1 border-b border-[#432874]/20 font-mono ${
+                      isSuccessfulEffect ? 'bg-green-900/20 border-l-4 border-l-green-500' : ''
+                    }`}
                     style={{whiteSpace: 'pre-wrap'}}
                   >
                     {adminLog}
