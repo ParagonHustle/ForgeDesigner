@@ -26,7 +26,10 @@ import {
   ChevronRight,
   Sparkles,
   Loader2,
-  CircleOff
+  CircleOff,
+  Eye,
+  Anchor,
+  Droplets
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -383,46 +386,46 @@ const CharacterCard = ({
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 text-xs mt-3">
-                      {aura.attack !== 0 && (
+                      {aura.attack !== null && aura.attack !== 0 && (
                         <div className="flex items-center">
                           <Swords className="h-3 w-3 mr-1 text-red-400" />
-                          <span>ATK: {aura.attack > 0 ? '+' : ''}{aura.attack}%</span>
+                          <span>ATK: {aura.attack && aura.attack > 0 ? '+' : ''}{aura.attack}%</span>
                         </div>
                       )}
-                      {aura.vitality !== 0 && (
+                      {aura.vitality !== null && aura.vitality !== 0 && (
                         <div className="flex items-center">
                           <Heart className="h-3 w-3 mr-1 text-red-400" />
-                          <span>VIT: {aura.vitality > 0 ? '+' : ''}{aura.vitality}%</span>
+                          <span>VIT: {aura.vitality && aura.vitality > 0 ? '+' : ''}{aura.vitality}%</span>
                         </div>
                       )}
-                      {aura.speed !== 0 && (
+                      {aura.speed !== null && aura.speed !== 0 && (
                         <div className="flex items-center">
                           <Zap className="h-3 w-3 mr-1 text-yellow-400" />
-                          <span>SPD: {aura.speed > 0 ? '+' : ''}{aura.speed}%</span>
+                          <span>SPD: {aura.speed && aura.speed > 0 ? '+' : ''}{aura.speed}%</span>
                         </div>
                       )}
-                      {aura.accuracy !== 0 && (
+                      {aura.accuracy !== null && aura.accuracy !== 0 && (
                         <div className="flex items-center">
                           <Target className="h-3 w-3 mr-1 text-blue-400" />
-                          <span>ACC: {aura.accuracy > 0 ? '+' : ''}{aura.accuracy}%</span>
+                          <span>ACC: {aura.accuracy && aura.accuracy > 0 ? '+' : ''}{aura.accuracy}%</span>
                         </div>
                       )}
-                      {aura.defense !== 0 && (
+                      {aura.defense !== null && aura.defense !== 0 && (
                         <div className="flex items-center">
                           <Shield className="h-3 w-3 mr-1 text-green-400" />
-                          <span>DEF: {aura.defense > 0 ? '+' : ''}{aura.defense}%</span>
+                          <span>DEF: {aura.defense && aura.defense > 0 ? '+' : ''}{aura.defense}%</span>
                         </div>
                       )}
-                      {aura.focus !== 0 && (
+                      {aura.focus !== null && aura.focus !== 0 && (
                         <div className="flex items-center">
                           <Eye className="h-3 w-3 mr-1 text-indigo-400" />
-                          <span>FOC: {aura.focus > 0 ? '+' : ''}{aura.focus}%</span>
+                          <span>FOC: {aura.focus && aura.focus > 0 ? '+' : ''}{aura.focus}%</span>
                         </div>
                       )}
-                      {aura.resilience !== 0 && (
+                      {aura.resilience !== null && aura.resilience !== 0 && (
                         <div className="flex items-center">
                           <Anchor className="h-3 w-3 mr-1 text-purple-400" />
-                          <span>RES: {aura.resilience > 0 ? '+' : ''}{aura.resilience}%</span>
+                          <span>RES: {aura.resilience && aura.resilience > 0 ? '+' : ''}{aura.resilience}%</span>
                         </div>
                       )}
                     </div>

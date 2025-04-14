@@ -1751,15 +1751,182 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
 
           <TabsContent value="summary">
             <div className="space-y-4">
-              <h3 className="font-semibold">Battle Statistics</h3>
+              {/* Battle Overview Section */}
+              <div className="bg-[#432874]/20 p-4 rounded-lg">
+                <h3 className="font-semibold text-[#FF9D00] mb-3">Battle Overview</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <div className="text-[#C8B8DB]/70 text-xs">Total Turns</div>
+                    <div className="font-semibold text-xl">{turns}</div>
+                  </div>
+                  <div>
+                    <div className="text-[#C8B8DB]/70 text-xs">Total Damage</div>
+                    <div className="font-semibold text-xl">
+                      {units.reduce((sum, unit) => sum + unit.totalDamageDealt, 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[#C8B8DB]/70 text-xs">Total Healing</div>
+                    <div className="font-semibold text-xl">
+                      {units.reduce((sum, unit) => sum + unit.totalHealingDone, 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[#C8B8DB]/70 text-xs">Status Effects</div>
+                    <div className="font-semibold text-xl">
+                      {units.reduce((sum, unit) => sum + (
+                        (unit.burnSuccess || 0) + 
+                        (unit.poisonSuccess || 0) + 
+                        (unit.slowSuccess || 0) + 
+                        (unit.weakenSuccess || 0)
+                      ), 0)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Status Effect Statistics */}
+              <div className="bg-[#432874]/20 p-4 rounded-lg">
+                <h3 className="font-semibold text-[#FF9D00] mb-3">Status Effect Statistics</h3>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="font-semibold text-center text-xs md:text-sm">Effect</div>
+                    <div className="font-semibold text-center text-xs md:text-sm">Success Rate</div>
+                    <div className="font-semibold text-center text-xs md:text-sm">Applied</div>
+                    <div className="font-semibold text-center text-xs md:text-sm">Attempts</div>
+                  </div>
+                  
+                  {/* Burn */}
+                  <div className="grid grid-cols-4 gap-2 items-center py-1 border-b border-[#432874]/30">
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 rounded-full bg-red-500 mr-2"></div>
+                      <span>Burn</span>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <div className="w-full bg-[#432874]/30 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full" 
+                          style={{ 
+                            width: `${Math.min(100, Math.round(units.reduce((sum, unit) => sum + (unit.burnSuccess || 0), 0) / 
+                            Math.max(units.reduce((sum, unit) => sum + (unit.burnAttempts || 0), 0), 1) * 100))}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <span className="ml-2 text-xs">
+                        {Math.round(units.reduce((sum, unit) => sum + (unit.burnSuccess || 0), 0) / 
+                        Math.max(units.reduce((sum, unit) => sum + (unit.burnAttempts || 0), 0), 1) * 100)}%
+                      </span>
+                    </div>
+                    <div className="text-center text-green-400 font-medium">
+                      {units.reduce((sum, unit) => sum + (unit.burnSuccess || 0), 0)}
+                    </div>
+                    <div className="text-center text-[#C8B8DB]/70">
+                      {units.reduce((sum, unit) => sum + (unit.burnAttempts || 0), 0)}
+                    </div>
+                  </div>
+                  
+                  {/* Poison */}
+                  <div className="grid grid-cols-4 gap-2 items-center py-1 border-b border-[#432874]/30">
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
+                      <span>Poison</span>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <div className="w-full bg-[#432874]/30 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-green-500 to-emerald-700 h-2 rounded-full" 
+                          style={{ 
+                            width: `${Math.min(100, Math.round(units.reduce((sum, unit) => sum + (unit.poisonSuccess || 0), 0) / 
+                            Math.max(units.reduce((sum, unit) => sum + (unit.poisonAttempts || 0), 0), 1) * 100))}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <span className="ml-2 text-xs">
+                        {Math.round(units.reduce((sum, unit) => sum + (unit.poisonSuccess || 0), 0) / 
+                        Math.max(units.reduce((sum, unit) => sum + (unit.poisonAttempts || 0), 0), 1) * 100)}%
+                      </span>
+                    </div>
+                    <div className="text-center text-green-400 font-medium">
+                      {units.reduce((sum, unit) => sum + (unit.poisonSuccess || 0), 0)}
+                    </div>
+                    <div className="text-center text-[#C8B8DB]/70">
+                      {units.reduce((sum, unit) => sum + (unit.poisonAttempts || 0), 0)}
+                    </div>
+                  </div>
+                  
+                  {/* Slow */}
+                  <div className="grid grid-cols-4 gap-2 items-center py-1 border-b border-[#432874]/30">
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 rounded-full bg-blue-500 mr-2"></div>
+                      <span>Slow</span>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <div className="w-full bg-[#432874]/30 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-400 to-indigo-600 h-2 rounded-full" 
+                          style={{ 
+                            width: `${Math.min(100, Math.round(units.reduce((sum, unit) => sum + (unit.slowSuccess || 0), 0) / 
+                            Math.max(units.reduce((sum, unit) => sum + (unit.slowAttempts || 0), 0), 1) * 100))}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <span className="ml-2 text-xs">
+                        {Math.round(units.reduce((sum, unit) => sum + (unit.slowSuccess || 0), 0) / 
+                        Math.max(units.reduce((sum, unit) => sum + (unit.slowAttempts || 0), 0), 1) * 100)}%
+                      </span>
+                    </div>
+                    <div className="text-center text-green-400 font-medium">
+                      {units.reduce((sum, unit) => sum + (unit.slowSuccess || 0), 0)}
+                    </div>
+                    <div className="text-center text-[#C8B8DB]/70">
+                      {units.reduce((sum, unit) => sum + (unit.slowAttempts || 0), 0)}
+                    </div>
+                  </div>
+                  
+                  {/* Weaken */}
+                  <div className="grid grid-cols-4 gap-2 items-center py-1">
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 rounded-full bg-purple-500 mr-2"></div>
+                      <span>Weaken</span>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <div className="w-full bg-[#432874]/30 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-purple-400 to-purple-700 h-2 rounded-full" 
+                          style={{ 
+                            width: `${Math.min(100, Math.round(units.reduce((sum, unit) => sum + (unit.weakenSuccess || 0), 0) / 
+                            Math.max(units.reduce((sum, unit) => sum + (unit.weakenAttempts || 0), 0), 1) * 100))}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <span className="ml-2 text-xs">
+                        {Math.round(units.reduce((sum, unit) => sum + (unit.weakenSuccess || 0), 0) / 
+                        Math.max(units.reduce((sum, unit) => sum + (unit.weakenAttempts || 0), 0), 1) * 100)}%
+                      </span>
+                    </div>
+                    <div className="text-center text-green-400 font-medium">
+                      {units.reduce((sum, unit) => sum + (unit.weakenSuccess || 0), 0)}
+                    </div>
+                    <div className="text-center text-[#C8B8DB]/70">
+                      {units.reduce((sum, unit) => sum + (unit.weakenAttempts || 0), 0)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Individual Unit Stats */}
+              <h3 className="font-semibold text-[#FF9D00] mt-4">Unit Performance</h3>
               {units.map(unit => (
                 <div key={unit.id} className="bg-[#432874]/20 p-3 rounded">
-                  <h4 className="font-medium mb-2">{unit.name}</h4>
+                  <h4 className={`font-medium mb-2 ${isAlly(unit.id) ? 'text-[#00B9AE]' : 'text-[#E83B69]'}`}>
+                    {unit.name}
+                  </h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>Damage Dealt: {unit.totalDamageDealt}</div>
-                    <div>Damage Received: {unit.totalDamageReceived}</div>
-                    <div>Healing Done: {unit.totalHealingDone}</div>
-                    <div>Healing Received: {unit.totalHealingReceived}</div>
+                    <div>Damage Dealt: <span className="font-medium">{unit.totalDamageDealt.toLocaleString()}</span></div>
+                    <div>Damage Received: <span className="font-medium">{unit.totalDamageReceived.toLocaleString()}</span></div>
+                    <div>Healing Done: <span className="font-medium">{unit.totalHealingDone.toLocaleString()}</span></div>
+                    <div>Healing Received: <span className="font-medium">{unit.totalHealingReceived.toLocaleString()}</span></div>
                   </div>
                   
                   <div className="mt-3 border-t border-[#432874]/40 pt-2">
@@ -1767,26 +1934,34 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {(unit.burnAttempts || 0) > 0 && (
                         <div>
-                          <span className="text-purple-300">Burn Attempts:</span> {unit.burnAttempts}
-                          <span className="text-green-400 ml-1">({unit.burnSuccess || 0} successful)</span>
+                          <span className="text-red-400">Burn:</span> <span className="text-green-400">{unit.burnSuccess || 0}</span>/{unit.burnAttempts}
+                          <span className="text-[#C8B8DB]/60 ml-1">
+                            ({Math.round(((unit.burnSuccess || 0) / unit.burnAttempts) * 100)}%)
+                          </span>
                         </div>
                       )}
                       {(unit.poisonAttempts || 0) > 0 && (
                         <div>
-                          <span className="text-purple-300">Poison Attempts:</span> {unit.poisonAttempts}
-                          <span className="text-green-400 ml-1">({unit.poisonSuccess || 0} successful)</span>
+                          <span className="text-green-400">Poison:</span> <span className="text-green-400">{unit.poisonSuccess || 0}</span>/{unit.poisonAttempts}
+                          <span className="text-[#C8B8DB]/60 ml-1">
+                            ({Math.round(((unit.poisonSuccess || 0) / unit.poisonAttempts) * 100)}%)
+                          </span>
                         </div>
                       )}
                       {(unit.slowAttempts || 0) > 0 && (
                         <div>
-                          <span className="text-purple-300">Slow Attempts:</span> {unit.slowAttempts}
-                          <span className="text-green-400 ml-1">({unit.slowSuccess || 0} successful)</span>
+                          <span className="text-blue-400">Slow:</span> <span className="text-green-400">{unit.slowSuccess || 0}</span>/{unit.slowAttempts}
+                          <span className="text-[#C8B8DB]/60 ml-1">
+                            ({Math.round(((unit.slowSuccess || 0) / unit.slowAttempts) * 100)}%)
+                          </span>
                         </div>
                       )}
                       {(unit.weakenAttempts || 0) > 0 && (
                         <div>
-                          <span className="text-purple-300">Weaken Attempts:</span> {unit.weakenAttempts}
-                          <span className="text-green-400 ml-1">({unit.weakenSuccess || 0} successful)</span>
+                          <span className="text-purple-400">Weaken:</span> <span className="text-green-400">{unit.weakenSuccess || 0}</span>/{unit.weakenAttempts}
+                          <span className="text-[#C8B8DB]/60 ml-1">
+                            ({Math.round(((unit.weakenSuccess || 0) / unit.weakenAttempts) * 100)}%)
+                          </span>
                         </div>
                       )}
                       {!unit.burnAttempts && !unit.poisonAttempts && !unit.slowAttempts && !unit.weakenAttempts && (
