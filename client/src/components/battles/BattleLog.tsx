@@ -942,9 +942,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setUnits(prevUnits => {
         return prevUnits.map(u => {
           if (u.id === attacker.id) {
+            // Make sure we properly initialize and increment the counter
+            const currentAttempts = typeof u.slowAttempts === 'number' ? u.slowAttempts : 0;
             return {
               ...u,
-              slowAttempts: (u.slowAttempts || 0) + 1
+              slowAttempts: currentAttempts + 1
             };
           }
           return u;
@@ -970,9 +972,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         setUnits(prevUnits => {
           return prevUnits.map(u => {
             if (u.id === attacker.id) {
+              // Make sure we properly initialize and increment the counter
+              const currentSuccesses = typeof u.slowSuccess === 'number' ? u.slowSuccess : 0;
               return {
                 ...u,
-                slowSuccess: (u.slowSuccess || 0) + 1
+                slowSuccess: currentSuccesses + 1
               };
             }
             return u;
@@ -1021,9 +1025,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setUnits(prevUnits => {
         return prevUnits.map(u => {
           if (u.id === attacker.id) {
+            // Make sure we properly initialize and increment the counter
+            const currentAttempts = typeof u.weakenAttempts === 'number' ? u.weakenAttempts : 0;
             return {
               ...u,
-              weakenAttempts: (u.weakenAttempts || 0) + 1
+              weakenAttempts: currentAttempts + 1
             };
           }
           return u;
