@@ -386,7 +386,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               const isAttackMeterFull = unit.attackMeter + ((unit.stats.speed / 40) * playbackSpeed) >= 100;
               const shouldDecrement = isAttackMeterFull;
 
-              console.log(`Processing ${unit.name}'s status effects - Current round: ${battleRound}, Is attack meter full: ${isAttackMeterFull}, Should decrement: ${shouldDecrement}`);
+              console.log(`Processing ${unit.name}'s status effects - Current turn: ${turnCountRef.current}, Is attack meter full: ${isAttackMeterFull}, Should decrement: ${shouldDecrement}`);
 
               // First, create new effects with decremented durations and collect messages
               for (let j = 0; j < updatedStatusEffects.length; j++) {
@@ -559,7 +559,17 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
 
         // Second pass: Process attacks after state update
+        // Important: We increment the turn number ONCE before processing any attacks in a batch
+        // This ensures first attack is turn 1, second group is turn 2, etc.
+        // Do NOT increment inside the forEach loop or each action would jump multiple turns
+        
         setTimeout(() => {
+          // Increment the turn number once before processing all actions for this turn
+          if (unitsToAttack.length > 0) {
+            turnCountRef.current += 1;
+            console.log(`Starting turn ${turnCountRef.current} with ${unitsToAttack.length} actions`);
+          }
+          
           unitsToAttack.forEach(({ attacker, target }) => {
             // Calculate attack details
             const attackCount = attacker.lastSkillUse + 1;
@@ -851,11 +861,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   };
   
   const performAction = (attacker: BattleUnit, target: BattleUnit) => {
-    // Increment battle turn - each ACTION is a new turn (not each interval tick)
-    // Always increment the turn counter when an action happens
-    turnCountRef.current += 1;
-    
-    // Also update the state version for UI
+    // We no longer increment turns here - turns are incremented once per interval
+    // before processing all actions for that turn
+    // Simply sync the battle round display with the current turn count
     setBattleRound(turnCountRef.current);
     
     const attackCount = attacker.lastSkillUse + 1;
