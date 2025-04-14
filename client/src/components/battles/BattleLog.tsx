@@ -34,6 +34,11 @@ interface BattleUnit {
   slowSuccess?: number;
   weakenAttempts?: number;
   weakenSuccess?: number;
+  // Track the last roll value for each status effect
+  lastBurnRoll?: number;
+  lastPoisonRoll?: number;
+  lastSlowRoll?: number;
+  lastWeakenRoll?: number;
   stats: {
     attack: number;
     vitality: number;
@@ -1831,20 +1836,29 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 </div>
               </div>
               
-              {/* Status Effect Statistics */}
+              {/* Status Effect Statistics - Enhanced to show both successes and attempts clearly */}
               <div className="bg-[#432874]/20 p-4 rounded-lg">
                 <h3 className="font-semibold text-[#FF9D00] mb-3">Status Effect Statistics</h3>
                 
+                {/* Message for first time users */}
+                <div className="bg-[#1A1A2E]/60 p-2 rounded-md mb-3 text-sm">
+                  <div className="flex items-center text-[#00B9AE]">
+                    <Info className="h-4 w-4 mr-2" />
+                    <span>Status effect attempts and successes are tracked here</span>
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     <div className="font-semibold text-center text-xs md:text-sm">Effect</div>
                     <div className="font-semibold text-center text-xs md:text-sm">Success Rate</div>
                     <div className="font-semibold text-center text-xs md:text-sm">Applied</div>
                     <div className="font-semibold text-center text-xs md:text-sm">Attempts</div>
+                    <div className="font-semibold text-center text-xs md:text-sm">Last Roll</div>
                   </div>
                   
                   {/* Burn */}
-                  <div className="grid grid-cols-4 gap-2 items-center py-1 border-b border-[#432874]/30">
+                  <div className="grid grid-cols-5 gap-2 items-center py-1 border-b border-[#432874]/30">
                     <div className="flex items-center">
                       <div className="h-3 w-3 rounded-full bg-red-500 mr-2"></div>
                       <span>Burn</span>
@@ -1870,10 +1884,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     <div className="text-center text-[#C8B8DB]/70">
                       {units.reduce((sum, unit) => sum + (unit.burnAttempts || 0), 0)}
                     </div>
+                    <div className="text-center text-yellow-300">
+                      {units.reduce((sum, unit) => sum + (unit.lastBurnRoll || 0), 0) > 0 
+                        ? `${(units.reduce((sum, unit) => sum + (unit.lastBurnRoll || 0), 0) * 100).toFixed(1)}%`
+                        : '—'
+                      }
+                    </div>
                   </div>
                   
                   {/* Poison */}
-                  <div className="grid grid-cols-4 gap-2 items-center py-1 border-b border-[#432874]/30">
+                  <div className="grid grid-cols-5 gap-2 items-center py-1 border-b border-[#432874]/30">
                     <div className="flex items-center">
                       <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
                       <span>Poison</span>
@@ -1899,10 +1919,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     <div className="text-center text-[#C8B8DB]/70">
                       {units.reduce((sum, unit) => sum + (unit.poisonAttempts || 0), 0)}
                     </div>
+                    <div className="text-center text-yellow-300">
+                      {units.reduce((sum, unit) => sum + (unit.lastPoisonRoll || 0), 0) > 0 
+                        ? `${(units.reduce((sum, unit) => sum + (unit.lastPoisonRoll || 0), 0) * 100).toFixed(1)}%`
+                        : '—'
+                      }
+                    </div>
                   </div>
                   
                   {/* Slow */}
-                  <div className="grid grid-cols-4 gap-2 items-center py-1 border-b border-[#432874]/30">
+                  <div className="grid grid-cols-5 gap-2 items-center py-1 border-b border-[#432874]/30">
                     <div className="flex items-center">
                       <div className="h-3 w-3 rounded-full bg-blue-500 mr-2"></div>
                       <span>Slow</span>
@@ -1928,10 +1954,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     <div className="text-center text-[#C8B8DB]/70">
                       {units.reduce((sum, unit) => sum + (unit.slowAttempts || 0), 0)}
                     </div>
+                    <div className="text-center text-yellow-300">
+                      {units.reduce((sum, unit) => sum + (unit.lastSlowRoll || 0), 0) > 0 
+                        ? `${(units.reduce((sum, unit) => sum + (unit.lastSlowRoll || 0), 0) * 100).toFixed(1)}%`
+                        : '—'
+                      }
+                    </div>
                   </div>
                   
                   {/* Weaken */}
-                  <div className="grid grid-cols-4 gap-2 items-center py-1">
+                  <div className="grid grid-cols-5 gap-2 items-center py-1">
                     <div className="flex items-center">
                       <div className="h-3 w-3 rounded-full bg-purple-500 mr-2"></div>
                       <span>Weaken</span>
@@ -1956,6 +1988,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     </div>
                     <div className="text-center text-[#C8B8DB]/70">
                       {units.reduce((sum, unit) => sum + (unit.weakenAttempts || 0), 0)}
+                    </div>
+                    <div className="text-center text-yellow-300">
+                      {units.reduce((sum, unit) => sum + (unit.lastWeakenRoll || 0), 0) > 0 
+                        ? `${(units.reduce((sum, unit) => sum + (unit.lastWeakenRoll || 0), 0) * 100).toFixed(1)}%`
+                        : '—'
+                      }
                     </div>
                   </div>
                 </div>
