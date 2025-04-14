@@ -1139,10 +1139,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Create a roll result message with the exact roll value for better user feedback - formatted for tooltip detection
-      const rollResultMessage = `${attacker.name}'s Gust roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
+      // Create a roll result message with the exact roll value and HTML formatting
+      const rollResultMessage = `${attacker.name}'s Gust roll: <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectRoll.toFixed(1)}%</span> - <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectSuccess ? "SUCCESS!" : "FAILED"}</span> ${effectSuccess ? '🌪️' : ''}`;
       
-      // Add roll result to action log
+      // Add roll result to action log - using HTML markup that will be rendered with dangerouslySetInnerHTML
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
       
       // Also add to detailed log for Debug tab
@@ -1181,9 +1181,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           });
         });
         
-        // Add to detailed action log and actionLog (main log)
+        // Add to detailed action log
         setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: STATUS - ${attacker.name} applied SLOW to ${target.name}`, ...prev]);
-        setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} successfully applied SLOW to ${target.name}!`, ...prev]);
+        
+        // Format a colorful success message with an icon
+        const successMessage = `${attacker.name} successfully applied <span class="text-cyan-300 font-bold">Minor Slow</span> to ${target.name}! 🌪️`;
+        setActionLog(prev => [`Turn ${turnCountRef.current}: ${successMessage}`, ...prev]);
         
         // Apply Minor Slow (20% Speed reduction) for 1 turn
         const effect: StatusEffect = {
@@ -1198,7 +1201,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         if (!target.statusEffects) target.statusEffects = [];
         target.statusEffects.push(effect);
 
-        statusEffectText = " [Minor Slow applied]";
+        statusEffectText = " [<span class='text-cyan-300 font-semibold'>Minor Slow</span> applied]";
       }
     } 
     else if (skill.name === "Breeze") { // 10% chance to reduce Turn Meter
@@ -1209,8 +1212,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
       const effectSuccess = effectRoll < 10; // 10% chance
       
-      // Create a user-friendly roll result message formatted for tooltip detection
-      const rollResultMessage = `${attacker.name}'s Breeze roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
+      // Create an HTML formatted roll result message with colored success/failure
+      const rollResultMessage = `${attacker.name}'s Breeze roll: <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectRoll.toFixed(1)}%</span> - <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectSuccess ? "SUCCESS!" : "FAILED"}</span> ${effectSuccess ? '🌪️' : ''}`;
       
       // Add roll result to action log for player visibility
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
@@ -1279,10 +1282,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Create a user-friendly roll result message formatted for tooltip detection
-      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
+      // Create a formatted message with HTML styling for the roll result
+      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectRoll.toFixed(1)}%</span> - <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectSuccess ? "SUCCESS!" : "FAILED"}</span> ${effectSuccess ? '🪨' : ''}`;
       
-      // Add roll result to action log for player visibility
+      // Add roll result to action log
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
       
       // Add detailed log about the roll for Debug tab
@@ -1351,8 +1354,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
       const effectSuccess = effectRoll < 30; // 30% chance
       
-      // Create a user-friendly roll result message formatted for tooltip detection
-      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
+      // Create a formatted message with HTML styling for roll result
+      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectRoll.toFixed(1)}%</span> - <span class="${effectSuccess ? 'text-green-400' : 'text-red-400'} font-bold">${effectSuccess ? "SUCCESS!" : "FAILED"}</span> ${effectSuccess ? (skill.name.toLowerCase().includes("fire") ? '🔥' : '💧') : ''}`;
       
       // Add roll result to action log for player visibility
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
