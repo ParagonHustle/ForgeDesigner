@@ -1119,6 +1119,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // Always add the attempt to both logs for visibility
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollAttemptMessage}`, ...prev]);
       
+      // EXPLICITLY ADD TO DETAILED LOG - This is what the Debug Logs tab shows
+      console.log("Adding to detailedActionLog:", `Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${rollAttemptMessage}`);
+      setDetailedActionLog(prevLogs => {
+        const newLog = `Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${rollAttemptMessage}`;
+        console.log("Current detailedActionLog:", prevLogs.length, "logs");
+        console.log("Adding new log:", newLog);
+        return [newLog, ...prevLogs];
+      });
+      
       // Roll once for effect application - 20% chance
       const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
       const effectSuccess = effectRoll < 20; // 20% chance
@@ -1128,7 +1137,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       // Add roll result to both logs
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
-      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ROLL - ${rollAttemptMessage} - ${rollResultMessage}`, ...prev]);
+      
+      // EXPLICITLY ADD ROLL RESULT TO DETAILED LOG
+      console.log("Adding roll result to detailedActionLog");
+      const rollDetailedMessage = `Turn ${turnCountRef.current}: EFFECT ROLL - ${rollAttemptMessage} - ${rollResultMessage}`;
+      setDetailedActionLog(prevLogs => [rollDetailedMessage, ...prevLogs]);
       
       // Record the last roll for UI display in the summary tab
       setUnits(prevUnits => {
@@ -2417,9 +2430,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               ) : (
                 // When no logs are available, show a helpful message
                 <div className="bg-[#1A1A2E]/70 p-4 border border-[#432874]/50 rounded-md mt-2">
-                  <h3 className="text-[#FF9D00] font-semibold mb-2">No Debug Logs Available</h3>
+                  <h3 className="text-[#FF9D00] font-semibold mb-2">Debug Logs Array Length: {detailedActionLog.length}</h3>
                   <p className="text-[#C8B8DB]/80 mb-2">
-                    Debug logs will appear here when skills with status effects are used in battle.
+                    Here are the first 3 detailed action logs (raw format):
+                    {detailedActionLog.slice(0, 3).map((log, i) => (
+                      <div key={i} className="text-xs font-mono text-white my-1 p-1 bg-black/30">{log}</div>
+                    ))}
                   </p>
                   <div className="bg-[#432874]/20 p-3 rounded-md">
                     <h4 className="text-[#00B9AE] text-sm font-medium mb-1">Skills with Status Effects:</h4>
