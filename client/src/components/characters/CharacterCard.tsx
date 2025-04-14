@@ -489,22 +489,33 @@ const CharacterCard = ({
                       </div>
 
                       {skills && skills.length > 0 && (
-                        <div className="mt-2">
-                          <h5 className="font-semibold text-xs mb-1">Skills:</h5>
-                          <ul className="list-disc pl-4 text-xs space-y-1">
+                        <div className="mt-3">
+                          <div className="flex items-center mb-2 text-xs">
+                            <Sparkles className="h-3 w-3 mr-1 text-[#FF9D00]" />
+                            <h5 className="font-semibold text-[#FF9D00]">Aura Skills</h5>
+                          </div>
+                          <div className="space-y-2 border rounded-md border-[#432874]/40 p-2 bg-[#1A1A2E]/50">
                             {skills.map((skill: any, index: number) => (
-                              <li key={index}>{skill.name} - {skill.description}</li>
+                              <div key={index} className="border-b last:border-b-0 border-[#432874]/30 pb-2 last:pb-0">
+                                <div className="font-medium text-xs text-[#00B9AE]">{skill.name}</div>
+                                {skill.description && (
+                                  <div className="text-xs text-[#C8B8DB]/80 mt-0.5">{skill.description}</div>
+                                )}
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       )}
 
                       {(selectedAura.attack !== 0 || selectedAura.accuracy !== 0 || selectedAura.defense !== 0 || 
                         selectedAura.vitality !== 0 || selectedAura.speed !== 0 || selectedAura.focus !== 0 || 
                         selectedAura.resilience !== 0) && (
-                        <div className="mt-2">
-                          <h5 className="font-semibold text-xs mb-1">Stat Bonuses:</h5>
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                        <div className="mt-3">
+                          <div className="flex items-center mb-2 text-xs">
+                            <Info className="h-3 w-3 mr-1 text-[#FF9D00]" />
+                            <h5 className="font-semibold text-[#FF9D00]">Total Stat Bonuses</h5>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs bg-[#1A1A2E]/50 p-2 border border-[#432874]/40 rounded-md">
                             {selectedAura.attack !== 0 && (
                               <div className="flex justify-between">
                                 <span>Attack:</span>
