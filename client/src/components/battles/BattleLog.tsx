@@ -1598,6 +1598,22 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     );
   };
 
+  // Helper function to extract turn number from log message
+  const extractTurnNumber = (logMessage: string): number => {
+    const match = logMessage.match(/Turn (\d+):/);
+    return match ? parseInt(match[1]) : 0;
+  };
+
+  // Sort action log by turn number (descending)
+  const sortedActionLog = [...actionLog].sort((a, b) => {
+    return extractTurnNumber(b) - extractTurnNumber(a);
+  });
+  
+  // Sort detailed action log by turn number (descending)
+  const sortedDetailedLog = [...detailedActionLog].sort((a, b) => {
+    return extractTurnNumber(b) - extractTurnNumber(a);
+  });
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-[#1A1A2E] border-[#432874] text-[#C8B8DB] max-w-6xl max-h-[90vh] overflow-y-auto p-6">
@@ -2005,8 +2021,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           </TabsContent>
 
           <TabsContent value="log">
+            {/* Battle round heading */}
+            <div className="mb-2 font-semibold text-[#FF9D00]">
+              Current Battle Round: {battleRound}
+            </div>
+            
             <div className="h-[400px] overflow-y-auto space-y-1">
-              {actionLog.map((log, index) => {
+              {sortedActionLog.map((log, index) => {
                 // Improved ally detection - check for ANY ally character in The Forge
                 const allyNames = ["G-Wolf", "Kleos", "Brawler Frank", "Gideon", "Albus Dumbleboom", "Grimmjaw"];
                 const isAllyAction = allyNames.some(name => log.includes(`${name} used`));
