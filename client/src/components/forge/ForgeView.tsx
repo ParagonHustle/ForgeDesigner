@@ -417,8 +417,6 @@ const completeForging = async (taskId: number) => {
                     <SelectItem value="water">Water</SelectItem>
                     <SelectItem value="earth">Earth</SelectItem>
                     <SelectItem value="wind">Wind</SelectItem>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -452,8 +450,7 @@ const completeForging = async (taskId: number) => {
                       : selectedElement === 'water' ? 'bg-blue-500'
                       : selectedElement === 'earth' ? 'bg-green-500' 
                       : selectedElement === 'wind' ? 'bg-cyan-500'
-                      : selectedElement === 'light' ? 'bg-yellow-500'
-                      : 'bg-purple-500'
+                      : 'bg-gray-500'
                       : 'bg-gray-500'}`} 
                     />
                     <span className="capitalize">
@@ -581,7 +578,6 @@ const completeForging = async (taskId: number) => {
                                 : aura.element === 'water' ? 'bg-blue-500/30 text-blue-300'
                                 : aura.element === 'earth' ? 'bg-green-500/30 text-green-300' 
                                 : aura.element === 'wind' ? 'bg-cyan-500/30 text-cyan-300'
-                                : aura.element === 'light' ? 'bg-yellow-500/30 text-yellow-300'
                                 : 'bg-purple-500/30 text-purple-300'
                               }`}>
                                 {aura.element?.charAt(0).toUpperCase()}
@@ -637,7 +633,6 @@ const completeForging = async (taskId: number) => {
                                   : aura.element === 'water' ? 'bg-blue-500/30 text-blue-300'
                                   : aura.element === 'earth' ? 'bg-green-500/30 text-green-300' 
                                   : aura.element === 'wind' ? 'bg-cyan-500/30 text-cyan-300'
-                                  : aura.element === 'light' ? 'bg-yellow-500/30 text-yellow-300'
                                   : 'bg-purple-500/30 text-purple-300'
                                 }`}>
                                   {aura.element?.charAt(0).toUpperCase()}
@@ -682,7 +677,6 @@ const completeForging = async (taskId: number) => {
                           : primaryAura.element === 'water' ? 'bg-blue-500/30 text-blue-300'
                           : primaryAura.element === 'earth' ? 'bg-green-500/30 text-green-300' 
                           : primaryAura.element === 'wind' ? 'bg-cyan-500/30 text-cyan-300'
-                          : primaryAura.element === 'light' ? 'bg-yellow-500/30 text-yellow-300'
                           : 'bg-purple-500/30 text-purple-300'
                         }`}>
                           {primaryAura.element?.charAt(0).toUpperCase()}
@@ -793,7 +787,6 @@ const completeForging = async (taskId: number) => {
                   : completedAura.element === 'water' ? 'bg-blue-500/30 text-blue-300'
                   : completedAura.element === 'earth' ? 'bg-green-500/30 text-green-300' 
                   : completedAura.element === 'wind' ? 'bg-cyan-500/30 text-cyan-300'
-                  : completedAura.element === 'light' ? 'bg-yellow-500/30 text-yellow-300'
                   : 'bg-purple-500/30 text-purple-300'
                 }`}>
                   <span className="text-2xl">{completedAura.element?.charAt(0).toUpperCase()}</span>
@@ -889,12 +882,7 @@ const completeForging = async (taskId: number) => {
                 </div>
               )}
 
-              {completedAura.description && (
-                <div className="bg-[#432874]/20 rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">Description</h4>
-                  <p className="text-[#C8B8DB]">{completedAura.description}</p>
-                </div>
-              )}
+              {/* Description section removed as it's not in the schema */}
 
               {completedAura.skills && (
                 <div className="bg-[#432874]/20 rounded-lg p-4">
