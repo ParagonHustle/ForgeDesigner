@@ -333,8 +333,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     if (battleLog && battleLog.length > 0 && units.length > 0) {
       console.log("Initial battle setup: Setting turn to 1");
       
-      // Reset to turn 1
+      // Reset both the state and the ref counter to 1
       setBattleRound(1);
+      turnCountRef.current = 1;
       
       // Clear existing logs - this ensures we don't have logs from previous battles
       setActionLog([]);
@@ -1166,7 +1167,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     } 
     else if (skill.name === "Breeze") { // 10% chance to reduce Turn Meter
       // Track this effect attempt
-      setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted turn meter reduction on ${target.name}`, ...prev]);
+      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted turn meter reduction on ${target.name}`, ...prev]);
       
       // Roll for effect application
       const effectRoll = Math.random();
@@ -1174,7 +1175,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       // Add detailed log about the roll
       setDetailedActionLog(prev => [
-        `Turn ${battleRound}: EFFECT ROLL - ${attacker.name}'s Breeze - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 10.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Breeze - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 10.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
         ...prev
       ]);
       
@@ -1193,12 +1194,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
         
         // Log the successful application
-        setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} reduced ${target.name}'s turn meter by 10%`, ...prev]);
+        setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: STATUS - ${attacker.name} reduced ${target.name}'s turn meter by 10%`, ...prev]);
         statusEffectText = ` [Turn Meter reduced by 10% - ${(effectRoll * 100).toFixed(1)}% roll]`;
       }
     } else if (skill.name === "Stone Slam" || skill.name === "Boss Strike") { // 20% chance to apply Weakness
       // Log the effect attempt to debug console to make sure the game system recognizes the effect attempt
-      console.log(`${attacker.name} attempting to apply WEAKEN with ${skill.name} on ${target.name} - Turn ${battleRound}`);
+      console.log(`${attacker.name} attempting to apply WEAKEN with ${skill.name} on ${target.name} - Turn ${turnCountRef.current}`);
       
       // Always update attempts counter
       setUnits(prevUnits => {
@@ -1216,8 +1217,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       });
       
       // Add to detailed action log about attempt AND to main action log for visibility
-      setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted WEAKEN on ${target.name}`, ...prev]);
-      setActionLog(prev => [`Turn ${battleRound}: ${attacker.name} attempted to WEAKEN ${target.name}!`, ...prev]);
+      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted WEAKEN on ${target.name}`, ...prev]);
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} attempted to WEAKEN ${target.name}!`, ...prev]);
 
       // Roll once for effect application - 20% chance
       const effectRoll = Math.random();
@@ -1238,7 +1239,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       // Add detailed log about the roll - include the exact percentage rolled
       setDetailedActionLog(prev => [
-        `Turn ${battleRound}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
         ...prev
       ]);
       
@@ -1259,8 +1260,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
         
         // Add to both logs when effect is applied
-        setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} applied WEAKEN to ${target.name}`, ...prev]);
-        setActionLog(prev => [`Turn ${battleRound}: ${attacker.name} successfully applied WEAKEN to ${target.name}!`, ...prev]);
+        setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: STATUS - ${attacker.name} applied WEAKEN to ${target.name}`, ...prev]);
+        setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} successfully applied WEAKEN to ${target.name}!`, ...prev]);
         
         // Apply Weakness (10% Attack reduction) for 2 turns
         const effect: StatusEffect = {
@@ -1296,7 +1297,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Regular effect chances based on skill type
     else if (skillType !== 'basic') { // 30% chance to apply status effect for advanced/ultimate skills
       // First track the attempt in the debug logs
-      setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted status effect with ${skill.name}`, ...prev]);
+      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted status effect with ${skill.name}`, ...prev]);
       
       // Roll for the effect application
       const effectRoll = Math.random();
@@ -1304,7 +1305,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       // Add detailed log about the roll
       setDetailedActionLog(prev => [
-        `Turn ${battleRound}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 30.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 30.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
         ...prev
       ]);
       
