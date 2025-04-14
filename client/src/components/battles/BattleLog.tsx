@@ -1101,18 +1101,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Apply special status effects for specific skills
     // For Gust skill, do a single roll when the skill is used to determine if effect is applied
     if (skill.name === "Gust") {
-      // TEMPORARY TEST - Always add a status effect attempt and roll message for Gust
-      // Add a debug hook to see this function execution
-      console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${turnCountRef.current} [STATUS EFFECT TEST]`);
+      // Track attempt to apply Slow effect
+      console.log(`${attacker.name} attempting to apply SLOW with Gust on ${target.name} - Turn ${turnCountRef.current}`);
       
-      // Force status effect messages to appear for testing
-      setActionLog(prev => [`**STATUS EFFECT TEST** - Gust should apply Slow effect`, ...prev]);
-      
-      // Always update attempts counter and add to summary stats
+      // Update attempts counter
       setUnits(prevUnits => {
         return prevUnits.map(u => {
           if (u.id === attacker.id) {
-            // Make sure we properly initialize and increment the counter
             const currentAttempts = typeof u.slowAttempts === 'number' ? u.slowAttempts : 0;
             return {
               ...u,
@@ -1122,6 +1117,28 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           return u;
         });
       });
+
+      // Roll for effect application - 20% chance
+      const effectRoll = Math.random() * 100;
+      const effectSuccess = effectRoll <= 20; // 20% chance
+      
+      // Store the roll value
+      setUnits(prevUnits => {
+        return prevUnits.map(u => {
+          if (u.id === attacker.id) {
+            return {
+              ...u,
+              lastSlowRoll: effectRoll
+            };
+          }
+          return u;
+        });
+      });
+
+      // Add roll attempt to logs
+      const rollMessage = `${attacker.name}'s Gust roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? 'SUCCESS!' : 'FAILED'}`;
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollMessage}`, ...prev]);
+      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ROLL - ${rollMessage}`, ...prev]);
       
       // For testing/debugging - add a very clear message that will be visible in the action log
       console.log("TESTING STATUS EFFECT: Attempting to apply Slow with Gust!");
@@ -1183,7 +1200,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       // This detailed log entry is now redundant - already added above
       
-      if (effectSuccess) { // 10% chance for Minor Slow
+      if (effectSuccess) { // 20% chance for Minor Slow
         // Update success counter only if effect lands
         setUnits(prevUnits => {
           return prevUnits.map(u => {
