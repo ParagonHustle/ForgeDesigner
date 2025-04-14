@@ -3,13 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
-import { Shield, Swords, Heart, Zap, Info } from 'lucide-react';
+import { Shield, Swords, Heart, Zap, Info, Clock, Table, Calculator } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAppStore } from "@/lib/zustandStore";
 
 interface StatusEffect {
   name: string;
@@ -72,8 +73,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [currentStage, setCurrentStage] = useState(0);
   const [units, setUnits] = useState<BattleUnit[]>([]);
   const [actionLog, setActionLog] = useState<string[]>([]);
+  const [detailedActionLog, setDetailedActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [battleRound, setBattleRound] = useState(1);
+  
+  // Get user info to check if admin
+  const { user } = useStore();
   
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
@@ -558,8 +563,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   source: attacker.id
                 };
                 statusEffectText = ` [Poisoned applied - ${poisonDamage} damage per turn]`;
+              } else if (skill.name === "Boss Strike") {
+                // Boss Strike always applies Weakened effect
+                effect = {
+                  name: "Weakened", 
+                  effect: "ReduceAtk", 
+                  value: 10, 
+                  duration: 2, 
+                  source: attacker.id
+                };
+                statusEffectText = ` [Weakened applied - 10% Attack reduction]`;
               } else {
-                // General status effects
+                // General status effects for other skills
                 const possibleEffects = [
                   {name: "Weakened", effect: "ReduceAtk", value: 10, duration: 2, source: attacker.id},
                   {name: "Slowed", effect: "ReduceSpd", value: 15, duration: 2, source: attacker.id}
