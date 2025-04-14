@@ -1026,21 +1026,38 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         statusEffectText = " [Minor Slow applied]";
       }
     } 
-    else if (skill.name === "Breeze" && Math.random() < 0.1) { // 10% chance to reduce Turn Meter
-      // Apply Turn Meter reduction (10%)
-      setUnits(prevUnits => {
-        return prevUnits.map(u => {
-          if (u.id === target.id) {
-            return {
-              ...u,
-              attackMeter: Math.max(0, u.attackMeter - 10) // Reduce by 10%
-            };
-          }
-          return u;
+    else if (skill.name === "Breeze") { // 10% chance to reduce Turn Meter
+      // Track this effect attempt
+      setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted turn meter reduction on ${target.name}`, ...prev]);
+      
+      // Roll for effect application
+      const effectRoll = Math.random();
+      const effectSuccess = effectRoll < 0.1; // 10% chance
+      
+      // Add detailed log about the roll
+      setDetailedActionLog(prev => [
+        `Turn ${battleRound}: EFFECT ROLL - ${attacker.name}'s Breeze - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 10.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        ...prev
+      ]);
+      
+      if (effectSuccess) {
+        // Apply Turn Meter reduction (10%)
+        setUnits(prevUnits => {
+          return prevUnits.map(u => {
+            if (u.id === target.id) {
+              return {
+                ...u,
+                attackMeter: Math.max(0, u.attackMeter - 10) // Reduce by 10%
+              };
+            }
+            return u;
+          });
         });
-      });
-
-      statusEffectText = " [Turn Meter reduced by 10%]";
+        
+        // Log the successful application
+        setDetailedActionLog(prev => [`Turn ${battleRound}: STATUS - ${attacker.name} reduced ${target.name}'s turn meter by 10%`, ...prev]);
+        statusEffectText = ` [Turn Meter reduced by 10% - ${(effectRoll * 100).toFixed(1)}% roll]`;
+      }
     } else if (skill.name === "Stone Slam" || skill.name === "Boss Strike") { // 20% chance to apply Weakness
       // Log the effect attempt to debug console to make sure the game system recognizes the effect attempt
       console.log(`${attacker.name} attempting to apply WEAKEN with ${skill.name} on ${target.name} - Turn ${battleRound}`);
@@ -1068,9 +1085,22 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       const effectRoll = Math.random();
       const effectSuccess = effectRoll < 0.2;
       
-      // Add detailed log about the roll
+      // Record the last roll for UI display in the summary tab
+      setUnits(prevUnits => {
+        return prevUnits.map(u => {
+          if (u.id === attacker.id) {
+            return {
+              ...u,
+              lastWeakenRoll: effectRoll
+            };
+          }
+          return u;
+        });
+      });
+      
+      // Add detailed log about the roll - include the exact percentage rolled
       setDetailedActionLog(prev => [
-        `Turn ${battleRound}: EFFECT ROLL - Value: ${(effectRoll * 100).toFixed(2)}%, Threshold: 20%, Success: ${effectSuccess ? "YES" : "NO"}`,
+        `Turn ${battleRound}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
         ...prev
       ]);
       
@@ -1126,82 +1156,97 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
 
     // Regular effect chances based on skill type
-    else if (skillType !== 'basic' && Math.random() < 0.3) { // 30% chance to apply status effect for advanced/ultimate skills
-      // Determine the type of status effect based on skill name/type
-      let effectType = "general";
-      if (skill.name.toLowerCase().includes("burn") || skill.name.toLowerCase().includes("fire") || 
-          skill.name.toLowerCase().includes("flame") || skill.name.toLowerCase().includes("inferno")) {
-        effectType = "burn";
-      } else if (skill.name.toLowerCase().includes("poison") || skill.name.toLowerCase().includes("venom") || 
-                skill.name.toLowerCase().includes("toxic")) {
-        effectType = "poison";
-      }
-
-      let effect: StatusEffect;
-      if (effectType === "burn") {
-        // Burn effect: 5% of max HP damage per turn
-        const burnDamage = Math.floor(target.maxHp * 0.05);
-        // Get burn duration based on skill
-        let burnDuration = 3; // Default duration
-        if (skill.name === "Ember") {
-          burnDuration = 1; // Ember applies burn for 1 turn only
-        } else if (skill.name === "Flame Whip") {
-          burnDuration = 2; // Flame Whip applies burn for 2 turns
+    else if (skillType !== 'basic') { // 30% chance to apply status effect for advanced/ultimate skills
+      // First track the attempt in the debug logs
+      setDetailedActionLog(prev => [`Turn ${battleRound}: EFFECT ATTEMPT - ${attacker.name} attempted status effect with ${skill.name}`, ...prev]);
+      
+      // Roll for the effect application
+      const effectRoll = Math.random();
+      const effectSuccess = effectRoll < 0.3; // 30% chance
+      
+      // Add detailed log about the roll
+      setDetailedActionLog(prev => [
+        `Turn ${battleRound}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 30.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        ...prev
+      ]);
+      
+      if (effectSuccess) {
+        // Determine the type of status effect based on skill name/type
+        let effectType = "general";
+        if (skill.name.toLowerCase().includes("burn") || skill.name.toLowerCase().includes("fire") || 
+            skill.name.toLowerCase().includes("flame") || skill.name.toLowerCase().includes("inferno")) {
+          effectType = "burn";
+        } else if (skill.name.toLowerCase().includes("poison") || skill.name.toLowerCase().includes("venom") || 
+                  skill.name.toLowerCase().includes("toxic")) {
+          effectType = "poison";
         }
-        effect = {
-          name: "Burning",
-          effect: "Burn",
-          value: burnDamage,
-          duration: burnDuration,
-          source: attacker.id
-        };
-        statusEffectText = ` [Burning applied - ${burnDamage} damage per turn]`;
-      } else if (effectType === "poison") {
-        // Poison effect: 5% of max HP damage per turn
-        const poisonDamage = Math.floor(target.maxHp * 0.05);
-        effect = {
-          name: "Poisoned",
-          effect: "Poison",
-          value: poisonDamage,
-          duration: 3,
-          source: attacker.id
-        };
-        statusEffectText = ` [Poisoned applied - ${poisonDamage} damage per turn]`;
-      } else {
-        // General status effects
-        const possibleEffects = [
-          {name: "Weakened", effect: "ReduceAtk", value: 10, duration: 2, source: attacker.id},
-          {name: "Slowed", effect: "ReduceSpd", value: 15, duration: 2, source: attacker.id}
-        ];
-        effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
-        statusEffectText = ` [${effect.name} applied]`;
+
+        let effect: StatusEffect;
+        if (effectType === "burn") {
+          // Burn effect: 5% of max HP damage per turn
+          const burnDamage = Math.floor(target.maxHp * 0.05);
+          // Get burn duration based on skill
+          let burnDuration = 3; // Default duration
+          if (skill.name === "Ember") {
+            burnDuration = 1; // Ember applies burn for 1 turn only
+          } else if (skill.name === "Flame Whip") {
+            burnDuration = 2; // Flame Whip applies burn for 2 turns
+          }
+          effect = {
+            name: "Burning",
+            effect: "Burn",
+            value: burnDamage,
+            duration: burnDuration,
+            source: attacker.id
+          };
+          statusEffectText = ` [Burning applied - ${burnDamage} damage per turn]`;
+        } else if (effectType === "poison") {
+          // Poison effect: 5% of max HP damage per turn
+          const poisonDamage = Math.floor(target.maxHp * 0.05);
+          effect = {
+            name: "Poisoned",
+            effect: "Poison",
+            value: poisonDamage,
+            duration: 3,
+            source: attacker.id
+          };
+          statusEffectText = ` [Poisoned applied - ${poisonDamage} damage per turn]`;
+        } else {
+          // General status effects
+          const possibleEffects = [
+            {name: "Weakened", effect: "ReduceAtk", value: 10, duration: 2, source: attacker.id},
+            {name: "Slowed", effect: "ReduceSpd", value: 15, duration: 2, source: attacker.id}
+          ];
+          effect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
+          statusEffectText = ` [${effect.name} applied]`;
+        }
+
+        // Apply the status effect to the target (will be added when the unit's state is updated)
+        if (!target.statusEffects) target.statusEffects = [];
+
+        // Debug status effects
+        console.log(`Status effects before update for ${target.name}:`, 
+          target.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
+
+        // Check if target already has this effect, if so, extend duration rather than adding new
+        const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
+        if (existingEffectIndex >= 0) {
+          // Extend existing effect duration
+          target.statusEffects[existingEffectIndex].duration = Math.max(
+            target.statusEffects[existingEffectIndex].duration,
+            effect.duration
+          );
+          console.log(`Extended ${effect.name} duration to ${target.statusEffects[existingEffectIndex].duration} turns`);
+        } else {
+          // Add new effect
+          target.statusEffects.push(effect);
+          console.log(`Added new effect ${effect.name} with ${effect.duration} turns duration`);
+        }
+
+        // Debug updated status effects
+        console.log(`Status effects after update for ${target.name}:`, 
+          target.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
       }
-
-      // Apply the status effect to the target (will be added when the unit's state is updated)
-      if (!target.statusEffects) target.statusEffects = [];
-
-      // Debug status effects
-      console.log(`Status effects before update for ${target.name}:`, 
-        target.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
-
-      // Check if target already has this effect, if so, extend duration rather than adding new
-      const existingEffectIndex = target.statusEffects.findIndex(e => e.effect === effect.effect);
-      if (existingEffectIndex >= 0) {
-        // Extend existing effect duration
-        target.statusEffects[existingEffectIndex].duration = Math.max(
-          target.statusEffects[existingEffectIndex].duration,
-          effect.duration
-        );
-        console.log(`Extended ${effect.name} duration to ${target.statusEffects[existingEffectIndex].duration} turns`);
-      } else {
-        // Add new effect
-        target.statusEffects.push(effect);
-        console.log(`Added new effect ${effect.name} with ${effect.duration} turns duration`);
-      }
-
-      // Debug updated status effects
-      console.log(`Status effects after update for ${target.name}:`, 
-        target.statusEffects.map(e => `${e.name}: ${e.duration} turns`).join(", "));
     }
 
     // Add healing effect text for Soothing Current
