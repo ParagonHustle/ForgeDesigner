@@ -884,22 +884,7 @@ const completeForging = async (taskId: number) => {
 
               {/* Description section removed as it's not in the schema */}
 
-              {completedAura.skills && (
-                <div className="bg-[#432874]/20 rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">Skills</h4>
-                  <div className="space-y-2">
-                    {(typeof completedAura.skills === 'string' 
-                      ? JSON.parse(completedAura.skills) 
-                      : completedAura.skills
-                    ).map((skill: any, index: number) => (
-                      <div key={index} className="border border-[#432874]/40 rounded p-2">
-                        <div className="font-medium text-[#FF9D00]">{skill.name}</div>
-                        <div className="text-sm text-[#C8B8DB]/80">{skill.description}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* No duplicate skills section needed */}
             </div>
           )}
           

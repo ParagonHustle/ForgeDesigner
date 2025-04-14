@@ -53,7 +53,7 @@ export const auras = pgTable("auras", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   level: integer("level").default(1),
-  element: text("element").notNull(), // fire, water, earth, air, light, dark
+  element: text("element").notNull(), // fire, water, earth, wind
   tier: integer("tier").default(1),
   // Stat bonuses range from -10 to +10 (representing percentage)
   attack: integer("attack").default(0),
@@ -99,7 +99,7 @@ export const dungeonTypes = pgTable("dungeon_types", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  elementalType: text("elemental_type").notNull(), // fire, water, wind, earth
+  elementalType: text("elemental_type").notNull(), // fire, water, earth, wind
   difficulty: text("difficulty").notNull(), // easy, medium, hard, elite, legendary
   recommendedLevel: integer("recommended_level").notNull(),
   stages: integer("stages").default(8).notNull(),

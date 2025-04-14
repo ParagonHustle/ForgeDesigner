@@ -31,8 +31,8 @@ const Sidebar = () => {
   const [location] = useLocation();
   
   return (
-    <aside className="w-16 md:w-56 bg-[#1A1A2E] border-r border-[#432874]/50 flex flex-col transition-all duration-300">
-      <div className="py-4 flex flex-col items-center md:items-start space-y-1">
+    <aside className="w-16 md:w-56 bg-[#1A1A2E] border-r border-[#432874]/50 flex flex-col h-screen transition-all duration-300">
+      <div className="py-4 flex flex-col items-center md:items-start space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location === item.path;
           
