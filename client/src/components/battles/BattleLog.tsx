@@ -93,25 +93,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     let description = '';
     
     if (effect.effect === "Burn") {
-      title = "Burning Status";
-      description = `Deals ${effect.value} fire damage at the start of each turn. Lasts for ${effect.duration} more turns.`;
+      title = "Burning";
+      description = `${effect.value} fire dmg/turn. ${effect.duration} turns left.`;
     } else if (effect.effect === "Poison") {
-      title = "Poisoned Status";
-      description = `Deals ${effect.value} poison damage at the start of each turn. Lasts for ${effect.duration} more turns.`;
+      title = "Poisoned";
+      description = `${effect.value} poison dmg/turn. ${effect.duration} turns left.`;
     } else if (effect.effect === "ReduceAtk") {
-      title = "Attack Reduced";
-      description = `Decreases Attack stat by ${effect.value}%. Lasts for ${effect.duration} more turns.`;
+      title = "Weakened";
+      description = `-${effect.value}% Attack. ${effect.duration} turns left.`;
     } else if (effect.effect === "ReduceSpd") {
-      title = "Speed Reduced";
-      description = `Decreases Speed stat by ${effect.value}%, making turns come less frequently. Lasts for ${effect.duration} more turns.`;
+      title = "Slowed";
+      description = `-${effect.value}% Speed. ${effect.duration} turns left.`;
     } else if (effect.effect === "Stun") {
       title = "Stunned";
-      description = `Cannot take actions for ${effect.duration} more turns.`;
+      description = `Can't act for ${effect.duration} more turns.`;
     } else {
       title = effect.name;
       description = `${effect.effect === "Burn" || effect.effect === "Poison" ? 
-        `${effect.value} damage per turn` : 
-        `${effect.value}% reduction`} (${effect.duration} turns remaining)`;
+        `${effect.value} dmg/turn` : 
+        `-${effect.value}%`} (${effect.duration} turns left)`;
     }
     
     return (
@@ -119,22 +119,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <div 
-              className={`text-xs px-1 rounded text-white ${statusColor} flex items-center cursor-help`}
+              className={`text-xs px-1.5 py-0.5 rounded text-white ${statusColor} flex items-center cursor-help gap-0.5 leading-none`}
             >
-              {effect.name} ({effect.duration})
+              <span>{effect.name}</span>
+              <span className="opacity-80">({effect.duration})</span>
             </div>
           </TooltipTrigger>
           <TooltipContent
-            side="top"
+            side="right"
             align="center"
-            className="bg-gray-900/95 border-purple-900 text-white p-3 max-w-xs rounded-lg shadow-xl z-50"
+            className="bg-gray-900/95 border-purple-900 text-white p-1.5 max-w-[180px] rounded-lg shadow-xl z-50"
           >
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <Info className="text-yellow-400 mt-0.5 flex-shrink-0" size={18} />
-                <h4 className="font-semibold text-yellow-400">{title}</h4>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1">
+                <Info className="text-yellow-400 flex-shrink-0" size={14} />
+                <h4 className="font-semibold text-yellow-400 text-xs">{title}</h4>
               </div>
-              <p className="text-sm leading-relaxed">{description}</p>
+              <p className="text-xs leading-tight">{description}</p>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -1135,7 +1136,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     
                     {/* Status effects display for allies */}
                     {unit.statusEffects && unit.statusEffects.length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
+                      <div className="mt-0.5 flex flex-wrap gap-0.5 max-w-[200px]">
                         {unit.statusEffects.map((effect, index) => 
                           renderStatusEffect(effect, index, true)
                         )}
@@ -1169,7 +1170,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     
                     {/* Status effects display for enemies */}
                     {unit.statusEffects && unit.statusEffects.length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
+                      <div className="mt-0.5 flex flex-wrap gap-0.5 max-w-[200px]">
                         {unit.statusEffects.map((effect, index) => 
                           renderStatusEffect(effect, index, false)
                         )}
@@ -1286,9 +1287,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   if (!battleEntry) return `Dungeon Completed! Cleared ${currentStage + 1} of 8 stages`;
                   
                   // Then check if all allies are defeated
-                  const allAlliesDefeated = battleEntry.allies.every((a: any) => 
-                    units.find(u => u.id === a.id)?.hp <= 0
-                  );
+                  const allAlliesDefeated = battleEntry?.allies?.every((a: any) => {
+                    const unit = units.find(u => u.id === a.id);
+                    return unit ? unit.hp <= 0 : true; // Consider missing units as defeated
+                  }) || false;
                   
                   return allAlliesDefeated 
                     ? `Your party was defeated on Stage ${currentStage + 1}` 
