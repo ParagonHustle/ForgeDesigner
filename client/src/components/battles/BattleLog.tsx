@@ -1112,36 +1112,43 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // DIRECTLY ADD TO MAIN ACTION LOG with more details
-      // Format a user-friendly action message about the attempt
+      // Format a user-friendly action message about the attempt with relevant info for tooltips
       const rollAttemptMessage = `${attacker.name} used Gust - 20% chance to apply Minor Slow on ${target.name}`;
       
-      // Always add the attempt to both logs for visibility
+      // Always add the attempt to the action log for visibility
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollAttemptMessage}`, ...prev]);
       
-      // EXPLICITLY ADD TO DETAILED LOG - This is what the Debug Logs tab shows
-      console.log("Adding to detailedActionLog:", `Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${rollAttemptMessage}`);
-      setDetailedActionLog(prevLogs => {
-        const newLog = `Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${rollAttemptMessage}`;
-        console.log("Current detailedActionLog:", prevLogs.length, "logs");
-        console.log("Adding new log:", newLog);
-        return [newLog, ...prevLogs];
-      });
+      // Add to detailed log too - this is what we see in debug logs
+      console.log("Adding Gust attempt to detailed log");
+      setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${rollAttemptMessage}`, ...prev]);
       
       // Roll once for effect application - 20% chance
       const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
       const effectSuccess = effectRoll < 20; // 20% chance
       
-      // Create a roll result message with the exact roll value for better user feedback
+      // Store the last roll value on the attacker for reporting
+      setUnits(prevUnits => {
+        return prevUnits.map(u => {
+          if (u.id === attacker.id) {
+            return {
+              ...u,
+              lastSlowRoll: effectRoll
+            };
+          }
+          return u;
+        });
+      });
+      
+      // Create a roll result message with the exact roll value for better user feedback - formatted for tooltip detection
       const rollResultMessage = `${attacker.name}'s Gust roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
       
-      // Add roll result to both logs
+      // Add roll result to action log
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
       
-      // EXPLICITLY ADD ROLL RESULT TO DETAILED LOG
-      console.log("Adding roll result to detailedActionLog");
-      const rollDetailedMessage = `Turn ${turnCountRef.current}: EFFECT ROLL - ${rollAttemptMessage} - ${rollResultMessage}`;
-      setDetailedActionLog(prevLogs => [rollDetailedMessage, ...prevLogs]);
+      // Also add to detailed log for Debug tab
+      const rollDetailedMessage = `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Gust - Rolled: ${effectRoll.toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`;
+      console.log("Adding Gust roll result to detailed log:", rollDetailedMessage);
+      setDetailedActionLog(prev => [rollDetailedMessage, ...prev]);
       
       // Record the last roll for UI display in the summary tab
       setUnits(prevUnits => {
@@ -1199,12 +1206,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted turn meter reduction on ${target.name}`, ...prev]);
       
       // Roll for effect application
-      const effectRoll = Math.random();
-      const effectSuccess = effectRoll < 0.1; // 10% chance
+      const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
+      const effectSuccess = effectRoll < 10; // 10% chance
       
-      // Add detailed log about the roll
+      // Create a user-friendly roll result message formatted for tooltip detection
+      const rollResultMessage = `${attacker.name}'s Breeze roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
+      
+      // Add roll result to action log for player visibility
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
+      
+      // Add detailed log about the roll for Debug tab
       setDetailedActionLog(prev => [
-        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Breeze - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 10.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s Breeze - Rolled: ${effectRoll.toFixed(1)}% vs 10.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
         ...prev
       ]);
       
@@ -1249,9 +1262,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted WEAKEN on ${target.name}`, ...prev]);
       setActionLog(prev => [`Turn ${turnCountRef.current}: ${attacker.name} attempted to WEAKEN ${target.name}!`, ...prev]);
 
-      // Roll once for effect application - 20% chance
-      const effectRoll = Math.random();
-      const effectSuccess = effectRoll < 0.2;
+      // Roll once for effect application - 20% chance 
+      const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
+      const effectSuccess = effectRoll < 20; // 20% chance
       
       // Record the last roll for UI display in the summary tab
       setUnits(prevUnits => {
@@ -1266,9 +1279,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       });
       
-      // Add detailed log about the roll - include the exact percentage rolled
+      // Create a user-friendly roll result message formatted for tooltip detection
+      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
+      
+      // Add roll result to action log for player visibility
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
+      
+      // Add detailed log about the roll for Debug tab
       setDetailedActionLog(prev => [
-        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${effectRoll.toFixed(1)}% vs 20.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
         ...prev
       ]);
       
@@ -1329,12 +1348,18 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setDetailedActionLog(prev => [`Turn ${turnCountRef.current}: EFFECT ATTEMPT - ${attacker.name} attempted status effect with ${skill.name}`, ...prev]);
       
       // Roll for the effect application
-      const effectRoll = Math.random();
-      const effectSuccess = effectRoll < 0.3; // 30% chance
+      const effectRoll = Math.random() * 100; // Roll 0-100 for clearer percentage display
+      const effectSuccess = effectRoll < 30; // 30% chance
       
-      // Add detailed log about the roll
+      // Create a user-friendly roll result message formatted for tooltip detection
+      const rollResultMessage = `${attacker.name}'s ${skill.name} roll: ${effectRoll.toFixed(1)}% - ${effectSuccess ? "SUCCESS!" : "FAILED"}`;
+      
+      // Add roll result to action log for player visibility
+      setActionLog(prev => [`Turn ${turnCountRef.current}: ${rollResultMessage}`, ...prev]);
+      
+      // Add detailed log about the roll for Debug tab
       setDetailedActionLog(prev => [
-        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${(effectRoll * 100).toFixed(1)}% vs 30.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
+        `Turn ${turnCountRef.current}: EFFECT ROLL - ${attacker.name}'s ${skill.name} - Rolled: ${effectRoll.toFixed(1)}% vs 30.0% threshold - ${effectSuccess ? 'SUCCESS' : 'FAILED'}`,
         ...prev
       ]);
       
@@ -2219,7 +2244,126 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                   }
                 });
 
-                return (
+                // Check if this log entry is about a status effect
+                const isStatusEffectLog = log.includes('applied') || 
+                                        log.includes('SLOW') || 
+                                        log.includes('WEAKEN') || 
+                                        log.includes('attempted') ||
+                                        log.includes('roll:') ||
+                                        statusEffects.some(effect => log.includes(effect));
+                
+                // Determine what kind of skill is referenced
+                const mentionsGust = log.includes('Gust');
+                const mentionsStoneSlamWeakness = log.includes('Stone Slam') || log.includes('Weakness');
+                const mentionsBurn = log.includes('Burn') || log.includes('burn') || log.includes('Burning');
+                
+                // Check for roll results
+                const isRollResult = log.includes('roll:');
+                
+                // Extract roll value if present
+                let rollInfo = null;
+                if (isRollResult) {
+                  const rollMatch = log.match(/roll: ([\d.]+)% - (SUCCESS!|FAILED)/);
+                  if (rollMatch) {
+                    const rollValue = parseFloat(rollMatch[1]);
+                    const threshold = mentionsGust ? 20 : 
+                                      mentionsStoneSlamWeakness ? 20 : 
+                                      log.includes('Breeze') ? 10 : 30;
+                    const success = rollMatch[2].includes('SUCCESS');
+                    
+                    rollInfo = {
+                      value: rollValue,
+                      threshold: threshold,
+                      success: success
+                    };
+                  }
+                }
+                
+                // Add status effect icon if applicable
+                let statusIcon = '';
+                if (log.includes('SLOW') || log.includes('slow') || log.includes('Slow') || (mentionsGust && log.includes('applied'))) {
+                  statusIcon = '🌪️'; // wind symbol for slow
+                } else if (log.includes('WEAKEN') || log.includes('weaken') || log.includes('Weakness') || 
+                          (mentionsStoneSlamWeakness && log.includes('applied'))) {
+                  statusIcon = '🪨'; // rock symbol for weaken
+                } else if (mentionsBurn) {
+                  statusIcon = '🔥'; // fire for burn
+                }
+                
+                // If this has status effect information, wrap it in a tooltip
+                return isStatusEffectLog ? (
+                  <TooltipProvider key={index}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div 
+                          className={`text-sm py-1 border-b border-[#432874]/20 cursor-help ${
+                            isAllyAction ? 'text-left flex' : 
+                            isEnemyAction ? 'text-right flex justify-end' : 
+                            'text-center'
+                          }`}
+                        >
+                          {statusIcon && isAllyAction && <span className="mr-1">{statusIcon}</span>}
+                          <span dangerouslySetInnerHTML={{ __html: formattedLog }} />
+                          {statusIcon && isEnemyAction && <span className="ml-1">{statusIcon}</span>}
+                          {rollInfo && (
+                            <span className="mx-1 flex items-center">
+                              <span className={`h-2 w-2 rounded-full ${rollInfo.success ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                            </span>
+                          )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-sm bg-black/80 border-gray-700 text-gray-100 p-3">
+                        <div className="text-xs">
+                          {isRollResult ? (
+                            <div>
+                              <div className="font-semibold mb-1 text-white">Status Effect Roll Details:</div>
+                              <div className="flex items-center mb-1">
+                                <div className="w-full bg-gray-800 h-3 rounded-full overflow-hidden mr-2">
+                                  <div 
+                                    className={`h-full ${rollInfo?.success ? 'bg-green-500' : 'bg-red-500'}`}
+                                    style={{ width: `${Math.min(100, ((rollInfo?.value || 0) / (rollInfo?.threshold || 100)) * 100)}%` }}
+                                  />
+                                </div>
+                                <span className={rollInfo?.success ? 'text-green-400' : 'text-red-400'}>
+                                  {rollInfo?.value.toFixed(1)}% / {rollInfo?.threshold}%
+                                </span>
+                              </div>
+                              <div>
+                                {rollInfo?.success 
+                                  ? "Success! Status effect applied." 
+                                  : `Failed. Needed to roll below ${rollInfo?.threshold}% to apply effect.`}
+                              </div>
+                            </div>
+                          ) : mentionsGust ? (
+                            <div>
+                              <div className="font-semibold text-cyan-300">Gust Status Effect:</div>
+                              <div>Has a 20% chance to apply "Minor Slow" (20% Speed reduction) for 1 turn.</div>
+                              <div className="mt-2 italic text-gray-400">The system rolls a random number from 0-100. If the roll is below 20, the effect is applied.</div>
+                            </div>
+                          ) : mentionsStoneSlamWeakness ? (
+                            <div>
+                              <div className="font-semibold text-yellow-300">Stone Slam Status Effect:</div>
+                              <div>Has a 20% chance to apply "Minor Weakness" (10% Attack reduction) for 2 turns.</div>
+                              <div className="mt-2 italic text-gray-400">The system rolls a random number from 0-100. If the roll is below 20, the effect is applied.</div>
+                            </div>
+                          ) : mentionsBurn ? (
+                            <div>
+                              <div className="font-semibold text-orange-400">Burn Status Effect:</div>
+                              <div>Has a 30% chance to apply "Burn" (5% max HP damage per turn) for 3 turns.</div>
+                              <div className="mt-2 italic text-gray-400">The system rolls a random number from 0-100. If the roll is below 30, the effect is applied.</div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="font-semibold">Status Effect Information:</div>
+                              <div>When a character uses a skill with a status effect chance, the system rolls to determine if the effect is applied.</div>
+                              <div className="mt-2 text-gray-400">Hover over roll results for detailed information about the roll.</div>
+                            </div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
                   <div 
                     key={index} 
                     className={`text-sm py-1 border-b border-[#432874]/20 ${
