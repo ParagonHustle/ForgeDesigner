@@ -429,6 +429,34 @@ const CharacterCard = ({
                         </div>
                       )}
                     </div>
+                    
+                    {/* Show related aura skills if they exist */}
+                    {(() => {
+                      try {
+                        const skills = aura.skills ? 
+                          (typeof aura.skills === 'string' ? JSON.parse(aura.skills) : aura.skills) : 
+                          [];
+                        
+                        if (skills && skills.length > 0) {
+                          return (
+                            <div className="mt-2 border-t border-[#432874]/30 pt-2">
+                              <div className="flex items-center text-xs text-[#FF9D00]">
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                <span>Aura Skills</span>
+                              </div>
+                              <div className="text-xs mt-1 text-[#C8B8DB]/80">
+                                {skills.map((skill: any, index: number) => (
+                                  <div key={index} className="truncate">• {skill.name}</div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                      } catch (e) {
+                        console.error('Failed to parse aura skills in grid:', e);
+                      }
+                      return null;
+                    })()}
                   </div>
                 ))}
               </div>

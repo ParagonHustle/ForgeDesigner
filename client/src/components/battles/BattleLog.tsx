@@ -2132,79 +2132,43 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           
           <TabsContent value="debug-logs">
             <div className="h-[400px] overflow-y-auto space-y-1 text-xs font-mono">
-              {actionLog.map((log, index) => {
-                // Enhanced logging for admin view with correct turn numbers
-                // Extract turn number from log if it exists
+              {/* Show the detailed logs directly for better visibility of all status effect attempts */}
+              {detailedActionLog.map((log, index) => {
                 const turnMatch = log.match(/Turn (\d+):/);
                 const turnNumber = turnMatch ? turnMatch[1] : "?";
                 
-                const timestamp = new Date().toLocaleTimeString();
-                let adminLog = `[Turn ${turnNumber}] [${timestamp}] ${log}`;
-
-                // Add detailed status effect and combat information
-                if (log.includes("used")) {
-                  // Don't generate random rolls here anymore - use stored detailed action log instead
-                  const attackMatch = log.match(/(\w+) used (\w+( \w+)*) on (\w+( \w+)*) for (\d+) damage/);
-                  
-                  if (attackMatch) {
-                    const [_, attacker, skill, __, target, ___, damage] = attackMatch;
-                    adminLog = `[Turn ${turnNumber}] COMBAT: ${attacker} -> ${target}\n`;
-                    adminLog += `  Skill: ${skill}\n`;
-                    adminLog += `  Base Damage: ${damage}\n`;
-                    
-                    // Instead of random rolls, get this information from latest status effect logs
-                    // which should already be stored in detailedActionLog
-                    const relevantLogs = detailedActionLog.filter(dl => 
-                      dl.includes(`Turn ${turnNumber}:`) && 
-                      dl.includes(attacker) && 
-                      dl.includes(target)
-                    );
-                    
-                    // Include any status effect roll information
-                    const effectRollLog = relevantLogs.find(l => l.includes('EFFECT ROLL'));
-                    if (effectRollLog) {
-                      adminLog += `  ${effectRollLog.replace(`Turn ${turnNumber}: `, '')}\n`;
-                    }
-                    
-                    // Include success/failure information
-                    const statusLog = relevantLogs.find(l => l.includes('STATUS -'));
-                    if (statusLog) {
-                      adminLog += `  Result: EFFECT APPLIED\n`;
-                    } else if (effectRollLog) {
-                      adminLog += `  Result: No Effect\n`;
-                    }
-                  }
+                // Highlight different types of logs
+                const isEffectAttempt = log.includes('EFFECT ATTEMPT');
+                const isEffectRoll = log.includes('EFFECT ROLL');
+                const isStatusApplied = log.includes('STATUS -') && log.includes('applied');
+                const isActionLog = log.includes('Action -');
+                
+                // Style based on log type
+                let logStyle = '';
+                let borderStyle = '';
+                if (isEffectAttempt) {
+                  logStyle = 'bg-blue-900/20 text-blue-300';
+                  borderStyle = 'border-l-4 border-l-blue-500';
+                } else if (isEffectRoll) {
+                  logStyle = 'bg-purple-900/20 text-purple-300';
+                  borderStyle = 'border-l-4 border-l-purple-500';
+                } else if (isStatusApplied) {
+                  logStyle = 'bg-green-900/20 text-green-300';
+                  borderStyle = 'border-l-4 border-l-green-500';
+                } else if (isActionLog) {
+                  logStyle = 'bg-gray-900/20 text-gray-300';
                 }
-                // Status effect processing
-                else if (log.includes("status effects")) {
-                  const statusMatch = log.match(/Processing ([\w\s-]+)'s status effects/);
-                  if (statusMatch) {
-                    adminLog = `[${timestamp}] STATUS UPDATE: ${statusMatch[1]}\n`;
-                    // Add any status effect processing details from the log
-                    if (log.includes("duration")) {
-                      const durationMatch = log.match(/(\w+): (\d+) turns/);
-                      if (durationMatch) {
-                        adminLog += `  Effect: ${durationMatch[1]} | Turns remaining: ${durationMatch[2]}\n`;
-                      }
-                    }
-                  }
-                }
-
-                // Highlight successful status effect applications
-                const isSuccessfulEffect = adminLog.includes("EFFECT APPLIED") || 
-                                        adminLog.includes("BURN APPLIED") ||
-                                        adminLog.includes("SLOW APPLIED") ||
-                                        adminLog.includes("WEAKEN APPLIED");
-
+                
+                // Format the log string for better readability
+                const formattedLog = log.replace(`Turn ${turnNumber}: `, '');
+                
                 return (
                   <div 
                     key={index} 
-                    className={`py-1 border-b border-[#432874]/20 font-mono ${
-                      isSuccessfulEffect ? 'bg-green-900/20 border-l-4 border-l-green-500' : ''
-                    }`}
+                    className={`py-1 border-b border-[#432874]/20 font-mono ${logStyle} ${borderStyle}`}
                     style={{whiteSpace: 'pre-wrap'}}
                   >
-                    {adminLog}
+                    {`[Turn ${turnNumber}] ${formattedLog}`}
                   </div>
                 );
               })}
