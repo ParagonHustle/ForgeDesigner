@@ -347,12 +347,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       console.log("Battle simulation running with", units.length, "units");
 
       const interval = setInterval(() => {
-        // Increment battle round on each interval - this ensures status effects decrement properly
-        setBattleRound(prevRound => {
-          console.log(`Advancing to battle round ${prevRound + 1}`);
-          return prevRound + 1;
-        });
-
+        // DON'T increment battle round on each interval
+        // Only increment when actual actions happen
+        // This fixes the turn tracking issues
+        
         // First pass: update meters and track which units should attack
         const unitsToAttack: { attacker: BattleUnit, target: BattleUnit }[] = [];
 
@@ -854,6 +852,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   };
 
   const performAction = (attacker: BattleUnit, target: BattleUnit) => {
+    // Increment battle turn - each ACTION is a new turn (not each interval tick)
+    setBattleRound(prevRound => prevRound + 1);
+    
     const attackCount = attacker.lastSkillUse + 1;
     let skill = attacker.skills.basic;
     let skillType = 'basic';
@@ -2107,11 +2108,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           </TabsContent>
 
           <TabsContent value="log">
-            {/* Battle round heading */}
-            <div className="mb-2 font-semibold text-[#FF9D00]">
-              Current Battle Round: {battleRound}
-            </div>
-            
             <div className="h-[400px] overflow-y-auto space-y-1">
               {sortedActionLog.map((log, index) => {
                 // Improved ally detection - check for ANY ally character in The Forge
