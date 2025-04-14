@@ -88,6 +88,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   useEffect(() => {
     if (battleLog && battleLog.length > 0) {
       setBattleRound(1);
+      setActionLog([]); // Clear action log when a new battle starts
+      setDetailedActionLog([]); // Clear detailed log when a new battle starts
     }
   }, [battleLog]);
 
