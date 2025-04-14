@@ -3,8 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
-import { Shield, Swords, Heart, Zap } from 'lucide-react';
-import TooltipWrapper from '@/components/common/TooltipWrapper';
+import { Shield, Swords, Heart, Zap, Info } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface StatusEffect {
   name: string;
@@ -109,28 +114,31 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         `${effect.value}% reduction`} (${effect.duration} turns remaining)`;
     }
     
-    // Create a synthetic tooltip ID
-    const tooltipId = `status-effect-${effect.effect.toLowerCase()}`;
-    
-    // Create a tooltip for this effect
-    gameMechanicsTooltips.push({
-      id: tooltipId,
-      title: title,
-      description: description,
-      category: 'combat'
-    });
-    
     return (
-      <TooltipWrapper 
-        key={index}
-        id={tooltipId}
-      >
-        <div 
-          className={`text-xs px-1 rounded text-white ${statusColor} flex items-center cursor-help`}
-        >
-          {effect.name} ({effect.duration})
-        </div>
-      </TooltipWrapper>
+      <TooltipProvider key={index}>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <div 
+              className={`text-xs px-1 rounded text-white ${statusColor} flex items-center cursor-help`}
+            >
+              {effect.name} ({effect.duration})
+            </div>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            align="center"
+            className="bg-gray-900/95 border-purple-900 text-white p-3 max-w-xs rounded-lg shadow-xl z-50"
+          >
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <Info className="text-yellow-400 mt-0.5 flex-shrink-0" size={18} />
+                <h4 className="font-semibold text-yellow-400">{title}</h4>
+              </div>
+              <p className="text-sm leading-relaxed">{description}</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   };
 
