@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAppStore } from "@/lib/zustandStore";
+import { useAuthStore } from "@/lib/zustandStore";
 
 interface StatusEffect {
   name: string;
@@ -78,7 +78,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [battleRound, setBattleRound] = useState(1);
   
   // Get user info to check if admin
-  const { user } = useStore();
+  const { user } = useAuthStore();
   
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
@@ -769,13 +769,47 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Calculate damage: Attack * Damage Multiplier
     // Apply aura bonus if available
     let attackValue = attacker.stats.attack;
+    let attackWithBonus = attackValue;
+    let auraBonus = 0;
+    
     if (attacker.auraBonus?.attack) {
       // Add percentage bonus from aura
-      attackValue = Math.floor(attackValue * (1 + attacker.auraBonus.attack / 100));
+      auraBonus = attacker.auraBonus.attack;
+      attackWithBonus = Math.floor(attackValue * (1 + auraBonus / 100));
+    }
+    
+    // Check for "Weakened" status effect (-10% attack)
+    const hasWeakenedEffect = attacker.statusEffects?.some(effect => 
+      effect.effect === "ReduceAtk"
+    );
+    
+    let weakenedMultiplier = 1.0;
+    if (hasWeakenedEffect) {
+      // Find the weakened effect to get exact reduction percentage
+      const weakenEffect = attacker.statusEffects?.find(effect => effect.effect === "ReduceAtk");
+      if (weakenEffect) {
+        weakenedMultiplier = 1 - (weakenEffect.value / 100);
+        attackWithBonus = Math.floor(attackWithBonus * weakenedMultiplier);
+      }
     }
     
     // Damage = Attack * Skill Damage Multiplier
-    const damage = Math.floor(attackValue * skill.damage);
+    const damage = Math.floor(attackWithBonus * skill.damage);
+    
+    // Log detailed calculations for admin view
+    const calculationLog = `
+=== DAMAGE CALCULATION ===
+${attacker.name} using ${skill.name} against ${target.name}
+Base Attack: ${attackValue}
+Aura Bonus: ${auraBonus > 0 ? `+${auraBonus}%` : 'None'} 
+Attack with Aura: ${attackValue !== attackWithBonus ? attackWithBonus : attackValue}
+Weakened Effect: ${hasWeakenedEffect ? `Yes (-${(1-weakenedMultiplier)*100}%)` : 'No'}
+Skill Multiplier: ${skill.damage * 100}%
+Final Damage: ${attackWithBonus} × ${skill.damage} = ${damage}
+`;
+    
+    // Add to detailed log for admin view
+    setDetailedActionLog(prev => [calculationLog, ...prev]);
     
     // Handle special skill behaviors
     const applySpecialSkillBehavior = () => {
@@ -1506,6 +1540,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <TabsTrigger value="live">Live Battle</TabsTrigger>
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="log">Action Log</TabsTrigger>
+            {user?.isAdmin && (
+              <TabsTrigger value="admin-log" className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/30">
+                <Calculator size={14} className="mr-1" /> Admin Log
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="live" className="space-y-4">
@@ -1775,6 +1814,130 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               })}
             </div>
           </TabsContent>
+
+          {/* Admin Battle Log - Only visible to admins */}
+          {user?.isAdmin && (
+            <TabsContent value="admin-log">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-amber-500/10 p-2 rounded border border-amber-500/30">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="text-amber-500" size={16} />
+                    <h3 className="font-semibold text-amber-500">Admin Battle Analytics</h3>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-xs border-amber-500/30 hover:bg-amber-500/10"
+                    onClick={() => {
+                      // Add battle data to the detailed log for debugging
+                      const debugInfo = `Battle Round: ${battleRound}\nTotal Units: ${units.length}\nAllies: ${units.filter(u => battleLog[0]?.allies?.some((a: any) => a.id === u.id)).length}\nEnemies: ${units.filter(u => battleLog[0]?.enemies?.some((e: any) => e.id === u.id)).length}`;
+                      setDetailedActionLog(prev => [`=== BATTLE DEBUG INFO ===\n${debugInfo}`, ...prev]);
+                    }}
+                  >
+                    Log Battle State
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Combat Calculation Analysis */}
+                  <div className="bg-gray-800/50 rounded shadow-inner p-3 border border-gray-700">
+                    <h4 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-1">
+                      <Table size={14} /> Damage Calculations
+                    </h4>
+                    <div className="space-y-2">
+                      {/* Sample Calculation Preview */}
+                      <div className="text-xs bg-gray-900/50 p-2 rounded border border-gray-800 font-mono">
+                        <div className="text-green-400 border-b border-gray-700 pb-1 mb-1">Base Attack Calculation</div>
+                        <div>
+                          attacker.stats.attack: <span className="text-blue-400">100</span><br />
+                          skill.damage (multiplier): <span className="text-purple-400">0.8</span><br />
+                          base_damage = <span className="text-blue-400">100</span> * <span className="text-purple-400">0.8</span> = <span className="text-yellow-300">80</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs bg-gray-900/50 p-2 rounded border border-gray-800 font-mono">
+                        <div className="text-green-400 border-b border-gray-700 pb-1 mb-1">Status Effect Modifier</div>
+                        <div>
+                          If Weakened (-10% ATK):<br />
+                          modified_damage = <span className="text-yellow-300">80</span> * 0.9 = <span className="text-red-400">72</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs bg-gray-900/50 p-2 rounded border border-gray-800 font-mono">
+                        <div className="text-green-400 border-b border-gray-700 pb-1 mb-1">Attack Speed Formula</div>
+                        <div>
+                          base_speed: <span className="text-blue-400">50</span><br />
+                          meter_increase = (<span className="text-blue-400">50</span> / 40) * playbackSpeed<br />
+                          meter_increase = <span className="text-yellow-300">1.25</span> * <span className="text-purple-400">1</span> = <span className="text-red-400">1.25</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Detailed Debug Log */}
+                  <div className="bg-gray-800/50 rounded shadow-inner border border-gray-700">
+                    <div className="flex items-center justify-between p-2 border-b border-gray-700">
+                      <h4 className="text-sm font-semibold text-amber-400 flex items-center gap-1">
+                        <Info size={14} /> Detailed System Log
+                      </h4>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setDetailedActionLog([])}
+                        className="h-6 px-2 text-xs"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                    <div className="h-[300px] overflow-y-auto p-2 font-mono text-xs">
+                      {detailedActionLog.length > 0 ? (
+                        detailedActionLog.map((log, index) => (
+                          <div key={index} className="mb-1 border-b border-gray-800/50 pb-1 whitespace-pre-wrap break-all">
+                            {log}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-gray-500 italic">No detailed logs captured yet. Actions will be logged here during battle.</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Battle Status Effect Analytics */}
+                <div className="bg-gray-800/50 rounded shadow-inner p-3 border border-gray-700">
+                  <h4 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-1">
+                    <Swords size={14} /> Status Effect Analysis
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="bg-red-900/20 p-2 rounded border border-red-900/30">
+                      <div className="text-xs font-medium text-red-400">Burn</div>
+                      <div className="text-xs">Chance: 10-30%</div>
+                      <div className="text-xs">Duration: 1-3 turns</div>
+                      <div className="text-xs">Effect: Fixed damage per turn</div>
+                    </div>
+                    <div className="bg-green-900/20 p-2 rounded border border-green-900/30">
+                      <div className="text-xs font-medium text-green-400">Poison</div>
+                      <div className="text-xs">Chance: 30%</div>
+                      <div className="text-xs">Duration: 3 turns</div>
+                      <div className="text-xs">Effect: Fixed damage per turn</div>
+                    </div>
+                    <div className="bg-orange-900/20 p-2 rounded border border-orange-900/30">
+                      <div className="text-xs font-medium text-orange-400">Weakened</div>
+                      <div className="text-xs">Chance: 15-30%</div>
+                      <div className="text-xs">Duration: 2 turns</div>
+                      <div className="text-xs">Effect: -10% Attack</div>
+                    </div>
+                    <div className="bg-blue-900/20 p-2 rounded border border-blue-900/30">
+                      <div className="text-xs font-medium text-blue-400">Slowed</div>
+                      <div className="text-xs">Chance: 10%</div>
+                      <div className="text-xs">Duration: 1 turn</div>
+                      <div className="text-xs">Effect: -20% Speed</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
 
         <DialogFooter className="flex flex-col gap-2 sm:gap-0">
