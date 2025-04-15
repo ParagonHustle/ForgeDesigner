@@ -88,19 +88,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
   const [currentStage, setCurrentStage] = useState(0);
+  const [currentAction, setCurrentAction] = useState(0);
   const [units, setUnits] = useState<BattleUnit[]>([]);
   const [actionLog, setActionLog] = useState<string[]>([]);
   const [detailedActionLog, setDetailedActionLog] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
+  const [activeTab, setActiveTab] = useState('battle');
   
-  // Animation states for battle transitions
+  // Animation states
+  const [animationInProgress, setAnimationInProgress] = useState(false);
+  const [pendingStatusEffectAnimations, setPendingStatusEffectAnimations] = useState<any[]>([]);
+  const [animationQueue, setAnimationQueue] = useState<any[]>([]);
   const [activeAttacker, setActiveAttacker] = useState<string | number | null>(null);
   const [activeTarget, setActiveTarget] = useState<string | number | null>(null);
   const [showAttackAnimation, setShowAttackAnimation] = useState(false);
   const [showDamageAnimation, setShowDamageAnimation] = useState(false);
   const [attackAnimationType, setAttackAnimationType] = useState<'basic' | 'advanced' | 'ultimate'>('basic');
   const [currentSkillName, setCurrentSkillName] = useState<string>('');
-  const [animationInProgress, setAnimationInProgress] = useState(false);
   
   // No rounds in the battle system, just stages
   

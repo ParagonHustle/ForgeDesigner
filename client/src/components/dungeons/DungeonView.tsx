@@ -138,6 +138,27 @@ const DungeonView = () => {
         throw new Error(`${unequippedChars.map(c => c.name).join(', ')} ${unequippedChars.length === 1 ? 'needs' : 'need'} an aura equipped to enter dungeons`);
       }
 
+      // Check for any characters with very low health (treat all as healthy for now)
+      // In the future, when currentHealth is added to the character schema, we can enable this check
+      const damagedCharacters: any[] = [];
+      
+      // Commented out implementation for when currentHealth property is added
+      /*
+      const damagedCharacters = selectedChars.filter(char => {
+        // Calculate max health (vitality * 8)
+        const maxHealth = (char.vitality || 100) * 8;
+        // If currentHealth exists and is too low, flag this character
+        return (char.currentHealth !== null && 
+                char.currentHealth !== undefined && 
+                char.currentHealth < (maxHealth * 0.3));
+      });
+      */
+      
+      if (damagedCharacters.length > 0) {
+        const charNames = damagedCharacters.map(c => c.name).join(', ');
+        throw new Error(`${charNames} ${damagedCharacters.length === 1 ? 'is' : 'are'} too damaged to enter the dungeon. Please heal or select different characters.`);
+      }
+
       console.log("Sending dungeon request:", {
         dungeonName: selectedDungeon.name,
         dungeonLevel: selectedDungeon.level,
