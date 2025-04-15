@@ -470,11 +470,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         allies.forEach((ally, index) => {
           if (!ally) return; // Skip if ally is undefined/null
           
+          // Add debug logging for problematic HP values
+          if (typeof ally.hp === 'number' && ally.hp <= 0) {
+            console.log(`🔶 Fixing ally ${ally.name} with invalid HP: ${ally.hp}`);
+            // Ensure we never show units with 0 HP as this makes no sense in the battle
+            ally.hp = typeof ally.maxHp === 'number' ? Math.max(1, Math.ceil(ally.maxHp * 0.1)) : 10;
+            console.log(`   New HP value: ${ally.hp}`);
+          }
+          
           // Create a battle unit with safe default values
           const allyUnit: BattleUnit = {
             id: ally.id || `ally-${index}`,
             name: ally.name || `Ally ${index + 1}`,
-            hp: typeof ally.hp === 'number' ? ally.hp : 100,
+            hp: typeof ally.hp === 'number' ? Math.max(1, ally.hp) : 100, // Ensure HP is at least 1
             maxHp: typeof ally.maxHp === 'number' ? ally.maxHp : 100,
             attackMeter: typeof ally.actionTimer === 'number' ? ally.actionTimer : 0,
             totalDamageDealt: 0,
@@ -517,11 +525,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         enemies.forEach((enemy, index) => {
           if (!enemy) return; // Skip if enemy is undefined/null
           
+          // Add debug logging for problematic HP values
+          if (typeof enemy.hp === 'number' && enemy.hp <= 0) {
+            console.log(`🔶 Fixing ally ${enemy.name} with invalid HP: ${enemy.hp}`);
+            // Ensure we never show units with 0 HP as this makes no sense in the battle
+            enemy.hp = typeof enemy.maxHp === 'number' ? Math.max(1, Math.ceil(enemy.maxHp * 0.1)) : 10;
+            console.log(`   New HP value: ${enemy.hp}`);
+          }
+          
           // Create a battle unit with safe default values
           const enemyUnit: BattleUnit = {
             id: enemy.id || `enemy-${index}`,
             name: enemy.name || `Enemy ${index + 1}`,
-            hp: typeof enemy.hp === 'number' ? enemy.hp : 100,
+            hp: typeof enemy.hp === 'number' ? Math.max(1, enemy.hp) : 100, // Ensure HP is at least 1
             maxHp: typeof enemy.maxHp === 'number' ? enemy.maxHp : 100,
             attackMeter: typeof enemy.actionTimer === 'number' ? enemy.actionTimer : 0,
             totalDamageDealt: 0,
@@ -576,7 +592,35 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         if (target && effect) {
           actionMessages.push(`${target.name} is affected by ${effect.name}`);
         }
-      // We ignore round type events - we don't use rounds in this system
+      } else if (event.type === 'round') {
+        // Process battle round events - these contain the actual combat actions
+        console.log(`Processing round ${event.number}:`, event);
+        
+        // Extract round actions - each action is an attack/skill use from one unit to another
+        if (Array.isArray(event.actions) && event.actions.length > 0) {
+          event.actions.forEach(action => {
+            if (action.actor && action.target && typeof action.damage === 'number') {
+              // Format the message differently based on whether it's damage or healing
+              const isHealing = action.healing || action.damage < 0;
+              const message = isHealing
+                ? `${action.actor} healed ${action.target} for ${Math.abs(action.damage)} HP with ${action.skill}!`
+                : `${action.actor} used ${action.skill} on ${action.target} for ${action.damage} damage${action.isCritical ? " (CRITICAL HIT!)" : ""}!`;
+              
+              // Add the message to both action logs
+              actionMessages.push(message);
+              if (action.message) {
+                detailedMessages.push(action.message);
+              } else {
+                detailedMessages.push(message);
+              }
+            } else if (action.type === 'defeat' && action.target) {
+              // Handle defeat actions separately for clarity
+              const defeatMessage = `${action.target} has been defeated!`;
+              actionMessages.push(defeatMessage);
+              detailedMessages.push(defeatMessage);
+            }
+          });
+        }
       } else if (event.type === 'stage' || event.type === 'stage_progress') {
         // Handle both 'stage' and 'stage_progress' events for backward compatibility
         // Extract stage information from the event
