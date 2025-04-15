@@ -210,12 +210,12 @@ const InventoryView = () => {
     required: number,
     characterClass: string,
     characterName: string,
-    type: string,
+    rarity: "common" | "uncommon" | "rare" | "epic" | "legendary",
     avatarUrl?: string
   }) => {
     if (shard.quantity >= shard.required) {
       // Find the character
-      const character = characters.find(c => c.id === shard.id);
+      const character = characters.find(c => c.id === (shard.id % 10000)); // Remove rarity offset
       
       if (!character) {
         toast({
@@ -229,7 +229,7 @@ const InventoryView = () => {
       // Level up character
       toast({
         title: "Character Level Up!",
-        description: `Leveling up ${character.name} using ${shard.characterName} shards!`
+        description: `Leveling up ${character.name} using ${shard.rarity} shards!`
       });
       
       // Update shard quantity (reset to 0)
@@ -245,7 +245,7 @@ const InventoryView = () => {
       localStorage.setItem('characterShards', JSON.stringify(updatedShards));
       
       // Level up the character
-      handleLevelUpCharacter(shard.id);
+      handleLevelUpCharacter(character.id);
     } else {
       // Collect more shards
       const randomAmount = Math.floor(Math.random() * 5) + 1;
@@ -264,7 +264,7 @@ const InventoryView = () => {
       
       toast({
         title: "Shards Collected!",
-        description: `You collected ${randomAmount} ${shard.characterName} shards!`
+        description: `You collected ${randomAmount} ${shard.rarity} ${shard.characterName} shards!`
       });
     }
   };
