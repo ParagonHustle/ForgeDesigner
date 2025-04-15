@@ -338,14 +338,158 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   useEffect(() => {
     if (battleLog && battleLog.length > 0 && isOpen && !isPaused) {
       // Process battle log data
+      console.log("Battle log data received:", JSON.stringify(battleLog).slice(0, 500) + "...");
       processBattleLog();
     }
   }, [battleLog, isOpen, isPaused]);
   
   // Function to process battle log data
   const processBattleLog = () => {
-    // Implementation would go here - simplified for this fix
     console.log("Processing battle log data...");
+    
+    if (!battleLog || battleLog.length === 0) {
+      console.error("No battle log data available");
+      return;
+    }
+    
+    // Process battle events sequentially
+    let actionMessages: string[] = [];
+    let detailedMessages: string[] = [];
+    let currentRound = 1;
+    let stage = 0;
+    let battleUnits: BattleUnit[] = [];
+    
+    // First, extract all units from the init event
+    const initEvent = battleLog.find(event => event.type === 'init');
+    if (initEvent && initEvent.data) {
+      const initData = initEvent.data || {};
+      const allies = initData.allies || [];
+      const enemies = initData.enemies || [];
+      
+      // Process allies
+      if (Array.isArray(allies)) {
+        allies.forEach((ally, index) => {
+          if (!ally) return; // Skip if ally is undefined/null
+          
+          // Create a battle unit with safe default values
+          const allyUnit: BattleUnit = {
+            id: ally.id || `ally-${index}`,
+            name: ally.name || `Ally ${index + 1}`,
+            hp: typeof ally.hp === 'number' ? ally.hp : 100,
+            maxHp: typeof ally.maxHp === 'number' ? ally.maxHp : 100,
+            attackMeter: typeof ally.actionTimer === 'number' ? ally.actionTimer : 0,
+            totalDamageDealt: 0,
+            totalDamageReceived: 0,
+            totalHealingDone: 0,
+            totalHealingReceived: 0,
+            stats: {
+              attack: typeof ally.stats?.attack === 'number' ? ally.stats.attack : 10,
+              vitality: typeof ally.stats?.vitality === 'number' ? ally.stats.vitality : 10,
+              speed: typeof ally.stats?.speed === 'number' ? ally.stats.speed : 10
+            },
+            skills: {
+              basic: { 
+                name: ally.skills?.basic?.name || "Basic Attack", 
+                damage: typeof ally.skills?.basic?.damage === 'number' ? ally.skills.basic.damage : 5 
+              }
+            },
+            statusEffects: Array.isArray(ally.statusEffects) ? ally.statusEffects : []
+          };
+          
+          // Add optional fields only if they exist
+          if (ally.auraBonus) {
+            allyUnit.auraBonus = ally.auraBonus;
+          }
+          
+          if (ally.skills?.advanced) {
+            allyUnit.skills.advanced = ally.skills.advanced;
+          }
+          
+          if (ally.skills?.ultimate) {
+            allyUnit.skills.ultimate = ally.skills.ultimate;
+          }
+          
+          battleUnits.push(allyUnit);
+        });
+      }
+      
+      // Process enemies
+      if (Array.isArray(enemies)) {
+        enemies.forEach((enemy, index) => {
+          if (!enemy) return; // Skip if enemy is undefined/null
+          
+          // Create a battle unit with safe default values
+          const enemyUnit: BattleUnit = {
+            id: enemy.id || `enemy-${index}`,
+            name: enemy.name || `Enemy ${index + 1}`,
+            hp: typeof enemy.hp === 'number' ? enemy.hp : 100,
+            maxHp: typeof enemy.maxHp === 'number' ? enemy.maxHp : 100,
+            attackMeter: typeof enemy.actionTimer === 'number' ? enemy.actionTimer : 0,
+            totalDamageDealt: 0,
+            totalDamageReceived: 0,
+            totalHealingDone: 0,
+            totalHealingReceived: 0,
+            stats: {
+              attack: typeof enemy.stats?.attack === 'number' ? enemy.stats.attack : 10,
+              vitality: typeof enemy.stats?.vitality === 'number' ? enemy.stats.vitality : 10,
+              speed: typeof enemy.stats?.speed === 'number' ? enemy.stats.speed : 10
+            },
+            skills: {
+              basic: { 
+                name: enemy.skills?.basic?.name || "Basic Attack", 
+                damage: typeof enemy.skills?.basic?.damage === 'number' ? enemy.skills.basic.damage : 5 
+              }
+            },
+            statusEffects: Array.isArray(enemy.statusEffects) ? enemy.statusEffects : []
+          };
+          
+          // Add optional fields only if they exist
+          if (enemy.auraBonus) {
+            enemyUnit.auraBonus = enemy.auraBonus;
+          }
+          
+          if (enemy.skills?.advanced) {
+            enemyUnit.skills.advanced = enemy.skills.advanced;
+          }
+          
+          if (enemy.skills?.ultimate) {
+            enemyUnit.skills.ultimate = enemy.skills.ultimate;
+          }
+          
+          battleUnits.push(enemyUnit);
+        });
+      }
+      
+      // Add an initial message about battle start
+      actionMessages.push(`Battle started with ${battleUnits.length} combatants`);
+      setUnits(battleUnits);
+    }
+    
+    // Gather action logs
+    battleLog.forEach(event => {
+      if (event.type === 'action') {
+        const { source, target, skill, damage } = event.data || {};
+        if (source && target) {
+          actionMessages.push(`${source.name} used ${skill?.name || 'an attack'} on ${target.name} for ${damage || 0} damage`);
+        }
+      } else if (event.type === 'status') {
+        const { target, effect } = event.data || {};
+        if (target && effect) {
+          actionMessages.push(`${target.name} is affected by ${effect.name}`);
+        }
+      } else if (event.type === 'round') {
+        // Safely access event.data with a default empty object
+        const roundData = event.data || {};
+        currentRound = roundData.round ? roundData.round : currentRound + 1;
+        actionMessages.push(`Round ${currentRound} begins`);
+        setBattleRound(currentRound);
+      } else if (event.type === 'stage') {
+        const stageData = event.data || {};
+        stage = stageData.stage !== undefined ? stageData.stage : stage + 1;
+        actionMessages.push(`Entering Stage ${stage + 1}`);
+        setCurrentStage(stage);
+      }
+    });
     
     // Check for battle completion
     const battleCompleteEvent = battleLog.find(event => 
@@ -355,7 +499,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     if (battleCompleteEvent) {
       // Mark battle as complete for UI to show the complete dungeon button
       setIsComplete(true);
+      actionMessages.push(`Battle Complete! ${battleCompleteEvent.type === 'victory' ? 'Victory!' : 'Defeat!'}`);
     }
+    
+    // Update state with collected messages
+    setActionLog(actionMessages);
+    setDetailedActionLog(detailedMessages.length > 0 ? detailedMessages : actionMessages);
   };
   
   return (
