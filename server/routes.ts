@@ -2911,26 +2911,26 @@ async function generateMockBattleLog(run: any, success: boolean) {
       actionsAdded++;
     }
     
-    // If no actions were added this round, add a forced action
+    // If no actions were added this round, add forced actions for both allies and enemies
     if (actionsAdded === 0 && aliveAllies.length > 0 && aliveEnemies.length > 0) {
       // Add a forced action from an ally to make sure the battle progresses
       const randomAlly = aliveAllies[Math.floor(Math.random() * aliveAllies.length)];
       const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
       
-      // Generate a simple attack with basic damage
-      const forcedDamage = Math.floor(randomAlly.stats.attack * 1.2);
+      // Generate a simple attack with basic damage for ally
+      const forcedAllyDamage = Math.floor(randomAlly.stats.attack * 1.2);
       
       roundActions.push({
         actor: randomAlly.name,
-        skill: "Forced Action",
+        skill: "Basic Attack",
         target: randomEnemy.name,
-        damage: forcedDamage,
+        damage: forcedAllyDamage,
         isCritical: false,
-        message: `${randomAlly.name} attacks ${randomEnemy.name} for ${forcedDamage} damage!`
+        message: `${randomAlly.name} attacks ${randomEnemy.name} for ${forcedAllyDamage} damage!`
       });
       
       // Apply damage to the enemy
-      randomEnemy.hp -= forcedDamage;
+      randomEnemy.hp -= forcedAllyDamage;
       
       // Check if this forced action defeated the enemy
       if (randomEnemy.hp <= 0) {
@@ -2939,6 +2939,37 @@ async function generateMockBattleLog(run: any, success: boolean) {
           type: 'defeat',
           target: randomEnemy.name
         });
+      }
+      
+      // If enemies are still alive, add a forced enemy action too
+      if (aliveEnemies.length > 0 && aliveAllies.length > 0) {
+        // Pick a random enemy to attack and a random ally as target
+        const randomAttacker = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+        const randomTarget = aliveAllies[Math.floor(Math.random() * aliveAllies.length)];
+        
+        // Generate a simple attack with basic damage for enemy
+        const forcedEnemyDamage = Math.floor(randomAttacker.stats.attack * 1.0);
+        
+        roundActions.push({
+          actor: randomAttacker.name,
+          skill: "Enemy Attack",
+          target: randomTarget.name,
+          damage: forcedEnemyDamage,
+          isCritical: false,
+          message: `${randomAttacker.name} attacks ${randomTarget.name} for ${forcedEnemyDamage} damage!`
+        });
+        
+        // Apply damage to the ally
+        randomTarget.hp -= forcedEnemyDamage;
+        
+        // Check if this forced action defeated the ally
+        if (randomTarget.hp <= 0) {
+          aliveAllies = aliveAllies.filter(a => a.id !== randomTarget.id);
+          roundActions.push({
+            type: 'defeat',
+            target: randomTarget.name
+          });
+        }
       }
     }
 
@@ -3030,7 +3061,7 @@ async function generateMockBattleLog(run: any, success: boolean) {
     currentStage++;
     
     // Create enemies for next stage (harder)
-    enemies = [];
+    const newEnemies = [];
     const nextStageDifficulty = run.dungeonLevel + currentStage - 1;
     const nextStageEnemyCount = Math.min(3, Math.floor(nextStageDifficulty / 2) + 1);
     
@@ -3042,7 +3073,7 @@ async function generateMockBattleLog(run: any, success: boolean) {
       
       const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
       
-      enemies.push({
+      newEnemies.push({
         id: `enemy_stage${currentStage}_${i}`,
         name: `${type} ${i + 1} (Stage ${currentStage})`,
         hp: healthPoints,
@@ -3069,11 +3100,11 @@ async function generateMockBattleLog(run: any, success: boolean) {
         'Your party advances to the final stage!' : 
         `Your party advances to stage ${currentStage} of ${TOTAL_STAGES}.`,
       aliveAllies,
-      newEnemies: enemies
+      newEnemies: newEnemies
     });
     
     // Set up next stage battle
-    aliveEnemies = [...enemies];
+    aliveEnemies = [...newEnemies];
     round = 0;
     
     // Continue battle simulation for next stage (recursive)
