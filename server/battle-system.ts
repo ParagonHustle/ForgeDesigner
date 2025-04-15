@@ -139,10 +139,11 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     const safeHealthPoints = Math.max(1, healthPoints); // Ensure minimum 1 HP
     
     // Per requirements, characters MUST start with FULL HP at battle beginning
+    console.log(`Setting ally ${char?.name} initial HP to ${safeHealthPoints} (full health)`);
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',
-      hp: safeHealthPoints,
+      hp: safeHealthPoints, // CRITICAL: Allies must start at full HP
       maxHp: safeHealthPoints,
       stats: {
         attack: char?.attack || 50,
@@ -190,10 +191,11 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     const safeHealthPoints = Math.max(1, healthPoints);
     
     // Ensure enemies always start with full health
+    console.log(`Setting enemy ${type} ${i + 1} initial HP to ${safeHealthPoints} (full health)`);
     enemies.push({
       id: `enemy_${i}`,
       name: `${type} ${i + 1}`,
-      hp: safeHealthPoints,  // CRITICAL: Always start with full health
+      hp: safeHealthPoints,  // CRITICAL: Enemies must start at full HP
       maxHp: safeHealthPoints, // Set maxHP equal to 8x vitality
       stats: {
         attack: 40 + (level * 5),
