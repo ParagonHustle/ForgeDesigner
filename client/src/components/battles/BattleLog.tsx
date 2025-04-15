@@ -11,12 +11,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Interface definitions remained the same
 interface StatusEffect {
   name: string;
   duration: number;
-  effect: string; // "Burn" | "Poison" | "Weaken" | "Slow" | etc.
-  value: number;  // Damage amount or stat reduction percentage
-  source?: string; // ID of the unit that applied the effect
+  effect: string; 
+  value: number;  
+  source?: string; 
 }
 
 interface BattleUnit {
@@ -52,7 +53,7 @@ interface BattleUnit {
     speed: number;
   };
   skills: {
-    basic: { name: string; damage: number }; // damage is a multiplier (e.g. 0.8 means 80% of attack)
+    basic: { name: string; damage: number }; 
     advanced?: { name: string; damage: number; cooldown: number };
     ultimate?: { name: string; damage: number; cooldown: number };
   };
@@ -855,6 +856,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       event.type === 'dungeon-complete' ||
       event.type === 'dungeon-failed'
     );
+    
+    console.log('Battle events:', battleEvents);
     
     // Process battle events one by one with appropriate delays
     const processEvents = (index: number) => {
