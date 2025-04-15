@@ -989,11 +989,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             // Add battle status message
             addToLog(`Round ${event.number}: Allies: ${currentAllies.length}, Enemies: ${currentEnemies.length}`);
             
-            // Check for battle completion
-            if (currentEnemies.length === 0) {
-              addToLog("All enemies defeated! Victory!");
-            } else if (currentAllies.length === 0) {
-              addToLog("All allies defeated! Defeat!");
+            // Only check for battle completion if this is the last event
+            // We'll let the battle_end event handle the final victory/defeat message
+            if (currentEnemies.length === 0 && index === battleLog.length - 2) {
+              addToLog(`Round ${event.number}: All enemies in this stage defeated!`);
+            } else if (currentAllies.length === 0 && index === battleLog.length - 2) {
+              addToLog(`Round ${event.number}: All allies defeated! Battle lost!`);
+            } else {
+              // Just a regular round update, don't announce victory/defeat
             }
             
             setAnimationInProgress(false);
