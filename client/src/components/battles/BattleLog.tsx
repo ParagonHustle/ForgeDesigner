@@ -121,14 +121,24 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   // Function to handle dialog close
   const handleClose = (open: boolean) => {
     if (!open) {
-      // Reset battle state when closing dialog
+      // Reset ALL battle state when closing dialog to prevent stale data persistence
       setUnits([]);
       setActionLog([]);
       setDetailedActionLog([]);
       setCurrentStage(0);
+      setCurrentAction(0);
+      setAnimationInProgress(false);
+      setPendingStatusEffectAnimations([]);
       setIsComplete(false);
+      setIsPaused(true);
+      setPlaybackSpeed(1);
+      setAnimationQueue([]);
+      setShowAttackAnimation(false);
       setActiveAttacker(null);
       setActiveTarget(null);
+      setActiveTab('battle');
+      
+      // Signal to parent component that dialog has closed
       onClose();
     }
   };

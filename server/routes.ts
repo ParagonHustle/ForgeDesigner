@@ -3092,17 +3092,20 @@ async function generateMockBattleLog(run: any, success: boolean) {
     
     for (let i = 0; i < nextStageEnemyCount; i++) {
       const type = (i === nextStageEnemyCount - 1 && currentStage === TOTAL_STAGES) ? 'Boss' : 'Minion';
-      const vitality = type === 'Boss' ? 
+      // Ensure vitality is always positive
+      const vitality = Math.max(10, type === 'Boss' ? 
         250 + (nextStageDifficulty * 25) : 
-        90 + (nextStageDifficulty * 12);
+        90 + (nextStageDifficulty * 12));
       
       const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
+      // Ensure HP is never negative
+      const safeHealthPoints = Math.max(1, healthPoints);
       
       newEnemies.push({
         id: `enemy_stage${currentStage}_${i}`,
         name: `${type} ${i + 1} (Stage ${currentStage})`,
-        hp: healthPoints,
-        maxHp: healthPoints,
+        hp: safeHealthPoints,
+        maxHp: safeHealthPoints,
         stats: {
           attack: 45 + (nextStageDifficulty * 6),
           vitality: vitality,
