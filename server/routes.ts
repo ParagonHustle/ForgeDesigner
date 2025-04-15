@@ -2848,7 +2848,21 @@ async function generateMockBattleLog(run: any, success: boolean) {
     });
   }
 
-  // Initial battle state
+  // Validate battle data for invalid health values
+  const invalidAllies = allies.some(ally => ally.hp <= 0);
+  const invalidEnemies = enemies.some(enemy => enemy.hp <= 0);
+  
+  if (invalidAllies || invalidEnemies) {
+    console.error("Battle initialization error: Units with 0 or negative HP detected");
+    // Return a special error event if invalid units are detected
+    return [{
+      type: 'battle_error',
+      message: 'Invalid battle data detected. Units with 0 or negative HP found.',
+      timestamp: Date.now()
+    }];
+  }
+  
+  // Initial battle state (only if validation passes)
   battleLog.push({
     type: 'battle_start',
     allies,

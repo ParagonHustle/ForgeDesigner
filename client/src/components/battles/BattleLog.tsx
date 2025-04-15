@@ -388,6 +388,17 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       console.log("Allies:", allies);
       console.log("Enemies:", enemies);
       
+      // Validation: Check if any characters or enemies have invalid HP (0 or negative)
+      const invalidCharacters = allies.some((ally: any) => typeof ally?.hp === 'number' && ally.hp <= 0);
+      const invalidEnemies = enemies.some((enemy: any) => typeof enemy?.hp === 'number' && enemy.hp <= 0);
+      
+      if (invalidCharacters || invalidEnemies) {
+        console.error("Invalid battle data detected: Units with 0 or negative HP detected");
+        setActionLog(["Error: Invalid battle data detected. Please try again."]);
+        // Bail out early - don't process this battle
+        return;
+      }
+      
       // Process allies
       if (Array.isArray(allies)) {
         allies.forEach((ally, index) => {
