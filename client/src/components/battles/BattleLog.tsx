@@ -645,6 +645,44 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 ? `${action.actor} healed ${action.target} for ${Math.abs(action.damage)} HP with ${action.skill}!`
                 : `${action.actor} used ${action.skill} on ${action.target} for ${action.damage} damage${action.isCritical ? " (CRITICAL HIT!)" : ""}!`;
               
+              // CRITICAL FIX: Update the unit's HP in the actual units state
+              // Find the units in our state that match the actor and target
+              const targetUnit = units.find(unit => unit.name === action.target);
+              
+              // Update target unit HP if found and action caused damage
+              if (targetUnit && !isHealing && action.damage > 0) {
+                // Apply damage to target's HP
+                targetUnit.hp = Math.max(0, targetUnit.hp - action.damage);
+                targetUnit.totalDamageReceived = (targetUnit.totalDamageReceived || 0) + action.damage;
+                
+                // Update actor's stats if found
+                const actorUnit = units.find(unit => unit.name === action.actor);
+                if (actorUnit) {
+                  actorUnit.totalDamageDealt = (actorUnit.totalDamageDealt || 0) + action.damage;
+                }
+                
+                console.log(`Updated ${targetUnit.name} HP: ${targetUnit.hp}/${targetUnit.maxHp} after taking ${action.damage} damage`);
+              }
+              
+              // Handle healing
+              if (targetUnit && isHealing && action.damage > 0) {
+                // Apply healing to target's HP (don't exceed maxHp)
+                const healAmount = Math.abs(action.damage);
+                targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
+                targetUnit.totalHealingReceived = (targetUnit.totalHealingReceived || 0) + healAmount;
+                
+                // Update actor's healing stats
+                const actorUnit = units.find(unit => unit.name === action.actor);
+                if (actorUnit) {
+                  actorUnit.totalHealingDone = (actorUnit.totalHealingDone || 0) + healAmount;
+                }
+                
+                console.log(`Updated ${targetUnit.name} HP: ${targetUnit.hp}/${targetUnit.maxHp} after receiving ${healAmount} healing`);
+              }
+              
+              // We need to update the units state to reflect the health changes
+              setUnits([...units]);
+              
               // Add the message to both action logs
               actionMessages.push(message);
               if (action.message) {
@@ -657,6 +695,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               const defeatMessage = `${action.target} has been defeated!`;
               actionMessages.push(defeatMessage);
               detailedMessages.push(defeatMessage);
+              
+              // CRITICAL FIX: Set defeated unit's HP to 0
+              const defeatedUnit = units.find(unit => unit.name === action.target);
+              if (defeatedUnit) {
+                defeatedUnit.hp = 0; // Ensure defeated unit shows 0 HP
+                console.log(`Unit ${defeatedUnit.name} has been defeated - setting HP to 0`);
+                
+                // Update units state to reflect the defeat
+                setUnits([...units]);
+              }
             }
           });
         }
