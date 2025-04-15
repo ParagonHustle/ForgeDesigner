@@ -789,9 +789,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         
         // Make sure each unit has valid hp and maxHp values
         const processedUnits = allUnits.map((unit: any) => {
-          // Ensure HP and maxHP are valid numbers
-          const hp = typeof unit.hp === 'number' ? unit.hp : 100;
-          const maxHp = typeof unit.maxHp === 'number' ? unit.maxHp : 100;
+          // Ensure HP and maxHP are valid numbers by forcing numeric conversion and validation
+          const maxHp = Number.isFinite(Number(unit.maxHp)) ? Math.max(1, Number(unit.maxHp)) : 100;
+          const hp = Number.isFinite(Number(unit.hp)) ? Math.min(maxHp, Math.max(0, Number(unit.hp))) : maxHp;
+          
+          // Log the processed values for debugging
+          console.log(`Processed unit ${unit.name}: hp=${hp}, maxHp=${maxHp}, original values: hp=${unit.hp}, maxHp=${unit.maxHp}`);
           
           return {
             ...unit,
