@@ -525,10 +525,33 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           actionMessages.push(`${target.name} is affected by ${effect.name}`);
         }
       // We ignore round type events - we don't use rounds in this system
-      } else if (event.type === 'stage') {
+      } else if (event.type === 'stage' || event.type === 'stage_progress') {
+        // Handle both 'stage' and 'stage_progress' events for backward compatibility
+        // Extract stage information from the event
         const stageData = event.data || {};
-        stage = stageData.stage !== undefined ? stageData.stage : stage + 1;
-        actionMessages.push(`Entering Stage ${stage + 1}`);
+        const newStage = event.currentStage || stageData.stage;
+        
+        if (typeof newStage === 'number') {
+          stage = newStage;
+        } else {
+          // If stage number not provided, increment current stage
+          stage = stage + 1;
+        }
+        
+        // Update UI with stage progression message
+        const message = event.message || `Entering Stage ${stage}`;
+        actionMessages.push(message);
+        
+        // Extract and update units if provided in the event (for multi-stage battles)
+        if (event.aliveAllies && event.newEnemies && Array.isArray(event.aliveAllies) && Array.isArray(event.newEnemies)) {
+          // Update units list with surviving allies and new enemies
+          const updatedUnits = [...event.aliveAllies, ...event.newEnemies];
+          if (updatedUnits.length > 0) {
+            setUnits(updatedUnits);
+          }
+        }
+        
+        // Update current stage state
         setCurrentStage(stage);
       }
     });
