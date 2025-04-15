@@ -1153,7 +1153,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col bg-[#251942] text-[#E5DBFF] border-[#6A3FB5]" aria-describedby="battle-log-description">
+      <DialogContent className="max-w-5xl h-[85vh] flex flex-col bg-[#251942] text-[#E5DBFF] border-[#6A3FB5]" aria-describedby="battle-log-description">
         <div id="battle-log-description" className="sr-only">Battle log showing combat between your party and enemies</div>
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center justify-between">
@@ -1227,74 +1227,86 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           <div className="grid grid-cols-2 gap-4 px-4 overflow-auto flex-1">
             <div className="flex flex-col">
               <h4 className="text-md font-semibold mb-2">Your Party</h4>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-10">
                 {units.filter(unit => typeof unit.id === 'string' ? !unit.id.startsWith('enemy') : (typeof unit.id === 'number' && unit.id <= 10)).map(unit => (
                   <motion.div 
                     key={unit.id} 
-                    className={`bg-[#432874]/20 p-3 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
+                    className={`relative ${activeTarget === unit.id ? 'scale-105' : ''}`}
                     animate={{
                       scale: (activeAttacker === unit.id && showAttackAnimation) ? [1, 1.05, 1] : 1,
                       x: (activeAttacker === unit.id && showAttackAnimation) ? [0, -5, 0] : 0
                     }}
                   >
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="font-semibold">{unit.name}</div>
-                      <div 
-                        className={`text-sm ${unit.hp / unit.maxHp < 0.3 ? 'text-red-400' : ''}`}
-                      >
-                        {renderHP(unit.hp, unit.maxHp)}
+                    {/* Status effects above character */}
+                    {unit.statusEffects && unit.statusEffects.length > 0 && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 flex flex-wrap gap-1 justify-center z-10">
+                        {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, true))}
                       </div>
-                    </div>
+                    )}
                     
-                    <div className="w-full bg-[#432874]/30 h-2 rounded">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-red-500 to-red-700 rounded"
-                        style={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
-                        initial={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
-                        animate={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </div>
-                    
-                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1 mb-2">
+                    {/* Attack meter arc above character */}
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-12 h-2">
                       <div 
-                        className="h-full bg-yellow-500 rounded"
+                        className="h-1 bg-yellow-500 rounded-full"
                         style={{ width: `${Math.min(100, unit.attackMeter)}%` }}
                       />
                     </div>
                     
-                    <div className="flex items-center">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="w-12 h-12 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB] text-xl font-bold">
-                              {unit.name.substring(0, 1)}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="relative">
+                            {/* Health border circular indicator */}
+                            <div className={`
+                              w-14 h-14 rounded-full flex items-center justify-center
+                              ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}
+                              ${activeAttacker === unit.id ? 'ring-2 ring-yellow-500' : ''} 
+                            `}
+                              style={{
+                                background: `conic-gradient(
+                                  ${unit.hp / unit.maxHp < 0.3 ? '#EF4444' : '#7644D0'} ${calculateHealthPercent(unit.hp, unit.maxHp) * 3.6}deg, 
+                                  #432874 0deg
+                                )`
+                              }}
+                            >
+                              {/* Inner circle with character avatar */}
+                              <div className="w-11 h-11 bg-[#251942] rounded-full flex items-center justify-center text-[#E5DBFF] text-xl font-bold">
+                                {unit.name.substring(0, 1)}
+                              </div>
                             </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="p-3 max-w-xs bg-[#251942] text-[#E5DBFF] border border-[#6A3FB5]">
-                            <h4 className="font-semibold mb-2">{unit.name}</h4>
-                            <div className="text-xs text-[#C8B8DB] mb-1">Stats:</div>
-                            <div className="mb-2">{renderUnitStats(unit)}</div>
                             
-                            <div className="text-xs text-[#C8B8DB] mb-1">Skills:</div>
-                            <div className="flex flex-wrap gap-1">
-                              {renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
-                              {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
-                              {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
+                            {/* Character name and HP */}
+                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-center w-20">
+                              <div className="text-xs font-semibold truncate">{unit.name}</div>
+                              <div className={`text-xs ${unit.hp / unit.maxHp < 0.3 ? 'text-red-400' : 'text-[#C8B8DB]'}`}>
+                                {Math.ceil(unit.hp)}/{unit.maxHp}
+                              </div>
                             </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      
-                      {/* Status effects display */}
-                      <div className="flex-1 ml-2">
-                        {unit.statusEffects && unit.statusEffects.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, true))}
                           </div>
-                        )}
-                      </div>
-                    </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="p-3 max-w-xs bg-[#251942] text-[#E5DBFF] border border-[#6A3FB5]">
+                          <h4 className="font-semibold mb-2">{unit.name}</h4>
+                          <div className="text-xs text-[#C8B8DB] mb-1">Stats:</div>
+                          <div className="mb-2">{renderUnitStats(unit)}</div>
+                          
+                          <div className="text-xs text-[#C8B8DB] mb-1">Skills:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
+                            {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
+                            {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
+                          </div>
+                          
+                          {unit.statusEffects && unit.statusEffects.length > 0 && (
+                            <>
+                              <div className="text-xs text-[#C8B8DB] mb-1 mt-2">Status Effects:</div>
+                              <div className="flex flex-wrap gap-1">
+                                {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, true))}
+                              </div>
+                            </>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </motion.div>
                 ))}
               </div>
@@ -1302,74 +1314,86 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             
             <div className="flex flex-col">
               <h4 className="text-md font-semibold mb-2">Enemies</h4>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-10">
                 {units.filter(unit => typeof unit.id === 'string' ? unit.id.startsWith('enemy') : (typeof unit.id === 'number' && unit.id > 10)).map(unit => (
                   <motion.div 
                     key={unit.id} 
-                    className={`bg-[#432874]/20 p-3 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
+                    className={`relative ${activeTarget === unit.id ? 'scale-105' : ''}`}
                     animate={{
                       scale: (activeAttacker === unit.id && showAttackAnimation) ? [1, 1.05, 1] : 1,
                       x: (activeAttacker === unit.id && showAttackAnimation) ? [0, 5, 0] : 0
                     }}
                   >
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="font-semibold">{unit.name}</div>
-                      <div 
-                        className={`text-sm ${unit.hp / unit.maxHp < 0.3 ? 'text-red-400' : ''}`}
-                      >
-                        {renderHP(unit.hp, unit.maxHp)}
+                    {/* Status effects above character */}
+                    {unit.statusEffects && unit.statusEffects.length > 0 && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 flex flex-wrap gap-1 justify-center z-10">
+                        {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, false))}
                       </div>
-                    </div>
+                    )}
                     
-                    <div className="w-full bg-[#432874]/30 h-2 rounded">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-red-500 to-red-700 rounded"
-                        style={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
-                        initial={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
-                        animate={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </div>
-                    
-                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1 mb-2">
+                    {/* Attack meter arc above character */}
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-12 h-2">
                       <div 
-                        className="h-full bg-yellow-500 rounded"
+                        className="h-1 bg-yellow-500 rounded-full"
                         style={{ width: `${Math.min(100, unit.attackMeter)}%` }}
                       />
                     </div>
                     
-                    <div className="flex items-center">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="w-12 h-12 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB] text-xl font-bold">
-                              {unit.name.substring(0, 1)}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="relative">
+                            {/* Health border circular indicator */}
+                            <div className={`
+                              w-14 h-14 rounded-full flex items-center justify-center
+                              ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}
+                              ${activeAttacker === unit.id ? 'ring-2 ring-yellow-500' : ''} 
+                            `}
+                              style={{
+                                background: `conic-gradient(
+                                  ${unit.hp / unit.maxHp < 0.3 ? '#EF4444' : '#D74D20'} ${calculateHealthPercent(unit.hp, unit.maxHp) * 3.6}deg, 
+                                  #432874 0deg
+                                )`
+                              }}
+                            >
+                              {/* Inner circle with enemy avatar */}
+                              <div className="w-11 h-11 bg-[#251942] rounded-full flex items-center justify-center text-[#E5DBFF] text-xl font-bold">
+                                {unit.name.substring(0, 1)}
+                              </div>
                             </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="p-3 max-w-xs bg-[#251942] text-[#E5DBFF] border border-[#6A3FB5]">
-                            <h4 className="font-semibold mb-2">{unit.name}</h4>
-                            <div className="text-xs text-[#C8B8DB] mb-1">Stats:</div>
-                            <div className="mb-2">{renderUnitStats(unit)}</div>
                             
-                            <div className="text-xs text-[#C8B8DB] mb-1">Skills:</div>
-                            <div className="flex flex-wrap gap-1">
-                              {renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
-                              {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
-                              {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
+                            {/* Character name and HP */}
+                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-center w-20">
+                              <div className="text-xs font-semibold truncate">{unit.name}</div>
+                              <div className={`text-xs ${unit.hp / unit.maxHp < 0.3 ? 'text-red-400' : 'text-[#C8B8DB]'}`}>
+                                {Math.ceil(unit.hp)}/{unit.maxHp}
+                              </div>
                             </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      
-                      {/* Status effects display */}
-                      <div className="flex-1 ml-2">
-                        {unit.statusEffects && unit.statusEffects.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, false))}
                           </div>
-                        )}
-                      </div>
-                    </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="p-3 max-w-xs bg-[#251942] text-[#E5DBFF] border border-[#6A3FB5]">
+                          <h4 className="font-semibold mb-2">{unit.name}</h4>
+                          <div className="text-xs text-[#C8B8DB] mb-1">Stats:</div>
+                          <div className="mb-2">{renderUnitStats(unit)}</div>
+                          
+                          <div className="text-xs text-[#C8B8DB] mb-1">Skills:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
+                            {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
+                            {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
+                          </div>
+                          
+                          {unit.statusEffects && unit.statusEffects.length > 0 && (
+                            <>
+                              <div className="text-xs text-[#C8B8DB] mb-1 mt-2">Status Effects:</div>
+                              <div className="flex flex-wrap gap-1">
+                                {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, false))}
+                              </div>
+                            </>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </motion.div>
                 ))}
               </div>
