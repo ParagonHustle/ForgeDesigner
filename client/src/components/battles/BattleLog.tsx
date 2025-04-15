@@ -375,10 +375,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   
   // Add useEffect hook to process battle logs and update state
   useEffect(() => {
+    // Enhanced debugging for battle log processing
+    console.log("=== BATTLE LOG COMPONENT STATE ===");
+    console.log("isOpen:", isOpen);
+    console.log("isPaused:", isPaused);
+    console.log("battleLog length:", battleLog?.length || 0);
+    console.log("battleLog first few entries:", battleLog?.slice(0, 2));
+    
     if (battleLog && battleLog.length > 0 && isOpen && !isPaused) {
       // Process battle log data
       console.log("Battle log data received:", JSON.stringify(battleLog).slice(0, 500) + "...");
       processBattleLog();
+    } else {
+      console.log("Not processing battle log because:", !battleLog ? "no log" : !battleLog.length ? "empty log" : !isOpen ? "dialog closed" : "is paused");
     }
   }, [battleLog, isOpen, isPaused]);
   

@@ -207,11 +207,26 @@ const DungeonView = () => {
   const handleCompleteDungeon = async (runId: number) => {
     setIsSubmitting(true);
     try {
+      console.log(`Completing dungeon run ID: ${runId}`);
       const res = await apiRequest('POST', `/api/dungeons/complete/${runId}`, undefined);
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to complete dungeon");
+      }
+      
       const data = await res.json();
+      console.log("Dungeon completion response:", data);
+      console.log("Battle log entries:", data.battleLog?.length || 0);
 
       // Show battle log immediately
-      setCurrentBattleLog(data.battleLog || []);
+      if (data.battleLog && Array.isArray(data.battleLog)) {
+        console.log("Setting battle log with", data.battleLog.length, "entries");
+        setCurrentBattleLog(data.battleLog);
+      } else {
+        console.error("Invalid battle log format", data.battleLog);
+        setCurrentBattleLog([]);
+      }
       setShowBattleLog(true);
 
       // Refresh the list of dungeons
