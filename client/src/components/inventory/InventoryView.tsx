@@ -58,7 +58,7 @@ const InventoryView = () => {
     required: number,
     characterClass: string,
     characterName: string,
-    type: string,
+    rarity: "common" | "uncommon" | "rare" | "epic" | "legendary",
     avatarUrl?: string
   }>>([]);
   
@@ -72,16 +72,24 @@ const InventoryView = () => {
       setCharacterShards(JSON.parse(savedShards));
     } else if (characters.length > 0 && characterShards.length === 0) {
       // Generate new shards if none are saved
-      const shards = characters.map(character => ({
-        id: character.id,
-        name: `${character.name} Shard`,
-        quantity: Math.floor(Math.random() * 80) + 10, // Random quantity, but will be saved
-        required: 100,
-        characterClass: character.class,
-        characterName: character.name,
-        type: "rare", // Default type since we've removed rarity from characters
-        avatarUrl: character.avatarUrl
-      }));
+      const rarities: Array<"common" | "uncommon" | "rare" | "epic" | "legendary"> = [
+        "common", "uncommon", "rare", "epic", "legendary"
+      ];
+      
+      const shards = characters.flatMap(character => {
+        // Create one shard of each rarity for each character
+        return rarities.map(rarity => ({
+          id: character.id + rarities.indexOf(rarity) * 10000, // Ensure unique IDs across rarities
+          name: `${character.name} ${rarity.charAt(0).toUpperCase() + rarity.slice(1)} Shard`,
+          quantity: Math.floor(Math.random() * 80) + 10, // Random quantity, but will be saved
+          required: 100,
+          characterClass: character.class,
+          characterName: character.name,
+          rarity: rarity,
+          avatarUrl: character.avatarUrl
+        }));
+      });
+      
       setCharacterShards(shards);
       
       // Save to localStorage
@@ -130,6 +138,11 @@ const InventoryView = () => {
     const matchesSearch = shard.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = 
       filter === 'all' ||
+      (filter === 'common' && shard.rarity === 'common') ||
+      (filter === 'uncommon' && shard.rarity === 'uncommon') ||
+      (filter === 'rare' && shard.rarity === 'rare') ||
+      (filter === 'epic' && shard.rarity === 'epic') ||
+      (filter === 'legendary' && shard.rarity === 'legendary') ||
       (filter === filter && shard.characterClass.toLowerCase() === filter);
     
     return matchesSearch && matchesFilter;
@@ -403,6 +416,11 @@ const InventoryView = () => {
                 )}
                 {selectedTab === 'shards' && (
                   <>
+                    <SelectItem value="common">Common</SelectItem>
+                    <SelectItem value="uncommon">Uncommon</SelectItem>
+                    <SelectItem value="rare">Rare</SelectItem>
+                    <SelectItem value="epic">Epic</SelectItem>
+                    <SelectItem value="legendary">Legendary</SelectItem>
                     <SelectItem value="warrior">Warrior</SelectItem>
                     <SelectItem value="mage">Mage</SelectItem>
                     <SelectItem value="rogue">Rogue</SelectItem>
