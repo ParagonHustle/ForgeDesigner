@@ -398,7 +398,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       resetAnimationStates();
       
       // Get the initial data from the first stage of the battle log
-      const initialBattleData = battleLog.find(entry => entry.type === 'battle-start');
+      console.log('Looking for initial battle data from entry types:', battleLog.map(entry => entry.type));
+      const initialBattleData = battleLog.find(entry => 
+        entry.type === 'battle-start' || entry.type === 'battle_start'
+      );
       if (initialBattleData) {
         // Set up initial units
         const initialUnits = [
@@ -852,9 +855,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Find all battle turn events
     const battleEvents = battleLog.filter(event => 
       event.type === 'battle-turn' || 
-      event.type === 'stage-clear' || 
+      event.type === 'battle_turn' || 
+      event.type === 'stage-clear' ||
+      event.type === 'stage_clear' ||
       event.type === 'dungeon-complete' ||
-      event.type === 'dungeon-failed'
+      event.type === 'dungeon_complete' ||
+      event.type === 'dungeon-failed' ||
+      event.type === 'dungeon_failed'
     );
     
     console.log('Battle events:', battleEvents);
@@ -867,7 +874,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       
       const event = battleEvents[index];
       
-      if (event.type === 'battle-turn') {
+      if (event.type === 'battle-turn' || event.type === 'battle_turn') {
         setAnimationInProgress(true);
         
         setTimeout(() => {
@@ -889,7 +896,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             processEvents(index + 1);
           }, actionDelay);
         }, 100);
-      } else if (event.type === 'stage-clear') {
+      } else if (event.type === 'stage-clear' || event.type === 'stage_clear') {
         // Handle stage clear event
         setCurrentStage(prevStage => prevStage + 1);
         
@@ -941,12 +948,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         setTimeout(() => {
           processEvents(index + 1);
         }, 2000 / playbackSpeed);
-      } else if (event.type === 'dungeon-complete' || event.type === 'dungeon-failed') {
+      } else if (event.type === 'dungeon-complete' || event.type === 'dungeon_complete' || 
+                 event.type === 'dungeon-failed' || event.type === 'dungeon_failed') {
         // Handle dungeon completion or failure
         setIsComplete(true);
         
         // Log the final outcome
-        const outcomeMessage = event.type === 'dungeon-complete' 
+        const outcomeMessage = (event.type === 'dungeon-complete' || event.type === 'dungeon_complete')
           ? `Dungeon run successful! Reached stage ${event.stageReached} of ${event.totalStages}.`
           : `Dungeon run failed at stage ${event.stageReached} of ${event.totalStages}.`;
         
@@ -989,7 +997,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     setIsComplete(false);
     
     // Get the initial battle data again
-    const initialBattleData = battleLog.find(entry => entry.type === 'battle-start');
+    const initialBattleData = battleLog.find(entry => entry.type === 'battle-start' || entry.type === 'battle_start');
     if (initialBattleData) {
       // Reset units to their initial state
       const initialUnits = [
@@ -1056,7 +1064,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col bg-[#251942] text-[#E5DBFF] border-[#6A3FB5]">
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col bg-[#251942] text-[#E5DBFF] border-[#6A3FB5]" aria-describedby="battle-log-description">
+        <div id="battle-log-description" className="sr-only">Battle log showing combat between your party and enemies</div>
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center justify-between">
             <span>
@@ -1130,7 +1139,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <div className="flex flex-col">
               <h4 className="text-md font-semibold mb-2">Your Party</h4>
               <div className="space-y-2">
-                {units.filter(unit => !unit.id.startsWith('enemy')).map(unit => (
+                {units.filter(unit => typeof unit.id === 'string' ? !unit.id.startsWith('enemy') : (typeof unit.id === 'number' && unit.id <= 10)).map(unit => (
                   <motion.div 
                     key={unit.id} 
                     className={`bg-[#432874]/20 p-2 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
@@ -1209,7 +1218,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <div className="flex flex-col">
               <h4 className="text-md font-semibold mb-2">Enemies</h4>
               <div className="space-y-2">
-                {units.filter(unit => unit.id.startsWith('enemy')).map(unit => (
+                {units.filter(unit => typeof unit.id === 'string' ? unit.id.startsWith('enemy') : (typeof unit.id === 'number' && unit.id > 10)).map(unit => (
                   <motion.div 
                     key={unit.id} 
                     className={`bg-[#432874]/20 p-2 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
