@@ -110,7 +110,7 @@ interface BattleLogProps {
 const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: BattleLogProps) => {
   // State declarations
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused] = useState(true); // Start paused to let user control battle speed
   const [currentStage, setCurrentStage] = useState(0);
   const [currentAction, setCurrentAction] = useState(0);
   const [units, setUnits] = useState<BattleUnit[]>([]);
@@ -175,13 +175,21 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const restartBattle = () => {
     // Reset state to initial values
     setCurrentStage(0);
-    setIsPaused(false);
+    setIsPaused(true); // Start paused to let user control battle pace
     setUnits([]);
     setActionLog([]);
     setDetailedActionLog([]);
     setIsComplete(false);
     setActiveAttacker(null);
     setActiveTarget(null);
+    
+    // Add a helpful message for the user
+    setTimeout(() => {
+      if (actionLog.length === 0) {
+        setActionLog(["Battle loaded! Press 'Resume' to start the battle and watch combat actions in sequence."]);
+        setDetailedActionLog(["Welcome to The Forge battle system. This battle simulation will show all combat actions between your party and enemies. Press the Resume button to begin, or adjust the speed using the controls above."]);
+      }
+    }, 500);
   };
   
   // Function to handle complete dungeon button
@@ -724,6 +732,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               </button>
             </div>
           </DialogTitle>
+          {isPaused && (
+            <div className="bg-[#35235B] p-2 rounded-md mt-2 text-xs text-[#E5DBFF]">
+              <p className="font-semibold mb-1">Welcome to The Forge Battle System!</p>
+              <p>This simulation shows combat between your party and enemies. Press the Resume button below to start the battle.</p>
+              <p className="mt-1">Each unit's Attack Meter charges based on their Speed stat. When a meter reaches 100%, the unit takes action.</p>
+            </div>
+          )}
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden flex flex-col">
