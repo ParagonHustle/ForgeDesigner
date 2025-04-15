@@ -441,20 +441,24 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   console.log(`- aliveEnemies.length: ${aliveEnemies.length}`);
   console.log(`- stageBattleComplete: ${stageBattleComplete}`);
   
-  // Verify all units have appropriate health values
+  // CRITICAL FIX: Verify all allies have FULL health at battle start
+  // This is a redundant check to absolutely ensure our requirement is met
   aliveAllies.forEach(ally => {
     console.log(`Ally ${ally.name} HP check: ${ally.hp}/${ally.maxHp}`);
-    if (ally.hp <= 0) {
-      console.warn(`WARNING: Ally ${ally.name} has invalid HP (${ally.hp}), fixing to ${ally.maxHp}`);
-      ally.hp = ally.maxHp; // Ensure HP is correctly set
+    // Ensure allies always start with full health (not just positive health)
+    if (ally.hp !== ally.maxHp) {
+      console.warn(`CRITICAL FIX: Ally ${ally.name} HP (${ally.hp}) not at full health, resetting to ${ally.maxHp}`);
+      ally.hp = ally.maxHp; // Force to full health
     }
   });
   
+  // CRITICAL FIX: Ensure all enemies also have full health at battle start
   aliveEnemies.forEach(enemy => {
     console.log(`Enemy ${enemy.name} HP check: ${enemy.hp}/${enemy.maxHp}`);
-    if (enemy.hp <= 0) {
-      console.warn(`WARNING: Enemy ${enemy.name} has invalid HP (${enemy.hp}), fixing to ${enemy.maxHp}`);
-      enemy.hp = enemy.maxHp; // Ensure HP is correctly set
+    // Ensure enemies always start with full health too 
+    if (enemy.hp !== enemy.maxHp) {
+      console.warn(`CRITICAL FIX: Enemy ${enemy.name} HP (${enemy.hp}) not at full health, resetting to ${enemy.maxHp}`);
+      enemy.hp = enemy.maxHp; // Force to full health
     }
   });
   

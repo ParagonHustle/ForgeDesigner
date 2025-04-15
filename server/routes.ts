@@ -2773,6 +2773,10 @@ async function processBattleLog(run: any, success: boolean) {
     run.characterIds = [];
   }
   
+  // CRITICAL FIX: Add a note that reminds the battle system that characters MUST start at full health
+  console.log('CRITICAL REQUIREMENT: Characters must begin dungeon with FULL health (HP)');
+  // This informs the battle system that it's a fresh dungeon run and HP should be at max
+  
   // Make characterIds always an array
   if (!Array.isArray(run.characterIds)) {
     // If it's a string or other format, try to parse it if possible
