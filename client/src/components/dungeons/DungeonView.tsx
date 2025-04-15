@@ -514,10 +514,12 @@ const DungeonView = () => {
                                             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mr-2"></div>
                                             <div>
                                               <div className="text-sm text-[#00B9AE]">
-                                                {character.equippedAura?.name || 'Mysterious Aura'}
+                                                {/* Need to fetch aura details from API */}
+                                                Equipped Aura
                                               </div>
                                               <div className="text-xs text-[#C8B8DB]/60">
-                                                Level {character.equippedAura?.level || 1}
+                                                {/* Display aura level when available */}
+                                                Advanced
                                               </div>
                                             </div>
                                           </div>
