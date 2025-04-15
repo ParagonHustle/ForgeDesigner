@@ -884,8 +884,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Determine success (70% chance for simplicity)
       const success = Math.random() < 0.7;
       
-      // Generate battle log and rewards
-      const battleLog = await generateMockBattleLog(run, success);
+      // Generate battle log using proper battle system
+      const battleLog = await generateBattleLog(run, success);
       
       // Generate rewards if successful
       let rewards = null;

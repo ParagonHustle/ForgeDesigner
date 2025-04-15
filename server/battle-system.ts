@@ -135,10 +135,10 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     const vitality = Math.max(10, char?.vitality || 100);
     const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
     
-    // Ensure HP is always full at the start of a new battle and never negative
-    const safeHealthPoints = Math.max(1, healthPoints);
+    // According to documentation, HP = Vitality * 8
+    const safeHealthPoints = Math.max(1, healthPoints); // Ensure minimum 1 HP
     
-    // Always start with full health equal to maxHp
+    // Per requirements, characters MUST start with FULL HP at battle beginning
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',

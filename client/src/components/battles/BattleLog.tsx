@@ -421,12 +421,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // Instead of just validating, fix any characters or enemies with invalid HP
       let hasFixedHp = false;
       
-      // Fix any allies with 0 or negative HP
+      // According to documentation: "All characters (both allies and enemies) begin the dungeon at full HP."
+      // So if we find any ally with 0 or negative HP in the initial battle state, we'll set it to full HP
       allies.forEach((ally: any) => {
         if (typeof ally?.hp === 'number' && ally.hp <= 0) {
           console.warn(`Fixing ally ${ally.name} with invalid HP: ${ally.hp}`);
-          // Set to 25% HP to give them a fighting chance
-          ally.hp = Math.ceil(ally.maxHp * 0.25);
+          // Set to FULL HP (maxHp) as per requirements
+          ally.hp = ally.maxHp;
           hasFixedHp = true;
         }
       });
