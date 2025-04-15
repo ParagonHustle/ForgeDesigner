@@ -154,7 +154,7 @@ const InventoryView = () => {
         characterClass: 'Legendary Hero',
         characterName: 'Kleos',
         rarity: rarity,
-        avatarUrl: '/kleos.jpg'
+        avatarUrl: '/images/kleos.jpg'
       }));
       
       // Combine regular character shards with Kleos shards
@@ -486,10 +486,10 @@ const InventoryView = () => {
                 )}
                 {selectedTab === 'shards' && (
                   <>
-                    <SelectItem value="common">Common</SelectItem>
-                    <SelectItem value="uncommon">Uncommon</SelectItem>
-                    <SelectItem value="rare">Rare</SelectItem>
-                    <SelectItem value="epic">Epic</SelectItem>
+                    <SelectItem value="common">Basic</SelectItem>
+                    <SelectItem value="uncommon">Rare</SelectItem>
+                    <SelectItem value="rare">Epic</SelectItem>
+                    <SelectItem value="epic">Mythic</SelectItem>
                     <SelectItem value="legendary">Legendary</SelectItem>
                     <SelectItem value="warrior">Warrior</SelectItem>
                     <SelectItem value="mage">Mage</SelectItem>
@@ -1134,9 +1134,9 @@ const InventoryView = () => {
                 <div className="flex items-center">
                   <div className={`w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0 mr-3
                     ${shard.rarity === 'common' ? 'border-gray-600' : 
-                      shard.rarity === 'uncommon' ? 'border-green-600' : 
-                      shard.rarity === 'rare' ? 'border-blue-600' : 
-                      shard.rarity === 'epic' ? 'border-purple-600' : 
+                      shard.rarity === 'uncommon' ? 'border-blue-600' : 
+                      shard.rarity === 'rare' ? 'border-purple-600' : 
+                      shard.rarity === 'epic' ? 'border-red-600' : 
                       'border-yellow-600'}`
                   }>
                     <img 
@@ -1149,18 +1149,21 @@ const InventoryView = () => {
                     <h3 className="font-semibold text-[#FF9D00]">{shard.name}</h3>
                     <div className={`text-sm capitalize
                       ${shard.rarity === 'common' ? 'text-gray-300' : 
-                        shard.rarity === 'uncommon' ? 'text-green-300' : 
-                        shard.rarity === 'rare' ? 'text-blue-300' : 
-                        shard.rarity === 'epic' ? 'text-purple-300' : 
+                        shard.rarity === 'uncommon' ? 'text-blue-300' : 
+                        shard.rarity === 'rare' ? 'text-purple-300' : 
+                        shard.rarity === 'epic' ? 'text-red-300' : 
                         'text-yellow-300'}`
                     }>
-                      {shard.rarity} • {shard.characterClass}
+                      {shard.rarity === 'common' ? 'Basic' : 
+                        shard.rarity === 'uncommon' ? 'Rare' : 
+                        shard.rarity === 'rare' ? 'Epic' : 
+                        shard.rarity === 'epic' ? 'Mythic' : 
+                        'Legendary'} • {shard.characterClass}
                     </div>
                     <div className="flex mt-1 text-xs text-[#C8B8DB]">
                       <span className="font-medium">{shard.quantity}</span>
-                      <span className="text-[#C8B8DB]/60 mx-1">of</span>
+                      <span className="text-[#C8B8DB]/60 mx-1">/</span>
                       <span className="font-medium">{shard.required}</span>
-                      <span className="text-[#C8B8DB]/60 ml-1">collected</span>
                     </div>
                   </div>
                 </div>
