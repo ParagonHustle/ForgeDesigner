@@ -856,12 +856,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     console.log('Full battle log array:', battleLog);
     console.log('Types found in battleLog:', battleLog.map(event => event.type));
     
+    // Also include battle_end events which provide final outcome details
     const battleEvents = battleLog.filter(event => 
       event.type === 'battle-turn' || 
       event.type === 'battle_turn' || 
-      event.type === 'round' ||  // Also include 'round' events
+      event.type === 'round' ||  // Include 'round' events
       event.type === 'stage-clear' ||
       event.type === 'stage_clear' ||
+      event.type === 'battle-end' ||
+      event.type === 'battle_end' ||
       event.type === 'dungeon-complete' ||
       event.type === 'dungeon_complete' ||
       event.type === 'dungeon-failed' ||
@@ -1124,6 +1127,23 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         setTimeout(() => {
           processEvents(index + 1);
         }, 2000 / playbackSpeed);
+      } else if (event.type === 'battle-end' || event.type === 'battle_end') {
+        // Handle battle end event that appears after all round events
+        // This marks the final state of the battle
+        
+        // Log the final outcome 
+        const message = event.success 
+          ? "Battle complete! All enemies defeated!" 
+          : "Battle failed! Your party was defeated.";
+        
+        addToLog(message);
+        addToDetailedLog(message);
+        
+        // Process to the next event (usually dungeon-complete or dungeon-failed)
+        setTimeout(() => {
+          processEvents(index + 1);
+        }, 1000 / playbackSpeed);
+        
       } else if (event.type === 'dungeon-complete' || event.type === 'dungeon_complete' || 
                  event.type === 'dungeon-failed' || event.type === 'dungeon_failed') {
         // Handle dungeon completion or failure
