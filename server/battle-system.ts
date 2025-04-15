@@ -300,7 +300,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
       id: charId,
       name: char?.name || 'Unknown Hero',
       hp: safeHealthPoints, // CRITICAL: Allies must start at full HP
-      maxHp: safeHealthPoints,
+      maxHp: safeHealthPoints, // MaxHP based on vitality × 8
       stats: {
         attack: char?.attack || 50,
         vitality: vitality,
