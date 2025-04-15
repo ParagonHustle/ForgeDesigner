@@ -255,13 +255,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <p className="text-xs text-[#C8B8DB]">
               {effect.effect === "ReduceAtk" && `Reduces attack by ${effect.value}%`}
               {effect.effect === "ReduceSpd" && `Reduces speed by ${effect.value}%`}
-              {effect.effect === "Burn" && `Deals ${effect.value} damage per turn`}
-              {effect.effect === "Poison" && `Deals ${effect.value} damage per turn`}
-              {effect.effect === "Heal" && `Heals ${effect.value} HP per turn`}
+              {effect.effect === "Burn" && `Deals ${effect.value} damage per action`}
+              {effect.effect === "Poison" && `Deals ${effect.value} damage per action`}
+              {effect.effect === "Heal" && `Heals ${effect.value} HP per action`}
               {effect.effect === "Shield" && `Absorbs ${effect.value} damage`}
             </p>
             {effect.source && <p className="text-xs italic mt-1">From: {effect.source}</p>}
-            <p className="text-xs mt-1">Duration: {effect.duration} turns</p>
+            <p className="text-xs mt-1">Duration: {effect.duration} actions</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
