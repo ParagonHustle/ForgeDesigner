@@ -60,12 +60,64 @@ const InventoryView = () => {
     characterName: string,
     rarity: "common" | "uncommon" | "rare" | "epic" | "legendary",
     avatarUrl?: string
-  }>>([]);
+  }>>([
+    // Explicitly add all 5 Kleos shard rarities
+    {
+      id: 50001,
+      name: "Kleos Common Shard", 
+      quantity: 25,
+      required: 100,
+      characterClass: "Warrior",
+      characterName: "Kleos",
+      rarity: "common",
+      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+    },
+    {
+      id: 50002,
+      name: "Kleos Uncommon Shard",
+      quantity: 30,
+      required: 100,
+      characterClass: "Warrior",
+      characterName: "Kleos",
+      rarity: "uncommon",
+      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+    },
+    {
+      id: 50003,
+      name: "Kleos Rare Shard",
+      quantity: 45,
+      required: 100,
+      characterClass: "Warrior",
+      characterName: "Kleos",
+      rarity: "rare",
+      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+    },
+    {
+      id: 50004,
+      name: "Kleos Epic Shard",
+      quantity: 102,
+      required: 100,
+      characterClass: "Warrior",
+      characterName: "Kleos",
+      rarity: "epic",
+      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+    },
+    {
+      id: 50005,
+      name: "Kleos Legendary Shard",
+      quantity: 5,
+      required: 100,
+      characterClass: "Warrior", 
+      characterName: "Kleos",
+      rarity: "legendary",
+      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+    }
+  ]);
   
   // Generate persistent shards based on characters with localStorage persistence
   useEffect(() => {
-    // Force reset character shards (temporary fix)
-    localStorage.removeItem('characterShards');
+    // We've added Kleos shards in the initial state already
+    // No need to force reset localStorage
     
     // Try to load saved shards from localStorage
     const savedShards = localStorage.getItem('characterShards');
