@@ -446,22 +446,25 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       // Instead of just validating, fix any characters or enemies with invalid HP
       let hasFixedHp = false;
       
-      // According to documentation: "All characters (both allies and enemies) begin the dungeon at full HP."
-      // So if we find any ally with 0 or negative HP in the initial battle state, we'll set it to full HP
+      // CRITICAL FIX: Characters MUST start with full health
+      // Fix any ally that doesn't have full HP in the initial battle state
       allies.forEach((ally: any) => {
-        if (typeof ally?.hp === 'number' && ally.hp <= 0) {
-          console.warn(`Fixing ally ${ally.name} with invalid HP: ${ally.hp}`);
-          // Set to FULL HP (maxHp) as per requirements
+        // Check if hp is not equal to maxHp (the full health requirement)
+        if (typeof ally?.hp === 'number' && ally?.maxHp && ally.hp !== ally.maxHp) {
+          console.warn(`Fixing ally ${ally.name} with incorrect HP: ${ally.hp}/${ally.maxHp}`);
+          // Force set to FULL HP (maxHp) as per strict game requirements
           ally.hp = ally.maxHp;
           hasFixedHp = true;
         }
       });
       
-      // Fix any enemies with 0 or negative HP
+      // CRITICAL FIX: Enemies should also start with full health
+      // Fix any enemy that doesn't have full HP in the initial battle state
       enemies.forEach((enemy: any) => {
-        if (typeof enemy?.hp === 'number' && enemy.hp <= 0) {
-          console.warn(`Fixing enemy ${enemy.name} with invalid HP: ${enemy.hp}`);
-          // Set enemies to full HP (they should always start with full health)
+        // Check if hp is not equal to maxHp (full health requirement)
+        if (typeof enemy?.hp === 'number' && enemy?.maxHp && enemy.hp !== enemy.maxHp) {
+          console.warn(`Fixing enemy ${enemy.name} with incorrect HP: ${enemy.hp}/${enemy.maxHp}`);
+          // Force set to FULL HP (maxHp) as per strict game requirements
           enemy.hp = enemy.maxHp;
           hasFixedHp = true;
         }
@@ -495,21 +498,22 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         allies.forEach((ally, index) => {
           if (!ally) return; // Skip if ally is undefined/null
           
-          // Fix HP values for all allies to match the maxHP
-      // This is a critical fix for incorrect initial battle state from server
-      if (typeof ally.hp === 'number' && ally.hp <= 0) {
-        console.log(`🔶 Fixing ally ${ally.name || 'Unknown'} with invalid HP: ${ally.hp}`);
-        // Set to FULL HP (maxHp) as per requirements - all units should start a dungeon at full HP
-        ally.hp = typeof ally.maxHp === 'number' ? ally.maxHp : 100;
-        console.log(`   New HP value for ${ally.name || 'Unknown'}: ${ally.hp}`);
-      }
+          // CRITICAL FIX: Characters MUST start with full health
+          // Fix HP values for all allies to make sure they're at full HP
+          if (typeof ally.hp === 'number' && typeof ally.maxHp === 'number' && ally.hp !== ally.maxHp) {
+            console.log(`🔶 Fixing ally ${ally.name || 'Unknown'} with incorrect HP: ${ally.hp}/${ally.maxHp}`);
+            // Force set to FULL HP (maxHp) as per strict game requirements
+            ally.hp = ally.maxHp;
+            console.log(`   Set HP to full value for ${ally.name || 'Unknown'}: ${ally.hp}/${ally.maxHp}`);
+          }
           
-          // Create a battle unit with safe default values
+          // Create a battle unit with safe default values - ENSURE FULL HEALTH
+          const maxHp = typeof ally.maxHp === 'number' ? ally.maxHp : 100;
           const allyUnit: BattleUnit = {
             id: ally.id || `ally-${index}`,
             name: ally.name || `Ally ${index + 1}`,
-            hp: typeof ally.hp === 'number' ? Math.max(1, ally.hp) : 100, // Ensure HP is at least 1
-            maxHp: typeof ally.maxHp === 'number' ? ally.maxHp : 100,
+            hp: maxHp, // CRITICAL FIX: Always start with FULL health (maxHp)
+            maxHp: maxHp,
             attackMeter: typeof ally.actionTimer === 'number' ? ally.actionTimer : 0,
             totalDamageDealt: 0,
             totalDamageReceived: 0,
@@ -551,20 +555,22 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         enemies.forEach((enemy, index) => {
           if (!enemy) return; // Skip if enemy is undefined/null
           
-          // Fix HP values for all enemies to match the maxHP
-          if (typeof enemy.hp === 'number' && enemy.hp <= 0) {
-            console.log(`🔶 Fixing enemy ${enemy.name || 'Unknown'} with invalid HP: ${enemy.hp}`);
-            // Set to FULL HP (maxHp) as per requirements - all units should start a dungeon at full HP
-            enemy.hp = typeof enemy.maxHp === 'number' ? enemy.maxHp : 100;
-            console.log(`   New HP value for ${enemy.name || 'Unknown'}: ${enemy.hp}`);
+          // CRITICAL FIX: Enemies MUST start with full health
+          // Fix HP values for all enemies to make sure they're at full HP
+          if (typeof enemy.hp === 'number' && typeof enemy.maxHp === 'number' && enemy.hp !== enemy.maxHp) {
+            console.log(`🔶 Fixing enemy ${enemy.name || 'Unknown'} with incorrect HP: ${enemy.hp}/${enemy.maxHp}`);
+            // Force set to FULL HP (maxHp) as per strict game requirements
+            enemy.hp = enemy.maxHp;
+            console.log(`   Set HP to full value for ${enemy.name || 'Unknown'}: ${enemy.hp}/${enemy.maxHp}`);
           }
           
-          // Create a battle unit with safe default values
+          // Create a battle unit with safe default values - ENSURE FULL HEALTH
+          const maxHp = typeof enemy.maxHp === 'number' ? enemy.maxHp : 100;
           const enemyUnit: BattleUnit = {
             id: enemy.id || `enemy-${index}`,
             name: enemy.name || `Enemy ${index + 1}`,
-            hp: typeof enemy.hp === 'number' ? Math.max(1, enemy.hp) : 100, // Ensure HP is at least 1
-            maxHp: typeof enemy.maxHp === 'number' ? enemy.maxHp : 100,
+            hp: maxHp, // CRITICAL FIX: Always start with FULL health (maxHp)
+            maxHp: maxHp,
             attackMeter: typeof enemy.actionTimer === 'number' ? enemy.actionTimer : 0,
             totalDamageDealt: 0,
             totalDamageReceived: 0,
@@ -601,8 +607,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         });
       }
       
-      // Add an initial message about battle start
-      actionMessages.push(`Battle started with ${battleUnits.length} combatants`);
+      // Add helpful system messages about battle start and health rules
+      actionMessages.push(`Battle system initialized: All units start with full health (HP = Vitality × 8).`);
+      actionMessages.push(`Battle started with ${battleUnits.length} combatants.`);
+      
+      // Add health validation message if we had to fix any health values
+      if (hasFixedHp) {
+        actionMessages.push(`System: Health validation performed to ensure all units start at full health.`);
+      }
+      
       setUnits(battleUnits);
     }
     
