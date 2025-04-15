@@ -64,6 +64,9 @@ const InventoryView = () => {
   
   // Generate persistent shards based on characters with localStorage persistence
   useEffect(() => {
+    // Force reset character shards (temporary fix)
+    localStorage.removeItem('characterShards');
+    
     // Try to load saved shards from localStorage
     const savedShards = localStorage.getItem('characterShards');
     
