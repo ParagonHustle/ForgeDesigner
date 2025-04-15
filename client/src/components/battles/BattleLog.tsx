@@ -94,7 +94,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
+    console.log(`Setting playback speed to ${newSpeed}x`);
     setPlaybackSpeed(newSpeed);
+    
+    // If animation is currently in progress, restart with new speed to apply it
+    if (animationInProgress && !isPaused) {
+      setIsPaused(true);
+      setTimeout(() => {
+        setIsPaused(false);
+      }, 50);
+    }
   };
 
   // Helper function to render status effects with tooltips
@@ -1131,10 +1140,28 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         // Handle battle end event that appears after all round events
         // This marks the final state of the battle
         
+        // Double check the state of allies and enemies
+        const livingAllies = units.filter(unit => {
+          const id = String(unit.id);
+          return !id.includes('enemy') && unit.hp > 0;
+        });
+        
+        const livingEnemies = units.filter(unit => {
+          const id = String(unit.id);
+          return id.includes('enemy') && unit.hp > 0;
+        });
+        
+        // Determine actual battle outcome based on current unit state, not just the event flag
+        const battleSuccessful = livingEnemies.length === 0 && livingAllies.length > 0;
+        
+        // Override the server-provided outcome if it doesn't match the client state
+        // This ensures the UI accurately reflects what the player sees
+        const actualOutcome = battleSuccessful || event.success;
+        
         // Log the final outcome 
-        const message = event.success 
+        const message = actualOutcome
           ? "Battle complete! All enemies defeated!" 
-          : "Battle failed! Your party was defeated.";
+          : `Battle ${livingAllies.length > 0 ? 'incomplete' : 'failed'}! ${livingAllies.length === 0 ? 'Your party was defeated.' : 'Some enemies remain.'}`;
         
         addToLog(message);
         addToDetailedLog(message);
