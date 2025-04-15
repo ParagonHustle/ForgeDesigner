@@ -2765,17 +2765,15 @@ async function generateMockBattleLog(run: any, success: boolean) {
   const allies = [];
   const enemies = [];
   
-  // Set up multi-stage dungeon progression as per documentation
+  // Battle system constants based on documentation
   const TOTAL_STAGES = 8; // All dungeons have 8 stages (with mini-boss on stage 4, final boss on stage 8)
+  const ATTACK_METER_MAX = 100; // When meter hits 100%, unit takes action
+  const BASE_SPEED_REFERENCE = 40; // Base speed reference point (120 speed charges 3x faster than 40)
+  const MAX_STATUS_EFFECT_STACKS = 5; // Maximum number of stacks for effects like Poison/Burn
+  const MAX_ROUNDS_PER_STAGE = 50; // Safety limit to prevent infinite battle loops
   
   // Track current stage
   let currentStage = 1;
-  
-  // Battle configuration constants based on documentation
-  const ATTACK_METER_MAX = 100; // When meter hits 100%, unit takes action
-  const BASE_SPEED_REFERENCE = 100; // Reference speed for meter calculations
-  const MAX_STATUS_EFFECT_STACKS = 5; // Maximum number of stacks for effects like Poison/Burn
-  const MAX_ROUNDS_PER_STAGE = 50; // Safety limit to prevent infinite loops
 
   // Get character data for allies
   for (const charId of run.characterIds) {
@@ -2935,20 +2933,53 @@ async function generateMockBattleLog(run: any, success: boolean) {
     timestamp: Date.now()
   });
 
-  while (round < maxRounds && aliveAllies.length > 0 && aliveEnemies.length > 0) {
-    round++;
+  // Main battle loop using the Attack Meter system as per documentation
+  // Continue until stage is complete or max rounds reached
+  let battleRound = 0;
+  while (battleRound < MAX_ROUNDS_PER_STAGE && aliveAllies.length > 0 && aliveEnemies.length > 0 && !stageBattleComplete) {
+    battleRound++;
+    currentRound++;
     const roundActions = [];
 
-    // Process all units' actions based on speed
-    const allUnits = [...aliveAllies, ...aliveEnemies].map(unit => ({
-      ...unit,
-      actionTimer: 100 / (unit.stats.speed / 40)
-    }));
-
-    // Sort by action timer (lower acts first)
-    allUnits.sort((a, b) => a.actionTimer - b.actionTimer);
-
-    // Ensure we have at least one action per round even if all units skip
+    // Start of a new round - Process all units based on Attack Meter system
+    
+    // Update the attack meters for all units based on speed
+    // According to documentation, units with 120 speed charge 3x faster than units with 40 speed
+    aliveAllies.forEach(unit => {
+      // Increment attack meter based on speed
+      const speedFactor = unit.stats.speed / BASE_SPEED_REFERENCE;
+      unit.attackMeter += ATTACK_METER_MAX * speedFactor * 0.2; // 0.2 represents one tick
+      
+      // Reduce cooldowns if they exist
+      if (unit.advancedSkillCooldown > 0) {
+        unit.advancedSkillCooldown--;
+      }
+      if (unit.ultimateSkillCooldown > 0) {
+        unit.ultimateSkillCooldown--;
+      }
+    });
+    
+    aliveEnemies.forEach(unit => {
+      // Increment attack meter based on speed
+      const speedFactor = unit.stats.speed / BASE_SPEED_REFERENCE;
+      unit.attackMeter += ATTACK_METER_MAX * speedFactor * 0.2; // 0.2 represents one tick
+      
+      // Reduce cooldowns if they exist
+      if (unit.advancedSkillCooldown && unit.advancedSkillCooldown > 0) {
+        unit.advancedSkillCooldown--;
+      }
+      if (unit.ultimateSkillCooldown && unit.ultimateSkillCooldown > 0) {
+        unit.ultimateSkillCooldown--;
+      }
+    });
+    
+    // Process all units who have a full attack meter (100%)
+    const allUnits = [...aliveAllies, ...aliveEnemies];
+    
+    // Sort units by attack meter (highest first)
+    allUnits.sort((a, b) => b.attackMeter - a.attackMeter);
+    
+    // Track actions taken this round
     let actionsAdded = 0;
 
     for (const unit of allUnits) {
