@@ -781,19 +781,34 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Initialize units from battle log on first render
     if (battleLog.length > 0 && isOpen) {
       const battleEntry = battleLog[0];
+      console.log("Battle entry data:", battleEntry);
       
       if (battleEntry && battleEntry.allies && battleEntry.enemies) {
         const allUnits = [...battleEntry.allies, ...battleEntry.enemies];
-        setUnits(allUnits.map((unit: any) => ({
-          ...unit,
-          // Initialize tracking counters for display purposes
-          totalDamageDealt: 0,
-          totalDamageReceived: 0,
-          totalHealingDone: 0,
-          totalHealingReceived: 0,
-          // Add attack meter for each unit (starts between 70-90%)
-          attackMeter: Math.floor(Math.random() * 20) + 70
-        })));
+        console.log("All units before processing:", allUnits);
+        
+        // Make sure each unit has valid hp and maxHp values
+        const processedUnits = allUnits.map((unit: any) => {
+          // Ensure HP and maxHP are valid numbers
+          const hp = typeof unit.hp === 'number' ? unit.hp : 100;
+          const maxHp = typeof unit.maxHp === 'number' ? unit.maxHp : 100;
+          
+          return {
+            ...unit,
+            hp: hp,
+            maxHp: maxHp,
+            // Initialize tracking counters for display purposes
+            totalDamageDealt: 0,
+            totalDamageReceived: 0,
+            totalHealingDone: 0,
+            totalHealingReceived: 0,
+            // Add attack meter for each unit (starts between 70-90%)
+            attackMeter: Math.floor(Math.random() * 20) + 70
+          };
+        });
+        
+        console.log("Processed units:", processedUnits);
+        setUnits(processedUnits);
       }
     }
   }, [battleLog, isOpen]);
