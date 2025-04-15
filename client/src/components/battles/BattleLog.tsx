@@ -121,6 +121,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   // Function to handle dialog close
   const handleClose = (open: boolean) => {
     if (!open) {
+      // Reset battle state when closing dialog
+      setUnits([]);
+      setActionLog([]);
+      setDetailedActionLog([]);
+      setCurrentStage(0);
+      setIsComplete(false);
+      setActiveAttacker(null);
+      setActiveTarget(null);
       onClose();
     }
   };
