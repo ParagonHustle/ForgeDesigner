@@ -129,11 +129,12 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     // Ensure HP is always full at the start of a new battle and never negative
     const safeHealthPoints = Math.max(1, healthPoints);
     
+    // Always start with full health equal to maxHp
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',
-      hp: safeHealthPoints,  // CRITICAL: Always start with full health
-      maxHp: safeHealthPoints, // Set maxHP equal to 8x vitality
+      hp: safeHealthPoints,
+      maxHp: safeHealthPoints,
       stats: {
         attack: char?.attack || 50,
         vitality: vitality,
