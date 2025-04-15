@@ -70,7 +70,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "common",
-      avatarUrl: "/images/kleos.jpg"
+      avatarUrl: "/kleos.jpg"
     },
     {
       id: 50002,
@@ -80,7 +80,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "uncommon",
-      avatarUrl: "/images/kleos.jpg"
+      avatarUrl: "/kleos.jpg"
     },
     {
       id: 50003,
@@ -90,7 +90,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "rare",
-      avatarUrl: "/images/kleos.jpg"
+      avatarUrl: "/kleos.jpg"
     },
     {
       id: 50004,
@@ -100,7 +100,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "epic",
-      avatarUrl: "/images/kleos.jpg"
+      avatarUrl: "/kleos.jpg"
     },
     {
       id: 50005,
@@ -110,7 +110,7 @@ const InventoryView = () => {
       characterClass: "Warrior", 
       characterName: "Kleos",
       rarity: "legendary",
-      avatarUrl: "/images/kleos.jpg"
+      avatarUrl: "/kleos.jpg"
     }
   ]);
   
@@ -154,7 +154,7 @@ const InventoryView = () => {
         characterClass: 'Legendary Hero',
         characterName: 'Kleos',
         rarity: rarity,
-        avatarUrl: '/images/kleos.jpg'
+        avatarUrl: '/kleos.jpg'
       }));
       
       // Combine regular character shards with Kleos shards
