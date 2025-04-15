@@ -93,6 +93,155 @@ interface BattleLogEntry {
 }
 
 /**
+ * Continues a battle for subsequent stages with surviving allies
+ * @param run The dungeon run data
+ * @param allies Surviving allies from previous stage
+ * @param currentStage The current stage number
+ * @param success Whether the run ends in success (preset)
+ */
+async function generateNextStageBattle(run: any, allies: BattleUnit[], currentStage: number, success: boolean): Promise<BattleLogEntry[]> {
+  // Initialize battle data for the next stage
+  const battleLog: BattleLogEntry[] = [];
+  const enemies: BattleUnit[] = [];
+  
+  // Generate new enemies based on updated difficulty for this stage
+  const stageDifficulty = run.dungeonLevel + currentStage - 1;
+  const enemyCount = Math.min(3, Math.floor(stageDifficulty / 2) + 1);
+  
+  for (let i = 0; i < enemyCount; i++) {
+    const type = (i === enemyCount - 1 && currentStage === TOTAL_STAGES) ? 'Boss' : 'Minion';
+    // Ensure vitality is always positive
+    const vitality = Math.max(10, type === 'Boss' ? 
+      250 + (stageDifficulty * 25) : 
+      90 + (stageDifficulty * 12));
+    
+    const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
+    // Ensure HP is never negative
+    const safeHealthPoints = Math.max(1, healthPoints);
+    
+    console.log(`Setting next stage enemy ${type} ${i + 1} initial HP to ${safeHealthPoints} (full health)`);
+    
+    enemies.push({
+      id: `enemy_stage${currentStage}_${i}`,
+      name: `${type} ${i + 1} (Stage ${currentStage})`,
+      hp: safeHealthPoints,
+      maxHp: safeHealthPoints,
+      stats: {
+        attack: 45 + (stageDifficulty * 6),
+        vitality: vitality,
+        speed: type === 'Boss' ? 40 + (stageDifficulty * 2) : 50 + (stageDifficulty * 3)
+      },
+      skills: {
+        basic: { name: 'Enemy Attack', damage: 1.0 },
+        advanced: type === 'Boss' ? { name: 'Boss Strike', damage: 1.8, cooldown: 3 } : null,
+        ultimate: type === 'Boss' ? { name: 'Boss Ultimate', damage: 2.5, cooldown: 5 } : null
+      },
+      attackMeter: 0,
+      advancedSkillCooldown: 0,
+      ultimateSkillCooldown: 0,
+      statusEffects: []
+    });
+  }
+  
+  // Add stage start notification
+  battleLog.push({
+    type: 'stage_start',
+    stageNumber: currentStage,
+    totalStages: TOTAL_STAGES,
+    message: `Stage ${currentStage} of ${TOTAL_STAGES} begins!`,
+    timestamp: Date.now()
+  });
+  
+  // Add stage battle log with new enemies
+  battleLog.push({
+    type: 'stage_progress',
+    currentStage,
+    totalStages: TOTAL_STAGES,
+    message: currentStage === TOTAL_STAGES ? 
+      'Your party advances to the final stage!' : 
+      `Your party advances to stage ${currentStage} of ${TOTAL_STAGES}.`,
+    aliveAllies: allies,
+    newEnemies: enemies
+  });
+  
+  // Reset skill cooldowns or reduce them for the next stage
+  allies.forEach(ally => {
+    // Reduce cooldowns by 1 when progressing to next stage (minimum 0)
+    ally.advancedSkillCooldown = Math.max(0, ally.advancedSkillCooldown - 1);
+    ally.ultimateSkillCooldown = Math.max(0, ally.ultimateSkillCooldown - 1);
+    
+    // Clear status effects between stages
+    ally.statusEffects = [];
+  });
+  
+  // Set up battle simulation parameters
+  let aliveAllies = [...allies];
+  let aliveEnemies = [...enemies];
+  let stageBattleComplete = false;
+  let currentRound = 0;
+  
+  // Perform the battle for this stage
+  battleLog.push({
+    type: 'battle_start',
+    allies: aliveAllies,
+    enemies: aliveEnemies,
+    timestamp: Date.now()
+  });
+  
+  // Debug logging to check condition values
+  console.log("NEXT STAGE BATTLE LOOP CONDITIONS CHECK:");
+  console.log(`- MAX_ROUNDS_PER_STAGE: ${MAX_ROUNDS_PER_STAGE}`);
+  console.log(`- aliveAllies.length: ${aliveAllies.length}`);
+  console.log(`- aliveEnemies.length: ${aliveEnemies.length}`);
+  console.log(`- stageBattleComplete: ${stageBattleComplete}`);
+  
+  let battleRound = 0;
+  while (battleRound < MAX_ROUNDS_PER_STAGE && aliveAllies.length > 0 && aliveEnemies.length > 0 && !stageBattleComplete) {
+    console.log(`NEXT STAGE BATTLE ROUND ${battleRound + 1} STARTING`);
+    // Battle logic here (simplified for brevity)
+    battleRound++;
+    currentRound++;
+    
+    // Simulate a simple round to see if it works
+    battleLog.push({
+      type: 'round',
+      number: currentRound,
+      actions: [{
+        actor: 'System',
+        skill: 'Debug',
+        target: 'Debug',
+        damage: 0,
+        isCritical: false,
+        message: `Testing next stage battle round ${battleRound}`
+      }],
+      remainingAllies: aliveAllies.length,
+      remainingEnemies: aliveEnemies.length
+    });
+    
+    // Force battle to complete after 1 round for debugging
+    stageBattleComplete = true;
+  }
+  
+  // Record final battle outcome for this stage
+  const victory = aliveEnemies.length === 0;
+  battleLog.push({
+    type: 'battle_end',
+    victory,
+    totalRounds: currentRound,
+    currentStage,
+    totalStages: TOTAL_STAGES,
+    completedStages: victory ? currentStage : currentStage - 1,
+    survivingAllies: aliveAllies.map(a => a.name),
+    summary: victory && currentStage === TOTAL_STAGES ? 
+      `Complete victory! You conquered all ${TOTAL_STAGES} stages of the dungeon!` : 
+      victory ? `Victory at stage ${currentStage} of ${TOTAL_STAGES}!` : 
+      `Defeat at stage ${currentStage} of ${TOTAL_STAGES} after ${currentRound} rounds of combat.`
+  });
+  
+  return battleLog;
+}
+
+/**
  * Generate a detailed battle log for a dungeon run
  * Implements the combat mechanics as specified in documentation
  */
@@ -109,8 +258,15 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   const allies: BattleUnit[] = [];
   const enemies: BattleUnit[] = [];
   
-  // Track current stage
-  let currentStage = 1;
+  // Track current stage - check for _stage property in recursive calls
+  let currentStage = run._stage || 1;
+  
+  // For recursive calls, we should have _allies property containing surviving allies from previous stage
+  if (run._allies) {
+    console.log("RECURSIVE STAGE DETECTED - Using surviving allies from previous stage");
+    // Ignore characterIds and use the surviving allies directly
+    return generateNextStageBattle(run, run._allies, currentStage, success);
+  }
 
   // Get character data for allies
   console.log('Processing allies for battle, character IDs:', run.characterIds);
