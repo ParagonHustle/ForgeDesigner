@@ -105,6 +105,35 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       }, 50);
     }
   };
+  
+  // Function to handle dialog close
+  const handleClose = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
+  
+  // Function to handle restart battle button
+  const restartBattle = () => {
+    // Reset state to initial values
+    setCurrentStage(0);
+    setIsPaused(false);
+    setUnits([]);
+    setActionLog([]);
+    setDetailedActionLog([]);
+    setIsComplete(false);
+    turnCountRef.current = 1;
+    setBattleRound(1);
+    setActiveAttacker(null);
+    setActiveTarget(null);
+  };
+  
+  // Function to handle complete dungeon button
+  const handleCompleteDungeon = () => {
+    if (runId && onCompleteDungeon) {
+      onCompleteDungeon(runId);
+    }
+  };
 
   // Helper function to render HP display with proper validation
   const renderHP = (hp: any, maxHp: any): string => {
