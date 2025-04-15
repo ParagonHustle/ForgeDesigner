@@ -386,6 +386,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   }) : [];
   
   useEffect(() => {
+    console.log('battleLog data:', battleLog);
     if (battleLog.length > 0 && isOpen) {
       // Reset logs and states when a new battle log is loaded
       setActionLog([]);
@@ -441,11 +442,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           })
         ];
         
+        console.log('Setting initial units:', initialUnits);
         setUnits(initialUnits);
         
         // Start replay after a short delay for initialization
         if (!isPaused) {
           setTimeout(() => {
+            console.log('Starting battle simulation with units:', initialUnits);
             simulateBattle(0);
           }, 1000);
         }
