@@ -1329,11 +1329,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     )}
                     
                     {/* Attack meter arc above character */}
-                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-12 h-2">
-                      <div 
-                        className="h-1 bg-yellow-500 rounded-full"
-                        style={{ width: `${Math.min(100, unit.attackMeter)}%` }}
-                      />
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-14 h-2">
+                      <div className="relative w-full h-1 bg-gray-700/50 rounded-full overflow-hidden">
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-yellow-500 rounded-full"
+                          style={{ 
+                            width: `${Math.min(100, unit.attackMeter)}%`,
+                            transition: 'width 0.5s ease-in-out'
+                          }}
+                        />
+                      </div>
                     </div>
                     
                     <TooltipProvider>
@@ -1416,11 +1421,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                     )}
                     
                     {/* Attack meter arc above character */}
-                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-12 h-2">
-                      <div 
-                        className="h-1 bg-yellow-500 rounded-full"
-                        style={{ width: `${Math.min(100, unit.attackMeter)}%` }}
-                      />
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-14 h-2">
+                      <div className="relative w-full h-1 bg-gray-700/50 rounded-full overflow-hidden">
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-yellow-500 rounded-full"
+                          style={{ 
+                            width: `${Math.min(100, unit.attackMeter)}%`,
+                            transition: 'width 0.5s ease-in-out'
+                          }}
+                        />
+                      </div>
                     </div>
                     
                     <TooltipProvider>
