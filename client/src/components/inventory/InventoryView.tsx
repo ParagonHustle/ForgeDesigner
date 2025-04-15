@@ -70,7 +70,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "common",
-      avatarUrl: "/kleos.jpg"
+      avatarUrl: "/images/kleos.jpg"
     },
     {
       id: 50002,
@@ -80,7 +80,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "uncommon",
-      avatarUrl: "/kleos.jpg"
+      avatarUrl: "/images/kleos.jpg"
     },
     {
       id: 50003,
@@ -90,7 +90,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "rare",
-      avatarUrl: "/kleos.jpg"
+      avatarUrl: "/images/kleos.jpg"
     },
     {
       id: 50004,
@@ -100,7 +100,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "epic",
-      avatarUrl: "/kleos.jpg"
+      avatarUrl: "/images/kleos.jpg"
     },
     {
       id: 50005,
@@ -110,7 +110,7 @@ const InventoryView = () => {
       characterClass: "Warrior", 
       characterName: "Kleos",
       rarity: "legendary",
-      avatarUrl: "/kleos.jpg"
+      avatarUrl: "/images/kleos.jpg"
     }
   ]);
   
