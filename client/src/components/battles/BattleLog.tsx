@@ -102,10 +102,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [currentSkillName, setCurrentSkillName] = useState<string>('');
   const [animationInProgress, setAnimationInProgress] = useState(false);
   
-  // Using useRef for turn count to avoid re-render issues
-  const turnCountRef = useRef<number>(1);
-  // Keep state for displaying in the UI when needed
-  const [battleRound, setBattleRound] = useState(1);
+  // No rounds in the battle system, just stages
   
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
@@ -137,8 +134,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     setActionLog([]);
     setDetailedActionLog([]);
     setIsComplete(false);
-    turnCountRef.current = 1;
-    setBattleRound(1);
     setActiveAttacker(null);
     setActiveTarget(null);
   };
@@ -370,7 +365,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Process battle events sequentially
     let actionMessages: string[] = [];
     let detailedMessages: string[] = [];
-    let currentRound = 1;
     let stage = 0;
     let battleUnits: BattleUnit[] = [];
     
@@ -497,12 +491,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         if (target && effect) {
           actionMessages.push(`${target.name} is affected by ${effect.name}`);
         }
-      } else if (event.type === 'round') {
-        // Safely access event.data with a default empty object
-        const roundData = event.data || {};
-        currentRound = roundData.round ? roundData.round : currentRound + 1;
-        actionMessages.push(`Round ${currentRound} begins`);
-        setBattleRound(currentRound);
+      // We ignore round type events - we don't use rounds in this system
       } else if (event.type === 'stage') {
         const stageData = event.data || {};
         stage = stageData.stage !== undefined ? stageData.stage : stage + 1;
@@ -565,7 +554,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">
                 {!isComplete ? (
-                  <span>Battle in Progress - Round {battleRound}</span>
+                  <span>Battle in Progress - Stage {currentStage + 1}</span>
                 ) : (
                   <span>Battle Complete - Reached Stage {currentStage + 1}</span>
                 )}
