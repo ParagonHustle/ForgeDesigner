@@ -929,38 +929,42 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           const allLivingUnits = units.filter(unit => unit.hp > 0);
           const mockActions = [];
           
-          // Allies attack enemies
-          for (const ally of allies) {
-            if (enemies.length === 0) break;
-            
-            const target = enemies[Math.floor(Math.random() * enemies.length)];
-            const damage = Math.floor(ally.stats.attack * (0.8 + Math.random() * 0.4));
-            const isCritical = Math.random() < 0.2;
-            
-            mockActions.push({
-              actor: ally.name,
-              skill: 'Basic Attack',
-              target: target.name,
-              damage: isCritical ? Math.floor(damage * 1.5) : damage,
-              isCritical
-            });
-          }
+          // Allies and enemies take turns attacking
+          // We'll interleave ally and enemy actions for more dynamic battles
+          const maxActions = Math.max(allies.length, enemies.length);
           
-          // Enemies attack allies
-          for (const enemy of enemies) {
-            if (allies.length === 0) break;
+          for (let i = 0; i < maxActions; i++) {
+            // Ally attacks if available
+            if (i < allies.length && enemies.length > 0) {
+              const ally = allies[i];
+              const target = enemies[Math.floor(Math.random() * enemies.length)];
+              const damage = Math.floor(ally.stats.attack * (0.8 + Math.random() * 0.4));
+              const isCritical = Math.random() < 0.2;
+              
+              mockActions.push({
+                actor: ally.name,
+                skill: 'Basic Attack',
+                target: target.name,
+                damage: isCritical ? Math.floor(damage * 1.5) : damage,
+                isCritical
+              });
+            }
             
-            const target = allies[Math.floor(Math.random() * allies.length)];
-            const damage = Math.floor(enemy.stats.attack * (0.6 + Math.random() * 0.4));
-            const isCritical = Math.random() < 0.15;
-            
-            mockActions.push({
-              actor: enemy.name,
-              skill: 'Enemy Attack',
-              target: target.name,
-              damage: isCritical ? Math.floor(damage * 1.5) : damage,
-              isCritical
-            });
+            // Enemy attacks if available 
+            if (i < enemies.length && allies.length > 0) {
+              const enemy = enemies[i];
+              const target = allies[Math.floor(Math.random() * allies.length)];
+              const damage = Math.floor(enemy.stats.attack * (0.6 + Math.random() * 0.4));
+              const isCritical = Math.random() < 0.15;
+              
+              mockActions.push({
+                actor: enemy.name,
+                skill: 'Enemy Attack',
+                target: target.name,
+                damage: isCritical ? Math.floor(damage * 1.5) : damage,
+                isCritical
+              });
+            }
           }
           
           actions = mockActions;
