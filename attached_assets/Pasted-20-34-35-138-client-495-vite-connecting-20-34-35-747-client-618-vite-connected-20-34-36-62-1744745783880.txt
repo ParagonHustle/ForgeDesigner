@@ -1,0 +1,390 @@
+20:34:35.138 client:495 [vite] connecting...
+20:34:35.747 client:618 [vite] connected.
+20:34:36.622 chunk-WERSD76P.js?v=bebf37ce:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+20:34:36.899 chunk-WERSD76P.js?v=bebf37ce:521 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=bebf37ce:337:18
+    at div
+    at aside
+    at Sidebar (https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/src/components/layout/Sidebar.tsx:81:22)
+    at div
+    at div
+    at MainLayout (https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/src/components/layout/MainLayout.tsx:24:23)
+    at QueryClientProvider (https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=bebf37ce:2805:3)
+    at App
+printWarning @ chunk-WERSD76P.js?v=bebf37ce:521
+20:34:38.790 BattleLog.tsx:404 === BATTLE LOG COMPONENT STATE ===
+20:34:38.790 BattleLog.tsx:405 isOpen: false
+20:34:38.790 BattleLog.tsx:406 isPaused: true
+20:34:38.790 BattleLog.tsx:407 battleLog length: 0
+20:34:38.790 BattleLog.tsx:408 battleLog first few entries: Array(0)
+20:34:38.790 BattleLog.tsx:415 Not processing battle log because: empty log
+20:34:39.627 @radix-ui_react-dialog.js?v=bebf37ce:336 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ @radix-ui_react-dialog.js?v=bebf37ce:336
+20:34:43.550 DungeonView.tsx:162 Sending dungeon request: Object
+20:34:53.544 BattleLog.tsx:404 === BATTLE LOG COMPONENT STATE ===
+20:34:53.544 BattleLog.tsx:405 isOpen: false
+20:34:53.544 BattleLog.tsx:406 isPaused: true
+20:34:53.544 BattleLog.tsx:407 battleLog length: 0
+20:34:53.544 BattleLog.tsx:408 battleLog first few entries: Array(0)
+20:34:53.544 BattleLog.tsx:415 Not processing battle log because: empty log
+20:34:56.742 
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+20:35:01.246 DungeonView.tsx:210 Completing dungeon run ID: 144
+20:35:03.173 DungeonView.tsx:219 Dungeon completion response: {success: true, battleLog: Array(91), rewards: {…}}
+20:35:03.173 DungeonView.tsx:220 Battle log entries: 91
+20:35:03.173 DungeonView.tsx:224 Setting battle log with 91 entries
+20:35:03.174 queryClient.ts:15 Fetch finished loading: POST "https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/api/dungeons/complete/144".
+apiRequest @ queryClient.ts:15
+handleCompleteDungeon @ DungeonView.tsx:211
+onClick @ DungeonView.tsx:320
+callCallback2 @ chunk-WERSD76P.js?v=bebf37ce:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=bebf37ce:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=bebf37ce:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=bebf37ce:3736
+executeDispatch @ chunk-WERSD76P.js?v=bebf37ce:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=bebf37ce:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=bebf37ce:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=bebf37ce:7051
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=bebf37ce:18913
+batchedUpdates @ chunk-WERSD76P.js?v=bebf37ce:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=bebf37ce:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=bebf37ce:5478
+dispatchEvent @ chunk-WERSD76P.js?v=bebf37ce:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=bebf37ce:5449
+20:35:03.181 BattleLog.tsx:404 === BATTLE LOG COMPONENT STATE ===
+20:35:03.181 BattleLog.tsx:405 isOpen: true
+20:35:03.182 BattleLog.tsx:406 isPaused: true
+20:35:03.182 BattleLog.tsx:407 battleLog length: 91
+20:35:03.182 BattleLog.tsx:408 battleLog first few entries: (2) [{…}, {…}]
+20:35:03.183 BattleLog.tsx:415 Not processing battle log because: is paused
+20:35:03.198 @radix-ui_react-dialog.js?v=bebf37ce:336 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ @radix-ui_react-dialog.js?v=bebf37ce:336
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19432
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+finishConcurrentRender @ chunk-WERSD76P.js?v=bebf37ce:18805
+performConcurrentWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18718
+workLoop @ chunk-WERSD76P.js?v=bebf37ce:197
+flushWork @ chunk-WERSD76P.js?v=bebf37ce:176
+performWorkUntilDeadline @ chunk-WERSD76P.js?v=bebf37ce:384
+20:35:04.540 queryClient.ts:32 Fetch finished loading: GET "https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/api/dungeons/runs".
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=bebf37ce:840
+run @ @tanstack_react-query.js?v=bebf37ce:494
+start @ @tanstack_react-query.js?v=bebf37ce:536
+fetch @ @tanstack_react-query.js?v=bebf37ce:926
+executeFetch_fn @ @tanstack_react-query.js?v=bebf37ce:2211
+fetch @ @tanstack_react-query.js?v=bebf37ce:2011
+refetch @ @tanstack_react-query.js?v=bebf37ce:2001
+handleCompleteDungeon @ DungeonView.tsx:233
+await in handleCompleteDungeon
+onClick @ DungeonView.tsx:320
+callCallback2 @ chunk-WERSD76P.js?v=bebf37ce:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=bebf37ce:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=bebf37ce:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=bebf37ce:3736
+executeDispatch @ chunk-WERSD76P.js?v=bebf37ce:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=bebf37ce:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=bebf37ce:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=bebf37ce:7051
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=bebf37ce:18913
+batchedUpdates @ chunk-WERSD76P.js?v=bebf37ce:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=bebf37ce:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=bebf37ce:5478
+dispatchEvent @ chunk-WERSD76P.js?v=bebf37ce:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=bebf37ce:5449
+20:35:13.721 BattleLog.tsx:404 === BATTLE LOG COMPONENT STATE ===
+20:35:13.721 BattleLog.tsx:405 isOpen: true
+20:35:13.721 BattleLog.tsx:406 isPaused: false
+20:35:13.721 BattleLog.tsx:407 battleLog length: 91
+20:35:13.721 BattleLog.tsx:408 battleLog first few entries: (2) [{…}, {…}]
+20:35:13.722 BattleLog.tsx:412 Battle log data received: [{"type":"system_message","message":"Battle system initialized: All units start with full health (HP = Vitality × 8).","timestamp":1744745702228},{"type":"battle_start","allies":[{"id":3,"name":"Brawler Frank","hp":0,"maxHp":920,"stats":{"attack":135,"vitality":115,"speed":95},"skills":{"basic":{"name":"Basic Attack","damage":1},"advanced":null,"ultimate":null},"auraBonus":{"attack":2,"vitality":-1,"speed":7,"focus":10,"accuracy":-1,"defense":9,"resilience":3,"element":"fire"},"attackMeter":47.5...
+20:35:13.723 BattleLog.tsx:421 Processing battle log data...
+20:35:13.723 BattleLog.tsx:436 Found init event: {type: 'battle_start', allies: Array(4), enemies: Array(3), timestamp: 1744745702228}
+20:35:13.723 BattleLog.tsx:443 Allies: (4) [{…}, {…}, {…}, {…}]
+20:35:13.724 BattleLog.tsx:444 Enemies: (3) [{…}, {…}, {…}]
+20:35:13.724 BattleLog.tsx:454 Fixing ally Brawler Frank with incorrect HP: 0/920
+(anonymous) @ BattleLog.tsx:454
+processBattleLog @ BattleLog.tsx:451
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+20:35:13.724 BattleLog.tsx:454 Fixing ally Albus Dumbleboom with incorrect HP: 8/800
+(anonymous) @ BattleLog.tsx:454
+processBattleLog @ BattleLog.tsx:451
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+20:35:13.725 BattleLog.tsx:454 Fixing ally Kleos with incorrect HP: 0/960
+(anonymous) @ BattleLog.tsx:454
+processBattleLog @ BattleLog.tsx:451
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+20:35:13.725 BattleLog.tsx:454 Fixing ally G-Wolf with incorrect HP: 0/880
+(anonymous) @ BattleLog.tsx:454
+processBattleLog @ BattleLog.tsx:451
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+20:35:13.725 BattleLog.tsx:466 Fixing enemy Minion 1 with incorrect HP: 0/1280
+(anonymous) @ BattleLog.tsx:466
+processBattleLog @ BattleLog.tsx:463
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+20:35:13.725 BattleLog.tsx:466 Fixing enemy Minion 2 with incorrect HP: 0/1280
+(anonymous) @ BattleLog.tsx:466
+processBattleLog @ BattleLog.tsx:463
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+20:35:13.725 BattleLog.tsx:466 Fixing enemy Boss 3 with incorrect HP: 1/2880
+(anonymous) @ BattleLog.tsx:466
+processBattleLog @ BattleLog.tsx:463
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+20:35:13.726 BattleLog.tsx:636 Processing round 1: {type: 'round', number: 1, actions: Array(2), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.727 BattleLog.tsx:636 Processing round 2: {type: 'round', number: 2, actions: Array(3), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.727 BattleLog.tsx:636 Processing round 3: {type: 'round', number: 3, actions: Array(3), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.727 BattleLog.tsx:636 Processing round 4: {type: 'round', number: 4, actions: Array(4), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.728 BattleLog.tsx:636 Processing round 5: {type: 'round', number: 5, actions: Array(2), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.728 BattleLog.tsx:636 Processing round 6: {type: 'round', number: 6, actions: Array(6), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.728 BattleLog.tsx:636 Processing round 7: {type: 'round', number: 7, actions: Array(2), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.729 BattleLog.tsx:636 Processing round 8: {type: 'round', number: 8, actions: Array(4), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.729 BattleLog.tsx:636 Processing round 9: {type: 'round', number: 9, actions: Array(3), remainingAllies: 4, remainingEnemies: 3}
+20:35:13.729 BattleLog.tsx:636 Processing round 10: {type: 'round', number: 10, actions: Array(4), remainingAllies: 4, remainingEnemies: 2}
+20:35:13.729 BattleLog.tsx:636 Processing round 11: {type: 'round', number: 11, actions: Array(2), remainingAllies: 4, remainingEnemies: 2}
+20:35:13.730 BattleLog.tsx:636 Processing round 12: {type: 'round', number: 12, actions: Array(6), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.730 BattleLog.tsx:636 Processing round 13: {type: 'round', number: 13, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.730 BattleLog.tsx:636 Processing round 14: {type: 'round', number: 14, actions: Array(3), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.731 BattleLog.tsx:636 Processing round 15: {type: 'round', number: 15, actions: Array(1), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.731 BattleLog.tsx:636 Processing round 16: {type: 'round', number: 16, actions: Array(4), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.731 BattleLog.tsx:636 Processing round 17: {type: 'round', number: 17, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.731 BattleLog.tsx:636 Processing round 18: {type: 'round', number: 18, actions: Array(4), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.732 BattleLog.tsx:636 Processing round 19: {type: 'round', number: 19, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.732 BattleLog.tsx:636 Processing round 20: {type: 'round', number: 20, actions: Array(4), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.732 BattleLog.tsx:636 Processing round 21: {type: 'round', number: 21, actions: Array(1), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.732 BattleLog.tsx:636 Processing round 22: {type: 'round', number: 22, actions: Array(3), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.733 BattleLog.tsx:636 Processing round 23: {type: 'round', number: 23, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.733 BattleLog.tsx:636 Processing round 24: {type: 'round', number: 24, actions: Array(5), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.733 BattleLog.tsx:636 Processing round 25: {type: 'round', number: 25, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.734 BattleLog.tsx:636 Processing round 26: {type: 'round', number: 26, actions: Array(3), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.734 BattleLog.tsx:636 Processing round 27: {type: 'round', number: 27, actions: Array(1), remainingAllies: 4, remainingEnemies: 1}
+20:35:13.734 BattleLog.tsx:636 Processing round 28: {type: 'round', number: 28, actions: Array(5), remainingAllies: 3, remainingEnemies: 1}
+20:35:13.735 BattleLog.tsx:636 Processing round 29: {type: 'round', number: 29, actions: Array(2), remainingAllies: 3, remainingEnemies: 1}
+20:35:13.735 BattleLog.tsx:636 Processing round 30: {type: 'round', number: 30, actions: Array(3), remainingAllies: 3, remainingEnemies: 1}actions: Array(3)0: {actor: 'G-Wolf', skill: 'Basic Attack', target: 'Boss 3', damage: 120, isCritical: false, …}1: {actor: 'Kleos', skill: 'Basic Attack', target: 'Boss 3', damage: 187, isCritical: true, …}2: {actor: 'Albus Dumbleboom', skill: 'Basic Attack', target: 'Boss 3', damage: 90, isCritical: false, …}length: 3[[Prototype]]: Array(0)number: 30remainingAllies: 3remainingEnemies: 1type: "round"[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (...)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()
+20:35:13.735 BattleLog.tsx:636 Processing round 31: {type: 'round', number: 31, actions: Array(2), remainingAllies: 3, remainingEnemies: 1}actions: (2) [{…}, {…}]number: 31remainingAllies: 3remainingEnemies: 1type: "round"[[Prototype]]: Object
+20:35:13.736 BattleLog.tsx:636 Processing round 32: {type: 'round', number: 32, actions: Array(4), remainingAllies: 3, remainingEnemies: 1}
+20:35:13.736 BattleLog.tsx:636 Processing round 33: {type: 'round', number: 33, actions: Array(2), remainingAllies: 3, remainingEnemies: 1}
+20:35:13.736 BattleLog.tsx:636 Processing round 34: {type: 'round', number: 34, actions: Array(3), remainingAllies: 3, remainingEnemies: 1}
+20:35:13.737 BattleLog.tsx:636 Processing round 35: {type: 'round', number: 35, actions: Array(2), remainingAllies: 3, remainingEnemies: 1}
+20:35:13.737 BattleLog.tsx:636 Processing round 36: {type: 'round', number: 36, actions: Array(5), remainingAllies: 2, remainingEnemies: 1}
+20:35:13.737 BattleLog.tsx:636 Processing round 37: {type: 'round', number: 37, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+20:35:13.738 BattleLog.tsx:636 Processing round 38: {type: 'round', number: 38, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+20:35:13.738 BattleLog.tsx:636 Processing round 39: {type: 'round', number: 39, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+20:35:13.738 BattleLog.tsx:636 Processing round 40: {type: 'round', number: 40, actions: Array(3), remainingAllies: 2, remainingEnemies: 1}
+20:35:13.739 BattleLog.tsx:636 Processing round 41: {type: 'round', number: 41, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+20:35:13.739 BattleLog.tsx:636 Processing round 42: {type: 'round', number: 42, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+20:35:13.739 BattleLog.tsx:636 Processing round 43: {type: 'round', number: 43, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+20:35:13.740 BattleLog.tsx:636 Processing round 44: {type: 'round', number: 44, actions: Array(4), remainingAllies: 1, remainingEnemies: 1}
+20:35:13.740 BattleLog.tsx:636 Processing round 45: {type: 'round', number: 45, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+20:35:13.740 BattleLog.tsx:636 Processing round 46: {type: 'round', number: 46, actions: Array(1), remainingAllies: 1, remainingEnemies: 1}
+20:35:13.741 BattleLog.tsx:636 Processing round 47: {type: 'round', number: 47, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+20:35:13.741 BattleLog.tsx:636 Processing round 48: {type: 'round', number: 48, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+20:35:13.741 BattleLog.tsx:636 Processing round 49: {type: 'round', number: 49, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+20:35:13.741 BattleLog.tsx:636 Processing round 50: {type: 'round', number: 50, actions: Array(1), remainingAllies: 1, remainingEnemies: 1}
+20:35:35.267 queryClient.ts:32 Fetch finished loading: GET "https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/api/dungeons/runs".
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=bebf37ce:840
+run @ @tanstack_react-query.js?v=bebf37ce:494
+start @ @tanstack_react-query.js?v=bebf37ce:536
+fetch @ @tanstack_react-query.js?v=bebf37ce:926
+executeFetch_fn @ @tanstack_react-query.js?v=bebf37ce:2211
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:2245
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=bebf37ce:2243
+updateTimers_fn @ @tanstack_react-query.js?v=bebf37ce:2250
+onQueryUpdate @ @tanstack_react-query.js?v=bebf37ce:2206
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:998
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:997
+batch @ @tanstack_react-query.js?v=bebf37ce:583
+dispatch_fn @ @tanstack_react-query.js?v=bebf37ce:996
+setData @ @tanstack_react-query.js?v=bebf37ce:696
+onSuccess @ @tanstack_react-query.js?v=bebf37ce:897
+resolve @ @tanstack_react-query.js?v=bebf37ce:456
+Promise.then
+run @ @tanstack_react-query.js?v=bebf37ce:498
+start @ @tanstack_react-query.js?v=bebf37ce:536
+fetch @ @tanstack_react-query.js?v=bebf37ce:926
+executeFetch_fn @ @tanstack_react-query.js?v=bebf37ce:2211
+fetch @ @tanstack_react-query.js?v=bebf37ce:2011
+refetch @ @tanstack_react-query.js?v=bebf37ce:2001
+handleCompleteDungeon @ DungeonView.tsx:233
+await in handleCompleteDungeon
+onClick @ DungeonView.tsx:320
+callCallback2 @ chunk-WERSD76P.js?v=bebf37ce:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=bebf37ce:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=bebf37ce:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=bebf37ce:3736
+executeDispatch @ chunk-WERSD76P.js?v=bebf37ce:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=bebf37ce:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=bebf37ce:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=bebf37ce:7051
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=bebf37ce:18913
+batchedUpdates @ chunk-WERSD76P.js?v=bebf37ce:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=bebf37ce:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=bebf37ce:5478
+dispatchEvent @ chunk-WERSD76P.js?v=bebf37ce:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=bebf37ce:5449
+20:36:06.239 queryClient.ts:32 Fetch finished loading: GET "https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/api/dungeons/runs".
+(anonymous) @ queryClient.ts:32
+fetchFn @ @tanstack_react-query.js?v=bebf37ce:840
+run @ @tanstack_react-query.js?v=bebf37ce:494
+start @ @tanstack_react-query.js?v=bebf37ce:536
+fetch @ @tanstack_react-query.js?v=bebf37ce:926
+executeFetch_fn @ @tanstack_react-query.js?v=bebf37ce:2211
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:2245
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=bebf37ce:2243
+updateTimers_fn @ @tanstack_react-query.js?v=bebf37ce:2250
+onQueryUpdate @ @tanstack_react-query.js?v=bebf37ce:2206
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:998
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:997
+batch @ @tanstack_react-query.js?v=bebf37ce:583
+dispatch_fn @ @tanstack_react-query.js?v=bebf37ce:996
+setData @ @tanstack_react-query.js?v=bebf37ce:696
+onSuccess @ @tanstack_react-query.js?v=bebf37ce:897
+resolve @ @tanstack_react-query.js?v=bebf37ce:456
+Promise.then
+run @ @tanstack_react-query.js?v=bebf37ce:498
+start @ @tanstack_react-query.js?v=bebf37ce:536
+fetch @ @tanstack_react-query.js?v=bebf37ce:926
+executeFetch_fn @ @tanstack_react-query.js?v=bebf37ce:2211
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:2245
+setInterval
+updateRefetchInterval_fn @ @tanstack_react-query.js?v=bebf37ce:2243
+updateTimers_fn @ @tanstack_react-query.js?v=bebf37ce:2250
+onQueryUpdate @ @tanstack_react-query.js?v=bebf37ce:2206
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:998
+(anonymous) @ @tanstack_react-query.js?v=bebf37ce:997
+batch @ @tanstack_react-query.js?v=bebf37ce:583
+dispatch_fn @ @tanstack_react-query.js?v=bebf37ce:996
+setData @ @tanstack_react-query.js?v=bebf37ce:696
+onSuccess @ @tanstack_react-query.js?v=bebf37ce:897
+resolve @ @tanstack_react-query.js?v=bebf37ce:456
+Promise.then
+run @ @tanstack_react-query.js?v=bebf37ce:498
+start @ @tanstack_react-query.js?v=bebf37ce:536
+fetch @ @tanstack_react-query.js?v=bebf37ce:926
+executeFetch_fn @ @tanstack_react-query.js?v=bebf37ce:2211
+fetch @ @tanstack_react-query.js?v=bebf37ce:2011
+refetch @ @tanstack_react-query.js?v=bebf37ce:2001
+handleCompleteDungeon @ DungeonView.tsx:233
+await in handleCompleteDungeon
+onClick @ DungeonView.tsx:320
+callCallback2 @ chunk-WERSD76P.js?v=bebf37ce:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=bebf37ce:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=bebf37ce:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=bebf37ce:3736
+executeDispatch @ chunk-WERSD76P.js?v=bebf37ce:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=bebf37ce:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=bebf37ce:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=bebf37ce:7051
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=bebf37ce:18913
+batchedUpdates @ chunk-WERSD76P.js?v=bebf37ce:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=bebf37ce:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=bebf37ce:5478
+dispatchEvent @ chunk-WERSD76P.js?v=bebf37ce:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=bebf37ce:5449

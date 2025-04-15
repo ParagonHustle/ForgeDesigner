@@ -953,9 +953,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         relatedIds: { runId: run.id }
       });
       
+      // CRITICAL FIX: Sanitize battle log to ensure all units have full health at battle start
+      // This is our final safeguard before sending data to the client
+      const sanitizedBattleLog = battleLog.map(entry => {
+        // Only process battle_start events which contain unit data
+        if (entry.type === 'battle_start') {
+          // Ensure all allies have proper HP values (not 0 or less)
+          if (entry.allies && Array.isArray(entry.allies)) {
+            entry.allies = entry.allies.map(ally => {
+              // If HP is 0 or invalid, set it to maxHp
+              if (!ally.hp || ally.hp <= 0) {
+                console.warn(`API Response Fix: Correcting ally ${ally.name} with invalid HP (${ally.hp}) to ${ally.maxHp}`);
+                return { ...ally, hp: ally.maxHp };
+              }
+              return ally;
+            });
+          }
+          
+          // Ensure all enemies have proper HP values (not 0 or less)
+          if (entry.enemies && Array.isArray(entry.enemies)) {
+            entry.enemies = entry.enemies.map(enemy => {
+              // If HP is 0 or invalid, set it to maxHp
+              if (!enemy.hp || enemy.hp <= 0) {
+                console.warn(`API Response Fix: Correcting enemy ${enemy.name} with invalid HP (${enemy.hp}) to ${enemy.maxHp}`);
+                return { ...enemy, hp: enemy.maxHp };
+              }
+              return enemy;
+            });
+          }
+        }
+        
+        return entry;
+      });
+      
+      console.log('Sanitized battle log to ensure proper health values before sending to client');
+      
       res.json({
         success,
-        battleLog,
+        battleLog: sanitizedBattleLog,
         rewards
       });
     } catch (error) {
