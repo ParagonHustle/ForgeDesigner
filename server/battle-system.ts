@@ -106,7 +106,9 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   let currentStage = 1;
 
   // Get character data for allies
+  console.log('Processing allies for battle, character IDs:', run.characterIds);
   for (const charId of run.characterIds) {
+    console.log(`Getting character data for ID: ${charId}`);
     const char = await storage.getCharacterById(charId);
     const aura = char?.equippedAuraId ? await storage.getAuraById(char.equippedAuraId) : null;
     

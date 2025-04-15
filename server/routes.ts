@@ -2763,6 +2763,40 @@ import { generateBattleLog } from './battle-system';
 // Helper function to generate battle log with proper Attack Meter turn-based system
 // Implements the dungeon battle system as specified in the documentation
 async function generateMockBattleLog(run: any, success: boolean) {
+  // CRITICAL FIX: Before calling the battle system, ensure character IDs are processed correctly
+  if (!run.characterIds && typeof run.characterIds !== 'object') {
+    console.error('Missing or invalid characterIds in run:', run);
+    // Use an empty array as fallback if characterIds is missing
+    run.characterIds = [];
+  }
+  
+  // Make characterIds always an array
+  if (!Array.isArray(run.characterIds)) {
+    // If it's a string or other format, try to parse it if possible
+    try {
+      if (typeof run.characterIds === 'string') {
+        run.characterIds = JSON.parse(run.characterIds);
+      } else {
+        // If it's not a string, convert to string and try to parse
+        const idString = String(run.characterIds);
+        // Check if it looks like a Postgres array representation
+        if (idString.startsWith('{') && idString.endsWith('}')) {
+          // Parse Postgres array format {1,2,3} to JavaScript array [1,2,3]
+          run.characterIds = idString.slice(1, -1).split(',').map(id => parseInt(id.trim()));
+        } else {
+          // Default to empty array if we can't parse
+          console.error('Could not parse characterIds:', run.characterIds);
+          run.characterIds = [];
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing characterIds:', error);
+      run.characterIds = [];
+    }
+  }
+  
+  console.log('Processed characterIds for battle log:', run.characterIds);
+  
   // Call the dedicated battle system implementation
   return await generateBattleLog(run, success);
 }
