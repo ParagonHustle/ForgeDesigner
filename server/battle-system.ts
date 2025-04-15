@@ -1,5 +1,56 @@
 import { storage } from './storage';
 
+/**
+ * Deep copy a battle unit to prevent reference issues
+ * This ensures we get a completely new object with no shared references
+ * @param unit The battle unit to copy
+ * @returns A deep copy of the battle unit
+ */
+function deepCopyUnit(unit: BattleUnit): BattleUnit {
+  if (!unit) {
+    console.error('Attempted to deep copy a null or undefined unit');
+    throw new Error('Cannot deep copy a null unit');
+  }
+  
+  // Set default for the basic skill (should never be null according to BattleUnit interface)
+  const basicSkill: BattleSkill = unit.skills.basic ? 
+    { ...unit.skills.basic } : 
+    { name: 'Basic Attack', damage: 1.0 };
+  
+  // Create a new object with all the properties of the original unit
+  const copy: BattleUnit = {
+    id: unit.id,
+    name: unit.name,
+    hp: unit.maxHp, // CRITICAL: Always initialize with maxHp, never use original hp
+    maxHp: unit.maxHp,
+    stats: { ...unit.stats }, // Copy stats object
+    skills: { 
+      basic: basicSkill,
+      advanced: unit.skills.advanced ? { ...unit.skills.advanced } : null,
+      ultimate: unit.skills.ultimate ? { ...unit.skills.ultimate } : null,
+    },
+    attackMeter: 0, // Reset attack meter 
+    advancedSkillCooldown: unit.advancedSkillCooldown || 0,
+    ultimateSkillCooldown: unit.ultimateSkillCooldown || 0,
+    statusEffects: [], // Start with empty status effects array
+  };
+
+  // Copy any aura bonus if it exists
+  if (unit.auraBonus) {
+    copy.auraBonus = { ...unit.auraBonus };
+  } else {
+    copy.auraBonus = null;
+  }
+
+  // Perform verification to ensure health values are correct
+  if (copy.hp <= 0 || copy.hp !== copy.maxHp) {
+    console.warn(`Deep copy health check: Unit ${copy.name} has invalid HP (${copy.hp}). Setting to ${copy.maxHp}`);
+    copy.hp = copy.maxHp; // Force to maxHp
+  }
+  
+  return copy;
+}
+
 // Battle system constants
 const TOTAL_STAGES = 8; // All dungeons have 8 stages (mini-boss on 4, final boss on 8)
 const ATTACK_METER_MAX = 100; // When meter hits 100%, unit takes action
@@ -182,9 +233,10 @@ async function generateNextStageBattle(run: any, allies: BattleUnit[], currentSt
     ally.statusEffects = [];
   });
   
-  // Set up battle simulation parameters
-  let aliveAllies = [...allies];
-  let aliveEnemies = [...enemies];
+  // Set up battle simulation parameters with proper deep copying
+  // Using spread [...allies] was causing reference issues leading to the 0 HP bug
+  let aliveAllies = allies.map(ally => deepCopyUnit(ally));
+  let aliveEnemies = enemies.map(enemy => deepCopyUnit(enemy));
   let stageBattleComplete = false;
   let currentRound = 0;
   
@@ -440,9 +492,10 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     timestamp: Date.now()
   });
 
-  // Prepare for battle simulation with attack meter system
-  let aliveAllies = [...allies];
-  let aliveEnemies = [...enemies];
+  // Prepare for battle simulation with attack meter system using proper deep copying
+  // Using spread [...allies] was causing reference issues leading to the 0 HP bug
+  let aliveAllies = allies.map(ally => deepCopyUnit(ally));
+  let aliveEnemies = enemies.map(enemy => deepCopyUnit(enemy));
   
   // Track battle progress
   let stageBattleComplete = false;
@@ -821,8 +874,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
       newEnemies: newEnemies
     });
     
-    // Set up next stage battle
-    aliveEnemies = [...newEnemies];
+    // Set up next stage battle with proper deep copying
+    aliveEnemies = newEnemies.map(enemy => deepCopyUnit(enemy));
     
     // Reset skill cooldowns or reduce them for the next stage
     aliveAllies.forEach(ally => {
