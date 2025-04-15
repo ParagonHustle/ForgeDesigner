@@ -70,7 +70,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "common",
-      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+      avatarUrl: "/images/kleos.jpg"
     },
     {
       id: 50002,
@@ -80,7 +80,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "uncommon",
-      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+      avatarUrl: "/images/kleos.jpg"
     },
     {
       id: 50003,
@@ -90,7 +90,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "rare",
-      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+      avatarUrl: "/images/kleos.jpg"
     },
     {
       id: 50004,
@@ -100,7 +100,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "epic",
-      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+      avatarUrl: "/images/kleos.jpg"
     },
     {
       id: 50005,
@@ -110,7 +110,7 @@ const InventoryView = () => {
       characterClass: "Warrior", 
       characterName: "Kleos",
       rarity: "legendary",
-      avatarUrl: "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop"
+      avatarUrl: "/images/kleos.jpg"
     }
   ]);
   
@@ -154,7 +154,7 @@ const InventoryView = () => {
         characterClass: 'Legendary Hero',
         characterName: 'Kleos',
         rarity: rarity,
-        avatarUrl: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop'
+        avatarUrl: '/images/kleos.jpg'
       }));
       
       // Combine regular character shards with Kleos shards
@@ -1132,20 +1132,18 @@ const InventoryView = () => {
                 className="bg-[#1A1A2E] border border-[#432874]/30 rounded-lg p-4"
               >
                 <div className="flex items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3
-                    ${shard.rarity === 'common' ? 'bg-gray-600/30' : 
-                      shard.rarity === 'uncommon' ? 'bg-green-600/30' : 
-                      shard.rarity === 'rare' ? 'bg-blue-600/30' : 
-                      shard.rarity === 'epic' ? 'bg-purple-600/30' : 
-                      'bg-yellow-600/30'}`
+                  <div className={`w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0 mr-3
+                    ${shard.rarity === 'common' ? 'border-gray-600' : 
+                      shard.rarity === 'uncommon' ? 'border-green-600' : 
+                      shard.rarity === 'rare' ? 'border-blue-600' : 
+                      shard.rarity === 'epic' ? 'border-purple-600' : 
+                      'border-yellow-600'}`
                   }>
-                    <ShoppingBag className={`h-5 w-5 
-                      ${shard.rarity === 'common' ? 'text-gray-300' : 
-                        shard.rarity === 'uncommon' ? 'text-green-300' : 
-                        shard.rarity === 'rare' ? 'text-blue-300' : 
-                        shard.rarity === 'epic' ? 'text-purple-300' : 
-                        'text-yellow-300'}`
-                    } />
+                    <img 
+                      src={shard.avatarUrl || "/assets/default-avatar.png"}
+                      alt={shard.characterName}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#FF9D00]">{shard.name}</h3>
@@ -1158,32 +1156,13 @@ const InventoryView = () => {
                     }>
                       {shard.rarity} • {shard.characterClass}
                     </div>
+                    <div className="flex mt-1 text-xs text-[#C8B8DB]">
+                      <span className="font-medium">{shard.quantity}</span>
+                      <span className="text-[#C8B8DB]/60 mx-1">of</span>
+                      <span className="font-medium">{shard.required}</span>
+                      <span className="text-[#C8B8DB]/60 ml-1">collected</span>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="mt-3">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-[#C8B8DB]/80">Progress</span>
-                    <span className="text-[#C8B8DB]">{shard.quantity}/{shard.required}</span>
-                  </div>
-                  <div className="h-2 bg-[#1F1D36] rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${shard.rarity === 'common' ? 'bg-gray-600' : 
-                        shard.rarity === 'uncommon' ? 'bg-green-600' : 
-                        shard.rarity === 'rare' ? 'bg-blue-600' : 
-                        shard.rarity === 'epic' ? 'bg-purple-600' : 
-                        'bg-yellow-600'}`
-                      } 
-                      style={{ width: `${(shard.quantity / shard.required) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-                
-                <div className="mt-3 text-sm text-[#C8B8DB]/70">
-                  {shard.quantity >= shard.required ? 
-                    `You have enough ${shard.rarity} ${shard.characterName} shards!` : 
-                    `Collect ${shard.required - shard.quantity} more ${shard.rarity} shards for ${shard.characterName}.`
-                  }
                 </div>
               </motion.div>
             ))}
