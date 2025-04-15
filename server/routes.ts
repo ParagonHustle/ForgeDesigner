@@ -2788,15 +2788,18 @@ async function generateMockBattleLog(run: any, success: boolean) {
       element: aura.element
     } : null;
     
-    const vitality = char?.vitality || 100;
+    // Ensure vitality is always positive
+    const vitality = Math.max(10, char?.vitality || 100);
     const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
     
-    // Ensure HP is always full at the start of a new battle
+    // Ensure HP is always full at the start of a new battle and never negative
+    const safeHealthPoints = Math.max(1, healthPoints);
+    
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',
-      hp: healthPoints,      // CRITICAL: Always start with full health
-      maxHp: healthPoints,   // Set maxHP equal to 8x vitality
+      hp: safeHealthPoints,  // CRITICAL: Always start with full health
+      maxHp: safeHealthPoints, // Set maxHP equal to 8x vitality
       stats: {
         attack: char?.attack || 50,
         vitality: vitality,
@@ -2826,15 +2829,19 @@ async function generateMockBattleLog(run: any, success: boolean) {
     const type = i === enemyCount - 1 ? 'Boss' : 'Minion';
     const level = run.dungeonLevel;
     
-    const vitality = type === 'Boss' ? 200 + (level * 20) : 80 + (level * 10);
+    // Ensure vitality is always positive
+    const vitality = Math.max(10, type === 'Boss' ? 200 + (level * 20) : 80 + (level * 10));
     const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
+    
+    // Ensure HP is always full at the start of a new battle and never negative
+    const safeHealthPoints = Math.max(1, healthPoints);
     
     // Ensure enemies always start with full health
     enemies.push({
       id: `enemy_${i}`,
       name: `${type} ${i + 1}`,
-      hp: healthPoints,      // CRITICAL: Always start with full health
-      maxHp: healthPoints,   // Set maxHP equal to 8x vitality
+      hp: safeHealthPoints,  // CRITICAL: Always start with full health
+      maxHp: safeHealthPoints, // Set maxHP equal to 8x vitality
       stats: {
         attack: 40 + (level * 5),
         vitality: vitality,
