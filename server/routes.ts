@@ -2790,10 +2790,12 @@ async function generateMockBattleLog(run: any, success: boolean) {
     
     const vitality = char?.vitality || 100;
     const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
+    
+    // Ensure HP is always full at the start of a new battle
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',
-      hp: healthPoints,      // Set initial HP equal to 8x vitality
+      hp: healthPoints,      // CRITICAL: Always start with full health
       maxHp: healthPoints,   // Set maxHP equal to 8x vitality
       stats: {
         attack: char?.attack || 50,
@@ -2826,10 +2828,12 @@ async function generateMockBattleLog(run: any, success: boolean) {
     
     const vitality = type === 'Boss' ? 200 + (level * 20) : 80 + (level * 10);
     const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
+    
+    // Ensure enemies always start with full health
     enemies.push({
       id: `enemy_${i}`,
       name: `${type} ${i + 1}`,
-      hp: healthPoints,      // Set initial HP equal to 8x vitality
+      hp: healthPoints,      // CRITICAL: Always start with full health
       maxHp: healthPoints,   // Set maxHP equal to 8x vitality
       stats: {
         attack: 40 + (level * 5),
