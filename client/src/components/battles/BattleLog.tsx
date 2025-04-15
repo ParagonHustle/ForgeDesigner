@@ -51,6 +51,11 @@ interface BattleUnit {
     attack: number;
     vitality: number;
     speed: number;
+    focus?: number;
+    accuracy?: number;
+    defense?: number;
+    resilience?: number;
+    element?: string;
   };
   skills: {
     basic: { name: string; damage: number }; 
@@ -58,12 +63,22 @@ interface BattleUnit {
     ultimate?: { name: string; damage: number; cooldown: number };
   };
   statusEffects?: StatusEffect[];
+  actionTimer?: number; // For compatibility with API
+}
+
+// Interface for battle event types
+interface BattleEvent {
+  type: string;
+  data?: any;
+  allies?: BattleUnit[];
+  enemies?: BattleUnit[];
+  timestamp?: number;
 }
 
 interface BattleLogProps {
   isOpen: boolean;
   onClose: () => void;
-  battleLog: any[];
+  battleLog: BattleEvent[];
   runId: number | null;
   onCompleteDungeon?: (runId: number) => void;
 }
@@ -359,12 +374,17 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     let stage = 0;
     let battleUnits: BattleUnit[] = [];
     
-    // First, extract all units from the init event
-    const initEvent = battleLog.find(event => event.type === 'init');
-    if (initEvent && initEvent.data) {
-      const initData = initEvent.data || {};
-      const allies = initData.allies || [];
-      const enemies = initData.enemies || [];
+    // First, extract all units from the battle_start event (not init)
+    const initEvent = battleLog.find(event => event.type === 'battle_start' || event.type === 'init');
+    console.log("Found init event:", initEvent);
+    
+    if (initEvent) {
+      // Extract allies and enemies directly from the event if they exist
+      const allies = initEvent.allies || initEvent.data?.allies || [];
+      const enemies = initEvent.enemies || initEvent.data?.enemies || [];
+      
+      console.log("Allies:", allies);
+      console.log("Enemies:", enemies);
       
       // Process allies
       if (Array.isArray(allies)) {
