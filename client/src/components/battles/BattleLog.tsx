@@ -859,6 +859,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const battleEvents = battleLog.filter(event => 
       event.type === 'battle-turn' || 
       event.type === 'battle_turn' || 
+      event.type === 'round' ||  // Also include 'round' events
       event.type === 'stage-clear' ||
       event.type === 'stage_clear' ||
       event.type === 'dungeon-complete' ||
@@ -899,6 +900,91 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             processEvents(index + 1);
           }, actionDelay);
         }, 100);
+      } else if (event.type === 'round') {
+        // Process round events which contain multiple actions
+        console.log("Processing round event:", event);
+        setAnimationInProgress(true);
+        setBattleRound(event.number);
+        
+        // Process each action in the round
+        const actions = event.actions || [];
+        let actionIndex = 0;
+        
+        const processAction = () => {
+          if (actionIndex >= actions.length) {
+            setAnimationInProgress(false);
+            processEvents(index + 1);
+            return;
+          }
+          
+          const action = actions[actionIndex];
+          console.log("Processing action:", action);
+          
+          // If it's a defeat action, just log it
+          if (action.type === 'defeat') {
+            const message = `${action.target} was defeated!`;
+            addToLog(message);
+            addToDetailedLog(message);
+            actionIndex++;
+            setTimeout(processAction, 300 / playbackSpeed);
+            return;
+          }
+          
+          // Otherwise it's an attack action
+          const attackerIndex = units.findIndex(u => u.name === action.actor);
+          if (attackerIndex !== -1) {
+            setActiveAttacker(units[attackerIndex].id);
+          }
+          setShowAttackAnimation(true);
+          
+          const targetIndex = units.findIndex(u => u.name === action.target);
+          if (targetIndex !== -1) {
+            setActiveTarget(units[targetIndex].id);
+          }
+          
+          // Log the action
+          const message = action.message || 
+            `${action.actor} used ${action.skill} on ${action.target} for ${action.damage < 0 ? Math.abs(action.damage) + ' healing' : action.damage + ' damage'}${action.isCritical ? ' (Critical Hit!)' : ''}`;
+          
+          addToLog(message);
+          addToDetailedLog(message);
+          
+          // Update unit HP
+          setUnits(prevUnits => 
+            prevUnits.map(unit => {
+              if (unit.name === action.target) {
+                // For healing actions (damage is negative)
+                if (action.damage < 0 || action.healing) {
+                  const healAmount = Math.abs(action.damage);
+                  return {
+                    ...unit,
+                    hp: Math.min(unit.hp + healAmount, unit.maxHp),
+                    totalHealingReceived: (unit.totalHealingReceived || 0) + healAmount
+                  };
+                } else {
+                  // For damage actions
+                  return {
+                    ...unit,
+                    hp: Math.max(0, unit.hp - action.damage),
+                    totalDamageReceived: (unit.totalDamageReceived || 0) + action.damage
+                  };
+                }
+              }
+              return unit;
+            })
+          );
+          
+          // Move to next action after delay
+          setTimeout(() => {
+            setShowAttackAnimation(false);
+            setActiveAttacker(null);
+            setActiveTarget(null);
+            actionIndex++;
+            setTimeout(processAction, 300 / playbackSpeed);
+          }, 900 / playbackSpeed);
+        };
+        
+        processAction();
       } else if (event.type === 'stage-clear' || event.type === 'stage_clear') {
         // Handle stage clear event
         setCurrentStage(prevStage => prevStage + 1);
