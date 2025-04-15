@@ -90,10 +90,25 @@ const InventoryView = () => {
         }));
       });
       
-      setCharacterShards(shards);
+      // Add Kleos shards for each rarity level
+      const kleosShards = rarities.map((rarity, index) => ({
+        id: 50000 + index, // Unique ID range for Kleos
+        name: `Kleos ${rarity.charAt(0).toUpperCase() + rarity.slice(1)} Shard`,
+        quantity: Math.floor(Math.random() * 25), // Random initial amount
+        required: 20 + index * 20, // Increasing requirements by rarity
+        characterClass: 'Legendary Hero',
+        characterName: 'Kleos',
+        rarity: rarity,
+        avatarUrl: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=150&h=150&fit=crop'
+      }));
+      
+      // Combine regular character shards with Kleos shards
+      const allShards = [...shards, ...kleosShards];
+      
+      setCharacterShards(allShards);
       
       // Save to localStorage
-      localStorage.setItem('characterShards', JSON.stringify(shards));
+      localStorage.setItem('characterShards', JSON.stringify(allShards));
     }
   }, [characters, characterShards.length]);
 
