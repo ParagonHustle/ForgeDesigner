@@ -2763,6 +2763,13 @@ async function generateMockBattleLog(run: any, success: boolean) {
   const battleLog = [];
   const allies = [];
   const enemies = [];
+  
+  // Set up multi-stage dungeon progression
+  const TOTAL_STAGES = 8; // Easy dungeon has 8 stages
+  let completedStages = success ? TOTAL_STAGES : Math.floor(Math.random() * (TOTAL_STAGES - 1)) + 1;
+  
+  // Track current stage
+  let currentStage = 1;
 
   // Get character data for allies
   for (const charId of run.characterIds) {
@@ -2782,11 +2789,12 @@ async function generateMockBattleLog(run: any, success: boolean) {
     } : null;
     
     const vitality = char?.vitality || 100;
+    const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',
-      hp: vitality,      // Set initial HP equal to vitality
-      maxHp: vitality,   // Set maxHP equal to vitality
+      hp: healthPoints,      // Set initial HP equal to 8x vitality
+      maxHp: healthPoints,   // Set maxHP equal to 8x vitality
       stats: {
         attack: char?.attack || 50,
         vitality: vitality,
@@ -2817,11 +2825,12 @@ async function generateMockBattleLog(run: any, success: boolean) {
     const level = run.dungeonLevel;
     
     const vitality = type === 'Boss' ? 200 + (level * 20) : 80 + (level * 10);
+    const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
     enemies.push({
       id: `enemy_${i}`,
       name: `${type} ${i + 1}`,
-      hp: vitality,      // Set initial HP equal to vitality
-      maxHp: vitality,   // Set maxHP equal to vitality
+      hp: healthPoints,      // Set initial HP equal to 8x vitality
+      maxHp: healthPoints,   // Set maxHP equal to 8x vitality
       stats: {
         attack: 40 + (level * 5),
         vitality: vitality,
@@ -2956,14 +2965,79 @@ async function generateMockBattleLog(run: any, success: boolean) {
 
   // Record battle outcome
   const victory = aliveEnemies.length === 0;
+  
+  // Progress to next stage if victorious
+  if (victory && currentStage < TOTAL_STAGES) {
+    currentStage++;
+    
+    // Create enemies for next stage (harder)
+    enemies = [];
+    const nextStageDifficulty = run.dungeonLevel + currentStage - 1;
+    const nextStageEnemyCount = Math.min(3, Math.floor(nextStageDifficulty / 2) + 1);
+    
+    for (let i = 0; i < nextStageEnemyCount; i++) {
+      const type = (i === nextStageEnemyCount - 1 && currentStage === TOTAL_STAGES) ? 'Boss' : 'Minion';
+      const vitality = type === 'Boss' ? 
+        250 + (nextStageDifficulty * 25) : 
+        90 + (nextStageDifficulty * 12);
+      
+      const healthPoints = vitality * 8;  // Multiply vitality by 8 for HP
+      
+      enemies.push({
+        id: `enemy_stage${currentStage}_${i}`,
+        name: `${type} ${i + 1} (Stage ${currentStage})`,
+        hp: healthPoints,
+        maxHp: healthPoints,
+        stats: {
+          attack: 45 + (nextStageDifficulty * 6),
+          vitality: vitality,
+          speed: type === 'Boss' ? 40 + (nextStageDifficulty * 2) : 50 + (nextStageDifficulty * 3)
+        },
+        skills: {
+          basic: { name: 'Enemy Attack', damage: 1.0 },
+          advanced: type === 'Boss' ? { name: 'Boss Strike', damage: 1.8, cooldown: 3 } : null,
+          ultimate: type === 'Boss' ? { name: 'Boss Ultimate', damage: 2.5, cooldown: 5 } : null
+        }
+      });
+    }
+    
+    // Record progress to next stage
+    battleLog.push({
+      type: 'stage_progress',
+      currentStage,
+      totalStages: TOTAL_STAGES,
+      message: currentStage === TOTAL_STAGES ? 
+        'Your party advances to the final stage!' : 
+        `Your party advances to stage ${currentStage} of ${TOTAL_STAGES}.`,
+      aliveAllies,
+      newEnemies: enemies
+    });
+    
+    // Set up next stage battle
+    aliveEnemies = [...enemies];
+    round = 0;
+    
+    // Continue battle simulation for next stage (recursive)
+    return generateMockBattleLog({
+      ...run,
+      characterIds: aliveAllies.map(a => a.id),
+      dungeonLevel: nextStageDifficulty
+    }, success);
+  }
+  
+  // Final battle outcome
   battleLog.push({
     type: 'battle_end',
     victory,
     totalRounds: round,
+    currentStage,
+    totalStages: TOTAL_STAGES,
+    completedStages: victory ? currentStage : currentStage - 1,
     survivingAllies: aliveAllies.map(a => a.name),
-    summary: victory ? 
-      `Victory achieved in ${round} rounds!` : 
-      `Defeat after ${round} rounds of combat.`
+    summary: victory && currentStage === TOTAL_STAGES ? 
+      `Complete victory! You conquered all ${TOTAL_STAGES} stages of the dungeon!` : 
+      victory ? `Victory at stage ${currentStage} of ${TOTAL_STAGES}!` : 
+      `Defeat at stage ${currentStage} of ${TOTAL_STAGES} after ${round} rounds of combat.`
   });
 
   return battleLog;
