@@ -2766,34 +2766,4 @@ async function generateMockBattleLog(run: any, success: boolean) {
   // Call the dedicated battle system implementation
   return await generateBattleLog(run, success);
 }
-
-// Function to handle building skill routes
-export async function addBuildingSkillRoutes(app: Express) {
-  // Building skill routes implementation
-  app.post('/api/buildings/upgrade', authenticateUser, async (req: Request, res: Response) => {
-    try {
-      const { buildingId } = req.body;
-      
-      if (!buildingId) {
-        return res.status(400).json({ message: 'Missing required fields' });
-      }
-      
-      const building = await storage.getBuildingById(buildingId);
-      
-      if (!building) {
-        return res.status(404).json({ message: 'Building not found' });
-      }
-      
-      // Update building level
-      const updatedBuilding = await storage.upgradeBuilding(buildingId);
-      
-      return res.json({ 
-        success: true, 
-        building: updatedBuilding
-      });
-    } catch (error) {
-      console.error('Error upgrading building:', error);
-      return res.status(500).json({ message: 'Failed to upgrade building' });
-    }
-  });
-}
+  
