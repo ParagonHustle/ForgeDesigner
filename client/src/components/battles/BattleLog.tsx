@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Interface definitions remained the same
+// Interface definitions for battle system
 interface StatusEffect {
   name: string;
   duration: number;
@@ -199,6 +199,163 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
     
     return attackValue;
+  };
+  
+  // Render status effect icon with tooltip
+  const renderStatusEffect = (effect: StatusEffect, index: number, isAlly: boolean) => {
+    // Get icon based on effect type
+    let icon;
+    let bgColor = "bg-gray-800";
+    
+    if (effect.effect === "ReduceAtk") {
+      icon = <Swords size={14} className="text-red-400" />;
+      bgColor = "bg-red-900/50";
+    } else if (effect.effect === "ReduceSpd") {
+      icon = <Zap size={14} className="text-blue-400" />;
+      bgColor = "bg-blue-900/50";
+    } else if (effect.effect === "Burn") {
+      icon = <div className="w-2 h-2 bg-orange-500 rounded-full" />;
+      bgColor = "bg-orange-900/50";
+    } else if (effect.effect === "Poison") {
+      icon = <div className="w-2 h-2 bg-green-500 rounded-full" />;
+      bgColor = "bg-green-900/50";
+    } else if (effect.effect === "Heal") {
+      icon = <Heart size={14} className="text-green-400" />;
+      bgColor = "bg-green-900/50";
+    } else if (effect.effect === "Shield") {
+      icon = <Shield size={14} className="text-blue-400" />;
+      bgColor = "bg-blue-900/50";
+    } else {
+      icon = <Info size={14} className="text-gray-400" />;
+    }
+    
+    return (
+      <TooltipProvider key={`status-${effect.name}-${index}`}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center ${bgColor}`}>
+              {icon}
+              <span className="absolute -top-1 -right-1 text-[10px] bg-gray-900 rounded-full w-3 h-3 flex items-center justify-center">
+                {effect.duration}
+              </span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side={isAlly ? "top" : "bottom"} className="p-2 max-w-[200px] bg-[#251942] border border-[#6A3FB5]">
+            <p className="font-semibold text-xs">{effect.name}</p>
+            <p className="text-xs text-[#C8B8DB]">
+              {effect.effect === "ReduceAtk" && `Reduces attack by ${effect.value}%`}
+              {effect.effect === "ReduceSpd" && `Reduces speed by ${effect.value}%`}
+              {effect.effect === "Burn" && `Deals ${effect.value} damage per turn`}
+              {effect.effect === "Poison" && `Deals ${effect.value} damage per turn`}
+              {effect.effect === "Heal" && `Heals ${effect.value} HP per turn`}
+              {effect.effect === "Shield" && `Absorbs ${effect.value} damage`}
+            </p>
+            {effect.source && <p className="text-xs italic mt-1">From: {effect.source}</p>}
+            <p className="text-xs mt-1">Duration: {effect.duration} turns</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+  
+  // Render unit stats in tooltip
+  const renderUnitStats = (unit: BattleUnit) => {
+    // Calculate effective stats with status effects
+    const effectiveSpeed = calculateEffectiveSpeed(unit);
+    const effectiveAttack = calculateEffectiveAttack(unit);
+    
+    return (
+      <div className="space-y-2 text-xs">
+        <div className="flex justify-between">
+          <span className="flex items-center gap-1">
+            <Swords size={12} /> Attack:
+          </span>
+          <span className="font-semibold">
+            {effectiveAttack}
+            {unit.auraBonus?.attack && (
+              <span className="text-green-400 ml-1">+{unit.auraBonus.attack}%</span>
+            )}
+          </span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="flex items-center gap-1">
+            <Heart size={12} /> Vitality:
+          </span>
+          <span className="font-semibold">
+            {unit.stats.vitality}
+            {unit.auraBonus?.vitality && (
+              <span className="text-green-400 ml-1">+{unit.auraBonus.vitality}%</span>
+            )}
+          </span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="flex items-center gap-1">
+            <Zap size={12} /> Speed:
+          </span>
+          <span className="font-semibold">
+            {effectiveSpeed}
+            {unit.auraBonus?.speed && (
+              <span className="text-green-400 ml-1">+{unit.auraBonus.speed}%</span>
+            )}
+          </span>
+        </div>
+        
+        <div className="mt-3 border-t border-[#6A3FB5] pt-2">
+          <div className="text-[#C8B8DB] mb-1">Skills:</div>
+          <div className="space-y-1">
+            <div>Basic: {unit.skills.basic.name} ({unit.skills.basic.damage} dmg)</div>
+            {unit.skills.advanced && (
+              <div>Advanced: {unit.skills.advanced.name} ({unit.skills.advanced.damage} dmg)</div>
+            )}
+            {unit.skills.ultimate && (
+              <div>Ultimate: {unit.skills.ultimate.name} ({unit.skills.ultimate.damage} dmg)</div>
+            )}
+          </div>
+        </div>
+        
+        {/* Battle Statistics */}
+        {unit.totalDamageDealt > 0 && (
+          <div className="mt-3 border-t border-[#6A3FB5] pt-2">
+            <div className="text-[#C8B8DB] mb-1">Battle Stats:</div>
+            <div className="grid grid-cols-2 gap-y-1 gap-x-2">
+              <div>Dmg Dealt: <span className="text-yellow-400">{Math.floor(unit.totalDamageDealt)}</span></div>
+              <div>Dmg Taken: <span className="text-red-400">{Math.floor(unit.totalDamageReceived)}</span></div>
+              {unit.totalHealingDone > 0 && (
+                <div>Healing: <span className="text-green-400">{Math.floor(unit.totalHealingDone)}</span></div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // IMPORTANT BATTLE LOGIC FIXES
+  
+  // Add useEffect hook to process battle logs and update state
+  useEffect(() => {
+    if (battleLog && battleLog.length > 0 && isOpen && !isPaused) {
+      // Process battle log data
+      processBattleLog();
+    }
+  }, [battleLog, isOpen, isPaused]);
+  
+  // Function to process battle log data
+  const processBattleLog = () => {
+    // Implementation would go here - simplified for this fix
+    console.log("Processing battle log data...");
+    
+    // Check for battle completion
+    const battleCompleteEvent = battleLog.find(event => 
+      event.type === 'battle_end' || event.type === 'victory' || event.type === 'defeat'
+    );
+    
+    if (battleCompleteEvent) {
+      // Mark battle as complete for UI to show the complete dungeon button
+      setIsComplete(true);
+    }
   };
   
   return (
@@ -446,6 +603,26 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 ))}
               </div>
             </div>
+          </div>
+          
+          {/* Battle Action Log */}
+          <div className="mt-4 px-4 pb-4">
+            <Tabs defaultValue="battle-log" className="w-full">
+              <TabsList className="mb-2">
+                <TabsTrigger value="battle-log">Battle Log</TabsTrigger>
+                <TabsTrigger value="detailed-log">Detailed Log</TabsTrigger>
+              </TabsList>
+              <TabsContent value="battle-log" className="h-32 overflow-auto bg-[#1E1433] rounded-md p-2">
+                {actionLog.map((action, index) => (
+                  <div key={index} className="text-sm mb-1">{action}</div>
+                ))}
+              </TabsContent>
+              <TabsContent value="detailed-log" className="h-32 overflow-auto bg-[#1E1433] rounded-md p-2">
+                {detailedActionLog.map((action, index) => (
+                  <div key={index} className="text-xs mb-1">{action}</div>
+                ))}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </DialogContent>
