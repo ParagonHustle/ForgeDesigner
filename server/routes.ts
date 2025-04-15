@@ -2757,19 +2757,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// Helper function to generate mock battle log
+// Helper function to generate battle log with proper Attack Meter turn-based system
+// Implements the dungeon battle system as specified in the documentation
 async function generateMockBattleLog(run: any, success: boolean) {
   // Initialize battle data
   const battleLog = [];
   const allies = [];
   const enemies = [];
   
-  // Set up multi-stage dungeon progression
-  const TOTAL_STAGES = 8; // Easy dungeon has 8 stages
-  let completedStages = success ? TOTAL_STAGES : Math.floor(Math.random() * (TOTAL_STAGES - 1)) + 1;
+  // Set up multi-stage dungeon progression as per documentation
+  const TOTAL_STAGES = 8; // All dungeons have 8 stages (with mini-boss on stage 4, final boss on stage 8)
   
   // Track current stage
   let currentStage = 1;
+  
+  // Battle configuration constants based on documentation
+  const ATTACK_METER_MAX = 100; // When meter hits 100%, unit takes action
+  const BASE_SPEED_REFERENCE = 100; // Reference speed for meter calculations
+  const MAX_STATUS_EFFECT_STACKS = 5; // Maximum number of stacks for effects like Poison/Burn
+  const MAX_ROUNDS_PER_STAGE = 50; // Safety limit to prevent infinite loops
 
   // Get character data for allies
   for (const charId of run.characterIds) {
@@ -2897,11 +2903,37 @@ async function generateMockBattleLog(run: any, success: boolean) {
     timestamp: Date.now()
   });
 
-  // Simulate combat with attack meters
+  // Prepare for battle simulation with attack meter system
   let aliveAllies = [...allies];
   let aliveEnemies = [...enemies];
-  let round = 0;
-  const maxRounds = 30;
+  
+  // Track battle progress
+  let stageBattleComplete = false;
+  let currentRound = 0;
+  
+  // Initialize attack meters for all units (starts at 0)
+  aliveAllies.forEach(ally => {
+    ally.attackMeter = 0;
+    ally.advancedSkillCooldown = 0;
+    ally.ultimateSkillCooldown = 0;
+    ally.statusEffects = [];
+  });
+  
+  aliveEnemies.forEach(enemy => {
+    enemy.attackMeter = 0;
+    enemy.advancedSkillCooldown = enemy.skills.advanced ? 0 : null;
+    enemy.ultimateSkillCooldown = enemy.skills.ultimate ? 0 : null;
+    enemy.statusEffects = [];
+  });
+  
+  // Add stage start notification
+  battleLog.push({
+    type: 'stage_start',
+    stageNumber: currentStage,
+    totalStages: TOTAL_STAGES,
+    message: `Stage ${currentStage} of ${TOTAL_STAGES} begins!`,
+    timestamp: Date.now()
+  });
 
   while (round < maxRounds && aliveAllies.length > 0 && aliveEnemies.length > 0) {
     round++;

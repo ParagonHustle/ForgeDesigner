@@ -1,0 +1,442 @@
+Feature: Dungeon Building
+Brief Explainer Summary: Dungeons in The Forge are combat-based missions where players send their characters to engage in auto-battles across multiple stages. The mission’s outcome is determined by the characters' stats, Aura multipliers, skill usage priority, passive effects, and battle mechanics. Each dungeon features a reward curve based on the number of stages completed, with specific loot drops tied to difficulty and elemental themes.
+
+Comprehensive Description:
+Dungeon Structure
+Each dungeon consists of 8 sequential stages.
+
+
+A mini-boss appears on Stage 4, and a final boss appears on Stage 8.
+
+
+New enemies spawn at the start of each stage.
+
+
+Enemy difficulty increases progressively with each stage.
+
+
+All characters (both allies and enemies) begin the dungeon at full HP.
+
+
+Allies retain HP between stages.
+
+
+Status effects do NOT carry over between stages.
+
+
+When a character is defeated, they remain defeated unless revived via skill or item.
+
+
+Character Team Setup
+Players can assign up to 4 characters to a dungeon mission.
+
+
+Each character is equipped with a unique Aura that determines:
+
+
+Stat multipliers
+
+
+Available Basic, Advanced, and Ultimate skills
+
+
+Attack Meter & Turn System
+Each unit has an Attack Meter which fills based on total Speed (including buffs, debuffs, status effects, and Aura bonuses).
+
+
+The meter uses a smooth ticker system (minimum 50+ ticks).
+
+
+When the meter reaches 100%, the unit takes an action, and the meter resets to 0%.
+
+
+Characters with 120 Speed charge their meter 3x faster than those with 40 Speed.
+
+
+Tiebreakers (two or more units ready on the same tick) are resolved by Speed, then random roll if tied.
+
+
+Skill Priority System
+Skills are selected in the following priority:
+
+
+Ultimate Skill (if available)
+
+
+Advanced Skill (if available)
+
+
+Basic Attack (default)
+
+
+Advanced and Ultimate skills have individual cooldowns.
+
+
+Cooldowns reset to max at the start of each stage.
+
+
+Cooldowns are also reduced by 1 when progressing to the next stage.
+
+
+Cooldown logic includes usage tracking and manual overrides per skill if needed.
+
+
+Skill Effects and Targeting
+Most skills may include:
+
+
+Damage
+
+
+Healing
+
+
+Buffs
+
+
+Debuffs
+
+
+Status Effects
+
+
+Smart Targeting AI determines optimal skill use, unless a skill has predefined logic.
+
+
+Examples: target with lowest HP, highest Attack, random enemy, etc.
+
+
+Healing Logic
+Healing logic must define:
+
+
+Whether the healing amount is based on:
+
+
+Target's max HP
+
+
+Caster's max HP
+
+
+Caster's Attack stat
+
+
+How the target is selected:
+
+
+Ally with lowest HP %
+
+
+Ally with lowest absolute HP
+
+
+Status Effects
+Status effects are triggered by skill logic and RNG.
+
+
+Logs must include: skill used, chance to apply, actual roll, result.
+
+
+Status effects tick when the target's Attack Meter reaches 100%.
+
+
+Effects such as Poison/Burn trigger just before the unit acts.
+
+
+Effects like Minor Slow / Minor Weakness decrement after the unit's action.
+
+
+Stacking rules:
+
+
+Poison/Burn can stack independently (e.g., 4 stacks of Poison with 3 turns each).
+
+
+Non-stackable effects (e.g., Minor Weakness) can only be reapplied if the new effect has equal or longer duration.
+
+
+Interrupt Effects
+Effects like Stun or Silence prevent action when a meter reaches 100%.
+
+
+The meter still resets.
+
+
+Effect duration decrements by 1.
+
+
+Turn Meter Modification
+Some skills may increase or reduce a unit's turn meter.
+
+
+Examples: "Reduce target meter by 25%" or "Gain 50% meter instantly"
+
+
+Values must be clamped to a 0% - 100% range.
+
+
+Stage Transition Rules
+After a stage is completed:
+
+
+New enemies spawn.
+
+
+All character meters reset to 0%.
+
+
+Skill cooldowns are reduced by 1 (but not below 0).
+
+
+All defeated characters remain defeated.
+
+
+Rewards System
+Players earn rewards based on stages completed:
+
+
+A loot roll system determines reward tiers based on progress.
+
+
+Example Roll Table:
+
+
+0 Stages = Roll 0 to 0
+
+
+1 Stage = Roll 1 to 20
+
+
+2 Stages = Roll 10 to 30
+
+
+...
+
+
+8 Stages = Roll 50 to 100
+
+
+Reward Tiers:
+
+
+Tier 1: Roll ≥1
+
+
+Tier 2: Roll ≥15
+
+
+Tier 3: Roll ≥25
+
+
+...
+
+
+Tier 10: Roll ≥95
+
+
+Loot Crates will reflect tier, difficulty, and elemental dungeon theme.
+
+
+Elemental Dungeon Themes
+Dungeon themes include: Fire, Water, Wind, Earth.
+
+
+Each theme affects:
+
+
+Loot table (e.g., Fire Essences)
+
+
+Possibly aura drop rates or theme-specific status effects
+
+
+Rest Periods
+Characters rest after completing a dungeon.
+
+
+Defeated characters require longer rest periods.
+
+
+Forge Tokens or consumables can reduce rest time.
+
+
+Dungeon Refresh & Limits
+Dungeons refresh every 15 minutes.
+
+
+Only one active mission per difficulty allowed at a time.
+
+
+Higher Dungeon Building Level increases:
+
+
+Concurrent dungeon missions
+
+
+Available difficulty tiers
+
+
+Battle Summary and Logs
+Players receive:
+
+
+Summary: Total damage, healing, damage received per character
+
+
+Reward Report: Earned + missed rewards
+
+
+Battle Log:
+
+
+Timestamped entries per action
+
+
+Skill used, damage dealt/healed, status effect attempts, buffs, etc.
+
+
+Frontend Features
+Dungeon UI
+
+
+List of dungeons with available levels and themes
+
+
+Team setup for up to 4 characters
+
+
+Live stage progress bar
+
+
+Timer per stage
+
+
+Rewards view (earned + missed)
+
+
+Interactive battle log viewer
+
+
+Rest UI
+
+
+Progress bars for each resting character
+
+
+Token use buttons
+
+
+Backend Endpoints
+GET /dungeons – Fetch list of dungeons
+
+
+POST /assign-dungeon – Assign characters to dungeon
+
+
+GET /dungeon-progress – Return real-time status
+
+
+POST /complete-dungeon – Finalize outcome, deliver rewards
+
+
+POST /character-rest – Update rest timers
+
+
+Battle Logic Requirements
+Calculate:
+
+
+Damage = Attack * Aura Multiplier * Skill Modifiers
+
+
+HP = Vitality * 8 (adjustable server-side)
+
+
+Handle:
+
+
+Turn meter logic
+
+
+Status effects and stacks
+
+
+Skill cooldown tracking
+
+
+Passive skills (when implemented)
+
+
+Death and revival states
+
+
+Logging:
+
+
+Every action with timestamp
+
+
+Skill usage
+
+
+Damage/healing done
+
+
+Buffs/debuffs
+
+
+RNG rolls for status effects
+
+
+Sample Database Structure
+{
+  "dungeon_id": "dungeon_001",
+  "elemental_theme": "Fire",
+  "stages": [
+    { "stage_number": 1, "status": "completed", "damage_dealt": 320, "damage_received": 45 },
+    { "stage_number": 4, "status": "completed", "boss_type": "mini_boss", "damage_dealt": 450 }
+  ],
+  "rewards": [
+    { "type": "Crafting Material", "name": "Fire Essence", "tier": 2 },
+    { "type": "Aura", "name": "Flame Chain", "tier": 3 }
+  ],
+  "battle_summary": {
+    "total_damage_dealt": 1200,
+    "total_healing_done": 300,
+    "battle_log": [
+      { "time": "00:05", "event": "Kleos attacked with Flame Strike, dealt 120 damage" },
+      { "time": "01:00", "event": "Frank healed with Heal Aura, restored 50 HP" }
+    ]
+  }
+}
+
+Future Considerations
+World Boss Events
+
+
+Guild-Specific Dungeons
+
+
+Dungeon Terrain Effects
+
+
+Skip-to-Key-Moments Button
+
+
+Replay Save & Share
+
+
+Advanced AI behavior modules
+
+
+Status Immunity / Resistance Systems
+
+
+Combat Metrics Export (CSV, API)
+
+
+MVP / Damage Leader Highlight
+
+
+
