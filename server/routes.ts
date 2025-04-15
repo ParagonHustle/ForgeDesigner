@@ -2777,6 +2777,25 @@ async function processBattleLog(run: any, success: boolean) {
   console.log('CRITICAL REQUIREMENT: Characters must begin dungeon with FULL health (HP)');
   // This informs the battle system that it's a fresh dungeon run and HP should be at max
   
+  // Add special flag to ensure battle system knows to enforce full health
+  run._enforceFullHealth = true;
+  
+  // CRITICAL FIX: If any characters in the run have 0 HP, we need to 
+  // ensure a full reset occurs before battle start
+  if (run.characters && Array.isArray(run.characters)) {
+    let healthFixed = false;
+    run.characters.forEach((character: any) => {
+      if (character && (character.hp === 0 || character.hp !== character.maxHp)) {
+        console.warn(`Pre-battle health check: Character ${character.name || 'Unknown'} has incorrect HP (${character.hp}). Will be fixed in battle system.`);
+        healthFixed = true;
+      }
+    });
+    
+    if (healthFixed) {
+      console.log('Health issues detected in characters - battle system will enforce full health');
+    }
+  }
+  
   // Make characterIds always an array
   if (!Array.isArray(run.characterIds)) {
     // If it's a string or other format, try to parse it if possible

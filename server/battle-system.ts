@@ -100,6 +100,11 @@ interface BattleLogEntry {
  * @param success Whether the run ends in success (preset)
  */
 async function generateNextStageBattle(run: any, allies: BattleUnit[], currentStage: number, success: boolean): Promise<BattleLogEntry[]> {
+  // If the enforceFullHealth flag is set, ensure we carry it forward in this stage
+  const enforceFullHealth = run._enforceFullHealth || false;
+  if (enforceFullHealth) {
+    console.log("Next stage battle will enforce full health due to passed flag");
+  }
   // Initialize battle data for the next stage
   const battleLog: BattleLogEntry[] = [];
   const enemies: BattleUnit[] = [];
@@ -119,13 +124,16 @@ async function generateNextStageBattle(run: any, allies: BattleUnit[], currentSt
     // Ensure HP is never negative
     const safeHealthPoints = Math.max(1, healthPoints);
     
-    console.log(`Setting next stage enemy ${type} ${i + 1} initial HP to ${safeHealthPoints} (full health)`);
+    // CRITICAL: Enemies MUST start with FULL HP at battle beginning
+    // Double safety check to ensure we never get 0 HP
+    const finalHealth = safeHealthPoints > 0 ? safeHealthPoints : vitality * 8;
+    console.log(`Setting next stage enemy ${type} ${i + 1} initial HP to ${finalHealth} (full health)`);
     
     enemies.push({
       id: `enemy_stage${currentStage}_${i}`,
       name: `${type} ${i + 1} (Stage ${currentStage})`,
-      hp: safeHealthPoints,
-      maxHp: safeHealthPoints,
+      hp: finalHealth,  // CRITICAL: Enemies must start at full HP
+      maxHp: finalHealth, // Set maxHP equal to 8x vitality
       stats: {
         attack: 45 + (stageDifficulty * 6),
         vitality: vitality,
@@ -264,6 +272,19 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   // For recursive calls, we should have _allies property containing surviving allies from previous stage
   if (run._allies) {
     console.log("RECURSIVE STAGE DETECTED - Using surviving allies from previous stage");
+    
+    // Check if we need to enforce full health for allies
+    if (run._enforceFullHealth) {
+      console.log("ENFORCING FULL HEALTH for allies in next stage due to _enforceFullHealth flag");
+      run._allies.forEach((ally: BattleUnit) => {
+        // Only adjust HP if it's not already at max (we don't reset HP between stages normally)
+        if (ally.hp !== ally.maxHp) {
+          console.warn(`Resetting ally ${ally.name} HP from ${ally.hp} to ${ally.maxHp} due to enforce full health flag`);
+          ally.hp = ally.maxHp;
+        }
+      });
+    }
+    
     // Ignore characterIds and use the surviving allies directly
     return generateNextStageBattle(run, run._allies, currentStage, success);
   }
