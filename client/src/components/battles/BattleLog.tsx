@@ -73,6 +73,13 @@ interface BattleEvent {
   allies?: BattleUnit[];
   enemies?: BattleUnit[];
   timestamp?: number;
+  // Stage progression properties
+  currentStage?: number;
+  message?: string;
+  aliveAllies?: BattleUnit[];
+  newEnemies?: BattleUnit[];
+  // System message
+  system_message?: string;
 }
 
 interface BattleLogProps {
@@ -402,15 +409,33 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       console.log("Allies:", allies);
       console.log("Enemies:", enemies);
       
-      // Validation: Check if any characters or enemies have invalid HP (0 or negative)
-      const invalidCharacters = allies.some((ally: any) => typeof ally?.hp === 'number' && ally.hp <= 0);
-      const invalidEnemies = enemies.some((enemy: any) => typeof enemy?.hp === 'number' && enemy.hp <= 0);
+      // Instead of just validating, fix any characters or enemies with invalid HP
+      let hasFixedHp = false;
       
-      if (invalidCharacters || invalidEnemies) {
-        console.error("Invalid battle data detected: Units with 0 or negative HP detected");
-        setActionLog(["Error: Invalid battle data detected. Please try again."]);
-        // Bail out early - don't process this battle
-        return;
+      // Fix any allies with 0 or negative HP
+      allies.forEach((ally: any) => {
+        if (typeof ally?.hp === 'number' && ally.hp <= 0) {
+          console.warn(`Fixing ally ${ally.name} with invalid HP: ${ally.hp}`);
+          // Set to 25% HP to give them a fighting chance
+          ally.hp = Math.ceil(ally.maxHp * 0.25);
+          hasFixedHp = true;
+        }
+      });
+      
+      // Fix any enemies with 0 or negative HP
+      enemies.forEach((enemy: any) => {
+        if (typeof enemy?.hp === 'number' && enemy.hp <= 0) {
+          console.warn(`Fixing enemy ${enemy.name} with invalid HP: ${enemy.hp}`);
+          // Set enemies to full HP (they should always start with full health)
+          enemy.hp = enemy.maxHp;
+          hasFixedHp = true;
+        }
+      });
+      
+      // Add a system message if we had to fix any HP values
+      if (hasFixedHp) {
+        actionMessages.push("System: Some units had critical health issues that were automatically fixed.");
+        detailedMessages.push("System: Units with 0 or negative HP were detected and automatically healed to continue the battle.");
       }
       
       // Process allies
@@ -541,6 +566,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         // Update UI with stage progression message
         const message = event.message || `Entering Stage ${stage}`;
         actionMessages.push(message);
+      } else if (event.type === 'system_message') {
+        // Handle system notification messages (like HP corrections)
+        const systemMessage = event.message || event.system_message;
+        if (systemMessage) {
+          actionMessages.push(`System: ${systemMessage}`);
+          detailedMessages.push(`System Notification: ${systemMessage}`);
+        }
         
         // Extract and update units if provided in the event (for multi-stage battles)
         if (event.aliveAllies && event.newEnemies && Array.isArray(event.aliveAllies) && Array.isArray(event.newEnemies)) {

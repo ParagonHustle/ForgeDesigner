@@ -2855,18 +2855,38 @@ async function generateMockBattleLog(run: any, success: boolean) {
     });
   }
 
-  // Validate battle data for invalid health values
-  const invalidAllies = allies.some(ally => ally.hp <= 0);
-  const invalidEnemies = enemies.some(enemy => enemy.hp <= 0);
+  // Instead of just validating, fix any invalid health values
+  // Check for and fix any allies with zero or negative HP
+  let healthFixed = false;
   
-  if (invalidAllies || invalidEnemies) {
-    console.error("Battle initialization error: Units with 0 or negative HP detected");
-    // Return a special error event if invalid units are detected
-    return [{
-      type: 'battle_error',
-      message: 'Invalid battle data detected. Units with 0 or negative HP found.',
+  allies.forEach(ally => {
+    if (ally.hp <= 0) {
+      console.warn(`Fixed ally ${ally.name} with invalid HP: ${ally.hp}`);
+      // Set HP to at least 25% of max to give them a fighting chance
+      ally.hp = Math.max(Math.ceil(ally.maxHp * 0.25), 1);
+      healthFixed = true;
+    }
+  });
+  
+  // Check for and fix any enemies with zero or negative HP
+  enemies.forEach(enemy => {
+    if (enemy.hp <= 0) {
+      console.warn(`Fixed enemy ${enemy.name} with invalid HP: ${enemy.hp}`);
+      // Set HP to full for enemies (they should always start at full health)
+      enemy.hp = enemy.maxHp;
+      healthFixed = true;
+    }
+  });
+  
+  // Log a warning if any health values were fixed
+  if (healthFixed) {
+    console.log("Battle initialization warning: Some units had invalid HP values that were automatically fixed");
+    // Add a note to the battle log about the fix
+    battleLog.push({
+      type: 'system_message',
+      message: 'Some characters had critically low health and were partially healed before battle.',
       timestamp: Date.now()
-    }];
+    });
   }
   
   // Initial battle state (only if validation passes)
