@@ -316,8 +316,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
         const isCritical = Math.random() < CRITICAL_HIT_CHANCE;
         const damage = Math.floor(baseDamage * (isCritical ? CRITICAL_HIT_MULTIPLIER : 1));
         
-        // Apply damage to target
-        target.hp -= damage;
+        // Apply damage to target and ensure HP is never negative
+        target.hp = Math.max(0, target.hp - damage);
         
         // Record the action
         roundActions.push({
@@ -421,7 +421,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
         
         // Ally attacks first with a simple attack
         const allyDamage = Math.floor(ally.stats.attack * 0.8); // Reduced damage for forced action
-        enemy.hp -= allyDamage;
+        enemy.hp = Math.max(0, enemy.hp - allyDamage);
         
         roundActions.push({
           actor: ally.name,
@@ -456,7 +456,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
           // Use the first enemy if the original target was defeated
           const attacker = aliveEnemies[0];
           const enemyDamage = Math.floor(attacker.stats.attack * 0.7); // Reduced damage for forced action
-          ally.hp -= enemyDamage;
+          ally.hp = Math.max(0, ally.hp - enemyDamage);
           
           roundActions.push({
             actor: attacker.name,
