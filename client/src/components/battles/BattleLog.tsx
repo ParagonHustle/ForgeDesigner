@@ -132,13 +132,87 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   
   // No rounds in the battle system, just stages
   
+  // Effect to handle pause/resume of battle animation
+  useEffect(() => {
+    // When isPaused changes, handle animation state
+    if (isPaused) {
+      // Pause the animation by clearing timeout
+      if (battleAnimationRef.current) {
+        clearTimeout(battleAnimationRef.current);
+        battleAnimationRef.current = null;
+      }
+      console.log("Battle animation paused");
+    } else {
+      // Resume the animation by calling animateBattleStep
+      console.log("Battle animation resumed");
+      
+      // Create local function for step animation to avoid reference issues
+      const animateBattleStep = () => {
+        // Clear any existing animation
+        if (battleAnimationRef.current) {
+          clearTimeout(battleAnimationRef.current);
+        }
+        
+        // Get current animation step
+        const step = battleStepRef.current;
+        
+        // If no battle log or animation complete, stop
+        if (!battleLog || battleLog.length === 0 || step >= actionLog.length + 5) {
+          console.log("Battle animation complete or no battle log");
+          return;
+        }
+        
+        // Update the action logs with one more message (in batches of 1-3)
+        setActionLog(prev => [...prev, ...(actionLog.slice(prev.length, prev.length + 1))].filter(Boolean));
+        setDetailedActionLog(prev => [...prev, ...(detailedActionLog.slice(prev.length, prev.length + 1))].filter(Boolean));
+        
+        // Simulate attack animations
+        if (step % 3 === 0) {
+          // Find a random attacker and target for visualization
+          const attackerIndex = Math.floor(Math.random() * units.length);
+          const targetIndex = (attackerIndex + 1 + Math.floor(Math.random() * (units.length - 1))) % units.length;
+          
+          // Set attacker and target
+          setActiveAttacker(units[attackerIndex]?.id || null);
+          setActiveTarget(units[targetIndex]?.id || null);
+          
+          // Show attack animation
+          setShowAttackAnimation(true);
+          setTimeout(() => {
+            setShowAttackAnimation(false);
+            setActiveAttacker(null);
+            setActiveTarget(null);
+          }, 300);
+        }
+        
+        // Increment step counter
+        battleStepRef.current = step + 1;
+        
+        // Schedule next animation step based on playback speed
+        // Base delay is 800ms, divided by playback speed
+        const stepDelay = 800 / playbackSpeed;
+        battleAnimationRef.current = setTimeout(animateBattleStep, stepDelay);
+      };
+      
+      // Start animation with a small delay
+      battleAnimationRef.current = setTimeout(animateBattleStep, 300);
+    }
+    
+    // Cleanup on unmount or effect rerun
+    return () => {
+      if (battleAnimationRef.current) {
+        clearTimeout(battleAnimationRef.current);
+      }
+    };
+  }, [isPaused, playbackSpeed]);
+  
   // Function to handle changing the playback speed
   const handleSpeedChange = (newSpeed: number) => {
     console.log(`Setting playback speed to ${newSpeed}x`);
     setPlaybackSpeed(newSpeed);
     
     // If animation is currently in progress, restart with new speed to apply it
-    if (animationInProgress && !isPaused) {
+    if (!isPaused) {
       setIsPaused(true);
       setTimeout(() => {
         setIsPaused(false);
@@ -416,6 +490,92 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   }, [battleLog, isOpen, isPaused]);
   
+  // CRITICAL FIX - Animation system to process battle actions with timing
+  useEffect(() => {
+    // Only process animations if dialog is open and not paused
+    if (!isOpen || isPaused || animationQueue.length === 0 || animationInProgress) {
+      return;
+    }
+    
+    // Take the next action from the queue
+    const nextAction = animationQueue[0];
+    
+    // Set animation in progress
+    setAnimationInProgress(true);
+    
+    // Process the action (animate attack, update health, etc.)
+    if (nextAction.type === 'attack') {
+      // Setup who's attacking whom
+      setActiveAttacker(nextAction.actor);
+      setActiveTarget(nextAction.target);
+      setCurrentSkillName(nextAction.skill);
+      
+      // Set attack type based on skill name
+      if (nextAction.skill.toLowerCase().includes("ultimate")) {
+        setAttackAnimationType('ultimate');
+      } else if (nextAction.skill.toLowerCase().includes("advanced") || 
+                nextAction.skill.toLowerCase().includes("quick")) {
+        setAttackAnimationType('advanced');
+      } else {
+        setAttackAnimationType('basic');
+      }
+      
+      // Show attack animation
+      setShowAttackAnimation(true);
+      
+      // After a brief delay, show damage animation
+      setTimeout(() => {
+        setShowAttackAnimation(false);
+        setShowDamageAnimation(true);
+        
+        // After damage animation completes, reset and move to next action
+        setTimeout(() => {
+          setShowDamageAnimation(false);
+          setActiveAttacker(null);
+          setActiveTarget(null);
+          
+          // Remove this action from queue and mark animation as complete
+          setAnimationQueue(prev => prev.slice(1));
+          setAnimationInProgress(false);
+        }, 500); // Damage animation duration
+      }, 700); // Time between attack start and damage
+    } else if (nextAction.type === 'defeat') {
+      // Set the target unit to show defeat animation
+      setActiveTarget(nextAction.target);
+      
+      // Show defeat animation - a red flash followed by dimming
+      setShowDamageAnimation(true);
+      
+      // After animation, remove from queue and continue
+      setTimeout(() => {
+        setShowDamageAnimation(false);
+        setActiveTarget(null);
+        
+        // Find the unit that was defeated
+        const defeatedUnit = units.find(unit => unit.id === nextAction.target);
+        if (defeatedUnit) {
+          // Ensure its HP is 0
+          defeatedUnit.hp = 0;
+          setUnits([...units]);
+        }
+        
+        // Remove this action from queue and mark animation as complete
+        setAnimationQueue(prev => prev.slice(1));
+        setAnimationInProgress(false);
+      }, 1200); // Longer duration for dramatic effect
+    } else {
+      // For other non-attack actions (like system messages), process quickly
+      setTimeout(() => {
+        setAnimationQueue(prev => prev.slice(1));
+        setAnimationInProgress(false);
+      }, 800); // Default action duration
+    }
+  }, [isOpen, isPaused, animationQueue, animationInProgress, playbackSpeed]);
+  
+  // References for animation control
+  const battleAnimationRef = useRef<NodeJS.Timeout | null>(null);
+  const battleStepRef = useRef<number>(0);
+  
   // Function to process battle log data
   const processBattleLog = () => {
     console.log("Processing battle log data...");
@@ -425,7 +585,16 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       return;
     }
     
-    // Process battle events sequentially
+    // Stop any existing animation
+    if (battleAnimationRef.current) {
+      clearTimeout(battleAnimationRef.current);
+      battleAnimationRef.current = null;
+    }
+    
+    // Reset battle step counter
+    battleStepRef.current = 0;
+    
+    // Process battle events one-by-one with a timer
     let actionMessages: string[] = [];
     let detailedMessages: string[] = [];
     let stage = 0;
@@ -645,43 +814,58 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 ? `${action.actor} healed ${action.target} for ${Math.abs(action.damage)} HP with ${action.skill}!`
                 : `${action.actor} used ${action.skill} on ${action.target} for ${action.damage} damage${action.isCritical ? " (CRITICAL HIT!)" : ""}!`;
               
-              // CRITICAL FIX: Update the unit's HP in the actual units state
-              // Find the units in our state that match the actor and target
+              // CRITICAL FIX: Instead of immediately updating unit HP, queue the animation
+              // This ensures battle actions play out sequentially with visual feedback
               const targetUnit = units.find(unit => unit.name === action.target);
+              const actorUnit = units.find(unit => unit.name === action.actor);
               
-              // Update target unit HP if found and action caused damage
-              if (targetUnit && !isHealing && action.damage > 0) {
-                // Apply damage to target's HP
-                targetUnit.hp = Math.max(0, targetUnit.hp - action.damage);
-                targetUnit.totalDamageReceived = (targetUnit.totalDamageReceived || 0) + action.damage;
+              if (targetUnit && actorUnit) {
+                // Queue this action for animated processing
+                const queuedAction = {
+                  type: 'attack',
+                  actor: actorUnit.id,
+                  target: targetUnit.id,
+                  actorName: action.actor,
+                  targetName: action.target,
+                  damage: action.damage,
+                  skill: action.skill,
+                  isHealing: isHealing,
+                  isCritical: action.isCritical,
+                  message: action.message || message
+                };
                 
-                // Update actor's stats if found
-                const actorUnit = units.find(unit => unit.name === action.actor);
-                if (actorUnit) {
-                  actorUnit.totalDamageDealt = (actorUnit.totalDamageDealt || 0) + action.damage;
+                console.log(`Queuing battle action: ${actorUnit.name} -> ${targetUnit.name} for ${action.damage} damage`);
+                setAnimationQueue(prevQueue => [...prevQueue, queuedAction]);
+                
+                // Still need to update the underlying data for correct health calculation
+                // Update target unit HP if found and action caused damage
+                if (targetUnit && !isHealing && action.damage > 0) {
+                  // Apply damage to target's HP
+                  targetUnit.hp = Math.max(0, targetUnit.hp - action.damage);
+                  targetUnit.totalDamageReceived = (targetUnit.totalDamageReceived || 0) + action.damage;
+                  
+                  // Update actor's stats if found
+                  if (actorUnit) {
+                    actorUnit.totalDamageDealt = (actorUnit.totalDamageDealt || 0) + action.damage;
+                  }
                 }
                 
-                console.log(`Updated ${targetUnit.name} HP: ${targetUnit.hp}/${targetUnit.maxHp} after taking ${action.damage} damage`);
-              }
-              
-              // Handle healing
-              if (targetUnit && isHealing && action.damage > 0) {
-                // Apply healing to target's HP (don't exceed maxHp)
-                const healAmount = Math.abs(action.damage);
-                targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
-                targetUnit.totalHealingReceived = (targetUnit.totalHealingReceived || 0) + healAmount;
-                
-                // Update actor's healing stats
-                const actorUnit = units.find(unit => unit.name === action.actor);
-                if (actorUnit) {
-                  actorUnit.totalHealingDone = (actorUnit.totalHealingDone || 0) + healAmount;
+                // Handle healing
+                if (targetUnit && isHealing && action.damage > 0) {
+                  // Apply healing to target's HP (don't exceed maxHp)
+                  const healAmount = Math.abs(action.damage);
+                  targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
+                  targetUnit.totalHealingReceived = (targetUnit.totalHealingReceived || 0) + healAmount;
+                  
+                  // Update actor's healing stats
+                  if (actorUnit) {
+                    actorUnit.totalHealingDone = (actorUnit.totalHealingDone || 0) + healAmount;
+                  }
                 }
                 
-                console.log(`Updated ${targetUnit.name} HP: ${targetUnit.hp}/${targetUnit.maxHp} after receiving ${healAmount} healing`);
+                // We need to update the units state to reflect the health changes
+                setUnits([...units]);
               }
-              
-              // We need to update the units state to reflect the health changes
-              setUnits([...units]);
               
               // Add the message to both action logs
               actionMessages.push(message);
@@ -701,6 +885,17 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               if (defeatedUnit) {
                 defeatedUnit.hp = 0; // Ensure defeated unit shows 0 HP
                 console.log(`Unit ${defeatedUnit.name} has been defeated - setting HP to 0`);
+                
+                // Queue a defeat animation
+                const queuedDefeat = {
+                  type: 'defeat',
+                  target: defeatedUnit.id,
+                  targetName: action.target,
+                  message: defeatMessage
+                };
+                
+                // Add this to animation queue
+                setAnimationQueue(prevQueue => [...prevQueue, queuedDefeat]);
                 
                 // Update units state to reflect the defeat
                 setUnits([...units]);
@@ -757,9 +952,55 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       actionMessages.push(`Battle Complete! ${battleCompleteEvent.type === 'victory' ? 'Victory!' : 'Defeat!'}`);
     }
     
-    // Update state with collected messages
-    setActionLog(actionMessages);
-    setDetailedActionLog(detailedMessages.length > 0 ? detailedMessages : actionMessages);
+    // Save all the messages, but we'll display them one-by-one with animation
+    const allMessages = actionMessages;
+    const allDetailedMessages = detailedMessages.length > 0 ? detailedMessages : actionMessages;
+    
+    // Start with just the first few system messages
+    const initialMessages = allMessages.slice(0, 3);
+    const initialDetailedMessages = allDetailedMessages.slice(0, 3);
+    setActionLog(initialMessages);
+    setDetailedActionLog(initialDetailedMessages);
+    
+    // Function to animate battle progression step-by-step
+    const animateBattleStep = () => {
+      // Clear any existing animation
+      if (battleAnimationRef.current) {
+        clearTimeout(battleAnimationRef.current);
+      }
+      
+      // Get current animation step
+      const step = battleStepRef.current;
+      
+      // If we've shown all messages, stop animation
+      if (step >= allMessages.length) {
+        console.log("Battle animation complete");
+        return;
+      }
+      
+      // Update the action logs with one more message
+      setActionLog(allMessages.slice(0, Math.min(step + 3, allMessages.length)));
+      setDetailedActionLog(allDetailedMessages.slice(0, Math.min(step + 3, allDetailedMessages.length)));
+      
+      // Find damage events related to this step and update unit health
+      // Most health updates were already applied during event processing
+      
+      // Increment step counter
+      battleStepRef.current = step + 1;
+      
+      // Schedule next animation step based on playback speed
+      // Base delay is 800ms, divided by playback speed
+      const stepDelay = isPaused ? 0 : (800 / playbackSpeed);
+      battleAnimationRef.current = setTimeout(animateBattleStep, stepDelay);
+    };
+    
+    // Start the battle animation if not paused
+    if (!isPaused) {
+      // Small delay before starting to let the UI render
+      setTimeout(() => {
+        animateBattleStep();
+      }, 500);
+    }
   };
   
   return (
@@ -1025,12 +1266,28 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               </TabsList>
               <TabsContent value="battle-log" className="h-32 overflow-auto bg-[#1E1433] rounded-md p-2">
                 {actionLog.map((action, index) => (
-                  <div key={index} className="text-sm mb-1">{action}</div>
+                  <motion.div 
+                    key={index} 
+                    className="text-sm mb-1"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {action}
+                  </motion.div>
                 ))}
               </TabsContent>
               <TabsContent value="detailed-log" className="h-32 overflow-auto bg-[#1E1433] rounded-md p-2">
                 {detailedActionLog.map((action, index) => (
-                  <div key={index} className="text-xs mb-1">{action}</div>
+                  <motion.div 
+                    key={index} 
+                    className="text-xs mb-1"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {action}
+                  </motion.div>
                 ))}
               </TabsContent>
             </Tabs>
