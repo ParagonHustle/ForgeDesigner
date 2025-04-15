@@ -144,15 +144,15 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
           name: 'Basic Attack',
           damage: 1.0
         },
-        advanced: aura?.skills?.[1] ? {
-          name: aura.skills[1].name || 'Advanced Attack',
-          damage: Number(aura.skills[1].damage) || 1.5,
-          cooldown: Number(aura.skills[1].cooldown) || 3
+        advanced: (aura?.skills?.[1] && typeof aura.skills[1] === 'object') ? {
+          name: (aura.skills[1] as any).name || 'Advanced Attack',
+          damage: Number((aura.skills[1] as any).damage) || 1.5,
+          cooldown: Number((aura.skills[1] as any).cooldown) || 3
         } : null,
-        ultimate: aura?.skills?.[2] ? {
-          name: aura.skills[2].name || 'Ultimate Attack',
-          damage: Number(aura.skills[2].damage) || 2.0,
-          cooldown: Number(aura.skills[2].cooldown) || 5
+        ultimate: (aura?.skills?.[2] && typeof aura.skills[2] === 'object') ? {
+          name: (aura.skills[2] as any).name || 'Ultimate Attack',
+          damage: Number((aura.skills[2] as any).damage) || 2.0,
+          cooldown: Number((aura.skills[2] as any).cooldown) || 5
         } : null
       },
       // Add aura bonuses to be applied during battle calculations
