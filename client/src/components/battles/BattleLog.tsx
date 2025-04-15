@@ -21,7 +21,7 @@ interface StatusEffect {
 }
 
 interface BattleUnit {
-  id: string;
+  id: string | number;
   name: string;
   hp: number;
   maxHp: number;
@@ -79,8 +79,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const [isComplete, setIsComplete] = useState(false);
   
   // Animation states for battle transitions
-  const [activeAttacker, setActiveAttacker] = useState<string | null>(null);
-  const [activeTarget, setActiveTarget] = useState<string | null>(null);
+  const [activeAttacker, setActiveAttacker] = useState<string | number | null>(null);
+  const [activeTarget, setActiveTarget] = useState<string | number | null>(null);
   const [showAttackAnimation, setShowAttackAnimation] = useState(false);
   const [showDamageAnimation, setShowDamageAnimation] = useState(false);
   const [attackAnimationType, setAttackAnimationType] = useState<'basic' | 'advanced' | 'ultimate'>('basic');
