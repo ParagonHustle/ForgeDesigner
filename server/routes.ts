@@ -2871,6 +2871,9 @@ async function generateMockBattleLog(run: any, success: boolean) {
     // Sort by action timer (lower acts first)
     allUnits.sort((a, b) => a.actionTimer - b.actionTimer);
 
+    // Ensure we have at least one action per round even if all units skip
+    let actionsAdded = 0;
+
     for (const unit of allUnits) {
       // Skip if unit is defeated
       if (!aliveAllies.includes(unit) && !aliveEnemies.includes(unit)) continue;
@@ -2904,6 +2907,40 @@ async function generateMockBattleLog(run: any, success: boolean) {
         damage,
         isCritical
       });
+      
+      actionsAdded++;
+    }
+    
+    // If no actions were added this round, add a forced action
+    if (actionsAdded === 0 && aliveAllies.length > 0 && aliveEnemies.length > 0) {
+      // Add a forced action from an ally to make sure the battle progresses
+      const randomAlly = aliveAllies[Math.floor(Math.random() * aliveAllies.length)];
+      const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+      
+      // Generate a simple attack with basic damage
+      const forcedDamage = Math.floor(randomAlly.stats.attack * 1.2);
+      
+      roundActions.push({
+        actor: randomAlly.name,
+        skill: "Forced Action",
+        target: randomEnemy.name,
+        damage: forcedDamage,
+        isCritical: false,
+        message: `${randomAlly.name} attacks ${randomEnemy.name} for ${forcedDamage} damage!`
+      });
+      
+      // Apply damage to the enemy
+      randomEnemy.hp -= forcedDamage;
+      
+      // Check if this forced action defeated the enemy
+      if (randomEnemy.hp <= 0) {
+        aliveEnemies = aliveEnemies.filter(e => e.id !== randomEnemy.id);
+        roundActions.push({
+          type: 'defeat',
+          target: randomEnemy.name
+        });
+      }
+    }
 
       // Apply damage and check for defeats
       target.hp -= damage;
