@@ -1,0 +1,206 @@
+19:54:43.144 client:495 [vite] connecting...
+19:54:43.704 client:618 [vite] connected.
+19:54:44.898 chunk-WERSD76P.js?v=bebf37ce:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+19:54:45.174 chunk-WERSD76P.js?v=bebf37ce:521 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=bebf37ce:337:18
+    at div
+    at aside
+    at Sidebar (https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/src/components/layout/Sidebar.tsx:81:22)
+    at div
+    at div
+    at MainLayout (https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/src/components/layout/MainLayout.tsx:24:23)
+    at QueryClientProvider (https://9003c292-9726-4502-ae40-280b797959d0-00-1lh065qt8dl8j.spock.repl.co/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=bebf37ce:2805:3)
+    at App
+printWarning @ chunk-WERSD76P.js?v=bebf37ce:521
+19:54:45.199 BattleLog.tsx:404 === BATTLE LOG COMPONENT STATE ===
+19:54:45.199 BattleLog.tsx:405 isOpen: false
+19:54:45.199 BattleLog.tsx:406 isPaused: true
+19:54:45.199 BattleLog.tsx:407 battleLog length: 0
+19:54:45.199 BattleLog.tsx:408 battleLog first few entries: Array(0)
+19:54:45.199 BattleLog.tsx:415 Not processing battle log because: empty log
+19:54:48.782 DungeonView.tsx:210 Completing dungeon run ID: 143
+19:54:50.567 DungeonView.tsx:219 Dungeon completion response: Object
+19:54:50.567 DungeonView.tsx:220 Battle log entries: 76
+19:54:50.567 DungeonView.tsx:224 Setting battle log with 76 entries
+19:54:50.573 BattleLog.tsx:404 === BATTLE LOG COMPONENT STATE ===
+19:54:50.573 BattleLog.tsx:405 isOpen: true
+19:54:50.573 BattleLog.tsx:406 isPaused: true
+19:54:50.573 BattleLog.tsx:407 battleLog length: 76
+19:54:50.573 BattleLog.tsx:408 battleLog first few entries: Array(2)
+19:54:50.573 BattleLog.tsx:415 Not processing battle log because: is paused
+19:54:50.589 @radix-ui_react-dialog.js?v=bebf37ce:336 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ @radix-ui_react-dialog.js?v=bebf37ce:336
+19:54:53.166 
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+19:54:56.601 BattleLog.tsx:404 === BATTLE LOG COMPONENT STATE ===
+19:54:56.601 BattleLog.tsx:405 isOpen: true
+19:54:56.601 BattleLog.tsx:406 isPaused: false
+19:54:56.602 BattleLog.tsx:407 battleLog length: 76
+19:54:56.602 BattleLog.tsx:408 battleLog first few entries: (2) [{…}, {…}]
+19:54:56.602 BattleLog.tsx:412 Battle log data received: [{"type":"system_message","message":"Battle system initialized: All units start with full health (HP = Vitality × 8).","timestamp":1744743289748},{"type":"battle_start","allies":[{"id":3,"name":"Brawler Frank","hp":0,"maxHp":920,"stats":{"attack":135,"vitality":115,"speed":95},"skills":{"basic":{"name":"Basic Attack","damage":1},"advanced":null,"ultimate":null},"auraBonus":{"attack":2,"vitality":-1,"speed":7,"focus":10,"accuracy":-1,"defense":9,"resilience":3,"element":"fire"},"attackMeter":95,"...
+19:54:56.603 BattleLog.tsx:421 Processing battle log data...
+19:54:56.603 BattleLog.tsx:436 Found init event: {type: 'battle_start', allies: Array(4), enemies: Array(3), timestamp: 1744743289748}
+19:54:56.603 BattleLog.tsx:443 Allies: (4) [{…}, {…}, {…}, {…}]
+19:54:56.603 BattleLog.tsx:444 Enemies: (3) [{…}, {…}, {…}]
+19:54:56.603 BattleLog.tsx:454 Fixing ally Brawler Frank with incorrect HP: 0/920
+(anonymous) @ BattleLog.tsx:454
+processBattleLog @ BattleLog.tsx:451
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+19:54:56.604 BattleLog.tsx:454 Fixing ally Albus Dumbleboom with incorrect HP: 0/800
+(anonymous) @ BattleLog.tsx:454
+processBattleLog @ BattleLog.tsx:451
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+19:54:56.604 BattleLog.tsx:454 Fixing ally Kleos with incorrect HP: 0/960
+(anonymous) @ BattleLog.tsx:454
+processBattleLog @ BattleLog.tsx:451
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+19:54:56.604 BattleLog.tsx:454 Fixing ally G-Wolf with incorrect HP: 0/880
+(anonymous) @ BattleLog.tsx:454
+processBattleLog @ BattleLog.tsx:451
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+19:54:56.604 BattleLog.tsx:466 Fixing enemy Minion 1 with incorrect HP: 0/1280
+(anonymous) @ BattleLog.tsx:466
+processBattleLog @ BattleLog.tsx:463
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+19:54:56.604 BattleLog.tsx:466 Fixing enemy Minion 2 with incorrect HP: 0/1280
+(anonymous) @ BattleLog.tsx:466
+processBattleLog @ BattleLog.tsx:463
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+19:54:56.604 BattleLog.tsx:466 Fixing enemy Boss 3 with incorrect HP: 1/2880
+(anonymous) @ BattleLog.tsx:466
+processBattleLog @ BattleLog.tsx:463
+(anonymous) @ BattleLog.tsx:413
+commitHookEffectListMount @ chunk-WERSD76P.js?v=bebf37ce:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=bebf37ce:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=bebf37ce:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=bebf37ce:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=bebf37ce:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=bebf37ce:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=bebf37ce:19447
+commitRootImpl @ chunk-WERSD76P.js?v=bebf37ce:19416
+commitRoot @ chunk-WERSD76P.js?v=bebf37ce:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=bebf37ce:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=bebf37ce:9119
+(anonymous) @ chunk-WERSD76P.js?v=bebf37ce:18627
+19:54:56.605 BattleLog.tsx:636 Processing round 1: {type: 'round', number: 1, actions: Array(2), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.605 BattleLog.tsx:636 Processing round 2: {type: 'round', number: 2, actions: Array(3), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.605 BattleLog.tsx:636 Processing round 3: {type: 'round', number: 3, actions: Array(3), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.605 BattleLog.tsx:636 Processing round 4: {type: 'round', number: 4, actions: Array(4), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.605 BattleLog.tsx:636 Processing round 5: {type: 'round', number: 5, actions: Array(2), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.606 BattleLog.tsx:636 Processing round 6: {type: 'round', number: 6, actions: Array(6), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.606 BattleLog.tsx:636 Processing round 7: {type: 'round', number: 7, actions: Array(2), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.606 BattleLog.tsx:636 Processing round 8: {type: 'round', number: 8, actions: Array(4), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.606 BattleLog.tsx:636 Processing round 9: {type: 'round', number: 9, actions: Array(3), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.606 BattleLog.tsx:636 Processing round 10: {type: 'round', number: 10, actions: Array(3), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.606 BattleLog.tsx:636 Processing round 11: {type: 'round', number: 11, actions: Array(2), remainingAllies: 4, remainingEnemies: 3}
+19:54:56.607 BattleLog.tsx:636 Processing round 12: {type: 'round', number: 12, actions: Array(7), remainingAllies: 4, remainingEnemies: 2}
+19:54:56.607 BattleLog.tsx:636 Processing round 13: {type: 'round', number: 13, actions: Array(2), remainingAllies: 4, remainingEnemies: 2}
+19:54:56.607 BattleLog.tsx:636 Processing round 14: {type: 'round', number: 14, actions: Array(4), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.607 BattleLog.tsx:636 Processing round 15: {type: 'round', number: 15, actions: Array(1), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.607 BattleLog.tsx:636 Processing round 16: {type: 'round', number: 16, actions: Array(4), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.607 BattleLog.tsx:636 Processing round 17: {type: 'round', number: 17, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.608 BattleLog.tsx:636 Processing round 18: {type: 'round', number: 18, actions: Array(4), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.608 BattleLog.tsx:636 Processing round 19: {type: 'round', number: 19, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.608 BattleLog.tsx:636 Processing round 20: {type: 'round', number: 20, actions: Array(4), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.608 BattleLog.tsx:636 Processing round 21: {type: 'round', number: 21, actions: Array(1), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.609 BattleLog.tsx:636 Processing round 22: {type: 'round', number: 22, actions: Array(3), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.609 BattleLog.tsx:636 Processing round 23: {type: 'round', number: 23, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.609 BattleLog.tsx:636 Processing round 24: {type: 'round', number: 24, actions: Array(5), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.609 BattleLog.tsx:636 Processing round 25: {type: 'round', number: 25, actions: Array(2), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.610 BattleLog.tsx:636 Processing round 26: {type: 'round', number: 26, actions: Array(3), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.610 BattleLog.tsx:636 Processing round 27: {type: 'round', number: 27, actions: Array(1), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.610 BattleLog.tsx:636 Processing round 28: {type: 'round', number: 28, actions: Array(4), remainingAllies: 4, remainingEnemies: 1}
+19:54:56.610 BattleLog.tsx:636 Processing round 29: {type: 'round', number: 29, actions: Array(3), remainingAllies: 3, remainingEnemies: 1}
+19:54:56.610 BattleLog.tsx:636 Processing round 30: {type: 'round', number: 30, actions: Array(3), remainingAllies: 3, remainingEnemies: 1}
+19:54:56.610 BattleLog.tsx:636 Processing round 31: {type: 'round', number: 31, actions: Array(2), remainingAllies: 3, remainingEnemies: 1}
+19:54:56.611 BattleLog.tsx:636 Processing round 32: {type: 'round', number: 32, actions: Array(5), remainingAllies: 2, remainingEnemies: 1}
+19:54:56.611 BattleLog.tsx:636 Processing round 33: {type: 'round', number: 33, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+19:54:56.611 BattleLog.tsx:636 Processing round 34: {type: 'round', number: 34, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+19:54:56.611 BattleLog.tsx:636 Processing round 35: {type: 'round', number: 35, actions: Array(2), remainingAllies: 2, remainingEnemies: 1}
+19:54:56.611 BattleLog.tsx:636 Processing round 36: {type: 'round', number: 36, actions: Array(4), remainingAllies: 1, remainingEnemies: 1}
+19:54:56.611 BattleLog.tsx:636 Processing round 37: {type: 'round', number: 37, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+19:54:56.611 BattleLog.tsx:636 Processing round 38: {type: 'round', number: 38, actions: Array(1), remainingAllies: 1, remainingEnemies: 1}
+19:54:56.612 BattleLog.tsx:636 Processing round 39: {type: 'round', number: 39, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+19:54:56.612 BattleLog.tsx:636 Processing round 40: {type: 'round', number: 40, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+19:54:56.612 BattleLog.tsx:636 Processing round 41: {type: 'round', number: 41, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+19:54:56.612 BattleLog.tsx:636 Processing round 42: {type: 'round', number: 42, actions: Array(1), remainingAllies: 1, remainingEnemies: 1}
+19:54:56.612 BattleLog.tsx:636 Processing round 43: {type: 'round', number: 43, actions: Array(2), remainingAllies: 1, remainingEnemies: 1}
+19:54:56.612 BattleLog.tsx:636 Processing round 44: {type: 'round', number: 44, actions: Array(3), remainingAllies: 0, remainingEnemies: 1}

@@ -294,13 +294,16 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     // According to documentation, HP = Vitality * 8
     const safeHealthPoints = Math.max(1, healthPoints); // Ensure minimum 1 HP
     
-    // Per requirements, characters MUST start with FULL HP at battle beginning
-    console.log(`Setting ally ${char?.name} initial HP to ${safeHealthPoints} (full health)`);
+    // CRITICAL: Characters MUST always start with FULL HP at battle beginning
+    // Fix for the 0 HP issue - ensure safeHealthPoints is always positive and HP=maxHP
+    const finalHealth = safeHealthPoints > 0 ? safeHealthPoints : vitality * 8;
+    console.log(`Setting ally ${char?.name} initial HP to ${finalHealth} (full health)`);
+    
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',
-      hp: safeHealthPoints, // CRITICAL: Allies must start at full HP
-      maxHp: safeHealthPoints, // MaxHP based on vitality × 8
+      hp: finalHealth, // CRITICAL: Allies must start at full HP
+      maxHp: finalHealth, // MaxHP based on vitality × 8
       stats: {
         attack: char?.attack || 50,
         vitality: vitality,
@@ -346,13 +349,16 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     // Ensure HP is always full at the start of a new battle and never negative
     const safeHealthPoints = Math.max(1, healthPoints);
     
-    // Ensure enemies always start with full health
-    console.log(`Setting enemy ${type} ${i + 1} initial HP to ${safeHealthPoints} (full health)`);
+    // CRITICAL: Enemies MUST also start with FULL HP at battle beginning
+    // Double safety check to ensure we never get 0 HP
+    const finalHealth = safeHealthPoints > 0 ? safeHealthPoints : vitality * 8;
+    console.log(`Setting enemy ${type} ${i + 1} initial HP to ${finalHealth} (full health)`);
+    
     enemies.push({
       id: `enemy_${i}`,
       name: `${type} ${i + 1}`,
-      hp: safeHealthPoints,  // CRITICAL: Enemies must start at full HP
-      maxHp: safeHealthPoints, // Set maxHP equal to 8x vitality
+      hp: finalHealth,  // CRITICAL: Enemies must start at full HP
+      maxHp: finalHealth, // Set maxHP equal to 8x vitality
       stats: {
         attack: 40 + (level * 5),
         vitality: vitality,
