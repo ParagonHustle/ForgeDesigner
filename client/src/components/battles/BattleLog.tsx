@@ -487,13 +487,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         allies.forEach((ally, index) => {
           if (!ally) return; // Skip if ally is undefined/null
           
-          // Add debug logging for problematic HP values
-          if (typeof ally.hp === 'number' && ally.hp <= 0) {
-            console.log(`🔶 Fixing ally ${ally.name} with invalid HP: ${ally.hp}`);
-            // Ensure we never show units with 0 HP as this makes no sense in the battle
-            ally.hp = typeof ally.maxHp === 'number' ? Math.max(1, Math.ceil(ally.maxHp * 0.1)) : 10;
-            console.log(`   New HP value: ${ally.hp}`);
-          }
+          // Fix HP values for all allies to match the maxHP
+      // This is a critical fix for incorrect initial battle state from server
+      if (typeof ally.hp === 'number' && ally.hp <= 0) {
+        console.log(`🔶 Fixing ally ${ally.name || 'Unknown'} with invalid HP: ${ally.hp}`);
+        // Set to FULL HP (maxHp) as per requirements - all units should start a dungeon at full HP
+        ally.hp = typeof ally.maxHp === 'number' ? ally.maxHp : 100;
+        console.log(`   New HP value for ${ally.name || 'Unknown'}: ${ally.hp}`);
+      }
           
           // Create a battle unit with safe default values
           const allyUnit: BattleUnit = {
@@ -542,12 +543,12 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         enemies.forEach((enemy, index) => {
           if (!enemy) return; // Skip if enemy is undefined/null
           
-          // Add debug logging for problematic HP values
+          // Fix HP values for all enemies to match the maxHP
           if (typeof enemy.hp === 'number' && enemy.hp <= 0) {
-            console.log(`🔶 Fixing ally ${enemy.name} with invalid HP: ${enemy.hp}`);
-            // Ensure we never show units with 0 HP as this makes no sense in the battle
-            enemy.hp = typeof enemy.maxHp === 'number' ? Math.max(1, Math.ceil(enemy.maxHp * 0.1)) : 10;
-            console.log(`   New HP value: ${enemy.hp}`);
+            console.log(`🔶 Fixing enemy ${enemy.name || 'Unknown'} with invalid HP: ${enemy.hp}`);
+            // Set to FULL HP (maxHp) as per requirements - all units should start a dungeon at full HP
+            enemy.hp = typeof enemy.maxHp === 'number' ? enemy.maxHp : 100;
+            console.log(`   New HP value for ${enemy.name || 'Unknown'}: ${enemy.hp}`);
           }
           
           // Create a battle unit with safe default values
