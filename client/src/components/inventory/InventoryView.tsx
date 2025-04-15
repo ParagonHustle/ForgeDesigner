@@ -1063,27 +1063,30 @@ const InventoryView = () => {
               >
                 <div className="flex items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3
-                    ${shard.type === 'common' ? 'bg-gray-600/30' : 
-                      shard.type === 'rare' ? 'bg-blue-600/30' : 
-                      shard.type === 'epic' ? 'bg-purple-600/30' : 
+                    ${shard.rarity === 'common' ? 'bg-gray-600/30' : 
+                      shard.rarity === 'uncommon' ? 'bg-green-600/30' : 
+                      shard.rarity === 'rare' ? 'bg-blue-600/30' : 
+                      shard.rarity === 'epic' ? 'bg-purple-600/30' : 
                       'bg-yellow-600/30'}`
                   }>
                     <ShoppingBag className={`h-5 w-5 
-                      ${shard.type === 'common' ? 'text-gray-300' : 
-                        shard.type === 'rare' ? 'text-blue-300' : 
-                        shard.type === 'epic' ? 'text-purple-300' : 
+                      ${shard.rarity === 'common' ? 'text-gray-300' : 
+                        shard.rarity === 'uncommon' ? 'text-green-300' : 
+                        shard.rarity === 'rare' ? 'text-blue-300' : 
+                        shard.rarity === 'epic' ? 'text-purple-300' : 
                         'text-yellow-300'}`
                     } />
                   </div>
                   <div>
                     <h3 className="font-semibold text-[#FF9D00]">{shard.name}</h3>
                     <div className={`text-sm capitalize
-                      ${shard.type === 'common' ? 'text-gray-300' : 
-                        shard.type === 'rare' ? 'text-blue-300' : 
-                        shard.type === 'epic' ? 'text-purple-300' : 
+                      ${shard.rarity === 'common' ? 'text-gray-300' : 
+                        shard.rarity === 'uncommon' ? 'text-green-300' : 
+                        shard.rarity === 'rare' ? 'text-blue-300' : 
+                        shard.rarity === 'epic' ? 'text-purple-300' : 
                         'text-yellow-300'}`
                     }>
-                      {shard.type} • {shard.characterClass}
+                      {shard.rarity} • {shard.characterClass}
                     </div>
                   </div>
                 </div>
@@ -1095,9 +1098,10 @@ const InventoryView = () => {
                   </div>
                   <div className="h-2 bg-[#1F1D36] rounded-full overflow-hidden">
                     <div 
-                      className={`h-full ${shard.type === 'common' ? 'bg-gray-600' : 
-                        shard.type === 'rare' ? 'bg-blue-600' : 
-                        shard.type === 'epic' ? 'bg-purple-600' : 
+                      className={`h-full ${shard.rarity === 'common' ? 'bg-gray-600' : 
+                        shard.rarity === 'uncommon' ? 'bg-green-600' : 
+                        shard.rarity === 'rare' ? 'bg-blue-600' : 
+                        shard.rarity === 'epic' ? 'bg-purple-600' : 
                         'bg-yellow-600'}`
                       } 
                       style={{ width: `${(shard.quantity / shard.required) * 100}%` }}
@@ -1106,18 +1110,11 @@ const InventoryView = () => {
                 </div>
                 
                 <div className="mt-3 text-sm text-[#C8B8DB]/70">
-                  Collect {shard.required} shards to summon a {shard.type} {shard.characterClass} character.
+                  {shard.quantity >= shard.required ? 
+                    `You have enough ${shard.rarity} ${shard.characterName} shards!` : 
+                    `Collect ${shard.required - shard.quantity} more ${shard.rarity} shards for ${shard.characterName}.`
+                  }
                 </div>
-                
-                <Button 
-                  size="sm" 
-                  className={`w-full mt-3 text-xs ${shard.quantity >= shard.required ? 
-                    'bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]' : 
-                    'bg-[#432874] hover:bg-[#432874]/80'}`}
-                  onClick={() => handleShardAction(shard)}
-                >
-                  {shard.quantity >= shard.required ? 'Level Up Character' : `Collect Shards (${shard.quantity}/${shard.required})`}
-                </Button>
               </motion.div>
             ))}
           </motion.div>
