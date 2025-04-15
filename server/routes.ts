@@ -2762,7 +2762,10 @@ import { generateBattleLog } from './battle-system';
 
 // Helper function to generate battle log with proper Attack Meter turn-based system
 // Implements the dungeon battle system as specified in the documentation
-async function generateMockBattleLog(run: any, success: boolean) {
+/**
+ * Processes character IDs and generates a proper battle log using the battle system
+ */
+async function processBattleLog(run: any, success: boolean) {
   // CRITICAL FIX: Before calling the battle system, ensure character IDs are processed correctly
   if (!run.characterIds && typeof run.characterIds !== 'object') {
     console.error('Missing or invalid characterIds in run:', run);
