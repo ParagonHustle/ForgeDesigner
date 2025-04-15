@@ -576,7 +576,11 @@ const DungeonView = () => {
       {/* Battle Log Dialog */}
       <BattleLog 
         isOpen={showBattleLog}
-        onClose={() => setShowBattleLog(false)}
+        onClose={() => {
+          setShowBattleLog(false);
+          // Clear battle log when closing to prevent stale data in future battles
+          setCurrentBattleLog([]);
+        }}
         battleLog={currentBattleLog}
         runId={null}
         onCompleteDungeon={handleCompleteDungeon}
