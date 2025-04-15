@@ -308,6 +308,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const match = logMessage.match(/Turn (\d+):/);
     return match ? parseInt(match[1]) : 0;
   };
+  
+  // Helper function to render HP display with proper validation
+  const renderHP = (hp: any, maxHp: any): string => {
+    const validHp = Math.max(0, Math.ceil(Number(hp) || 0));
+    const validMaxHp = Math.max(1, Number(maxHp) || 100);
+    return `${validHp}/${validMaxHp} HP`;
+  };
 
   // IMPORTANT FIX: Calculate Speed with Status Effects applied
   const calculateEffectiveSpeed = (unit: BattleUnit): number => {
@@ -1020,7 +1027,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                             }}
                             transition={{ duration: 0.5 }}
                           >
-                            {Math.ceil(unit.hp)}/{unit.maxHp} HP
+                            {renderHP(unit.hp, unit.maxHp)}
                           </motion.span>
                         </div>
                         <div className="w-full bg-[#432874]/30 h-2 rounded">
@@ -1106,7 +1113,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                             }}
                             transition={{ duration: 0.5 }}
                           >
-                            {Math.ceil(unit.hp)}/{unit.maxHp} HP
+                            {renderHP(unit.hp, unit.maxHp)}
                           </motion.span>
                         </div>
                         <div className="w-full bg-[#432874]/30 h-2 rounded">
