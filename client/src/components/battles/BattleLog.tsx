@@ -66,6 +66,18 @@ interface BattleUnit {
   actionTimer?: number; // For compatibility with API
 }
 
+// Interface for battle actions within a round
+interface BattleAction {
+  actor: string;
+  target: string;
+  skill: string;
+  damage: number;
+  isCritical: boolean;
+  healing?: boolean;
+  message?: string;
+  type?: string;
+}
+
 // Interface for battle event types
 interface BattleEvent {
   type: string;
@@ -80,6 +92,11 @@ interface BattleEvent {
   newEnemies?: BattleUnit[];
   // System message
   system_message?: string;
+  // Round-specific properties
+  number?: number;            // Round number (when type === 'round')
+  actions?: BattleAction[];   // Array of actions in this round
+  remainingAllies?: number;   // Number of allies still alive after round
+  remainingEnemies?: number;  // Number of enemies still alive after round
 }
 
 interface BattleLogProps {
@@ -594,11 +611,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         }
       } else if (event.type === 'round') {
         // Process battle round events - these contain the actual combat actions
-        console.log(`Processing round ${event.number}:`, event);
+        console.log(`Processing round ${event.number || '(unknown)'}:`, event);
         
         // Extract round actions - each action is an attack/skill use from one unit to another
         if (Array.isArray(event.actions) && event.actions.length > 0) {
-          event.actions.forEach(action => {
+          event.actions.forEach((action: BattleAction) => {
             if (action.actor && action.target && typeof action.damage === 'number') {
               // Format the message differently based on whether it's damage or healing
               const isHealing = action.healing || action.damage < 0;
