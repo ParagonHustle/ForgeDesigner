@@ -1142,13 +1142,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 {units.filter(unit => typeof unit.id === 'string' ? !unit.id.startsWith('enemy') : (typeof unit.id === 'number' && unit.id <= 10)).map(unit => (
                   <motion.div 
                     key={unit.id} 
-                    className={`bg-[#432874]/20 p-2 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
+                    className={`bg-[#432874]/20 p-3 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
                     animate={{
                       scale: (activeAttacker === unit.id && showAttackAnimation) ? [1, 1.05, 1] : 1,
                       x: (activeAttacker === unit.id && showAttackAnimation) ? [0, -5, 0] : 0
                     }}
                   >
-                    <div className="flex justify-between items-start mb-1">
+                    <div className="flex justify-between items-center mb-1">
                       <div className="font-semibold">{unit.name}</div>
                       <div 
                         className={`text-sm ${unit.hp / unit.maxHp < 0.3 ? 'text-red-400' : ''}`}
@@ -1167,49 +1167,45 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                       />
                     </div>
                     
-                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1">
+                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1 mb-2">
                       <div 
                         className="h-full bg-yellow-500 rounded"
                         style={{ width: `${Math.min(100, unit.attackMeter)}%` }}
                       />
                     </div>
                     
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="flex flex-col">
-                        <div className="w-16 h-16 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB]/40 text-xs">
-                          {/* Character portrait or icon could go here */}
-                          {unit.name.substring(0, 1)}
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1 ml-2">
-                        <div className="flex flex-col gap-2">
-                          <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                    <div className="flex items-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="w-12 h-12 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB] text-xl font-bold">
+                              {unit.name.substring(0, 1)}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="p-3 max-w-xs bg-[#251942] text-[#E5DBFF] border border-[#6A3FB5]">
+                            <h4 className="font-semibold mb-2">{unit.name}</h4>
                             <div className="text-xs text-[#C8B8DB] mb-1">Stats:</div>
-                            {renderUnitStats(unit)}
-                          </div>
-                          
-                          <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                            <div className="mb-2">{renderUnitStats(unit)}</div>
+                            
                             <div className="text-xs text-[#C8B8DB] mb-1">Skills:</div>
                             <div className="flex flex-wrap gap-1">
                               {renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
                               {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
                               {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
                             </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      {/* Status effects display */}
+                      <div className="flex-1 ml-2">
+                        {unit.statusEffects && unit.statusEffects.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, true))}
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
-                    
-                    {/* Status effects display */}
-                    {unit.statusEffects && unit.statusEffects.length > 0 && (
-                      <div className="mt-2">
-                        <div className="text-xs text-[#C8B8DB]">Status Effects:</div>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, true))}
-                        </div>
-                      </div>
-                    )}
                   </motion.div>
                 ))}
               </div>
@@ -1221,13 +1217,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 {units.filter(unit => typeof unit.id === 'string' ? unit.id.startsWith('enemy') : (typeof unit.id === 'number' && unit.id > 10)).map(unit => (
                   <motion.div 
                     key={unit.id} 
-                    className={`bg-[#432874]/20 p-2 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
+                    className={`bg-[#432874]/20 p-3 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
                     animate={{
                       scale: (activeAttacker === unit.id && showAttackAnimation) ? [1, 1.05, 1] : 1,
                       x: (activeAttacker === unit.id && showAttackAnimation) ? [0, 5, 0] : 0
                     }}
                   >
-                    <div className="flex justify-between items-start mb-1">
+                    <div className="flex justify-between items-center mb-1">
                       <div className="font-semibold">{unit.name}</div>
                       <div 
                         className={`text-sm ${unit.hp / unit.maxHp < 0.3 ? 'text-red-400' : ''}`}
@@ -1246,49 +1242,45 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                       />
                     </div>
                     
-                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1">
+                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1 mb-2">
                       <div 
                         className="h-full bg-yellow-500 rounded"
                         style={{ width: `${Math.min(100, unit.attackMeter)}%` }}
                       />
                     </div>
                     
-                    <div className="flex justify-between items-center mt-2">
-                      <div className="flex flex-col">
-                        <div className="w-16 h-16 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB]/40 text-xs">
-                          {/* Enemy portrait or icon could go here */}
-                          {unit.name.substring(0, 1)}
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1 ml-2">
-                        <div className="flex flex-col gap-2">
-                          <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                    <div className="flex items-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="w-12 h-12 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB] text-xl font-bold">
+                              {unit.name.substring(0, 1)}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="p-3 max-w-xs bg-[#251942] text-[#E5DBFF] border border-[#6A3FB5]">
+                            <h4 className="font-semibold mb-2">{unit.name}</h4>
                             <div className="text-xs text-[#C8B8DB] mb-1">Stats:</div>
-                            {renderUnitStats(unit)}
-                          </div>
-                          
-                          <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                            <div className="mb-2">{renderUnitStats(unit)}</div>
+                            
                             <div className="text-xs text-[#C8B8DB] mb-1">Skills:</div>
                             <div className="flex flex-wrap gap-1">
                               {renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
                               {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
                               {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
                             </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      {/* Status effects display */}
+                      <div className="flex-1 ml-2">
+                        {unit.statusEffects && unit.statusEffects.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, false))}
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
-                    
-                    {/* Status effects display */}
-                    {unit.statusEffects && unit.statusEffects.length > 0 && (
-                      <div className="mt-2">
-                        <div className="text-xs text-[#C8B8DB]">Status Effects:</div>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, false))}
-                        </div>
-                      </div>
-                    )}
                   </motion.div>
                 ))}
               </div>
