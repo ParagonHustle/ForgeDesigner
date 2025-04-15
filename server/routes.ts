@@ -2793,9 +2793,15 @@ async function generateMockBattleLog(run: any, success: boolean) {
         speed: char?.speed || 40
       },
       skills: {
-        basic: aura?.skills?.[0] || { name: 'Basic Attack', damage: 1.0 },
-        advanced: aura?.skills?.[1] || null,
-        ultimate: aura?.skills?.[2] || null
+        basic: (aura?.skills?.[0] && typeof aura.skills[0] === 'object') 
+          ? { name: aura.skills[0].name || 'Basic Attack', damage: Number(aura.skills[0].damage) || 1.0 } 
+          : { name: 'Basic Attack', damage: 1.0 },
+        advanced: (aura?.skills?.[1] && typeof aura.skills[1] === 'object')
+          ? { name: aura.skills[1].name || 'Advanced Attack', damage: Number(aura.skills[1].damage) || 1.5, cooldown: Number(aura.skills[1].cooldown) || 3 }
+          : null,
+        ultimate: (aura?.skills?.[2] && typeof aura.skills[2] === 'object')
+          ? { name: aura.skills[2].name || 'Ultimate Attack', damage: Number(aura.skills[2].damage) || 2.0, cooldown: Number(aura.skills[2].cooldown) || 5 }
+          : null
       },
       // Add aura bonuses to be applied during battle calculations
       auraBonus: auraBonus

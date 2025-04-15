@@ -315,6 +315,13 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const validMaxHp = Math.max(1, Number(maxHp) || 100);
     return `${validHp}/${validMaxHp} HP`;
   };
+  
+  // Helper function to calculate health bar percentage
+  const calculateHealthPercent = (hp: any, maxHp: any): number => {
+    const validHp = Math.max(0, Number(hp) || 0);
+    const validMaxHp = Math.max(1, Number(maxHp) || 100);
+    return Math.max(0, Math.min(100, (validHp / validMaxHp) * 100));
+  };
 
   // IMPORTANT FIX: Calculate Speed with Status Effects applied
   const calculateEffectiveSpeed = (unit: BattleUnit): number => {
