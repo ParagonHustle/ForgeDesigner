@@ -97,6 +97,13 @@ interface BattleLogEntry {
  * Implements the combat mechanics as specified in documentation
  */
 export async function generateBattleLog(run: any, success: boolean): Promise<BattleLogEntry[]> {
+  // ENHANCED LOGGING FOR DEBUGGING
+  console.log("======= BATTLE SYSTEM: START =======");
+  console.log("Generating battle log for run:", run.id);
+  console.log("Success preset:", success);
+  console.log("Run character IDs:", JSON.stringify(run.characterIds));
+  console.log("Run dungeon level:", run.dungeonLevel);
+  
   // Initialize battle data
   const battleLog: BattleLogEntry[] = [];
   const allies: BattleUnit[] = [];
@@ -605,6 +612,14 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
       victory ? `Victory at stage ${currentStage} of ${TOTAL_STAGES}!` : 
       `Defeat at stage ${currentStage} of ${TOTAL_STAGES} after ${currentRound} rounds of combat.`
   });
-
+  
+  // ENHANCED LOGGING FOR DEBUGGING
+  console.log("======= BATTLE SYSTEM: COMPLETE =======");
+  console.log(`Battle completed with ${battleLog.length} log entries`);
+  console.log(`Final outcome: ${victory ? 'Victory' : 'Defeat'}`);
+  console.log(`Stages completed: ${currentStage}/${TOTAL_STAGES}`);
+  console.log(`Allies remaining: ${aliveAllies.length}`);
+  console.log(`First few battle log entries:`, battleLog.slice(0, 3).map(entry => entry.type));
+  
   return battleLog;
 }
