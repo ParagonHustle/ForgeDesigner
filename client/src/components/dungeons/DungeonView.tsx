@@ -297,11 +297,18 @@ const DungeonView = () => {
                           );
                         })}
                       </div>
-                      {!isCompleted && (
+                      {!isCompleted ? (
                         <div className="flex items-center text-sm text-[#C8B8DB]/70">
                           <Clock className="h-4 w-4 mr-1" />
                           <span>
-                            Completes in {Math.ceil((endTime.getTime() - new Date().getTime()) / 60000)} minutes
+                            Returns in {Math.ceil((endTime.getTime() - new Date().getTime()) / 60000)} minutes
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-sm text-[#4CAF50]/90">
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          <span>
+                            Ready for retrieval
                           </span>
                         </div>
                       )}
@@ -314,7 +321,7 @@ const DungeonView = () => {
                           disabled={isSubmitting}
                         >
                           <Skull className="h-4 w-4 mr-2" />
-                          {isSubmitting ? "Retrieving Party..." : "Retrieve Party"}
+                          {isSubmitting ? "Generating Battle Results..." : "Complete Dungeon Run"}
                         </Button>
                       ) : (
                         <Button 

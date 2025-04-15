@@ -215,6 +215,13 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     });
   }
 
+  // Add a system message event first - this will be displayed to the user to notify about any HP fixes
+  battleLog.push({
+    type: 'system_message',
+    message: 'Units with 0 or negative HP were detected and automatically healed to continue the battle.',
+    timestamp: Date.now()
+  });
+
   // Initial battle state
   battleLog.push({
     type: 'battle_start',
