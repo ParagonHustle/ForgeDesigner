@@ -1040,7 +1040,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         <div className="w-full bg-[#432874]/30 h-2 rounded">
                           <motion.div
                             className="bg-[#00B9AE] h-full rounded"
-                            style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
+                            style={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
                             animate={{ 
                               backgroundColor: (activeTarget === unit.id && showDamageAnimation) ? ['#00B9AE', '#ff0000', '#00B9AE'] : '#00B9AE'
                             }}
@@ -1126,7 +1126,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                         <div className="w-full bg-[#432874]/30 h-2 rounded">
                           <motion.div
                             className="bg-[#DC143C] h-full rounded"
-                            style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}
+                            style={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
                             animate={{ 
                               backgroundColor: (activeTarget === unit.id && showDamageAnimation) ? ['#DC143C', '#ff0000', '#DC143C'] : '#DC143C'
                             }}
