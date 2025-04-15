@@ -215,10 +215,10 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     });
   }
 
-  // Add a system message event first - this will be displayed to the user to notify about any HP fixes
+  // Add a system message event to inform players about HP initialization
   battleLog.push({
     type: 'system_message',
-    message: 'Units with 0 or negative HP were detected and automatically healed to continue the battle.',
+    message: 'Battle system initialized: All units start with full health (HP = Vitality × 8).',
     timestamp: Date.now()
   });
 

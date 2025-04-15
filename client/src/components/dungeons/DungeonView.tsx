@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Skull, Swords, Shield, Zap, Heart, Plus, Clock, ScrollText } from 'lucide-react';
+import { Skull, Swords, Shield, Zap, Heart, Plus, Clock, ScrollText, CheckCircle } from 'lucide-react';
 import type { Character, DungeonRun } from '@shared/schema';
 import BattleLog from '@/components/battles/BattleLog';
 
