@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { townhallSkillTree, hasBuildingPlans, consumeBuildingPlan } from './townhallSkills';
+import { generateBattleLog } from './battle-system';
 import {
   insertUserSchema,
   insertCharacterSchema,
@@ -2757,8 +2758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// Import our dedicated battle system implementation
-import { generateBattleLog } from './battle-system';
+// IMPORTANT: Using the battle system imported at the top of the file
 
 // Helper function to generate battle log with proper Attack Meter turn-based system
 // Implements the dungeon battle system as specified in the documentation
