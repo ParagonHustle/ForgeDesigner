@@ -853,6 +853,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     if (isPaused || !isOpen) return;
     
     // Find all battle turn events
+    console.log('Full battle log array:', battleLog);
+    console.log('Types found in battleLog:', battleLog.map(event => event.type));
+    
     const battleEvents = battleLog.filter(event => 
       event.type === 'battle-turn' || 
       event.type === 'battle_turn' || 
@@ -864,7 +867,7 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       event.type === 'dungeon_failed'
     );
     
-    console.log('Battle events:', battleEvents);
+    console.log('Filtered battle events:', battleEvents);
     
     // Process battle events one by one with appropriate delays
     const processEvents = (index: number) => {
