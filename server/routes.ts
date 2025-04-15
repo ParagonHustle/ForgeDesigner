@@ -2781,12 +2781,15 @@ async function generateMockBattleLog(run: any, success: boolean) {
       element: aura.element
     } : null;
     
+    const vitality = char?.vitality || 100;
     allies.push({
       id: charId,
       name: char?.name || 'Unknown Hero',
+      hp: vitality,      // Set initial HP equal to vitality
+      maxHp: vitality,   // Set maxHP equal to vitality
       stats: {
         attack: char?.attack || 50,
-        vitality: char?.vitality || 100,
+        vitality: vitality,
         speed: char?.speed || 40
       },
       skills: {
@@ -2807,12 +2810,15 @@ async function generateMockBattleLog(run: any, success: boolean) {
     const type = i === enemyCount - 1 ? 'Boss' : 'Minion';
     const level = run.dungeonLevel;
     
+    const vitality = type === 'Boss' ? 200 + (level * 20) : 80 + (level * 10);
     enemies.push({
       id: `enemy_${i}`,
       name: `${type} ${i + 1}`,
+      hp: vitality,      // Set initial HP equal to vitality
+      maxHp: vitality,   // Set maxHP equal to vitality
       stats: {
         attack: 40 + (level * 5),
-        vitality: type === 'Boss' ? 200 + (level * 20) : 80 + (level * 10),
+        vitality: vitality,
         speed: type === 'Boss' ? 35 + (level * 2) : 45 + (level * 3)
       },
       skills: {
@@ -2885,7 +2891,7 @@ async function generateMockBattleLog(run: any, success: boolean) {
       });
 
       // Apply damage and check for defeats
-      target.stats.vitality -= damage;
+      target.hp -= damage;
       
       // Check for special skills that include healing effects
       if (isAlly && skill.name === "Soothing Current" && aliveAllies.length > 0) {
@@ -2893,13 +2899,13 @@ async function generateMockBattleLog(run: any, success: boolean) {
         const otherAllies = aliveAllies.filter(ally => ally !== unit);
         const healTarget = otherAllies.length > 0 
           ? otherAllies.reduce((lowest, current) => 
-              current.stats.vitality < lowest.stats.vitality ? current : lowest, otherAllies[0])
+              current.hp < lowest.hp ? current : lowest, otherAllies[0])
           : unit; // Self-heal if no other allies
         
         // Apply healing (5% of max health)
-        const healAmount = Math.floor(unit.stats.vitality * 0.05);
-        const originalHp = healTarget.stats.vitality;
-        healTarget.stats.vitality = Math.min(healTarget.stats.vitality + healAmount, 100); // Assuming 100 is max HP
+        const healAmount = Math.floor(unit.maxHp * 0.05);
+        const originalHp = healTarget.hp;
+        healTarget.hp = Math.min(healTarget.hp + healAmount, healTarget.maxHp);
         
         // Log the healing action separately
         roundActions.push({
@@ -2915,7 +2921,7 @@ async function generateMockBattleLog(run: any, success: boolean) {
         console.log(`Healing effect applied: ${unit.name} healed ${healTarget.name} for ${healAmount} HP!`);
       }
       
-      if (target.stats.vitality <= 0) {
+      if (target.hp <= 0) {
         if (isAlly) {
           aliveEnemies = aliveEnemies.filter(e => e.id !== target.id);
           roundActions.push({
