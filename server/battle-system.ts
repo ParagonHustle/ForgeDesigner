@@ -215,12 +215,39 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     });
   }
 
+  // Force all units to have full HP to fix any issues that might have occurred
+  let hpFixed = false;
+  allies.forEach(ally => {
+    if (ally.hp !== ally.maxHp) {
+      console.warn(`Critical fix applied: Ally ${ally.name} HP was ${ally.hp}, forcing to ${ally.maxHp}`);
+      ally.hp = ally.maxHp;
+      hpFixed = true;
+    }
+  });
+  
+  enemies.forEach(enemy => {
+    if (enemy.hp !== enemy.maxHp) {
+      console.warn(`Critical fix applied: Enemy ${enemy.name} HP was ${enemy.hp}, forcing to ${enemy.maxHp}`);
+      enemy.hp = enemy.maxHp;
+      hpFixed = true;
+    }
+  });
+  
   // Add a system message event to inform players about HP initialization
   battleLog.push({
     type: 'system_message',
     message: 'Battle system initialized: All units start with full health (HP = Vitality × 8).',
     timestamp: Date.now()
   });
+
+  // Perform one final check to ensure all enemy values are consistent (specifically for the enemy HP display bug)
+  for (let i = 0; i < enemies.length; i++) {
+    // Double-check each enemy to guarantee they have proper HP values
+    if (enemies[i].hp !== enemies[i].maxHp) {
+      console.error(`CRITICAL ERROR FIXED: Enemy ${enemies[i].name} has inconsistent HP: ${enemies[i].hp}/${enemies[i].maxHp}`);
+      enemies[i].hp = enemies[i].maxHp;
+    }
+  }
 
   // Initial battle state
   battleLog.push({
@@ -250,7 +277,33 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   // Main battle loop using the Attack Meter system as per documentation
   // Continue until stage is complete or max rounds reached
   let battleRound = 0;
+  
+  // Debug logging to check condition values
+  console.log("BATTLE LOOP CONDITIONS CHECK:");
+  console.log(`- MAX_ROUNDS_PER_STAGE: ${MAX_ROUNDS_PER_STAGE}`);
+  console.log(`- aliveAllies.length: ${aliveAllies.length}`);
+  console.log(`- aliveEnemies.length: ${aliveEnemies.length}`);
+  console.log(`- stageBattleComplete: ${stageBattleComplete}`);
+  
+  // Verify all units have appropriate health values
+  aliveAllies.forEach(ally => {
+    console.log(`Ally ${ally.name} HP check: ${ally.hp}/${ally.maxHp}`);
+    if (ally.hp <= 0) {
+      console.warn(`WARNING: Ally ${ally.name} has invalid HP (${ally.hp}), fixing to ${ally.maxHp}`);
+      ally.hp = ally.maxHp; // Ensure HP is correctly set
+    }
+  });
+  
+  aliveEnemies.forEach(enemy => {
+    console.log(`Enemy ${enemy.name} HP check: ${enemy.hp}/${enemy.maxHp}`);
+    if (enemy.hp <= 0) {
+      console.warn(`WARNING: Enemy ${enemy.name} has invalid HP (${enemy.hp}), fixing to ${enemy.maxHp}`);
+      enemy.hp = enemy.maxHp; // Ensure HP is correctly set
+    }
+  });
+  
   while (battleRound < MAX_ROUNDS_PER_STAGE && aliveAllies.length > 0 && aliveEnemies.length > 0 && !stageBattleComplete) {
+    console.log(`BATTLE ROUND ${battleRound + 1} STARTING`);
     battleRound++;
     currentRound++;
     const roundActions: BattleAction[] = [];
