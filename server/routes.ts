@@ -2979,11 +2979,24 @@ async function generateMockBattleLog(run: any, success: boolean) {
       
       // Check if this forced action defeated the enemy
       if (randomEnemy.hp <= 0) {
-        aliveEnemies = aliveEnemies.filter(e => e.id !== randomEnemy.id);
-        roundActions.push({
-          type: 'defeat',
-          target: randomEnemy.name
-        });
+        // Check if this is the last enemy to be removed - if so, let it live with 1 HP for boss fights to avoid premature stage completion
+        const isFinalEnemyAndBoss = aliveEnemies.length === 1 && randomEnemy.name.includes('Boss') && currentStage < TOTAL_STAGES;
+        
+        if (isFinalEnemyAndBoss) {
+          // Let boss survive with minimal HP to ensure battle continuity 
+          randomEnemy.hp = 1;
+          battleLog.push({
+            type: 'system_message',
+            message: `${randomEnemy.name} is critically injured but refuses to fall!`,
+          });
+        } else {
+          // Normal defeat processing
+          aliveEnemies = aliveEnemies.filter(e => e.id !== randomEnemy.id);
+          roundActions.push({
+            type: 'defeat',
+            target: randomEnemy.name
+          });
+        }
       }
       
       // If enemies are still alive, add a forced enemy action too
@@ -3009,11 +3022,37 @@ async function generateMockBattleLog(run: any, success: boolean) {
         
         // Check if this forced action defeated the ally
         if (randomTarget.hp <= 0) {
-          aliveAllies = aliveAllies.filter(a => a.id !== randomTarget.id);
-          roundActions.push({
-            type: 'defeat',
-            target: randomTarget.name
-          });
+          // Check if this is the last ally - if so, provide emergency healing
+          const isLastAlly = aliveAllies.length === 1;
+          
+          if (isLastAlly) {
+            // Emergency resurrection with 25% health
+            const healAmount = Math.ceil(randomTarget.maxHp * 0.25);
+            randomTarget.hp = healAmount;
+            
+            battleLog.push({
+              type: 'system_message',
+              message: `${randomTarget.name} was critically injured but managed to recover with ${healAmount} HP!`,
+            });
+            
+            // Log the healing action separately
+            roundActions.push({
+              actor: 'System',
+              skill: 'Emergency Recovery',
+              target: randomTarget.name,
+              damage: -healAmount, // Negative damage indicates healing
+              isCritical: false,
+              healing: true,
+              message: `${randomTarget.name} recovered with ${healAmount} HP through sheer will!`
+            });
+          } else {
+            // Normal defeat processing
+            aliveAllies = aliveAllies.filter(a => a.id !== randomTarget.id);
+            roundActions.push({
+              type: 'defeat',
+              target: randomTarget.name
+            });
+          }
         }
       }
     }
@@ -3073,17 +3112,45 @@ async function generateMockBattleLog(run: any, success: boolean) {
       
       if (target.hp <= 0) {
         if (isAlly) {
+          // If enemy is defeated, remove it from alive enemies
           aliveEnemies = aliveEnemies.filter(e => e.id !== target.id);
           roundActions.push({
             type: 'defeat',
             target: target.name
           });
         } else {
-          aliveAllies = aliveAllies.filter(a => a.id !== target.id);
-          roundActions.push({
-            type: 'defeat',
-            target: target.name
-          });
+          // If this is the last ally and it's the last stage, give them a chance to survive
+          const isLastAlly = aliveAllies.length === 1 && target.id === aliveAllies[0].id;
+          const isLastStage = currentStage === TOTAL_STAGES;
+          
+          if (isLastAlly && isLastStage) {
+            // Emergency resurrection with a small amount of health in final stage
+            const healAmount = Math.ceil(target.maxHp * 0.1); // 10% health revival
+            target.hp = healAmount;
+            
+            battleLog.push({
+              type: 'system_message',
+              message: `In a final desperate effort, ${target.name} regains consciousness with ${healAmount} HP!`,
+            });
+            
+            // Log the healing action separately
+            roundActions.push({
+              actor: 'System',
+              skill: 'Last Stand',
+              target: target.name,
+              damage: -healAmount, // Negative damage indicates healing
+              isCritical: false,
+              healing: true,
+              message: `${target.name} refuses to give up, recovering with ${healAmount} HP!`
+            });
+          } else {
+            // Normal defeat processing
+            aliveAllies = aliveAllies.filter(a => a.id !== target.id);
+            roundActions.push({
+              type: 'defeat',
+              target: target.name
+            });
+          }
         }
       }
     }

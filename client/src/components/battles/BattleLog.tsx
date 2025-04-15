@@ -432,10 +432,27 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         }
       });
       
-      // Add a system message if we had to fix any HP values
+      // Add detailed system messages if we had to fix any HP values
       if (hasFixedHp) {
+        // Add a simple message to regular log
         actionMessages.push("System: Some units had critical health issues that were automatically fixed.");
+        
+        // Add more detailed information to the detailed log
         detailedMessages.push("System: Units with 0 or negative HP were detected and automatically healed to continue the battle.");
+        
+        // Add specific health fixes for transparency
+        allies.forEach((ally: any) => {
+          if (typeof ally?.hp === 'number' && ally.hp <= 0) {
+            const newHp = Math.ceil(ally.maxHp * 0.25);
+            detailedMessages.push(`System: ${ally.name} was critically injured (${ally.hp}/${ally.maxHp} HP) and received emergency healing to ${newHp} HP.`);
+          }
+        });
+        
+        enemies.forEach((enemy: any) => {
+          if (typeof enemy?.hp === 'number' && enemy.hp <= 0) {
+            detailedMessages.push(`System: ${enemy.name} was restored from ${enemy.hp} to ${enemy.maxHp} HP.`);
+          }
+        });
       }
       
       // Process allies
