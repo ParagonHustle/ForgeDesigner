@@ -384,887 +384,996 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const sortedDetailedLog = detailedActionLog.length > 0 ? [...detailedActionLog].sort((a, b) => {
     return extractTurnNumber(b) - extractTurnNumber(a);
   }) : [];
-
-  // Function to check if battle has ended
-  const checkBattleEnd = () => {
-    const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-    if (!battleEntry) {
-      console.error("No battle entry found with allies array");
-      return;
-    }
-
-    const allies = units.filter(u => battleEntry.allies.some((a: any) => a.id === u.id));
-    const enemies = units.filter(u => battleEntry.enemies.some((e: any) => e.id === u.id));
-
-    const allAlliesDefeated = allies.every((a: BattleUnit) => a.hp <= 0);
-    const allEnemiesDefeated = enemies.every((e: BattleUnit) => e.hp <= 0);
-
-    console.log(`Checking battle end conditions:
-      - All allies defeated: ${allAlliesDefeated} (${allies.length} allies)
-      - All enemies defeated: ${allEnemiesDefeated} (${enemies.length} enemies)
-      - Current stage: ${currentStage + 1} of 8
-      - Is battle complete: ${isComplete}
-    `);
-
-    // If all allies are defeated, the dungeon run is over
-    if (allAlliesDefeated) {
-      setIsPaused(true);
-      setIsComplete(true);
-      setActionLog(prev => [
-        ...prev,
-        `Battle ended! Your party has been defeated at stage ${currentStage + 1}.`
-      ]);
-      console.log(`Dungeon ended - party defeated at stage ${currentStage + 1}`);
-    } 
-    // If all enemies are defeated, progress to next stage or complete
-    else if (allEnemiesDefeated && !isComplete) {
-      setIsPaused(true);
-      // Mark as complete for now - in real app would progress to next stage
-      setIsComplete(true);
-      setActionLog(prev => [
-        ...prev,
-        `Congratulations! You've defeated all enemies!`
-      ]);
-    }
-  };
-
-  // Function for a unit to perform an action
-  const performAction = (attacker: BattleUnit, target: BattleUnit) => {
-    // Skip if either unit is defeated or if an animation is already in progress
-    if (attacker.hp <= 0 || target.hp <= 0) return;
-    if (animationInProgress) return;
-    
-    // Set animation in progress to prevent multiple actions at once
-    setAnimationInProgress(true);
-    
-    // Increment turn count for this action
-    turnCountRef.current += 1;
-    setBattleRound(turnCountRef.current);
-    
-    // Choose which skill to use based on cooldowns and chance
-    // Skill selection logic: 70% chance for basic, 20% chance for advanced, 10% chance for ultimate if available
-    const skillRoll = Math.random() * 100;
-    let skill = attacker.skills.basic;
-    let skillType = "basic";
-    
-    if (attacker.skills.advanced && skillRoll > 70) {
-      skill = attacker.skills.advanced;
-      skillType = "advanced";
-    } else if (attacker.skills.ultimate && skillRoll > 90) {
-      skill = attacker.skills.ultimate;
-      skillType = "ultimate";
-    }
-    
-    // Get the battle entry to determine if attacker is ally or enemy
-    const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-    const isAlly = battleEntry?.allies?.some((a: any) => a.id === attacker.id) || false;
-    
-    // Calculate damage with our fixed attack calculation
-    let attackValue = calculateEffectiveAttack(attacker);
-    
-    // Damage = Attack * Skill Damage Multiplier
-    const damage = Math.floor(attackValue * skill.damage);
-    
-    // Set animation states for visual feedback
-    setActiveAttacker(attacker.id);
-    setActiveTarget(target.id);
-    setAttackAnimationType(skillType as 'basic' | 'advanced' | 'ultimate');
-    setCurrentSkillName(skill.name);
-    
-    // Show attack animation
-    setShowAttackAnimation(true);
-    
-    // After a delay, show damage animation
-    setTimeout(() => {
-      setShowAttackAnimation(false);
-      setShowDamageAnimation(true);
-      
-      // After another delay, apply the actual damage and continue
-      setTimeout(() => {
-        setShowDamageAnimation(false);
-        
-        // Apply the damage to the target unit (update UI)
-        setUnits(prevUnits => {
-          return prevUnits.map(unit => {
-            if (unit.id === target.id) {
-              // Update target unit's HP
-              return { 
-                ...unit, 
-                hp: Math.max(0, unit.hp - damage),
-                totalDamageReceived: (unit.totalDamageReceived || 0) + damage
-              };
-            } else if (unit.id === attacker.id) {
-              // Update attacker's damage dealt stat
-              return {
-                ...unit,
-                totalDamageDealt: (unit.totalDamageDealt || 0) + damage
-              };
-            }
-            return unit;
-          });
-        });
-        
-        // Add attack to the action log
-        const attackString = `Turn ${turnCountRef.current}: <span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> used <span class="font-semibold">${skill.name}</span> on <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> for <span class="text-yellow-400">${damage} damage</span>!`;
-        
-        setActionLog(prev => [attackString, ...prev]);
-        
-        // Reset attack meter for attacker
-        setUnits(prevUnits => {
-          return prevUnits.map(unit => {
-            if (unit.id === attacker.id) {
-              return { ...unit, attackMeter: 0 };
-            }
-            return unit;
-          });
-        });
-        
-        // Determine if we should apply status effects based on the skill
-        let statusEffectApplied = false;
-        let statusEffectMessage = "";
-        let newStatusEffect: StatusEffect | null = null;
-        
-        // Check skill name to determine potential status effects
-        if (skill.name === "Gust") {
-          // 50% chance to apply Minor Slow (20% speed reduction) for 3 turns
-          const slowRoll = Math.random() * 100;
-          const slowChance = 50;
-          
-          // Update stats for reporting
-          setUnits(prevUnits => {
-            return prevUnits.map(unit => {
-              if (unit.id === attacker.id) {
-                return { 
-                  ...unit, 
-                  slowAttempts: (unit.slowAttempts || 0) + 1,
-                  lastSlowRoll: slowRoll
-                };
-              }
-              return unit;
-            });
-          });
-          
-          if (slowRoll <= slowChance) {
-            statusEffectApplied = true;
-            
-            // Create status effect
-            newStatusEffect = {
-              name: "Minor Slow",
-              duration: 3,
-              effect: "ReduceSpd",
-              value: 20, // 20% speed reduction
-              source: attacker.id
-            };
-            
-            // Add to target's status effects
-            setUnits(prevUnits => {
-              return prevUnits.map(unit => {
-                if (unit.id === target.id) {
-                  // Add status effect and update success counter
-                  let existingEffects = unit.statusEffects || [];
-                  
-                  // Check if an existing effect of the same type exists
-                  const existingEffectIndex = existingEffects.findIndex(e => e.effect === "ReduceSpd");
-                  
-                  if (existingEffectIndex >= 0) {
-                    // Replace existing effect with the new one if it's stronger or has longer duration
-                    if (existingEffects[existingEffectIndex].value < newStatusEffect!.value || 
-                        existingEffects[existingEffectIndex].duration < newStatusEffect!.duration) {
-                      
-                      existingEffects = [
-                        ...existingEffects.slice(0, existingEffectIndex),
-                        newStatusEffect!,
-                        ...existingEffects.slice(existingEffectIndex + 1)
-                      ];
-                      
-                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-blue-400">Minor Slow</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (replaces weaker effect)!`;
-                    } else {
-                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-blue-400">Minor Slow</span> was resisted by <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (already has stronger effect)!`;
-                      statusEffectApplied = false;
-                    }
-                  } else {
-                    // Add new effect
-                    existingEffects = [...existingEffects, newStatusEffect!];
-                    statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-blue-400">Minor Slow</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (Speed -20% for 3 turns)!`;
-                  }
-                  
-                  return { 
-                    ...unit, 
-                    statusEffects: existingEffects,
-                    slowSuccess: statusEffectApplied ? (unit.slowSuccess || 0) + 1 : (unit.slowSuccess || 0)
-                  };
-                } else if (unit.id === attacker.id) {
-                  return {
-                    ...unit,
-                    slowSuccess: statusEffectApplied ? (unit.slowSuccess || 0) + 1 : (unit.slowSuccess || 0)
-                  };
-                }
-                return unit;
-              });
-            });
-          } else {
-            statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-blue-400">Minor Slow</span> failed to affect <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (${slowRoll.toFixed(1)}% > ${slowChance}%)!`;
-          }
-        } else if (skill.name === "Stone Slam") {
-          // 20% chance to apply Minor Weakness (10% attack reduction) for 2 turns
-          const weakenRoll = Math.random() * 100;
-          const weakenChance = 20;
-          
-          // Update stats for reporting
-          setUnits(prevUnits => {
-            return prevUnits.map(unit => {
-              if (unit.id === attacker.id) {
-                return { 
-                  ...unit, 
-                  weakenAttempts: (unit.weakenAttempts || 0) + 1,
-                  lastWeakenRoll: weakenRoll
-                };
-              }
-              return unit;
-            });
-          });
-          
-          if (weakenRoll <= weakenChance) {
-            statusEffectApplied = true;
-            
-            // Create status effect
-            newStatusEffect = {
-              name: "Minor Weakness",
-              duration: 2,
-              effect: "ReduceAtk",
-              value: 10, // 10% attack reduction
-              source: attacker.id
-            };
-            
-            // Add to target's status effects
-            setUnits(prevUnits => {
-              return prevUnits.map(unit => {
-                if (unit.id === target.id) {
-                  // Add status effect and update success counter
-                  let existingEffects = unit.statusEffects || [];
-                  
-                  // Check if an existing effect of the same type exists
-                  const existingEffectIndex = existingEffects.findIndex(e => e.effect === "ReduceAtk");
-                  
-                  if (existingEffectIndex >= 0) {
-                    // Replace existing effect with the new one if it's stronger or has longer duration
-                    if (existingEffects[existingEffectIndex].value < newStatusEffect!.value || 
-                        existingEffects[existingEffectIndex].duration < newStatusEffect!.duration) {
-                      
-                      existingEffects = [
-                        ...existingEffects.slice(0, existingEffectIndex),
-                        newStatusEffect!,
-                        ...existingEffects.slice(existingEffectIndex + 1)
-                      ];
-                      
-                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-orange-400">Minor Weakness</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (replaces weaker effect)!`;
-                    } else {
-                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-orange-400">Minor Weakness</span> was resisted by <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (already has stronger effect)!`;
-                      statusEffectApplied = false;
-                    }
-                  } else {
-                    // Add new effect
-                    existingEffects = [...existingEffects, newStatusEffect!];
-                    statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-orange-400">Minor Weakness</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (Attack -10% for 2 turns)!`;
-                  }
-                  
-                  return { 
-                    ...unit, 
-                    statusEffects: existingEffects,
-                    weakenSuccess: statusEffectApplied ? (unit.weakenSuccess || 0) + 1 : (unit.weakenSuccess || 0)
-                  };
-                } else if (unit.id === attacker.id) {
-                  return {
-                    ...unit,
-                    weakenSuccess: statusEffectApplied ? (unit.weakenSuccess || 0) + 1 : (unit.weakenSuccess || 0)
-                  };
-                }
-                return unit;
-              });
-            });
-          } else {
-            statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-orange-400">Minor Weakness</span> failed to affect <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (${weakenRoll.toFixed(1)}% > ${weakenChance}%)!`;
-          }
-        } else if (skill.name === "Ember") {
-          // 30% chance to apply Burning effect for 2 turns
-          const burnRoll = Math.random() * 100;
-          const burnChance = 30;
-          
-          // Update stats for reporting
-          setUnits(prevUnits => {
-            return prevUnits.map(unit => {
-              if (unit.id === attacker.id) {
-                return { 
-                  ...unit, 
-                  burnAttempts: (unit.burnAttempts || 0) + 1,
-                  lastBurnRoll: burnRoll
-                };
-              }
-              return unit;
-            });
-          });
-          
-          if (burnRoll <= burnChance) {
-            statusEffectApplied = true;
-            
-            // Burning damage is based on a percentage of target's max HP
-            const burnDamage = Math.max(1, Math.floor(target.maxHp * 0.05)); // 5% of max HP
-            
-            // Create status effect
-            newStatusEffect = {
-              name: "Burning",
-              duration: 2,
-              effect: "Burn",
-              value: burnDamage,
-              source: attacker.id
-            };
-            
-            // Add to target's status effects
-            setUnits(prevUnits => {
-              return prevUnits.map(unit => {
-                if (unit.id === target.id) {
-                  // Add status effect and update success counter
-                  let existingEffects = unit.statusEffects || [];
-                  
-                  // Check if an existing effect of the same type exists
-                  const existingEffectIndex = existingEffects.findIndex(e => e.effect === "Burn");
-                  
-                  if (existingEffectIndex >= 0) {
-                    // Replace existing effect with the new one if it's stronger or has longer duration
-                    if (existingEffects[existingEffectIndex].value < newStatusEffect!.value || 
-                        existingEffects[existingEffectIndex].duration < newStatusEffect!.duration) {
-                      
-                      existingEffects = [
-                        ...existingEffects.slice(0, existingEffectIndex),
-                        newStatusEffect!,
-                        ...existingEffects.slice(existingEffectIndex + 1)
-                      ];
-                      
-                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-red-400">Burning</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (replaces weaker burning)!`;
-                    } else {
-                      statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-red-400">Burning</span> was resisted by <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (already has stronger effect)!`;
-                      statusEffectApplied = false;
-                    }
-                  } else {
-                    // Add new effect
-                    existingEffects = [...existingEffects, newStatusEffect!];
-                    statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}</span> applied <span class="text-red-400">Burning</span> to <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (${burnDamage} damage per turn for 2 turns)!`;
-                  }
-                  
-                  return { 
-                    ...unit, 
-                    statusEffects: existingEffects,
-                    burnSuccess: statusEffectApplied ? (unit.burnSuccess || 0) + 1 : (unit.burnSuccess || 0)
-                  };
-                } else if (unit.id === attacker.id) {
-                  return {
-                    ...unit,
-                    burnSuccess: statusEffectApplied ? (unit.burnSuccess || 0) + 1 : (unit.burnSuccess || 0)
-                  };
-                }
-                return unit;
-              });
-            });
-          } else {
-            statusEffectMessage = `<span class="text-${isAlly ? 'blue' : 'red'}-400">${attacker.name}'s</span> <span class="text-red-400">Burning</span> failed to affect <span class="text-${isAlly ? 'red' : 'blue'}-400">${target.name}</span> (${burnRoll.toFixed(1)}% > ${burnChance}%)!`;
-          }
-        }
-        
-        // Log status effect application if any
-        if (statusEffectApplied) {
-          setActionLog(prev => [statusEffectMessage, ...prev]);
-        }
-        
-        // Check if battle has ended
-        setTimeout(() => {
-          checkBattleEnd();
-          
-          // Clear animation states
-          setActiveAttacker(null);
-          setActiveTarget(null);
-          setShowAttackAnimation(false);
-          setShowDamageAnimation(false);
-          setAnimationInProgress(false);
-        }, 300);
-        
-      }, 500);
-    }, 500);
-  };
-
+  
   useEffect(() => {
-    // Initialize units from battle log on first render
     if (battleLog.length > 0 && isOpen) {
-      const battleEntry = battleLog[0];
-      console.log("Battle entry data:", battleEntry);
+      // Reset logs and states when a new battle log is loaded
+      setActionLog([]);
+      setDetailedActionLog([]);
+      setUnits([]);
+      setIsComplete(false);
+      setCurrentStage(0);
+      resetAnimationStates();
       
-      if (battleEntry && battleEntry.allies && battleEntry.enemies) {
-        const allUnits = [...battleEntry.allies, ...battleEntry.enemies];
-        console.log("All units before processing:", allUnits);
+      // Get the initial data from the first stage of the battle log
+      const initialBattleData = battleLog.find(entry => entry.type === 'battle-start');
+      if (initialBattleData) {
+        // Set up initial units
+        const initialUnits = [
+          ...initialBattleData.allies.map((ally: any) => {
+            // Calculate HP based on vitality (8x multiplier)
+            const maxHp = ally.stats.vitality * 8;
+            
+            return {
+              id: ally.id,
+              name: ally.name,
+              hp: maxHp,
+              maxHp: maxHp,
+              attackMeter: 0,
+              totalDamageDealt: 0,
+              totalDamageReceived: 0,
+              totalHealingDone: 0,
+              totalHealingReceived: 0,
+              stats: { ...ally.stats },
+              auraBonus: ally.auraBonus,
+              skills: { ...ally.skills },
+              statusEffects: []
+            };
+          }),
+          ...initialBattleData.enemies.map((enemy: any) => {
+            // Calculate HP based on vitality (8x multiplier)
+            const maxHp = enemy.stats.vitality * 8;
+            
+            return {
+              id: enemy.id,
+              name: enemy.name,
+              hp: maxHp,
+              maxHp: maxHp,
+              attackMeter: 0,
+              totalDamageDealt: 0,
+              totalDamageReceived: 0,
+              totalHealingDone: 0,
+              totalHealingReceived: 0,
+              stats: { ...enemy.stats },
+              skills: { ...enemy.skills },
+              statusEffects: []
+            };
+          })
+        ];
         
-        // Make sure each unit has valid hp and maxHp values
-        const processedUnits = allUnits.map((unit: any) => {
-          // Ensure HP and maxHP are valid numbers by forcing numeric conversion and validation
-          const maxHp = Number.isFinite(Number(unit.maxHp)) ? Math.max(1, Number(unit.maxHp)) : 100;
-          const hp = Number.isFinite(Number(unit.hp)) ? Math.min(maxHp, Math.max(0, Number(unit.hp))) : maxHp;
+        setUnits(initialUnits);
+        
+        // Start replay after a short delay for initialization
+        if (!isPaused) {
+          setTimeout(() => {
+            simulateBattle(0);
+          }, 1000);
+        }
+      }
+    }
+  }, [battleLog, isOpen, isPaused]);
+  
+  // Reset animation states to default
+  const resetAnimationStates = () => {
+    setActiveAttacker(null);
+    setActiveTarget(null);
+    setShowAttackAnimation(false);
+    setShowDamageAnimation(false);
+    setAttackAnimationType('basic');
+    setCurrentSkillName('');
+    setAnimationInProgress(false);
+  };
+  
+  // Process turn
+  const processTurn = (turn: any) => {
+    turnCountRef.current = turn.turnNumber;
+    setBattleRound(turn.turnNumber);
+    
+    // Apply effects like burning and poison before the unit acts
+    if (turn.preActionEffects && turn.preActionEffects.length > 0) {
+      turn.preActionEffects.forEach((effect: any) => {
+        if (effect.type === 'dot-damage') {
+          updateUnitHealth(effect.targetId, -effect.value);
           
-          // Log the processed values for debugging
-          console.log(`Processed unit ${unit.name}: hp=${hp}, maxHp=${maxHp}, original values: hp=${unit.hp}, maxHp=${unit.maxHp}`);
+          const effectType = effect.effect === 'Burn' ? 'Burning' : 'Poison';
+          const logMessage = `Turn ${turn.turnNumber}: ${effect.targetName} takes ${effect.value} damage from ${effectType}`;
+          addToLog(logMessage);
           
+          // Add more detailed information to the detailed log
+          const detailedLogMessage = `Turn ${turn.turnNumber}: ${effect.targetName} suffers ${effect.value} damage from ${effectType} (${effect.duration} turns remaining)`;
+          addToDetailedLog(detailedLogMessage);
+        }
+      });
+    }
+    
+    // Process this turn's actions (attack, use skill, etc)
+    if (turn.action) {
+      const { action } = turn;
+      
+      // Update attack meter for the actor
+      updateUnitAttackMeter(action.actorId, 0); // Reset attack meter after acting
+      
+      setActiveAttacker(action.actorId);
+      
+      // Log the action based on type
+      if (action.type === 'attack') {
+        setAttackAnimationType('basic');
+        setCurrentSkillName(action.skillName || 'Basic Attack');
+        
+        // For attacks with multiple targets (like Wildfire or Dust Spikes)
+        if (Array.isArray(action.targetId)) {
+          // Trigger animation for multiple targets sequentially
+          triggerMultiTargetAttackAnimation(action.actorId, action.targetId, action.damage, action.skillName);
+          
+          // Log the multi-target attack
+          const targetNames = action.targetId.map((id: string) => {
+            const target = units.find(u => u.id === id);
+            return target ? target.name : 'Unknown';
+          }).join(', ');
+          
+          const logMessage = `Turn ${turn.turnNumber}: ${action.actorName} used ${action.skillName} on ${targetNames}`;
+          addToLog(logMessage);
+          
+          // Log damage for each target in the detailed log
+          action.targetId.forEach((targetId: string, index: number) => {
+            const target = units.find(u => u.id === targetId);
+            if (target) {
+              const damageValue = Array.isArray(action.damage) ? action.damage[index] : action.damage;
+              const detailedLogMessage = `Turn ${turn.turnNumber}: ${action.actorName} deals ${damageValue} damage to ${target.name} with ${action.skillName}`;
+              addToDetailedLog(detailedLogMessage);
+              
+              // Update stats for damage tracking
+              updateUnitDamageStats(action.actorId, targetId, damageValue);
+            }
+          });
+        } else {
+          // Single target attack
+          setActiveTarget(action.targetId);
+          setShowAttackAnimation(true);
+          
+          setTimeout(() => {
+            setShowAttackAnimation(false);
+            setShowDamageAnimation(true);
+            
+            // Update health after a delay for visual effect
+            setTimeout(() => {
+              updateUnitHealth(action.targetId, -action.damage);
+              setShowDamageAnimation(false);
+              
+              setTimeout(() => {
+                setActiveAttacker(null);
+                setActiveTarget(null);
+              }, 300);
+            }, 300);
+          }, 500 / playbackSpeed);
+          
+          const logMessage = `Turn ${turn.turnNumber}: ${action.actorName} used ${action.skillName || 'Basic Attack'} on ${action.targetName} for ${action.damage} damage`;
+          addToLog(logMessage);
+          
+          // Add more detailed information to the detailed log
+          let detailedLogMessage = `Turn ${turn.turnNumber}: ${action.actorName} deals ${action.damage} damage to ${action.targetName}`;
+          if (action.critical) {
+            detailedLogMessage += ' (Critical Hit!)';
+          }
+          addToDetailedLog(detailedLogMessage);
+          
+          // Update stats for damage tracking
+          updateUnitDamageStats(action.actorId, action.targetId, action.damage);
+        }
+      } else if (action.type === 'heal') {
+        // Healing action processing
+        setActiveTarget(action.targetId);
+        setAttackAnimationType('advanced');
+        setCurrentSkillName(action.skillName || 'Heal');
+        
+        setTimeout(() => {
+          updateUnitHealth(action.targetId, action.value); // Healing is positive
+          
+          setTimeout(() => {
+            setActiveAttacker(null);
+            setActiveTarget(null);
+          }, 300);
+        }, 500 / playbackSpeed);
+        
+        const logMessage = `Turn ${turn.turnNumber}: ${action.actorName} healed ${action.targetName} for ${action.value} HP`;
+        addToLog(logMessage);
+        
+        // Add more detailed information to the detailed log
+        const detailedLogMessage = `Turn ${turn.turnNumber}: ${action.actorName} restores ${action.value} HP to ${action.targetName} with ${action.skillName || 'Healing'}`;
+        addToDetailedLog(detailedLogMessage);
+        
+        // Update stats for healing tracking
+        updateUnitHealingStats(action.actorId, action.targetId, action.value);
+      }
+      
+      // Process status effect applications
+      if (action.statusEffects && action.statusEffects.length > 0) {
+        action.statusEffects.forEach((effectData: any) => {
+          if (effectData.applied) {
+            // Add status effect to the target unit
+            applyStatusEffect(effectData.targetId, {
+              name: effectData.name,
+              duration: effectData.duration,
+              effect: effectData.type,
+              value: effectData.value,
+              source: action.actorId
+            });
+            
+            // Log the status effect application
+            const statusTarget = units.find(unit => unit.id === effectData.targetId);
+            const statusLogMessage = `Turn ${turn.turnNumber}: ${action.actorName} applied ${effectData.name} to ${statusTarget?.name || 'Unknown'}`;
+            addToDetailedLog(statusLogMessage);
+            
+            // For special effects like burn/poison/slow/weaken, add to tracker
+            if (effectData.type === 'Burn') {
+              updateStatusEffectStats(action.actorId, 'burn', true, effectData.roll);
+            } else if (effectData.type === 'Poison') {
+              updateStatusEffectStats(action.actorId, 'poison', true, effectData.roll);
+            } else if (effectData.type === 'ReduceSpd') {
+              updateStatusEffectStats(action.actorId, 'slow', true, effectData.roll);
+            } else if (effectData.type === 'ReduceAtk') {
+              updateStatusEffectStats(action.actorId, 'weaken', true, effectData.roll);
+            }
+          } else {
+            // Status effect failed to apply (roll failed)
+            const statusTarget = units.find(unit => unit.id === effectData.targetId);
+            const statusLogMessage = `Turn ${turn.turnNumber}: ${action.actorName} failed to apply ${effectData.name} to ${statusTarget?.name || 'Unknown'} (roll: ${effectData.roll})`;
+            addToDetailedLog(statusLogMessage);
+            
+            // For special effects like burn/poison/slow/weaken, add to tracker
+            if (effectData.type === 'Burn') {
+              updateStatusEffectStats(action.actorId, 'burn', false, effectData.roll);
+            } else if (effectData.type === 'Poison') {
+              updateStatusEffectStats(action.actorId, 'poison', false, effectData.roll);
+            } else if (effectData.type === 'ReduceSpd') {
+              updateStatusEffectStats(action.actorId, 'slow', false, effectData.roll);
+            } else if (effectData.type === 'ReduceAtk') {
+              updateStatusEffectStats(action.actorId, 'weaken', false, effectData.roll);
+            }
+          }
+        });
+      }
+    }
+    
+    // Process meter updates for all units
+    if (turn.meterUpdates) {
+      turn.meterUpdates.forEach((update: any) => {
+        updateUnitAttackMeter(update.unitId, update.value);
+      });
+    }
+    
+    // Process status effect updates
+    if (turn.statusEffectUpdates) {
+      turn.statusEffectUpdates.forEach((update: any) => {
+        updateStatusEffectDuration(update.unitId, update.effectIndex, update.newDuration);
+      });
+    }
+  };
+  
+  // Update attack meter for a unit
+  const updateUnitAttackMeter = (unitId: string, newValue: number) => {
+    setUnits(prevUnits => prevUnits.map(unit => {
+      if (unit.id === unitId) {
+        return {
+          ...unit,
+          attackMeter: newValue
+        };
+      }
+      return unit;
+    }));
+  };
+  
+  // Update health for a unit
+  const updateUnitHealth = (unitId: string, changeAmount: number) => {
+    setUnits(prevUnits => prevUnits.map(unit => {
+      if (unit.id === unitId) {
+        // Calculate new HP ensuring it's not below 0
+        const newHp = Math.max(0, unit.hp + changeAmount);
+        return {
+          ...unit,
+          hp: Math.min(newHp, unit.maxHp) // Don't exceed max HP
+        };
+      }
+      return unit;
+    }));
+  };
+  
+  // Update damage statistics for a unit
+  const updateUnitDamageStats = (attackerId: string, targetId: string, damageAmount: number) => {
+    setUnits(prevUnits => prevUnits.map(unit => {
+      if (unit.id === attackerId) {
+        return {
+          ...unit,
+          totalDamageDealt: (unit.totalDamageDealt || 0) + damageAmount
+        };
+      }
+      if (unit.id === targetId) {
+        return {
+          ...unit,
+          totalDamageReceived: (unit.totalDamageReceived || 0) + damageAmount
+        };
+      }
+      return unit;
+    }));
+  };
+  
+  // Update healing statistics for a unit
+  const updateUnitHealingStats = (healerId: string, targetId: string, healAmount: number) => {
+    setUnits(prevUnits => prevUnits.map(unit => {
+      if (unit.id === healerId) {
+        return {
+          ...unit,
+          totalHealingDone: (unit.totalHealingDone || 0) + healAmount
+        };
+      }
+      if (unit.id === targetId) {
+        return {
+          ...unit,
+          totalHealingReceived: (unit.totalHealingReceived || 0) + healAmount
+        };
+      }
+      return unit;
+    }));
+  };
+  
+  // Update status effect statistics for applying effects
+  const updateStatusEffectStats = (unitId: string, effectType: 'burn' | 'poison' | 'slow' | 'weaken', success: boolean, roll?: number) => {
+    setUnits(prevUnits => prevUnits.map(unit => {
+      if (unit.id === unitId) {
+        let updatedUnit = { ...unit };
+        
+        if (effectType === 'burn') {
+          updatedUnit.burnAttempts = (unit.burnAttempts || 0) + 1;
+          if (success) updatedUnit.burnSuccess = (unit.burnSuccess || 0) + 1;
+          if (roll !== undefined) updatedUnit.lastBurnRoll = roll;
+        } else if (effectType === 'poison') {
+          updatedUnit.poisonAttempts = (unit.poisonAttempts || 0) + 1;
+          if (success) updatedUnit.poisonSuccess = (unit.poisonSuccess || 0) + 1;
+          if (roll !== undefined) updatedUnit.lastPoisonRoll = roll;
+        } else if (effectType === 'slow') {
+          updatedUnit.slowAttempts = (unit.slowAttempts || 0) + 1;
+          if (success) updatedUnit.slowSuccess = (unit.slowSuccess || 0) + 1;
+          if (roll !== undefined) updatedUnit.lastSlowRoll = roll;
+        } else if (effectType === 'weaken') {
+          updatedUnit.weakenAttempts = (unit.weakenAttempts || 0) + 1;
+          if (success) updatedUnit.weakenSuccess = (unit.weakenSuccess || 0) + 1;
+          if (roll !== undefined) updatedUnit.lastWeakenRoll = roll;
+        }
+        
+        return updatedUnit;
+      }
+      return unit;
+    }));
+  };
+  
+  // Apply a status effect to a unit
+  const applyStatusEffect = (unitId: string, effect: StatusEffect) => {
+    setUnits(prevUnits => prevUnits.map(unit => {
+      if (unit.id === unitId) {
+        // Initialize or add to existing status effects array
+        const updatedStatusEffects = unit.statusEffects ? [...unit.statusEffects] : [];
+        updatedStatusEffects.push(effect);
+        return {
+          ...unit,
+          statusEffects: updatedStatusEffects
+        };
+      }
+      return unit;
+    }));
+  };
+  
+  // Update the duration of a status effect
+  const updateStatusEffectDuration = (unitId: string, effectIndex: number, newDuration: number) => {
+    setUnits(prevUnits => prevUnits.map(unit => {
+      if (unit.id === unitId && unit.statusEffects) {
+        const updatedStatusEffects = [...unit.statusEffects];
+        
+        if (newDuration <= 0) {
+          // Remove the effect if duration is zero or less
+          updatedStatusEffects.splice(effectIndex, 1);
+        } else if (updatedStatusEffects[effectIndex]) {
+          // Update the duration of the effect
+          updatedStatusEffects[effectIndex] = {
+            ...updatedStatusEffects[effectIndex],
+            duration: newDuration
+          };
+        }
+        
+        return {
+          ...unit,
+          statusEffects: updatedStatusEffects
+        };
+      }
+      return unit;
+    }));
+  };
+  
+  // Add a message to the main log
+  const addToLog = (message: string) => {
+    setActionLog(prevLog => [...prevLog, message]);
+  };
+  
+  // Add a message to the detailed log
+  const addToDetailedLog = (message: string) => {
+    setDetailedActionLog(prevLog => [...prevLog, message]);
+  };
+  
+  // Handle animating multi-target attacks (like Wildfire or Dust Spikes)
+  const triggerMultiTargetAttackAnimation = (attackerId: string, targetIds: string[], damages: number[] | number, skillName: string) => {
+    setActiveAttacker(attackerId);
+    setAttackAnimationType('advanced');
+    setCurrentSkillName(skillName);
+    
+    // Process each target sequentially with delays
+    let delay = 0;
+    const targetProcessingTime = 800 / playbackSpeed; // Time for each target
+    
+    targetIds.forEach((targetId, index) => {
+      setTimeout(() => {
+        setActiveTarget(targetId);
+        setShowAttackAnimation(true);
+        
+        setTimeout(() => {
+          setShowAttackAnimation(false);
+          setShowDamageAnimation(true);
+          
+          // Calculate damage - could be an array of damages or a single value
+          const damageValue = Array.isArray(damages) ? damages[index] : damages;
+          
+          // Update health after a delay for visual effect
+          setTimeout(() => {
+            updateUnitHealth(targetId, -damageValue);
+            setShowDamageAnimation(false);
+            
+            // If last target, reset active states
+            if (index === targetIds.length - 1) {
+              setTimeout(() => {
+                setActiveAttacker(null);
+                setActiveTarget(null);
+              }, 300);
+            }
+          }, 200);
+        }, 300);
+      }, delay);
+      
+      // Increment delay for next target
+      delay += targetProcessingTime;
+    });
+  };
+  
+  // MAIN BATTLE SIMULATION LOGIC
+  const simulateBattle = (startIndex: number) => {
+    if (isPaused || !isOpen) return;
+    
+    // Find all battle turn events
+    const battleEvents = battleLog.filter(event => 
+      event.type === 'battle-turn' || 
+      event.type === 'stage-clear' || 
+      event.type === 'dungeon-complete' ||
+      event.type === 'dungeon-failed'
+    );
+    
+    // Process battle events one by one with appropriate delays
+    const processEvents = (index: number) => {
+      if (index >= battleEvents.length || isPaused || !isOpen) {
+        return;
+      }
+      
+      const event = battleEvents[index];
+      
+      if (event.type === 'battle-turn') {
+        setAnimationInProgress(true);
+        
+        setTimeout(() => {
+          processTurn(event);
+          
+          // Calculate delay based on action complexity
+          let actionDelay = 1500; // Base delay
+          
+          // If it's a multi-target attack, add more delay
+          if (event.action && event.action.type === 'attack' && Array.isArray(event.action.targetId)) {
+            actionDelay += event.action.targetId.length * 600;
+          }
+          
+          // Adjust for playback speed
+          actionDelay = actionDelay / playbackSpeed;
+          
+          setTimeout(() => {
+            setAnimationInProgress(false);
+            processEvents(index + 1);
+          }, actionDelay);
+        }, 100);
+      } else if (event.type === 'stage-clear') {
+        // Handle stage clear event
+        setCurrentStage(prevStage => prevStage + 1);
+        
+        // Log stage completion
+        const stageMessage = `Stage ${event.stageNumber} complete! Moving to stage ${event.stageNumber + 1}...`;
+        addToLog(stageMessage);
+        addToDetailedLog(stageMessage);
+        
+        // Update units with carried over health from previous stage
+        if (event.remainingUnits) {
+          setUnits(prevUnits => {
+            // Create a map of the previous units for easy lookup
+            const unitMap = new Map(prevUnits.map(unit => [unit.id, unit]));
+            
+            // Update each unit that continues to the next stage
+            return event.remainingUnits.map((unit: any) => {
+              const prevUnit = unitMap.get(unit.id);
+              
+              if (prevUnit) {
+                return {
+                  ...prevUnit,
+                  hp: unit.hp, // Update the HP
+                  attackMeter: 0, // Reset attack meter for new stage
+                  // Keep existing status effects, damage counters, etc.
+                };
+              }
+              
+              // If it's a new unit (like new enemies in the stage)
+              return {
+                id: unit.id,
+                name: unit.name,
+                hp: unit.stats.vitality * 8, // Calculate HP based on VIT
+                maxHp: unit.stats.vitality * 8,
+                attackMeter: 0,
+                totalDamageDealt: 0,
+                totalDamageReceived: 0,
+                totalHealingDone: 0,
+                totalHealingReceived: 0,
+                stats: { ...unit.stats },
+                auraBonus: unit.auraBonus,
+                skills: { ...unit.skills },
+                statusEffects: []
+              };
+            });
+          });
+        }
+        
+        // Short pause before continuing
+        setTimeout(() => {
+          processEvents(index + 1);
+        }, 2000 / playbackSpeed);
+      } else if (event.type === 'dungeon-complete' || event.type === 'dungeon-failed') {
+        // Handle dungeon completion or failure
+        setIsComplete(true);
+        
+        // Log the final outcome
+        const outcomeMessage = event.type === 'dungeon-complete' 
+          ? `Dungeon run successful! Reached stage ${event.stageReached} of ${event.totalStages}.`
+          : `Dungeon run failed at stage ${event.stageReached} of ${event.totalStages}.`;
+        
+        addToLog(outcomeMessage);
+        addToDetailedLog(outcomeMessage);
+        
+        // If there's loot, display it
+        if (event.loot && event.loot.length > 0) {
+          const lootMessage = `Obtained loot: ${event.loot.map((item: any) => `${item.quantity} ${item.name}`).join(', ')}`;
+          addToLog(lootMessage);
+          addToDetailedLog(lootMessage);
+        }
+        
+        // Additional rewards (if any)
+        if (event.experienceGained) {
+          const expMessage = `Gained ${event.experienceGained} experience.`;
+          addToLog(expMessage);
+          addToDetailedLog(expMessage);
+        }
+        
+        if (event.goldEarned) {
+          const goldMessage = `Earned ${event.goldEarned} gold.`;
+          addToLog(goldMessage);
+          addToDetailedLog(goldMessage);
+        }
+      }
+    };
+    
+    // Start processing events from the given index
+    processEvents(startIndex);
+  };
+  
+  // Function to restart the battle simulation
+  const restartBattle = () => {
+    // Reset all state
+    setActionLog([]);
+    setDetailedActionLog([]);
+    resetAnimationStates();
+    setCurrentStage(0);
+    setIsComplete(false);
+    
+    // Get the initial battle data again
+    const initialBattleData = battleLog.find(entry => entry.type === 'battle-start');
+    if (initialBattleData) {
+      // Reset units to their initial state
+      const initialUnits = [
+        ...initialBattleData.allies.map((ally: any) => {
+          const maxHp = ally.stats.vitality * 8;
           return {
-            ...unit,
-            hp: hp,
+            id: ally.id,
+            name: ally.name,
+            hp: maxHp,
             maxHp: maxHp,
-            // Initialize tracking counters for display purposes
+            attackMeter: 0,
             totalDamageDealt: 0,
             totalDamageReceived: 0,
             totalHealingDone: 0,
             totalHealingReceived: 0,
-            // Add attack meter for each unit (starts between 70-90%)
-            attackMeter: Math.floor(Math.random() * 20) + 70
+            stats: { ...ally.stats },
+            auraBonus: ally.auraBonus,
+            skills: { ...ally.skills },
+            statusEffects: []
           };
-        });
-        
-        console.log("Processed units:", processedUnits);
-        setUnits(processedUnits);
-      }
-    }
-  }, [battleLog, isOpen]);
-
-  useEffect(() => {
-    // Battle simulation loop - only runs when not paused and there are units
-    if (!isPaused && units.length > 0 && !isComplete) {
-      const battleTimer = setInterval(() => {
-        // Increment attack meters for all units
-        setUnits(prevUnits => {
-          // Find the unit with the highest attack meter
-          let highestMeterUnit: BattleUnit | null = null;
-          let highestMeter = 0;
-          
-          const updatedUnits = prevUnits.map(unit => {
-            // Skip if unit is defeated
-            if (unit.hp <= 0) return unit;
-            
-            // Calculate effective speed after status effects
-            const effectiveSpeed = calculateEffectiveSpeed(unit);
-            
-            // Calculate meter increment based on speed
-            // Formula: faster units fill their attack meter faster
-            const increment = Math.max(1, Math.floor(effectiveSpeed / 5));
-            
-            // Increase attack meter
-            const newMeter = Math.min(100, unit.attackMeter + increment * playbackSpeed);
-            
-            // Update highest meter tracker
-            if (newMeter > highestMeter) {
-              highestMeter = newMeter;
-              highestMeterUnit = { ...unit, attackMeter: newMeter };
-            }
-            
-            return { ...unit, attackMeter: newMeter };
-          });
-          
-          // If any unit reached 100% attack meter
-          if (highestMeter >= 100 && highestMeterUnit) {
-            // Update status effect durations first
-            highestMeterUnit = { 
-              ...highestMeterUnit,
-              statusEffects: highestMeterUnit.statusEffects?.map(effect => ({
-                ...effect,
-                // Decrease duration by 1 when the unit takes a turn
-                duration: effect.duration - 1
-              })).filter(effect => effect.duration > 0)
-            };
-            
-            // Apply DoT effects (Burn, Poison, etc.) before the unit acts
-            if (highestMeterUnit.statusEffects && highestMeterUnit.statusEffects.length > 0) {
-              // Process Burn damage
-              const burnEffect = highestMeterUnit.statusEffects.find(effect => effect.effect === "Burn");
-              
-              if (burnEffect) {
-                const burnDamage = burnEffect.value;
-                
-                // Apply burning damage
-                highestMeterUnit = {
-                  ...highestMeterUnit,
-                  hp: Math.max(0, highestMeterUnit.hp - burnDamage),
-                  totalDamageReceived: (highestMeterUnit.totalDamageReceived || 0) + burnDamage
-                };
-                
-                // Log damage
-                const sourceUnit = prevUnits.find(u => u.id === burnEffect.source);
-                
-                // Update source unit's damage dealt if found
-                if (sourceUnit) {
-                  const sourceIndex = updatedUnits.findIndex(u => u.id === sourceUnit.id);
-                  if (sourceIndex >= 0) {
-                    updatedUnits[sourceIndex] = {
-                      ...updatedUnits[sourceIndex],
-                      totalDamageDealt: (updatedUnits[sourceIndex].totalDamageDealt || 0) + burnDamage
-                    };
-                  }
-                }
-                
-                // Log to action log
-                const attackerName = sourceUnit ? sourceUnit.name : "Unknown";
-                const isSourceAlly = battleLog[0]?.allies?.some((a: any) => a.id === burnEffect.source);
-                
-                setActionLog(prev => [
-                  `<span class="text-${isSourceAlly ? 'blue' : 'red'}-400">${attackerName}'s</span> <span class="text-red-400">Burning</span> dealt <span class="text-yellow-400">${burnDamage} damage</span> to <span class="text-${isSourceAlly ? 'red' : 'blue'}-400">${highestMeterUnit!.name}</span>!`,
-                  ...prev
-                ]);
-              }
-            }
-            
-            // Find a target - for simplicity, target a random unit from the opposite side
-            const battleEntry = battleLog.find(log => log.allies && Array.isArray(log.allies));
-            const isAlly = battleEntry?.allies?.some((a: any) => a.id === highestMeterUnit!.id) || false;
-            
-            // Get all valid targets (enemy units that are still alive)
-            const validTargets = prevUnits
-              .filter(u => u.hp > 0)
-              .filter(u => isAlly ? 
-                !battleEntry?.allies?.some((a: any) => a.id === u.id) : 
-                battleEntry?.allies?.some((a: any) => a.id === u.id)
-              );
-            
-            if (validTargets.length > 0) {
-              // Select random target
-              const targetIndex = Math.floor(Math.random() * validTargets.length);
-              const target = validTargets[targetIndex];
-              
-              // Update the unit in our local updatedUnits array to include status effect duration changes
-              const actingUnitIndex = updatedUnits.findIndex(u => u.id === highestMeterUnit!.id);
-              if (actingUnitIndex >= 0) {
-                updatedUnits[actingUnitIndex] = highestMeterUnit!;
-              }
-              
-              // Queue the action to occur after the state update
-              setTimeout(() => performAction(highestMeterUnit!, target), 50);
-            }
-          }
-          
-          return updatedUnits;
-        });
-      }, 100); // Update every 100ms
+        }),
+        ...initialBattleData.enemies.map((enemy: any) => {
+          const maxHp = enemy.stats.vitality * 8;
+          return {
+            id: enemy.id,
+            name: enemy.name,
+            hp: maxHp,
+            maxHp: maxHp,
+            attackMeter: 0,
+            totalDamageDealt: 0,
+            totalDamageReceived: 0,
+            totalHealingDone: 0,
+            totalHealingReceived: 0,
+            stats: { ...enemy.stats },
+            skills: { ...enemy.skills },
+            statusEffects: []
+          };
+        })
+      ];
       
-      return () => clearInterval(battleTimer);
+      setUnits(initialUnits);
+      
+      // Restart the simulation after a delay
+      setTimeout(() => {
+        simulateBattle(0);
+      }, 1000);
     }
-  }, [isPaused, units, isComplete, playbackSpeed, battleLog]);
-
-  useEffect(() => {
-    // Reset state when dialog is opened
-    if (isOpen) {
-      setIsPaused(false);
-      setIsComplete(false);
-      setActionLog([]);
-      setDetailedActionLog([]);
-      turnCountRef.current = 1;
-      setBattleRound(1);
+  };
+  
+  // Handle closing the dialog and cleaning up
+  const handleClose = () => {
+    setIsPaused(true);
+    resetAnimationStates();
+    onClose();
+  };
+  
+  // Function to handle completing the dungeon and claiming rewards
+  const handleCompleteDungeon = () => {
+    if (runId && onCompleteDungeon) {
+      onCompleteDungeon(runId);
     }
-  }, [isOpen]);
-
+    handleClose();
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-5xl bg-[#241045] text-[#C8B8DB] border-[#432874] overflow-y-auto max-h-[90vh]">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col bg-[#251942] text-[#E5DBFF] border-[#6A3FB5]">
         <DialogHeader>
-          <DialogTitle className="text-xl">
+          <DialogTitle className="text-xl font-semibold flex items-center justify-between">
+            <span>
+              Battle Log {currentStage > 0 && `- Stage ${currentStage + 1}`}
+            </span>
             <div className="flex items-center gap-2">
-              <span className="text-[#FF9D00]">Battle Log</span>
-              <span className="text-sm font-normal opacity-60 mt-1">
-                {isComplete ? "Battle Completed" : "Battle in Progress..."}
-              </span>
+              <span className="text-sm font-normal">Speed:</span>
+              <button 
+                onClick={() => handleSpeedChange(1)}
+                className={`px-2 py-0.5 rounded text-xs ${playbackSpeed === 1 ? 'bg-[#6A3FB5] text-white' : 'bg-[#35235B] hover:bg-[#4D318A]'}`}
+              >
+                1x
+              </button>
+              <button 
+                onClick={() => handleSpeedChange(2)}
+                className={`px-2 py-0.5 rounded text-xs ${playbackSpeed === 2 ? 'bg-[#6A3FB5] text-white' : 'bg-[#35235B] hover:bg-[#4D318A]'}`}
+              >
+                2x
+              </button>
+              <button 
+                onClick={() => handleSpeedChange(4)}
+                className={`px-2 py-0.5 rounded text-xs ${playbackSpeed === 4 ? 'bg-[#6A3FB5] text-white' : 'bg-[#35235B] hover:bg-[#4D318A]'}`}
+              >
+                4x
+              </button>
             </div>
           </DialogTitle>
         </DialogHeader>
-
-        <Tabs defaultValue="live" className="w-full">
-          <TabsList>
-            <TabsTrigger value="live">Live Battle</TabsTrigger>
-            <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="log">Action Log</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="live" className="space-y-4">
-            <div className="flex justify-between items-center mb-3">
-              <div className="space-x-2">
-                <Button
-                  variant="outline"
+        
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="mb-4 ml-2">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">
+                {!isComplete ? (
+                  <span>Battle in Progress - Round {battleRound}</span>
+                ) : (
+                  <span>Battle Complete - Reached Stage {currentStage + 1}</span>
+                )}
+              </h3>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
                   onClick={() => setIsPaused(!isPaused)}
-                  className="w-24"
+                  className="h-8 text-sm"
                 >
                   {isPaused ? 'Resume' : 'Pause'}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleSpeedChange(playbackSpeed === 1 ? 2 : playbackSpeed === 2 ? 4 : 1)}
-                  className="w-24"
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={restartBattle}
+                  className="h-8 text-sm"
                 >
-                  {playbackSpeed}x Speed
+                  Restart
                 </Button>
-              </div>
-              <div className="text-sm">
-                Turn: {battleRound}
+                {isComplete && runId && onCompleteDungeon && (
+                  <Button 
+                    size="sm" 
+                    onClick={handleCompleteDungeon}
+                    className="h-8 text-sm bg-[#6A3FB5] hover:bg-[#8352D3]"
+                  >
+                    Complete Dungeon
+                  </Button>
+                )}
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 px-4 overflow-auto flex-1">
+            <div className="flex flex-col">
+              <h4 className="text-md font-semibold mb-2">Your Party</h4>
               <div className="space-y-2">
-                <h3 className="font-semibold">Allies</h3>
-                {units.filter(u => battleLog[0]?.allies?.some((a: any) => a.id === u.id)).map(unit => (
+                {units.filter(unit => !unit.id.startsWith('enemy')).map(unit => (
                   <motion.div 
                     key={unit.id} 
-                    className={`bg-[#432874]/20 p-2 rounded ${activeAttacker === unit.id ? 'ring-2 ring-yellow-400' : ''} ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
+                    className={`bg-[#432874]/20 p-2 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
                     animate={{
                       scale: (activeAttacker === unit.id && showAttackAnimation) ? [1, 1.05, 1] : 1,
                       x: (activeAttacker === unit.id && showAttackAnimation) ? [0, -5, 0] : 0
                     }}
-                    transition={{ duration: 0.5 }}
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#7855FF]/30 flex items-center justify-center overflow-hidden border border-[#7855FF]/50">
-                        <span className="text-lg">{unit.name.charAt(0)}</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <span>{unit.name}</span>
-                          <motion.span 
-                            animate={{ 
-                              scale: (activeTarget === unit.id && showDamageAnimation) ? [1, 1.2, 1] : 1,
-                              color: (activeTarget === unit.id && showDamageAnimation) ? ['#C8B8DB', '#ff0000', '#C8B8DB'] : '#C8B8DB' 
-                            }}
-                            transition={{ duration: 0.5 }}
-                          >
-                            {renderHP(unit.hp, unit.maxHp)}
-                          </motion.span>
-                        </div>
-                        <div className="w-full bg-[#432874]/30 h-2 rounded">
-                          <motion.div
-                            className="bg-[#00B9AE] h-full rounded"
-                            style={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
-                            animate={{ 
-                              backgroundColor: (activeTarget === unit.id && showDamageAnimation) ? ['#00B9AE', '#ff0000', '#00B9AE'] : '#00B9AE'
-                            }}
-                            transition={{ duration: 0.5 }}
-                          />
-                        </div>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="font-semibold">{unit.name}</div>
+                      <div 
+                        className={`text-sm ${unit.hp / unit.maxHp < 0.3 ? 'text-red-400' : ''}`}
+                      >
+                        {renderHP(unit.hp, unit.maxHp)}
                       </div>
                     </div>
-                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1">
-                      <motion.div
-                        className="bg-[#FF9D00] h-full rounded"
-                        style={{ width: `${unit.attackMeter}%` }}
+                    
+                    <div className="w-full bg-[#432874]/30 h-2 rounded">
+                      <motion.div 
+                        className="h-full bg-gradient-to-r from-red-500 to-red-700 rounded"
+                        style={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
+                        initial={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
+                        animate={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
+                        transition={{ duration: 0.3 }}
                       />
                     </div>
-                    <div className="flex">
-                      <div className="mr-3 flex-shrink-0">
+                    
+                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1">
+                      <div 
+                        className="h-full bg-yellow-500 rounded"
+                        style={{ width: `${Math.min(100, unit.attackMeter)}%` }}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="flex flex-col">
                         <div className="w-16 h-16 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB]/40 text-xs">
-                          Avatar
+                          {/* Character portrait or icon could go here */}
+                          {unit.name.substring(0, 1)}
                         </div>
                       </div>
-
-                      <div className="flex-grow">
-                        {renderUnitStats(unit)}
-                      </div>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
-                        <div className="text-xs font-semibold text-[#FF9D00] mb-1">Combat Skills</div>
-                        <div className="flex flex-wrap gap-1">
-                          {unit.skills.basic && renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
-                          {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
-                          {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
-                        </div>
-                      </div>
-
-                      <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
-                        <div className="text-xs font-semibold text-yellow-300 mb-1">Status Effects</div>
-                        {unit.statusEffects && unit.statusEffects.length > 0 ? (
-                          <div className="flex flex-wrap gap-0.5">
-                            {unit.statusEffects.map((effect, index) => 
-                              renderStatusEffect(effect, index, true)
-                            )}
+                      
+                      <div className="flex-1 ml-2">
+                        <div className="flex flex-col gap-2">
+                          <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                            <div className="text-xs text-[#C8B8DB] mb-1">Stats:</div>
+                            {renderUnitStats(unit)}
                           </div>
-                        ) : (
-                          <div className="text-xs italic text-[#C8B8DB]/40">No active effects</div>
-                        )}
+                          
+                          <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                            <div className="text-xs text-[#C8B8DB] mb-1">Skills:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
+                              {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
+                              {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                    
+                    {/* Status effects display */}
+                    {unit.statusEffects && unit.statusEffects.length > 0 && (
+                      <div className="mt-2">
+                        <div className="text-xs text-[#C8B8DB]">Status Effects:</div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, true))}
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
-
+            </div>
+            
+            <div className="flex flex-col">
+              <h4 className="text-md font-semibold mb-2">Enemies</h4>
               <div className="space-y-2">
-                <h3 className="font-semibold">Enemies</h3>
-                {units.filter(u => battleLog[0]?.enemies?.some((e: any) => e.id === u.id)).map(unit => (
+                {units.filter(unit => unit.id.startsWith('enemy')).map(unit => (
                   <motion.div 
                     key={unit.id} 
-                    className={`bg-[#432874]/20 p-2 rounded ${activeAttacker === unit.id ? 'ring-2 ring-yellow-400' : ''} ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
+                    className={`bg-[#432874]/20 p-2 rounded ${activeTarget === unit.id ? 'ring-2 ring-red-500' : ''}`}
                     animate={{
                       scale: (activeAttacker === unit.id && showAttackAnimation) ? [1, 1.05, 1] : 1,
                       x: (activeAttacker === unit.id && showAttackAnimation) ? [0, 5, 0] : 0
                     }}
-                    transition={{ duration: 0.5 }}
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#DC143C]/30 flex items-center justify-center overflow-hidden border border-[#DC143C]/50">
-                        <span className="text-lg">{unit.name.charAt(0)}</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <span>{unit.name}</span>
-                          <motion.span 
-                            animate={{ 
-                              scale: (activeTarget === unit.id && showDamageAnimation) ? [1, 1.2, 1] : 1,
-                              color: (activeTarget === unit.id && showDamageAnimation) ? ['#C8B8DB', '#ff0000', '#C8B8DB'] : '#C8B8DB' 
-                            }}
-                            transition={{ duration: 0.5 }}
-                          >
-                            {renderHP(unit.hp, unit.maxHp)}
-                          </motion.span>
-                        </div>
-                        <div className="w-full bg-[#432874]/30 h-2 rounded">
-                          <motion.div
-                            className="bg-[#DC143C] h-full rounded"
-                            style={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
-                            animate={{ 
-                              backgroundColor: (activeTarget === unit.id && showDamageAnimation) ? ['#DC143C', '#ff0000', '#DC143C'] : '#DC143C'
-                            }}
-                            transition={{ duration: 0.5 }}
-                          />
-                        </div>
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="font-semibold">{unit.name}</div>
+                      <div 
+                        className={`text-sm ${unit.hp / unit.maxHp < 0.3 ? 'text-red-400' : ''}`}
+                      >
+                        {renderHP(unit.hp, unit.maxHp)}
                       </div>
                     </div>
-                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1">
-                      <motion.div
-                        className="bg-[#FF9D00] h-full rounded"
-                        style={{ width: `${unit.attackMeter}%` }}
+                    
+                    <div className="w-full bg-[#432874]/30 h-2 rounded">
+                      <motion.div 
+                        className="h-full bg-gradient-to-r from-red-500 to-red-700 rounded"
+                        style={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
+                        initial={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
+                        animate={{ width: `${calculateHealthPercent(unit.hp, unit.maxHp)}%` }}
+                        transition={{ duration: 0.3 }}
                       />
                     </div>
-                    <div className="flex">
-                      <div className="mr-3 flex-shrink-0">
+                    
+                    <div className="w-full bg-[#432874]/30 h-1 rounded mt-1">
+                      <div 
+                        className="h-full bg-yellow-500 rounded"
+                        style={{ width: `${Math.min(100, unit.attackMeter)}%` }}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="flex flex-col">
                         <div className="w-16 h-16 bg-[#432874]/30 rounded-md border border-[#432874]/50 flex items-center justify-center text-[#C8B8DB]/40 text-xs">
-                          Enemy
+                          {/* Enemy portrait or icon could go here */}
+                          {unit.name.substring(0, 1)}
                         </div>
                       </div>
-
-                      <div className="flex-grow">
-                        {renderUnitStats(unit)}
-                      </div>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
-                        <div className="text-xs font-semibold text-[#FF9D00] mb-1">Combat Skills</div>
-                        <div className="flex flex-wrap gap-1">
-                          {unit.skills.basic && renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
-                          {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
-                          {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
-                        </div>
-                      </div>
-
-                      <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
-                        <div className="text-xs font-semibold text-yellow-300 mb-1">Status Effects</div>
-                        {unit.statusEffects && unit.statusEffects.length > 0 ? (
-                          <div className="flex flex-wrap gap-0.5">
-                            {unit.statusEffects.map((effect, index) => 
-                              renderStatusEffect(effect, index, false)
-                            )}
+                      
+                      <div className="flex-1 ml-2">
+                        <div className="flex flex-col gap-2">
+                          <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                            <div className="text-xs text-[#C8B8DB] mb-1">Stats:</div>
+                            {renderUnitStats(unit)}
                           </div>
-                        ) : (
-                          <div className="text-xs italic text-[#C8B8DB]/40">No active effects</div>
-                        )}
+                          
+                          <div className="bg-[#432874]/10 rounded-md p-2 border border-[#432874]/20">
+                            <div className="text-xs text-[#C8B8DB] mb-1">Skills:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {renderSkill(unit.skills.basic.name, unit.skills.basic.damage)}
+                              {unit.skills.advanced && renderSkill(unit.skills.advanced.name, unit.skills.advanced.damage, unit.skills.advanced.cooldown)}
+                              {unit.skills.ultimate && renderSkill(unit.skills.ultimate.name, unit.skills.ultimate.damage, unit.skills.ultimate.cooldown)}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                    
+                    {/* Status effects display */}
+                    {unit.statusEffects && unit.statusEffects.length > 0 && (
+                      <div className="mt-2">
+                        <div className="text-xs text-[#C8B8DB]">Status Effects:</div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {unit.statusEffects.map((effect, index) => renderStatusEffect(effect, index, false))}
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="summary">
-            <div className="space-y-4">
-              <div className="bg-[#432874]/20 p-4 rounded-lg">
-                <h3 className="font-semibold text-[#FF9D00] mb-3">Battle Overview</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <div className="text-[#C8B8DB]/70 text-xs">Total Turns</div>
-                    <div className="font-semibold text-xl">{actionLog.length}</div>
-                  </div>
-                  <div>
-                    <div className="text-[#C8B8DB]/70 text-xs">Total Damage</div>
-                    <div className="font-semibold text-xl">
-                      {units.reduce((sum, unit) => sum + unit.totalDamageDealt, 0).toLocaleString()}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[#C8B8DB]/70 text-xs">Total Healing</div>
-                    <div className="font-semibold text-xl">
-                      {units.reduce((sum, unit) => sum + unit.totalHealingDone, 0).toLocaleString()}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[#C8B8DB]/70 text-xs">Status Effects</div>
-                    <div className="font-semibold text-xl">
-                      {units.reduce((sum, unit) => sum + (
-                        (unit.burnSuccess || 0) + 
-                        (unit.poisonSuccess || 0) + 
-                        (unit.slowSuccess || 0) + 
-                        (unit.weakenSuccess || 0)
-                      ), 0)}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          </div>
+          
+          <div className="mt-4 px-4">
+            <Tabs defaultValue="action">
+              <TabsList className="bg-[#35235B]">
+                <TabsTrigger value="action">Action Log</TabsTrigger>
+                <TabsTrigger value="detailed">Detailed Log</TabsTrigger>
+                <TabsTrigger value="stats">Battle Stats</TabsTrigger>
+              </TabsList>
               
-              <div className="bg-[#432874]/20 p-4 rounded-lg">
-                <h3 className="font-semibold text-[#FF9D00] mb-3">Status Effect Fixes Implemented</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>✓ Status effects like Minor Slow from Gust skill are now properly applied</li>
-                  <li>✓ Fixed bug where status effects weren't actually affecting character stats</li>
-                  <li>✓ Added code to apply speed reduction effects when calculating unit speed</li>
-                  <li>✓ Added code to apply attack reduction effects when calculating attack damage</li>
-                  <li>✓ Added animation states to visualize attack and damage actions</li>
-                </ul>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="log">
-            <div className="space-y-2">
-              <div className="bg-[#432874]/10 p-3 rounded-lg">
-                <h3 className="font-semibold text-[#FF9D00] mb-2">Action Log</h3>
-                <div className="h-[400px] overflow-y-auto space-y-1 pr-2">
-                  {sortedActionLog.length > 0 ? (
-                    sortedActionLog.map((log, index) => (
-                      <div
-                        key={index}
-                        className="text-sm bg-[#432874]/20 p-2 rounded"
-                        dangerouslySetInnerHTML={{ __html: log }}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-sm italic opacity-70">No combat logs to display yet</div>
-                  )}
+              <TabsContent value="action" className="border border-[#6A3FB5]/40 rounded-md mt-2">
+                <div className="bg-[#432874]/20 p-4 rounded-lg">
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {sortedActionLog.length > 0 ? (
+                      sortedActionLog.map((log, index) => (
+                        <div key={index} className="text-sm">
+                          {log}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm italic text-gray-400">
+                        Battle log will appear here...
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <DialogFooter>
-          <Button onClick={onClose}>
-            Close
-          </Button>
-          {isComplete && runId && onCompleteDungeon && (
-            <Button 
-              variant="default" 
-              onClick={() => onCompleteDungeon(runId)}
-            >
-              Complete Dungeon
-            </Button>
-          )}
-        </DialogFooter>
+              </TabsContent>
+              
+              <TabsContent value="detailed" className="border border-[#6A3FB5]/40 rounded-md mt-2">
+                <div className="bg-[#432874]/20 p-4 rounded-lg">
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {sortedDetailedLog.length > 0 ? (
+                      sortedDetailedLog.map((log, index) => (
+                        <div key={index} className="text-sm">
+                          {log}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm italic text-gray-400">
+                        Detailed log will appear here...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="stats" className="border border-[#6A3FB5]/40 rounded-md mt-2">
+                <div className="bg-[#432874]/10 p-3 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4">
+                    {units.map(unit => (
+                      <div key={unit.id}
+                        className="text-sm bg-[#432874]/20 p-2 rounded"
+                      >
+                        <div className="font-semibold mb-1">{unit.name}</div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                          <div>Damage Dealt: {unit.totalDamageDealt || 0}</div>
+                          <div>Damage Taken: {unit.totalDamageReceived || 0}</div>
+                          <div>Healing Done: {unit.totalHealingDone || 0}</div>
+                          <div>Healing Received: {unit.totalHealingReceived || 0}</div>
+                          
+                          {/* Status effect success rates */}
+                          {unit.burnAttempts && unit.burnAttempts > 0 && (
+                            <div>Burn Rate: {unit.burnSuccess || 0}/{unit.burnAttempts} ({Math.round((unit.burnSuccess || 0) / unit.burnAttempts * 100)}%)</div>
+                          )}
+                          {unit.poisonAttempts && unit.poisonAttempts > 0 && (
+                            <div>Poison Rate: {unit.poisonSuccess || 0}/{unit.poisonAttempts} ({Math.round((unit.poisonSuccess || 0) / unit.poisonAttempts * 100)}%)</div>
+                          )}
+                          {unit.slowAttempts && unit.slowAttempts > 0 && (
+                            <div>Slow Rate: {unit.slowSuccess || 0}/{unit.slowAttempts} ({Math.round((unit.slowSuccess || 0) / unit.slowAttempts * 100)}%)</div>
+                          )}
+                          {unit.weakenAttempts && unit.weakenAttempts > 0 && (
+                            <div>Weaken Rate: {unit.weakenSuccess || 0}/{unit.weakenAttempts} ({Math.round((unit.weakenSuccess || 0) / unit.weakenAttempts * 100)}%)</div>
+                          )}
+                          
+                          {/* Show last rolls if available */}
+                          {unit.lastBurnRoll !== undefined && (
+                            <div>Last Burn Roll: {unit.lastBurnRoll}/100</div>
+                          )}
+                          {unit.lastPoisonRoll !== undefined && (
+                            <div>Last Poison Roll: {unit.lastPoisonRoll}/100</div>
+                          )}
+                          {unit.lastSlowRoll !== undefined && (
+                            <div>Last Slow Roll: {unit.lastSlowRoll}/100</div>
+                          )}
+                          {unit.lastWeakenRoll !== undefined && (
+                            <div>Last Weaken Roll: {unit.lastWeakenRoll}/100</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
