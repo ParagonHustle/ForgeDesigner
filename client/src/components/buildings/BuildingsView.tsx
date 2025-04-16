@@ -47,7 +47,17 @@ import CountdownTimer from '../common/CountdownTimer';
 import type { BuildingUpgrade } from '@shared/schema';
 
 // Building definitions
-const buildings = [];
+const buildings: {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  benefits: Array<{ level: number; text: string }>;
+  maxLevel: number;
+  baseUpgradeCost: { rogueCredits: number; forgeTokens: number };
+  upgradeTimeInMinutes: number;
+}[] = [];
 
 const BuildingsView = () => {
   const { user, fetchUser } = useDiscordAuth();

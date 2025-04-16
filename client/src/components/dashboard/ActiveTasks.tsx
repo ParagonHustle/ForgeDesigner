@@ -175,19 +175,19 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   return (
     <>
       <motion.div 
-        className="bg-[#1A1A2E] rounded-xl p-6"
+        className="bg-[#1A1A2E] rounded-xl p-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-cinzel font-bold">Active Tasks</h2>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-lg font-cinzel font-bold">Active Tasks</h2>
           <Link href="/dungeons">
-            <button className="text-[#FF9D00] text-sm hover:underline">View All</button>
+            <button className="text-[#FF9D00] text-xs hover:underline">View All</button>
           </Link>
         </div>
 
         <motion.div 
-          className="space-y-4"
+          className="space-y-2"
           variants={container}
           initial="hidden"
           animate="show"
@@ -196,7 +196,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
         {activeDungeonRuns.map((run) => (
           <motion.div 
             key={`dungeon-${run.id}`}
-            className="bg-[#1F1D36]/50 p-4 rounded-lg border border-[#432874]/30"
+            className="bg-[#1F1D36]/50 p-2 rounded-lg border border-[#432874]/30"
             variants={item}
           >
             <div className="flex items-center justify-between">
@@ -244,7 +244,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
           return (
             <motion.div 
               key={`farming-${task.id}`}
-              className="bg-[#1F1D36]/50 p-4 rounded-lg border border-[#432874]/30"
+              className="bg-[#1F1D36]/50 p-2 rounded-lg border border-[#432874]/30"
               variants={item}
             >
               <div className="flex items-center justify-between">
@@ -319,7 +319,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
           return (
             <motion.div 
               key={`forge-${task.id}`}
-              className="bg-[#1F1D36]/50 p-4 rounded-lg border border-[#432874]/30"
+              className="bg-[#1F1D36]/50 p-2 rounded-lg border border-[#432874]/30"
               variants={item}
             >
               <div className="flex items-center justify-between">
