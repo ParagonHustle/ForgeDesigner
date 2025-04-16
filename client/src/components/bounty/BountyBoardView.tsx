@@ -411,7 +411,7 @@ const BountyBoardView = () => {
           
           {/* Description */}
           <p className={`text-xs text-[#C8B8DB]/80 mb-3 ${quest.completed ? 'opacity-70' : ''}`}>
-            {quest.description}
+            {String(quest.description)}
           </p>
           
           {/* Progress bar */}
@@ -468,11 +468,11 @@ const BountyBoardView = () => {
           </div>
           
           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[0.65rem] mb-3">
-            {quest.rewards && typeof quest.rewards === 'object' && Object.entries(quest.rewards as Record<string, number>).map(([key, value]) => (
+            {quest.rewards && typeof quest.rewards === 'object' && Object.entries(quest.rewards as Record<string, any>).map(([key, value]) => (
               <div key={key} className="flex items-center">
                 <div className="w-2 h-2 rounded-full bg-[#432874]/70 mr-1"></div>
                 <span className="text-[#C8B8DB]/90">{key}: </span>
-                <span className="ml-1 text-[#FFD700]">{value}</span>
+                <span className="ml-1 text-[#FFD700]">{typeof value === 'object' ? JSON.stringify(value) : value}</span>
               </div>
             )) as React.ReactNode}
           </div>
