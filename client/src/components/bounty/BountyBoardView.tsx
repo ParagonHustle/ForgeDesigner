@@ -43,7 +43,8 @@ import {
   Calculator as Coin,
   Diamond,
   Zap,
-  BookOpen
+  BookOpen,
+  Loader2
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -125,98 +126,137 @@ const BountyBoardView = () => {
 
   // Get frequency badge style
   const getFrequencyStyle = (frequency?: string) => {
-    if (!frequency) return 'bg-blue-700/30 text-blue-400 border-blue-600/30'; // Default to daily style
+    if (!frequency) return 'bg-[#432874]/30 text-[#C8B8DB]'; // Default to daily style
     
     switch (frequency.toLowerCase()) {
       case 'daily':
-        return 'bg-blue-700/30 text-blue-400 border-blue-600/30';
+        return 'bg-[#432874]/30 text-[#C8B8DB]';
       case 'weekly':
-        return 'bg-purple-700/30 text-purple-400 border-purple-600/30';
+        return 'bg-[#00B9AE]/20 text-[#00B9AE]';
+      case 'monthly':
+        return 'bg-[#FF9D00]/20 text-[#FF9D00]';
       default:
-        return 'bg-slate-700/30 text-slate-300 border-slate-600/30';
+        return 'bg-[#432874]/30 text-[#C8B8DB]';
     }
   };
   
-  // Get rarity badge style and color for quest cards
-  const getRarityStyle = (rarity?: string) => {
-    if (!rarity) return { 
-      badge: 'bg-gray-700/30 text-gray-300 border-gray-600/30',
-      dot: 'bg-gray-500',
-      text: 'text-gray-400'
-    };
-    
-    switch (rarity.toLowerCase()) {
-      case 'legendary':
-        return { 
-          badge: 'bg-yellow-700/30 text-yellow-300 border-yellow-600/30',
-          dot: 'bg-yellow-500',
-          text: 'text-yellow-400'
-        };
-      case 'mythic':
-        return { 
-          badge: 'bg-purple-700/30 text-purple-300 border-purple-600/30',
-          dot: 'bg-purple-500',
-          text: 'text-purple-400'
-        };
-      case 'epic':
-        return { 
-          badge: 'bg-blue-700/30 text-blue-300 border-blue-600/30',
-          dot: 'bg-blue-500',
-          text: 'text-blue-400'
-        };
+  // Get rarity color
+  const getRarityColor = (rarity: string) => {
+    switch (rarity?.toLowerCase()) {
+      case 'common':
+        return { text: 'text-[#A0A0A0]', bg: 'bg-[#A0A0A0]' };
+      case 'uncommon':
+        return { text: 'text-[#4CAF50]', bg: 'bg-[#4CAF50]' };
       case 'rare':
-        return { 
-          badge: 'bg-green-700/30 text-green-300 border-green-600/30',
-          dot: 'bg-green-500',
-          text: 'text-green-400'
-        };
-      default: // Basic
-        return { 
-          badge: 'bg-gray-700/30 text-gray-300 border-gray-600/30',
-          dot: 'bg-gray-500',
-          text: 'text-gray-400'
-        };
+        return { text: 'text-[#2196F3]', bg: 'bg-[#2196F3]' };
+      case 'epic':
+        return { text: 'text-[#9C27B0]', bg: 'bg-[#9C27B0]' };
+      case 'legendary':
+        return { text: 'text-[#FF9D00]', bg: 'bg-[#FF9D00]' };
+      default:
+        return { text: 'text-[#A0A0A0]', bg: 'bg-[#A0A0A0]' };
     }
   };
 
-  // Get quest icon by type
+  // Rarity Badge Component
+  const RarityBadge = ({ rarity }: { rarity: string }) => {
+    const rarityClass = {
+      common: 'bg-[#3A3A3A]/40 text-[#A0A0A0] border-[#A0A0A0]/30',
+      uncommon: 'bg-[#4CAF50]/20 text-[#4CAF50] border-[#4CAF50]/30',
+      rare: 'bg-[#2196F3]/20 text-[#2196F3] border-[#2196F3]/30',
+      epic: 'bg-[#9C27B0]/20 text-[#9C27B0] border-[#9C27B0]/30',
+      legendary: 'bg-[#FF9D00]/20 text-[#FF9D00] border-[#FF9D00]/30',
+    }[rarity.toLowerCase()] || 'bg-[#3A3A3A]/40 text-[#A0A0A0] border-[#A0A0A0]/30';
+    
+    return (
+      <Badge className={`${rarityClass} text-xs py-0 px-1.5 border`}>
+        {rarity}
+      </Badge>
+    );
+  };
+
+  // Get icon for quest based on name or type
   const getQuestIcon = (questName: string) => {
-    const lowerName = questName.toLowerCase();
+    const questLower = questName.toLowerCase();
     
-    if (lowerName.includes('resource') || lowerName.includes('farm')) {
-      return <Gem className="h-5 w-5 text-green-400" />;
-    } else if (lowerName.includes('dungeon') || lowerName.includes('enemy')) {
-      return <Skull className="h-5 w-5 text-red-400" />;
-    } else if (lowerName.includes('craft') || lowerName.includes('forge') || lowerName.includes('aura')) {
-      return <Flame className="h-5 w-5 text-yellow-400" />;
-    } else if (lowerName.includes('building') || lowerName.includes('upgrade')) {
-      return <Shield className="h-5 w-5 text-blue-400" />;
+    if (questLower.includes('farm') || questLower.includes('resource') || questLower.includes('gather')) {
+      return <Gem className="h-4 w-4 text-green-400" />;
+    } else if (questLower.includes('dungeon') || questLower.includes('enemy') || questLower.includes('slay')) {
+      return <Skull className="h-4 w-4 text-red-400" />;
+    } else if (questLower.includes('craft') || questLower.includes('forge') || questLower.includes('aura')) {
+      return <Flame className="h-4 w-4 text-yellow-400" />;
+    } else if (questLower.includes('build') || questLower.includes('upgrade')) {
+      return <Shield className="h-4 w-4 text-blue-400" />;
+    } else if (questLower.includes('collect') || questLower.includes('gather')) {
+      return <Package className="h-4 w-4 text-purple-400" />;
+    } else if (questLower.includes('learn') || questLower.includes('skill')) {
+      return <BookOpen className="h-4 w-4 text-teal-400" />;
+    } else {
+      return <Scroll className="h-4 w-4 text-[#C8B8DB]" />;
     }
-    
-    return <Scroll className="h-5 w-5 text-purple-400" />;
   };
 
-  // Calculate quest progress percentage
+  // Calculate overall progress for a quest
   const calculateProgress = (quest: BountyQuest) => {
-    if (!quest.requirements || typeof quest.requirements !== 'object') return 0;
+    if (quest.completed) return 100;
     
-    let completed = 0;
-    let total = 0;
+    if (!quest.requirements || typeof quest.requirements !== 'object') {
+      return 0;
+    }
     
-    // Sum up all requirement progress
-    Object.entries(quest.requirements).forEach(([key, requirement]) => {
+    const requirements = quest.requirements as Record<string, any>;
+    let totalProgress = 0;
+    let requirementCount = 0;
+    
+    Object.values(requirements).forEach((requirement) => {
       if (typeof requirement === 'object' && 'current' in requirement && 'target' in requirement) {
-        completed += Math.min(requirement.current, requirement.target);
-        total += requirement.target;
+        const progress = Math.min(100, (requirement.current / requirement.target) * 100);
+        totalProgress += progress;
+        requirementCount++;
       }
     });
     
-    return total > 0 ? Math.floor((completed / total) * 100) : 0;
+    return requirementCount > 0 ? Math.round(totalProgress / requirementCount) : 0;
   };
 
   // Check if quest is completed but not claimed
   const isCompletedNotClaimed = (quest: BountyQuest) => {
-    return calculateProgress(quest) >= 100 && !quest.completed;
+    if (quest.completed) return false;
+    
+    const progress = calculateProgress(quest);
+    return progress >= 100;
+  };
+
+  // Handle start quest
+  const handleStartQuest = async (questId: number) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Call API to start quest
+      const response = await apiRequest('POST', `/api/bounty/quests/${questId}/start`, {});
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to start quest');
+      }
+      
+      toast({
+        title: "Quest Started",
+        description: "The quest has been started. Complete the objectives to earn rewards!",
+      });
+      
+      // Refresh quests
+      refetchQuests();
+    } catch (error: any) {
+      console.error('Error starting quest:', error);
+      toast({
+        title: "Failed to Start Quest",
+        description: error.message || "There was an error starting the quest.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Claim quest rewards
@@ -249,32 +289,36 @@ const BountyBoardView = () => {
         if ('soulShards' in rewards && rewards.soulShards) {
           rewardDescription += `${rewards.soulShards} Soul Shards, `;
         }
-        if ('material' in rewards && rewards.material) {
-          const mat = rewards.material as any;
-          rewardDescription += `${mat.amount} ${mat.name}, `;
+        if ('experience' in rewards && rewards.experience) {
+          rewardDescription += `${rewards.experience} XP, `;
         }
-        
-        // Remove trailing comma and space
-        rewardDescription = rewardDescription.replace(/, $/, '');
       }
       
+      // Remove trailing comma and space
+      rewardDescription = rewardDescription.replace(/,\s*$/, '');
+      
       toast({
-        title: "Quest Rewards Claimed!",
-        description: `You received: ${rewardDescription || 'various rewards'}`,
+        title: "Quest Completed!",
+        description: `You've received ${rewardDescription || 'rewards'}!`,
       });
       
-      // Refresh quests and user data
+      // Refresh quests
       refetchQuests();
-    } catch (error) {
-      console.error('Error claiming quest rewards:', error);
+    } catch (error: any) {
+      console.error('Error claiming rewards:', error);
       toast({
-        title: "Error",
-        description: typeof error === 'object' && error instanceof Error ? error.message : "Failed to claim quest rewards.",
+        title: "Failed to Claim Rewards",
+        description: error.message || "There was an error claiming the rewards.",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Handle complete bounty
+  const handleCompleteBounty = (questId: number) => {
+    claimQuestRewards(questId);
   };
 
   // Animation variants
@@ -307,444 +351,289 @@ const BountyBoardView = () => {
   const dailyQuests = bountyQuests.filter(quest => !quest.frequency || (quest.frequency as any)?.toLowerCase() === 'daily');
   const weeklyQuests = bountyQuests.filter(quest => (quest.frequency as any)?.toLowerCase() === 'weekly');
 
-  // Render quest card
+  // Render quest card with tech-style NFT appearance
   const renderQuestCard = (quest: BountyQuest) => {
     const progress = calculateProgress(quest);
     const canClaim = isCompletedNotClaimed(quest);
+    const rarityColor = getRarityColor((quest as any).rarity || 'Common');
     
     return (
       <motion.div
         key={quest.id}
         variants={item}
-        className={`border rounded-lg p-3 ${
+        className={`relative overflow-hidden rounded-lg ${
           quest.completed 
-            ? 'bg-[#1F1D36]/30 border-green-700/30 shadow-[0_0_8px_rgba(34,197,94,0.1)]' 
-            : 'bg-[#1F1D36]/50 border-[#432874]/30'
+            ? 'border border-green-700/40 shadow-[0_0_10px_rgba(34,197,94,0.15)]' 
+            : 'border border-[#432874]/30'
         }`}
+        style={{
+          background: quest.completed 
+            ? 'linear-gradient(135deg, rgba(20, 20, 35, 0.9) 0%, rgba(34, 90, 50, 0.4) 100%)' 
+            : 'linear-gradient(135deg, rgba(20, 20, 35, 0.9) 0%, rgba(67, 40, 116, 0.3) 100%)',
+          maxWidth: '280px'
+        }}
       >
-        <div className="flex items-start">
-          <div className="mr-2 mt-0.5">
-            {quest.completed ? 
-              <div className="bg-green-500/20 p-1 rounded-full">
-                <CheckCircle2 className="h-4 w-4 text-green-400" />
-              </div> : 
-              <div className="h-4 w-4">
-                {getQuestIcon(quest.name)}
-              </div>
-            }
-          </div>
-          <div className="flex-1">
-            <div className="flex justify-between items-start mb-0.5">
-              <div>
-                <div className="flex items-center gap-1 mb-0.5">
-                  <h3 className={`font-cinzel font-semibold text-base ${quest.completed ? 'line-through opacity-70' : ''}`}>
-                    {quest.name}
-                  </h3>
-                  {(quest as any).rarity && (
-                    <Badge className={`${getRarityStyle((quest as any).rarity).badge} text-xs py-0 px-1.5`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${getRarityStyle((quest as any).rarity).dot} mr-1`}></div>
-                      {(quest as any).rarity}
-                    </Badge>
-                  )}
+        {/* Tech pattern background */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none" 
+          style={{
+            backgroundImage: 'radial-gradient(circle at 10px 10px, rgba(255,255,255,0.1) 2px, transparent 0)',
+            backgroundSize: '20px 20px'
+          }}>
+        </div>
+        
+        {/* Top Rarity Bar */}
+        <div className={`h-1.5 w-full ${rarityColor.bg}`}></div>
+        
+        <div className="p-3">
+          {/* Header with title and badges */}
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center">
+              {quest.completed ? 
+                <div className="bg-green-500/20 p-1 rounded-full mr-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
+                </div> : 
+                <div className="mr-2">
+                  {getQuestIcon(quest.name)}
                 </div>
-                <p className={`text-xs text-[#C8B8DB]/80 ${quest.completed ? 'opacity-70' : ''}`}>
-                  {quest.description}
-                </p>
-              </div>
-              <Badge className={`${getFrequencyStyle((quest as any).frequency)} text-xs py-0 px-1.5`}>
+              }
+              <h3 className={`font-cinzel font-semibold text-sm ${quest.completed ? 'text-green-400/80' : rarityColor.text}`}>
+                {quest.name}
+              </h3>
+            </div>
+            <div className="flex flex-col gap-1 items-end">
+              <RarityBadge rarity={(quest as any).rarity || 'Common'} />
+              <Badge className={`${getFrequencyStyle((quest as any).frequency)} text-[0.65rem] py-0 px-1.5`}>
                 {(quest as any).frequency || 'Daily'}
               </Badge>
             </div>
-            
-            {/* Requirements */}
-            <div className="mt-2 space-y-1.5">
-              {quest.requirements && typeof quest.requirements === 'object' && Object.entries(quest.requirements as Record<string, any>).map(([key, requirement]) => {
+          </div>
+          
+          {/* Description */}
+          <p className={`text-xs text-[#C8B8DB]/80 mb-3 ${quest.completed ? 'opacity-70' : ''}`}>
+            {quest.description}
+          </p>
+          
+          {/* Progress bar */}
+          {!quest.completed && (
+            <div className="mb-3">
+              <div className="flex justify-between mb-1 text-xs">
+                <span className="text-[#C8B8DB]/70">Progress</span>
+                <span className="text-[#00B9AE]">{progress}%</span>
+              </div>
+              <div className="h-1.5 bg-[#1A1A2E] rounded-full overflow-hidden">
+                <div 
+                  className={`h-full ${canClaim ? 'bg-[#00B9AE]' : 'bg-[#432874]'}`}
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+          
+          {/* Compact Requirements */}
+          {quest.requirements && typeof quest.requirements === 'object' && Object.entries(quest.requirements as Record<string, any>).length > 0 && (
+            <div className="mb-3 px-2 py-1.5 bg-[#1A1A2E]/60 rounded border border-[#432874]/20">
+              {Object.entries(quest.requirements as Record<string, any>).map(([key, requirement]) => {
                 if (typeof requirement === 'object' && 'current' in requirement && 'target' in requirement) {
                   const subProgress = Math.min(100, (requirement.current / requirement.target) * 100);
                   
                   return (
-                    <div key={key} className="text-xs">
-                      <div className="flex justify-between mb-0.5">
-                        <span>{key}</span>
-                        <span>
+                    <div key={key} className="text-[0.65rem] mb-1 last:mb-0">
+                      <div className="flex justify-between">
+                        <span className="text-[#C8B8DB]/90">{key}</span>
+                        <span className={requirement.current >= requirement.target ? 'text-green-400' : 'text-[#C8B8DB]/70'}>
                           {requirement.current}/{requirement.target}
                         </span>
                       </div>
-                      <Progress 
-                        value={subProgress} 
-                        className="h-1 bg-[#1A1A2E] border-[#432874]/20" 
-                      />
                     </div>
                   );
                 }
                 return null;
-              }) as React.ReactNode}
+              })}
             </div>
-            
-            {/* Rewards */}
-            <div className="mt-3 pt-2 border-t border-[#432874]/30">
-              <div className="flex justify-between items-center mb-1">
-                <div className="flex items-center">
-                  <GiftIcon className="h-4 w-4 text-[#00B9AE] mr-1" />
-                  <span className="text-xs font-semibold">Possible Rewards:</span>
-                </div>
-                
-                {!quest.completed && (
-                  <div className="text-xs text-[#C8B8DB]/70">
-                    {progress < 100 
-                      ? `Progress: ${progress}%` 
-                      : 'Completed - Claim Rewards!'
-                    }
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex flex-wrap gap-1 mt-1">
-                {quest.rewards && typeof quest.rewards === 'object' && (
-                  <>
-                    {'rogueCredits' in quest.rewards && (quest.rewards as any).rogueCredits > 0 && (
-                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#432874]/10 border-[#432874]/30 text-[#C8B8DB]/90">
-                        <Coins className="h-3 w-3 mr-1 text-purple-400" />
-                        Rogue Credits
-                      </Badge>
-                    )}
-                    {'forgeTokens' in quest.rewards && (quest.rewards as any).forgeTokens > 0 && (
-                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#FFD700]/10 border-[#FFD700]/20 text-[#FFD700]/90">
-                        <Coins className="h-3 w-3 mr-1 text-yellow-400" />
-                        Forge Tokens
-                      </Badge>
-                    )}
-                    {'soulShards' in quest.rewards && (quest.rewards as any).soulShards > 0 && (
-                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#00B9AE]/10 border-[#00B9AE]/20 text-[#00B9AE]/90">
-                        <Diamond className="h-3 w-3 mr-1 text-teal-400" />
-                        Soul Shards
-                      </Badge>
-                    )}
-                    {'material' in quest.rewards && (quest.rewards as any).material && (
-                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#C8B8DB]/10 border-[#C8B8DB]/20 text-[#C8B8DB]/90">
-                        <Package className="h-3 w-3 mr-1 text-gray-400" />
-                        Materials
-                      </Badge>
-                    )}
-                    {'materials' in quest.rewards && Array.isArray((quest.rewards as any).materials) && 
-                      (quest.rewards as any).materials.length > 0 && (
-                        <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#C8B8DB]/10 border-[#C8B8DB]/20 text-[#C8B8DB]/90">
-                          <Package className="h-3 w-3 mr-1 text-gray-400" />
-                          Materials
-                        </Badge>
-                      )
-                    }
-                    {'xp' in quest.rewards && (quest.rewards as any).xp > 0 && (
-                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#FF9D00]/10 border-[#FF9D00]/20 text-[#FF9D00]/90">
-                        <Zap className="h-3 w-3 mr-1 text-orange-400" />
-                        XP
-                      </Badge>
-                    )}
-                    {'skillPoints' in quest.rewards && (quest.rewards as any).skillPoints > 0 && (
-                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-blue-500/10 border-blue-500/20 text-blue-400/90">
-                        <BookOpen className="h-3 w-3 mr-1 text-blue-400" />
-                        Skill Points
-                      </Badge>
-                    )}
-                  </>
-                ) as React.ReactNode}
-              </div>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="mt-3 flex justify-end">
-              {quest.completed ? (
-                <div className="flex items-center text-sm text-[#00B9AE]">
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                  Claimed
-                </div>
-              ) : canClaim ? (
-                <Button
-                  className="bg-[#00B9AE] hover:bg-[#00B9AE]/80"
-                  onClick={() => claimQuestRewards(quest.id)}
-                  disabled={isSubmitting}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  {isSubmitting ? 'Claiming...' : 'Claim Rewards'}
-                </Button>
-              ) : (
-                <div className="text-sm text-[#C8B8DB]/70">
-                  {formatTimeRemaining(quest.expiresAt)}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-  
-  return (
-    <>
-      {/* Bounty Board Upgrade Dialog */}
-      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
-        <DialogContent className="bg-[#1A1A2E] border-[#432874]/50 text-[#C8B8DB] max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">Upgrade Bounty Board</DialogTitle>
-            <DialogDescription className="text-[#C8B8DB]/80">
-              Upgrading your Bounty Board unlocks better quests and increases rewards.
-            </DialogDescription>
-          </DialogHeader>
+          )}
           
-          <div className="py-4">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h4 className="font-semibold">Current Level: {user?.bountyBoardLevel || 1}</h4>
-                <p className="text-sm text-[#C8B8DB]/70">Next Level: {(user?.bountyBoardLevel || 1) + 1}</p>
-              </div>
-              <div className="bg-[#432874]/30 px-3 py-1 rounded">
-                <span className="text-[#FF9D00] font-semibold">Lv.{user?.bountyBoardLevel || 1}</span>
-              </div>
+          {/* Rewards section */}
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center">
+              <GiftIcon className="h-3 w-3 text-[#FFD700] mr-1" />
+              <span className="text-xs font-semibold text-[#FFD700]">Rewards</span>
             </div>
             
-            <div className="space-y-4">
-              <div className="bg-[#15152C] p-3 rounded-md">
-                <h4 className="font-semibold mb-2">Required Materials</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
-                        <Scroll className="h-4 w-4 text-[#00B9AE]" />
-                      </div>
-                      <span>Bounty Board Blueprint</span>
-                    </div>
-                    <Badge className="bg-[#15152C] border-[#432874]">
-                      {(user?.bountyBoardLevel || 1) * 2} pcs
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
-                        <span className="text-[#FF9D00] text-xs">RC</span>
-                      </div>
-                      <span>Rogue Credits</span>
-                    </div>
-                    <Badge className="bg-[#15152C] border-[#432874]">
-                      {(user?.bountyBoardLevel || 1) * 1000}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-[#15152C] p-3 rounded-md">
-                <h4 className="font-semibold mb-2">Unlocks at Level {(user?.bountyBoardLevel || 1) + 1}</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
-                    {(user?.bountyBoardLevel || 1) + 1 >= 3 ? "Rare Quest Availability" : 
-                     (user?.bountyBoardLevel || 1) + 1 >= 5 ? "Epic Quest Availability" :
-                     (user?.bountyBoardLevel || 1) + 1 >= 7 ? "Mythic Quest Availability" :
-                     (user?.bountyBoardLevel || 1) + 1 >= 10 ? "Legendary Quest Availability" :
-                     "+1 Daily Quest Slot"}
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
-                    Increased Reward Values (+10%)
-                  </div>
-                  <div className="flex items-center">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
-                    New Skill Point
-                  </div>
-                </div>
-              </div>
-            </div>
+            {quest.completed && (
+              <span className="text-[0.65rem] text-green-400">
+                Completed {new Date(quest.completedAt || Date.now()).toLocaleDateString()}
+              </span>
+            )}
           </div>
           
-          <DialogFooter className="flex justify-between items-center">
-            <Button variant="outline" onClick={() => setShowUpgradeDialog(false)}>
-              Cancel
-            </Button>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[0.65rem] mb-3">
+            {quest.rewards && typeof quest.rewards === 'object' && Object.entries(quest.rewards as Record<string, number>).map(([key, value]) => (
+              <div key={key} className="flex items-center">
+                <div className="w-2 h-2 rounded-full bg-[#432874]/70 mr-1"></div>
+                <span className="text-[#C8B8DB]/90">{key}: </span>
+                <span className="ml-1 text-[#FFD700]">{value}</span>
+              </div>
+            ))}
+          </div>
+          
+          {/* Claim button */}
+          {!quest.completed && canClaim && (
             <Button 
-              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
-              onClick={() => {
-                toast({
-                  title: "Coming Soon",
-                  description: "Bounty Board upgrade functionality will be available in a future update."
-                });
-                setShowUpgradeDialog(false);
-              }}
+              size="sm"
+              className="w-full bg-[#00B9AE] hover:bg-[#00B9AE]/80 text-black text-xs py-1 h-7"
+              onClick={() => handleCompleteBounty(quest.id)}
+              disabled={isSubmitting}
             >
-              <Settings className="h-4 w-4 mr-2" />
-              Upgrade
+              {isSubmitting ? 
+                <Loader2 className="h-3 w-3 animate-spin mr-1" /> : 
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+              }
+              Claim Rewards
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    
-      <div className="mb-6">
-        <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">Bounty Board</h1>
-        <p className="text-[#C8B8DB]/80">
-          Complete daily and weekly quests to earn valuable rewards and progress your account.
-        </p>
-      </div>
-
-      {/* Bounty Board Information - Moved to the top */}
-      <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6 mb-8">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center">
-            <Shield className="h-5 w-5 text-[#00B9AE] mr-2" />
-            <h2 className="text-xl font-cinzel font-bold text-[#FF9D00]">Bounty Board Information</h2>
-          </div>
-          
-          {/* Upgrade Button */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="border-[#FF9D00]/50 text-[#FF9D00] hover:bg-[#FF9D00]/10"
-            onClick={() => setShowUpgradeDialog(true)}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Upgrade
-          </Button>
-        </div>
-        
-        <div className="bg-[#1F1D36]/50 rounded-lg p-4 mb-4">
-          <div className="flex items-center mb-2">
-            <Shield className="h-5 w-5 text-[#00B9AE] mr-2" />
-            <h3 className="font-semibold">Your Bounty Board Level: {user?.bountyBoardLevel || 1}</h3>
-          </div>
-          <p className="text-sm text-[#C8B8DB]/80 mb-3">
-            Your Bounty Board level determines the quantity and quality of daily quests available.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-semibold mb-1">Daily Quest Slots:</div>
-              <div className="flex">
-                {Array.from({ length: 7 }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`w-5 h-5 rounded-sm mr-1 flex items-center justify-center text-xs ${
-                      idx < (user?.bountyBoardLevel || 1) * 1.5
-                        ? 'bg-[#432874] text-[#C8B8DB]'
-                        : 'bg-[#1A1A2E] text-[#432874]/50 border border-[#432874]/30'
-                    }`}
-                  >
-                    {idx + 1}
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <div className="text-sm font-semibold mb-1">Quest Rarity Chance:</div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="flex items-center">
-                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-yellow-500 border-0 rounded-full p-0"></Badge>
-                    Legendary Quests:
-                  </span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 10 ? 'text-yellow-400' : 'text-[#C8B8DB]/50'}>
-                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 10 ? 'Unlocked' : 'Locked (Lvl 10)'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center">
-                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-purple-500 border-0 rounded-full p-0"></Badge>
-                    Mythic Quests:
-                  </span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 7 ? 'text-purple-400' : 'text-[#C8B8DB]/50'}>
-                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 7 ? 'Unlocked' : 'Locked (Lvl 7)'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center">
-                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-blue-500 border-0 rounded-full p-0"></Badge>
-                    Epic Quests:
-                  </span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 5 ? 'text-blue-400' : 'text-[#C8B8DB]/50'}>
-                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 5 ? 'Unlocked' : 'Locked (Lvl 5)'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center">
-                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-green-500 border-0 rounded-full p-0"></Badge>
-                    Rare Quests:
-                  </span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? 'text-green-400' : 'text-[#C8B8DB]/50'}>
-                    {user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? 'Unlocked' : 'Locked (Lvl 3)'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center">
-                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-gray-500 border-0 rounded-full p-0"></Badge>
-                    Basic Quests:
-                  </span>
-                  <span className="text-gray-400">Always Available</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Active Quests */}
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
-        <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6 mb-8">
-          <div className="flex items-center mb-4">
-            <List className="h-6 w-6 text-[#FF9D00] mr-2" />
-            <h2 className="text-xl font-cinzel font-bold">Active Quests</h2>
-            <div className="ml-auto flex items-center text-sm text-[#C8B8DB]/70">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>Daily Reset in 12h 34m</span>
-            </div>
-          </div>
-          
-          {bountyQuests.length === 0 ? (
-            <div className="bg-[#1F1D36]/50 rounded-lg p-8 text-center">
-              <Scroll className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
-              <p className="text-[#C8B8DB]/80 mb-4">
-                No active quests available. Check back later or upgrade your Bounty Board to unlock more quests!
-              </p>
-            </div>
-          ) : (
-            <Tabs defaultValue="daily" className="w-full">
-              <TabsList className="bg-[#1A1A2E] border border-[#432874]/30 mb-4">
-                <TabsTrigger value="daily" className="data-[state=active]:bg-[#432874]/30">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Daily Quests
-                </TabsTrigger>
-                <TabsTrigger value="weekly" className="data-[state=active]:bg-[#432874]/30">
-                  <CalendarDays className="h-4 w-4 mr-2" />
-                  Weekly Quests
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="daily" className="space-y-4">
-                {dailyQuests.length > 0 ? (
-                  dailyQuests.map(renderQuestCard)
-                ) : (
-                  <div className="bg-[#1F1D36]/50 rounded-lg p-6 text-center">
-                    <p className="text-[#C8B8DB]/80">No daily quests available right now.</p>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="weekly" className="space-y-4">
-                {weeklyQuests.length > 0 ? (
-                  weeklyQuests.map(renderQuestCard)
-                ) : (
-                  <div className="bg-[#1F1D36]/50 rounded-lg p-6 text-center">
-                    <p className="text-[#C8B8DB]/80">No weekly quests available right now.</p>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
           )}
         </div>
       </motion.div>
+    )
+  };
+
+  return (
+    <>
+      <div className="mb-6">
+        <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">Bounty Board</h1>
+        <p className="text-[#C8B8DB]/80">
+          Complete bounties to earn valuable rewards including Forge Tokens, Rogue Credits, and Soul Shards.
+        </p>
+      </div>
       
-      {/* End of Active Quests section */}
+      {/* Stats and Building Info */}
+      <div className="bg-gradient-to-r from-[#432874]/60 to-[#1A1A2E] rounded-xl p-6 mb-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF9D00]/10 rounded-full -mr-32 -mt-32 blur-md"></div>
+        <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-[#00B9AE]/10 rounded-full blur-md"></div>
+        
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4 z-10">
+          <div>
+            <h2 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-1">Bounty Board Level {bountyBoard?.currentLevel || 1}</h2>
+            
+            <div className="text-sm text-[#C8B8DB]/80 mb-2">
+              Complete bounties to earn valuable rewards and increase your character's renown.
+            </div>
+            
+            <div className="flex items-center text-[#C8B8DB]/70 mt-2">
+              <CalendarDays className="h-4 w-4 mr-1" />
+              <span className="text-sm">Daily reset in {formatTimeRemaining(new Date(new Date().setHours(24, 0, 0, 0)))}</span>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            <div className="bg-[#1A1A2E]/50 px-3 py-2 rounded-lg flex items-center">
+              <div className="mr-2 bg-[#432874]/30 p-1.5 rounded-full">
+                <List className="h-4 w-4 text-[#00B9AE]" />
+              </div>
+              <div>
+                <div className="text-xs text-[#C8B8DB]/70">Active Quests</div>
+                <div className="font-semibold text-[#C8B8DB]">{bountyQuests.filter(q => !q.completed).length}</div>
+              </div>
+            </div>
+            
+            <div className="bg-[#1A1A2E]/50 px-3 py-2 rounded-lg flex items-center">
+              <div className="mr-2 bg-[#432874]/30 p-1.5 rounded-full">
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+              </div>
+              <div>
+                <div className="text-xs text-[#C8B8DB]/70">Completed</div>
+                <div className="font-semibold text-[#C8B8DB]">{bountyQuests.filter(q => q.completed).length}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Quest Tabs */}
+      <Tabs defaultValue="daily" className="w-full">
+        <TabsList className="bg-[#432874]/20 mb-6">
+          <TabsTrigger value="daily" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
+            <Calendar className="h-4 w-4 mr-2" />
+            Daily Quests
+          </TabsTrigger>
+          <TabsTrigger value="weekly" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Weekly Quests
+          </TabsTrigger>
+          <TabsTrigger value="all" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
+            <List className="h-4 w-4 mr-2" />
+            All Quests
+          </TabsTrigger>
+        </TabsList>
+        
+        {/* Daily Quests Tab */}
+        <TabsContent value="daily">
+          <h2 className="text-lg font-cinzel font-bold text-[#FF9D00] mb-4">Daily Quests</h2>
+          
+          {dailyQuests.length === 0 ? (
+            <div className="bg-[#1F1D36]/50 rounded-lg p-8 text-center">
+              <List className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
+              <p className="text-[#C8B8DB]/80 mb-4">
+                No daily quests are available at the moment. Upgrade your Bounty Board to unlock more quests!
+              </p>
+            </div>
+          ) : (
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+            >
+              {dailyQuests.map((quest) => renderQuestCard(quest))}
+            </motion.div>
+          )}
+        </TabsContent>
+        
+        {/* Weekly Quests Tab */}
+        <TabsContent value="weekly">
+          <h2 className="text-lg font-cinzel font-bold text-[#FF9D00] mb-4">Weekly Quests</h2>
+          
+          {weeklyQuests.length === 0 ? (
+            <div className="bg-[#1F1D36]/50 rounded-lg p-8 text-center">
+              <CalendarDays className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
+              <p className="text-[#C8B8DB]/80 mb-4">
+                No weekly quests are available at the moment. Weekly quests become available at Bounty Board Level 2.
+              </p>
+            </div>
+          ) : (
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+            >
+              {weeklyQuests.map((quest) => renderQuestCard(quest))}
+            </motion.div>
+          )}
+        </TabsContent>
+        
+        {/* All Quests Tab */}
+        <TabsContent value="all">
+          <h2 className="text-lg font-cinzel font-bold text-[#FF9D00] mb-4">All Quests</h2>
+          
+          {bountyQuests.length === 0 ? (
+            <div className="bg-[#1F1D36]/50 rounded-lg p-8 text-center">
+              <List className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
+              <p className="text-[#C8B8DB]/80 mb-4">
+                No quests are available at the moment. Upgrade your Bounty Board to unlock more quests!
+              </p>
+            </div>
+          ) : (
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+            >
+              {bountyQuests.map((quest) => renderQuestCard(quest))}
+            </motion.div>
+          )}
+        </TabsContent>
+      </Tabs>
     </>
   );
 };

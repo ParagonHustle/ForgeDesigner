@@ -60,6 +60,30 @@ const BlackMarketView = () => {
   const standardListings = listings.filter(listing => 
     listing.currencyType === 'rogueCredits' && !listing.isPremium && !listing.sold
   ).slice(0, maxItemsPerCategory);
+  
+  // Add placeholder slots to show locked slots
+  const addLockedSlots = (listings: BlackMarketListing[], count: number) => {
+    const result = [...listings];
+    // Add one more slot than current capacity, showing the "next" locked slot
+    if (result.length < maxItemsPerCategory + 1) {
+      const placeholdersNeeded = maxItemsPerCategory + 1 - result.length;
+      for (let i = 0; i < placeholdersNeeded; i++) {
+        result.push({
+          id: `placeholder-${i}`,
+          itemType: 'placeholder',
+          itemData: { name: 'Locked Slot' },
+          price: 0,
+          currencyType: 'rogueCredits',
+          sold: false,
+          isPlaceholder: true
+        } as any);
+      }
+    }
+    return result;
+  };
+  
+  const premiumListingsWithPlaceholders = addLockedSlots(premiumListings, maxItemsPerCategory + 1);
+  const standardListingsWithPlaceholders = addLockedSlots(standardListings, maxItemsPerCategory + 1);
 
   // Generate time until refresh
   const getTimeUntilRefresh = () => {
