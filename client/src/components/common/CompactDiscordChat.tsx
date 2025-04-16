@@ -48,19 +48,19 @@ const CompactDiscordChat = () => {
         {/* Live Discord Chat Bar */}
         <div className="flex items-center h-9 relative">
           {/* Live Chat Display (Always visible) - Full width without Discord label */}
-          <div className="bg-[#1F1D36]/80 border border-[#432874]/30 rounded-l-md flex-1 h-12 overflow-y-auto scrollbar-none px-3 py-1 flex flex-col justify-center">
+          <div className="bg-[#1F1D36]/80 border border-[#432874]/30 rounded-l-md flex-1 h-12 overflow-y-auto scrollbar-none px-3 py-1 flex flex-col justify-center w-full">
             {recentMessages.length > 0 ? (
               <div className="w-full">
                 {recentMessages.map((msg, index) => (
-                  <div key={msg.id} className={`flex truncate ${index !== recentMessages.length - 1 ? 'mb-0.5' : ''}`}>
-                    <span className={`font-semibold text-xs ${
+                  <div key={msg.id} className={`flex ${index !== recentMessages.length - 1 ? 'mb-0.5' : ''}`}>
+                    <span className={`font-semibold text-xs whitespace-nowrap ${
                       msg.username === 'GuildMaster' ? 'text-[#FF9D00]' : 
                       msg.username === 'AuraCollector' ? 'text-[#00B9AE]' : 
                       'text-[#C8B8DB]'
                     }`}>
                       {msg.username}:
                     </span>
-                    <span className="text-[#C8B8DB]/90 ml-1 truncate text-xs">{msg.content}</span>
+                    <span className="text-[#C8B8DB]/90 ml-1 truncate text-xs flex-1">{msg.content}</span>
                   </div>
                 ))}
               </div>
@@ -83,7 +83,7 @@ const CompactDiscordChat = () => {
         </div>
       </div>
       
-      <DialogContent className="sm:max-w-md bg-[#1A1A2E] border-[#432874]/50">
+      <DialogContent className="sm:max-w-xl bg-[#1A1A2E] border-[#432874]/50">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-cinzel font-bold text-[#FF9D00]">Discord Chat</h2>
           <div className="bg-[#FF9D00]/20 rounded-full px-2 py-0.5 text-xs text-[#FF9D00]">
