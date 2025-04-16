@@ -310,6 +310,51 @@ const completeForging = async (taskId: number) => {
     };
   };
   
+  // Function to calculate the actual bonuses for a slot based on its level and path
+  const calculateSlotBonuses = (slotIndex: number) => {
+    const slotInfo = forgeSlotUpgrades.find((slot: any) => slot.slotId === slotIndex);
+    
+    if (!slotInfo) {
+      return {
+        level: 1,
+        path: 'None',
+        statBonus: 0,
+        fusionBonus: 0,
+        speedBonus: 0,
+        qualityBonus: 0
+      };
+    }
+    
+    const level = slotInfo.level || 1;
+    const path = slotInfo.upgradePath || 1;
+    
+    // Different bonuses based on path
+    // Path 1: Master Artisan - higher base stats on crafted auras
+    // Path 2: Fusion Specialist - better fusion bonuses
+    
+    if (path === 1) {
+      // Master Artisan path (orange): Better base stats, small fusion bonus
+      return {
+        level,
+        path: 'Master Artisan',
+        statBonus: level * 5, // 5% better stats per level
+        fusionBonus: level * 2, // 2% better fusion per level
+        speedBonus: level * 2, // 2% faster per level
+        qualityBonus: level * 3 // 3% better quality per level
+      };
+    } else {
+      // Fusion Specialist path (teal): Better fusion results, small stat bonus
+      return {
+        level,
+        path: 'Fusion Specialist',
+        statBonus: level * 2, // 2% better stats per level
+        fusionBonus: level * 5, // 5% better fusion per level
+        speedBonus: level * 3, // 3% faster per level
+        qualityBonus: level * 2 // 2% better quality per level
+      };
+    }
+  };
+  
   const upgradeSlot = () => {
     setIsSubmitting(true);
     
@@ -715,6 +760,53 @@ const completeForging = async (taskId: number) => {
                             <div className="text-sm text-[#C8B8DB]/70 mb-3">
                               Select an operation for this slot
                             </div>
+                            
+                            {/* Show Slot Bonuses */}
+                            {(() => {
+                              const bonuses = calculateSlotBonuses(index);
+                              // Only show if there are any bonuses (slot level > 1)
+                              if (bonuses.level > 1) {
+                                const isArtisanPath = bonuses.path === 'Master Artisan';
+                                return (
+                                  <div className={`mb-3 p-2 rounded-md text-xs ${
+                                    isArtisanPath ? 'bg-[#FF9D00]/10 border border-[#FF9D00]/20' : 'bg-[#00B9AE]/10 border border-[#00B9AE]/20'
+                                  }`}>
+                                    <div className="flex justify-between items-center mb-1">
+                                      <div className="flex items-center">
+                                        {isArtisanPath ? (
+                                          <Hammer className="h-3 w-3 mr-1 text-[#FF9D00]" />
+                                        ) : (
+                                          <Sparkles className="h-3 w-3 mr-1 text-[#00B9AE]" />
+                                        )}
+                                        <span className={isArtisanPath ? 'text-[#FF9D00]' : 'text-[#00B9AE]'}>
+                                          {bonuses.path} (Level {bonuses.level})
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[#C8B8DB]/80">
+                                      <div className="flex items-center">
+                                        <div className={`w-2 h-2 rounded-full ${isArtisanPath ? 'bg-[#FF9D00]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                        <span>+{bonuses.statBonus}% Stats</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <div className={`w-2 h-2 rounded-full ${isArtisanPath ? 'bg-[#FF9D00]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                        <span>+{bonuses.fusionBonus}% Fusion</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <div className={`w-2 h-2 rounded-full ${isArtisanPath ? 'bg-[#FF9D00]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                        <span>+{bonuses.speedBonus}% Speed</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <div className={`w-2 h-2 rounded-full ${isArtisanPath ? 'bg-[#FF9D00]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                        <span>+{bonuses.qualityBonus}% Quality</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+                            
                             <div className="grid grid-cols-3 gap-1">
                               <Button 
                                 variant="outline" 
