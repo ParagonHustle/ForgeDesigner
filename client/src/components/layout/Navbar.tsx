@@ -60,40 +60,9 @@ const Navbar = () => {
         <div className="text-2xl font-cinzel font-bold text-[#FF9D00] mr-2">The Forge</div>
         <span className="bg-[#00B9AE]/20 text-[#00B9AE] text-xs px-2 py-0.5 rounded">Alpha v0.1</span>
 
-        {/* Activity Timer Tags */}
-        <div className="ml-4 flex gap-2">
-          {Object.entries(activityTimers).map(([type, data]) => {
-            if (data.count === 0) return null;
-            const isComplete = data.time <= 0;
-            return (
-              <Link 
-                key={type} 
-                href={data.path}
-                className={`
-                  px-2 py-1 rounded text-xs flex items-center gap-1 cursor-pointer
-                  ${isComplete 
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                    : 'bg-[#432874]/20 text-[#C8B8DB] border border-[#432874]/30'}
-                `}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-                {data.count > 1 && (
-                  <span className="text-[#FF9D00] font-semibold ml-1">
-                    x{data.count}
-                  </span>
-                )}
-                {!isComplete && (
-                  <CountdownTimer 
-                    endTime={new Date(Date.now() + data.time).toISOString()} 
-                    className="ml-1"
-                  />
-                )}
-                {isComplete && (
-                  <span className="text-green-400">✓</span>
-                )}
-              </Link>
-            );
-          })}
+        {/* Discord Chat */}
+        <div className="ml-4">
+          <CompactDiscordChat />
         </div>
 
         {speedBoostActive && (
@@ -105,10 +74,6 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center space-x-4">
-        {/* Discord Chat */}
-        <div className="hidden md:block">
-          <CompactDiscordChat />
-        </div>
         
         {/* Resources Display */}
         <div className="hidden md:flex items-center space-x-3">

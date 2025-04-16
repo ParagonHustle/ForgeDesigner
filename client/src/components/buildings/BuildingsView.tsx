@@ -47,25 +47,7 @@ import CountdownTimer from '../common/CountdownTimer';
 import type { BuildingUpgrade } from '@shared/schema';
 
 // Building definitions
-const buildings = [
-  {
-    id: 'bountyboard',
-    name: 'Bounty Board',
-    description: 'Complete quests to earn rewards with enhanced quest options and rewards.',
-    icon: <List className="h-6 w-6" />,
-    color: 'text-[#00B9AE] bg-[#00B9AE]/10',
-    benefits: [
-      { level: 1, text: 'Basic daily quests (3 slots)' },
-      { level: 2, text: 'Unlocks weekly quests' },
-      { level: 3, text: 'Increased quest rewards by 20%' },
-      { level: 4, text: 'Unlocks rare quests' },
-      { level: 5, text: 'Unlocks epic quests with premium rewards' }
-    ],
-    maxLevel: 9,
-    baseUpgradeCost: { rogueCredits: 700, forgeTokens: 70 },
-    upgradeTimeInMinutes: 35
-  }
-];
+const buildings = [];
 
 const BuildingsView = () => {
   const { user, fetchUser } = useDiscordAuth();
