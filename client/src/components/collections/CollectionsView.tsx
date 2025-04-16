@@ -24,9 +24,8 @@ import {
 } from 'lucide-react';
 
 const CollectionsView = () => {
-  const [selectedTab, setSelectedTab] = useState('collections');
-  const [basicRewardClaimed, setBasicRewardClaimed] = useState(false);
-  const [rareRewardClaimed, setRareRewardClaimed] = useState(false);
+  const [selectedTab, setSelectedTab] = useState('active-collections');
+  const [collectionsSubTab, setCollectionsSubTab] = useState('active-collections');
   const [equippedTitle, setEquippedTitle] = useState<number | null>(1); // Default to first title
   
   const gameStore = useGameStore();
