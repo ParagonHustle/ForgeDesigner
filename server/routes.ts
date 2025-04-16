@@ -2596,137 +2596,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/buildings/upgrade', authenticateUser, async (req, res) => {
-    try {
-      const { buildingType, allocatedSkill } = req.body;
-      
-      if (!buildingType) {
-        return res.status(400).json({ message: 'Building type is required' });
-      }
-      
-      // Get user to check resources
-      const user = await storage.getUserById(req.session.userId!);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-      
-      // Get the townhall to determine building level restrictions
-      const townhall = await storage.getBuildingUpgradeByTypeAndUserId('townhall', req.session.userId!);
-      const townhallLevel = townhall?.currentLevel || 1;
-      
-      // Set max allowed level to 9 for all buildings regardless of townhall level
-      const maxAllowedLevel = 9;
-      
-      // Get the existing building
-      const existingBuilding = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
-      
-      if (!existingBuilding) {
-        // Create a new building upgrade if it doesn't exist
-        const newBuilding = await storage.createBuildingUpgrade({
-          userId: req.session.userId!,
-          buildingType,
-          currentLevel: 1,
-          upgradeInProgress: false,
-          unlockedSkills: []
-        });
-        
-        return res.status(201).json(newBuilding);
-      }
-      
-      // Check if already upgrading
-      if (existingBuilding.upgradeInProgress) {
-        return res.status(400).json({ message: 'Building is already being upgraded' });
-      }
-      
-      // Building configs with max level and upgrade time
-      const buildingConfigs = {
-        townhall: { maxLevel: 9, upgradeTime: 60 },
-        forge: { maxLevel: 9, upgradeTime: 45 },
-        blackmarket: { maxLevel: 9, upgradeTime: 30 },
-        barracks: { maxLevel: 9, upgradeTime: 45 },
-        library: { maxLevel: 9, upgradeTime: 30 },
-        guild: { maxLevel: 9, upgradeTime: 90 },
-        bountyBoard: { maxLevel: 9, upgradeTime: 40 }
-      };
-      
-      const config = buildingConfigs[buildingType as keyof typeof buildingConfigs];
-      const maxLevel = config?.maxLevel || 50;
-      
-      // For townhall, use its own max level
-      if (buildingType === 'townhall') {
-        if (existingBuilding.currentLevel >= maxLevel) {
-          return res.status(400).json({ message: 'Townhall is already at max level' });
-        }
-      } else {
-        // For other buildings, check against the max allowed level
-        if (existingBuilding.currentLevel >= Math.min(maxAllowedLevel, maxLevel)) {
-          return res.status(400).json({ 
-            message: 'Building has reached maximum level',
-            currentLevel: existingBuilding.currentLevel,
-            maxAllowedLevel: maxAllowedLevel
-          });
-        }
-      }
-      
-      // Calculate cost
-      const baseCosts = {
-        townhall: { rogueCredits: 1000, forgeTokens: 100 },
-        forge: { rogueCredits: 800, forgeTokens: 80 },
-        blackmarket: { rogueCredits: 600, forgeTokens: 60 },
-        barracks: { rogueCredits: 800, forgeTokens: 80 },
-        library: { rogueCredits: 600, forgeTokens: 60 },
-        guild: { rogueCredits: 1200, forgeTokens: 120 },
-        bountyBoard: { rogueCredits: 700, forgeTokens: 70 }
-      };
-      
-      const baseCost = baseCosts[buildingType as keyof typeof baseCosts] || { rogueCredits: 500, forgeTokens: 50 };
-      const levelMultiplier = existingBuilding.currentLevel;
-      const cost = {
-        rogueCredits: baseCost.rogueCredits * levelMultiplier,
-        forgeTokens: baseCost.forgeTokens * levelMultiplier
-      };
-      
-      // Check if user can afford upgrade
-      if (user.rogueCredits! < cost.rogueCredits || user.forgeTokens! < cost.forgeTokens) {
-        return res.status(400).json({ 
-          message: 'Insufficient resources for upgrade',
-          required: cost,
-          current: {
-            rogueCredits: user.rogueCredits,
-            forgeTokens: user.forgeTokens
-          }
-        });
-      }
-      
-      // Deduct costs
-      await storage.updateUser(user.id, {
-        rogueCredits: user.rogueCredits! - cost.rogueCredits,
-        forgeTokens: user.forgeTokens! - cost.forgeTokens
-      });
-      
-      // Set upgrade in progress
-      const upgradeTime = (config?.upgradeTime || 30) * 60 * 1000; // minutes to milliseconds
-      const updatedBuilding = await storage.updateBuildingUpgrade(existingBuilding.id, {
-        upgradeInProgress: true,
-        upgradeStartTime: new Date(),
-        upgradeEndTime: new Date(Date.now() + upgradeTime)
-      });
-      
-      // Log activity
-      await storage.createActivityLog({
-        userId: req.session.userId!,
-        activityType: 'building_upgrade_started',
-        description: `Started upgrading ${buildingType} to level ${existingBuilding.currentLevel + 1}`,
-        relatedIds: { buildingId: existingBuilding.id }
-      });
-      
-      res.json(updatedBuilding);
-    } catch (error) {
-      console.error('Error starting building upgrade:', error);
-      res.status(500).json({ message: 'Failed to start building upgrade' });
-    }
-  });
-  
+// DISABLED:   // DISABLED - duplicate route
+// DISABLED:   // app.post('/api/buildings/upgrade', authenticateUser, async (req, res) => {
+// DISABLED:     try {
+// DISABLED:       const { buildingType, allocatedSkill } = req.body;
+// DISABLED:       
+// DISABLED:       if (!buildingType) {
+// DISABLED:         return res.status(400).json({ message: 'Building type is required' });
+// DISABLED:       }
+// DISABLED:       
+// DISABLED:       // Get user to check resources
+// DISABLED:       const user = await storage.getUserById(req.session.userId!);
+// DISABLED:       if (!user) {
+// DISABLED:         return res.status(404).json({ message: 'User not found' });
+// DISABLED:       }
+// DISABLED:       
+// DISABLED:       // Get the townhall to determine building level restrictions
+// DISABLED:       const townhall = await storage.getBuildingUpgradeByTypeAndUserId('townhall', req.session.userId!);
+// DISABLED:       const townhallLevel = townhall?.currentLevel || 1;
+// DISABLED:       
+// DISABLED:       // Set max allowed level to 9 for all buildings regardless of townhall level
+// DISABLED:       const maxAllowedLevel = 9;
+// DISABLED:       
+// DISABLED:       // Get the existing building
+// DISABLED:       const existingBuilding = await storage.getBuildingUpgradeByTypeAndUserId(buildingType, req.session.userId!);
+// DISABLED:       
+// DISABLED:       if (!existingBuilding) {
+// DISABLED:         // Create a new building upgrade if it doesn't exist
+// DISABLED:         const newBuilding = await storage.createBuildingUpgrade({
+// DISABLED:           userId: req.session.userId!,
+// DISABLED:           buildingType,
+// DISABLED:           currentLevel: 1,
+// DISABLED:           upgradeInProgress: false,
+// DISABLED:           unlockedSkills: []
+// DISABLED:         });
+// DISABLED:         
+// DISABLED:         return res.status(201).json(newBuilding);
+// DISABLED:       }
+// DISABLED:       
+// DISABLED:       // Check if already upgrading
+// DISABLED:       if (existingBuilding.upgradeInProgress) {
+// DISABLED:         return res.status(400).json({ message: 'Building is already being upgraded' });
+// DISABLED:       }
+// DISABLED:       
+// DISABLED:       // Building configs with max level and upgrade time
+// DISABLED:       const buildingConfigs = {
+// DISABLED:         townhall: { maxLevel: 9, upgradeTime: 60 },
+// DISABLED:         forge: { maxLevel: 9, upgradeTime: 45 },
+// DISABLED:         blackmarket: { maxLevel: 9, upgradeTime: 30 },
+// DISABLED:         barracks: { maxLevel: 9, upgradeTime: 45 },
+// DISABLED:         library: { maxLevel: 9, upgradeTime: 30 },
+// DISABLED:         guild: { maxLevel: 9, upgradeTime: 90 },
+// DISABLED:         bountyBoard: { maxLevel: 9, upgradeTime: 40 }
+// DISABLED:       };
+// DISABLED:       
+// DISABLED:       const config = buildingConfigs[buildingType as keyof typeof buildingConfigs];
+// DISABLED:       const maxLevel = config?.maxLevel || 50;
+// DISABLED:       
+// DISABLED:       // For townhall, use its own max level
+// DISABLED:       if (buildingType === 'townhall') {
+// DISABLED:         if (existingBuilding.currentLevel >= maxLevel) {
+// DISABLED:           return res.status(400).json({ message: 'Townhall is already at max level' });
+// DISABLED:         }
+// DISABLED:       } else {
+// DISABLED:         // For other buildings, check against the max allowed level
+// DISABLED:         if (existingBuilding.currentLevel >= Math.min(maxAllowedLevel, maxLevel)) {
+// DISABLED:           return res.status(400).json({ 
+// DISABLED:             message: 'Building has reached maximum level',
+// DISABLED:             currentLevel: existingBuilding.currentLevel,
+// DISABLED:             maxAllowedLevel: maxAllowedLevel
+// DISABLED:           });
+// DISABLED:         }
+// DISABLED:       }
+// DISABLED:       
+// DISABLED:       // Calculate cost
+// DISABLED:       const baseCosts = {
+// DISABLED:         townhall: { rogueCredits: 1000, forgeTokens: 100 },
+// DISABLED:         forge: { rogueCredits: 800, forgeTokens: 80 },
+// DISABLED:         blackmarket: { rogueCredits: 600, forgeTokens: 60 },
+// DISABLED:         barracks: { rogueCredits: 800, forgeTokens: 80 },
+// DISABLED:         library: { rogueCredits: 600, forgeTokens: 60 },
+// DISABLED:         guild: { rogueCredits: 1200, forgeTokens: 120 },
+// DISABLED:         bountyBoard: { rogueCredits: 700, forgeTokens: 70 }
+// DISABLED:       };
+// DISABLED:       
+// DISABLED:       const baseCost = baseCosts[buildingType as keyof typeof baseCosts] || { rogueCredits: 500, forgeTokens: 50 };
+// DISABLED:       const levelMultiplier = existingBuilding.currentLevel;
+// DISABLED:       const cost = {
+// DISABLED:         rogueCredits: baseCost.rogueCredits * levelMultiplier,
+// DISABLED:         forgeTokens: baseCost.forgeTokens * levelMultiplier
+// DISABLED:       };
+// DISABLED:       
+// DISABLED:       // Check if user can afford upgrade
+// DISABLED:       if (user.rogueCredits! < cost.rogueCredits || user.forgeTokens! < cost.forgeTokens) {
+// DISABLED:         return res.status(400).json({ 
+// DISABLED:           message: 'Insufficient resources for upgrade',
+// DISABLED:           required: cost,
+// DISABLED:           current: {
+// DISABLED:             rogueCredits: user.rogueCredits,
+// DISABLED:             forgeTokens: user.forgeTokens
+// DISABLED:           }
+// DISABLED:         });
+// DISABLED:       }
+// DISABLED:       
+// DISABLED:       // Deduct costs
+// DISABLED:       await storage.updateUser(user.id, {
+// DISABLED:         rogueCredits: user.rogueCredits! - cost.rogueCredits,
+// DISABLED:         forgeTokens: user.forgeTokens! - cost.forgeTokens
+// DISABLED:       });
+// DISABLED:       
+// DISABLED:       // Set upgrade in progress
+// DISABLED:       const upgradeTime = (config?.upgradeTime || 30) * 60 * 1000; // minutes to milliseconds
+// DISABLED:       const updatedBuilding = await storage.updateBuildingUpgrade(existingBuilding.id, {
+// DISABLED:         upgradeInProgress: true,
+// DISABLED:         upgradeStartTime: new Date(),
+// DISABLED:         upgradeEndTime: new Date(Date.now() + upgradeTime)
+// DISABLED:       });
+// DISABLED:       
+// DISABLED:       // Log activity
+// DISABLED:       await storage.createActivityLog({
+// DISABLED:         userId: req.session.userId!,
+// DISABLED:         activityType: 'building_upgrade_started',
+// DISABLED:         description: `Started upgrading ${buildingType} to level ${existingBuilding.currentLevel + 1}`,
+// DISABLED:         relatedIds: { buildingId: existingBuilding.id }
+// DISABLED:       });
+// DISABLED:       
+// DISABLED:       res.json(updatedBuilding);
+// DISABLED:     } catch (error) {
+// DISABLED:       console.error('Error starting building upgrade:', error);
+// DISABLED:       res.status(500).json({ message: 'Failed to start building upgrade' });
+// DISABLED:     }
+// DISABLED:   });
+// DISABLED:   
   app.post('/api/buildings/complete/:buildingType', authenticateUser, async (req, res) => {
     try {
       const { buildingType } = req.params;
