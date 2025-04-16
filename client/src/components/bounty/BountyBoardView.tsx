@@ -182,12 +182,11 @@ const BountyBoardView = () => {
   // Rarity Badge Component
   const RarityBadge = ({ rarity }: { rarity: string }) => {
     const rarityClass = {
-      common: 'bg-[#3A3A3A]/40 text-[#A0A0A0] border-[#A0A0A0]/30',
-      uncommon: 'bg-[#4CAF50]/20 text-[#4CAF50] border-[#4CAF50]/30',
+      common: 'bg-[#4CAF50]/20 text-[#4CAF50] border-[#4CAF50]/30',
       rare: 'bg-[#2196F3]/20 text-[#2196F3] border-[#2196F3]/30',
       epic: 'bg-[#9C27B0]/20 text-[#9C27B0] border-[#9C27B0]/30',
       legendary: 'bg-[#FF9D00]/20 text-[#FF9D00] border-[#FF9D00]/30',
-    }[rarity.toLowerCase()] || 'bg-[#3A3A3A]/40 text-[#A0A0A0] border-[#A0A0A0]/30';
+    }[rarity.toLowerCase()] || 'bg-[#4CAF50]/20 text-[#4CAF50] border-[#4CAF50]/30';
     
     return (
       <Badge className={`${rarityClass} text-xs py-0 px-1.5 border`}>

@@ -1,6 +1,5 @@
 import WelcomeSection from './WelcomeSection';
 import ActiveTasks from './ActiveTasks';
-import ResourcesOverview from './ResourcesOverview';
 import DiscordChat from './DiscordChat';
 import OfferBanner from '../ui/OfferBanner';
 import { useDiscordAuth } from '@/lib/discordAuth';
@@ -41,8 +40,8 @@ const DashboardView = () => {
       <OfferBanner />
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Left Column - Account Overview */}
-        <div className="md:col-span-8 space-y-6">
+        {/* Main Column - Account Overview */}
+        <div className="md:col-span-12 space-y-6">
           <WelcomeSection 
             username={user?.username || 'Adventurer'} 
             charactersCount={characters.length}
@@ -58,12 +57,7 @@ const DashboardView = () => {
           />
         </div>
         
-        {/* Right Column - Resources */}
-        <div className="md:col-span-4 space-y-6">
-          <ResourcesOverview />
-        </div>
-        
-        {/* Discord Chat - Can be expanded to full width */}
+        {/* Discord Chat - Full width */}
         <div className="md:col-span-12">
           <DiscordChat />
         </div>

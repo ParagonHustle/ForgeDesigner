@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import AICompanion from '../ui/AICompanion';
-import MechanicsHelpModal from '../common/MechanicsHelpModal';
+import { Button } from "@/components/ui/button";
 import { 
   Home, 
   Package, 
@@ -57,14 +57,14 @@ const Sidebar = () => {
       </div>
       
       <div className="mt-auto p-4 hidden md:block space-y-4">
-        <div className="bg-[#432874]/20 rounded-lg p-2 text-center">
-          <div className="text-xs text-[#C8B8DB]/70">Game Mechanics</div>
-          <div className="mt-2 flex justify-center">
-            <MechanicsHelpModal 
-              buttonText="Game Guide" 
-              buttonVariant="outline"
-              buttonSize="sm"
-            />
+        <div className="bg-[#432874]/20 rounded-lg p-3 text-center">
+          <div className="text-xs text-[#C8B8DB]/70 mb-2">Today's Special Offer</div>
+          <div className="text-[#FF9D00] text-sm font-bold">50% OFF ALL PREMIUM PACKS</div>
+          <div className="text-xs text-[#C8B8DB]/90 mt-1">Limited time offer! Ends in 3h 45m</div>
+          <div className="mt-2">
+            <Button size="sm" className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]">
+              Claim Offer
+            </Button>
           </div>
         </div>
         
