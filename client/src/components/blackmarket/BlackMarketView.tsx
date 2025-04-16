@@ -22,7 +22,10 @@ import {
   Users, 
   Shield, 
   Gem, 
-  AlertTriangle
+  AlertTriangle,
+  Lock,
+  Scroll,
+  CheckCircle2
 } from 'lucide-react';
 
 import type { BlackMarketListing } from '@shared/schema';
@@ -37,6 +40,11 @@ const BlackMarketView = () => {
     listing: null
   });
   
+  // Fetch user's Black Market level
+  const blackMarketLevel = user?.blackMarketLevel || 1;
+  const maxItemsPerCategory = blackMarketLevel < 3 ? (blackMarketLevel + 2) : 6; // 3 slots at level 1, 4 at level 2, etc.
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  
   // Fetch black market listings
   const { data: listings = [], isLoading, refetch: refetchListings } = useQuery<BlackMarketListing[]>({ 
     queryKey: ['/api/blackmarket/listings'],
@@ -44,17 +52,13 @@ const BlackMarketView = () => {
   });
 
   // Filter listings by different categories
-  const featuredPremiumListings = listings.filter(listing => 
-    listing.isPremium === true && !listing.sold
-  );
-  
-  const regularPremiumListings = listings.filter(listing => 
-    listing.currencyType === 'forgeTokens' && !listing.isPremium && !listing.sold
-  );
+  const premiumListings = listings.filter(listing => 
+    (listing.isPremium === true || listing.currencyType === 'forgeTokens') && !listing.sold
+  ).slice(0, maxItemsPerCategory);
   
   const standardListings = listings.filter(listing => 
     listing.currencyType === 'rogueCredits' && !listing.isPremium && !listing.sold
-  );
+  ).slice(0, maxItemsPerCategory);
 
   // Generate time until refresh
   const getTimeUntilRefresh = () => {
@@ -195,11 +199,120 @@ const BlackMarketView = () => {
 
   return (
     <>
+      {/* Black Market Upgrade Dialog */}
+      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <DialogContent className="bg-[#1A1A2E] border-[#432874]/50 text-[#C8B8DB] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">Upgrade Black Market</DialogTitle>
+            <DialogDescription className="text-[#C8B8DB]/80">
+              Upgrading your Black Market unlocks more item slots and better offerings.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h4 className="font-semibold">Current Level: {blackMarketLevel}</h4>
+                <p className="text-sm text-[#C8B8DB]/70">Next Level: {blackMarketLevel + 1}</p>
+              </div>
+              <div className="bg-[#432874]/30 px-3 py-1 rounded">
+                <span className="text-[#FF9D00] font-semibold">Lv.{blackMarketLevel}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-[#15152C] p-3 rounded-md">
+                <h4 className="font-semibold mb-2">Required Materials</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
+                        <Scroll className="h-4 w-4 text-[#00B9AE]" />
+                      </div>
+                      <span>Market Expansion Plans</span>
+                    </div>
+                    <Badge className="bg-[#15152C] border-[#432874]">
+                      {blackMarketLevel * 2} pcs
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
+                        <span className="text-[#FF9D00] text-xs">RC</span>
+                      </div>
+                      <span>Rogue Credits</span>
+                    </div>
+                    <Badge className="bg-[#15152C] border-[#432874]">
+                      {blackMarketLevel * 1000}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-[#15152C] p-3 rounded-md">
+                <h4 className="font-semibold mb-2">Unlocks at Level {blackMarketLevel + 1}</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
+                    +1 Item Slot per Category
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
+                    {blackMarketLevel + 1 >= 3 ? "Rare Item Availability" : 
+                     blackMarketLevel + 1 >= 5 ? "Epic Item Availability" :
+                     blackMarketLevel + 1 >= 7 ? "Mythic Item Availability" :
+                     "Better Price Offerings"}
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
+                    Improved Refresh Rate
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex justify-between items-center">
+            <Button variant="outline" onClick={() => setShowUpgradeDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+              onClick={() => {
+                toast({
+                  title: "Coming Soon",
+                  description: "Black Market upgrade functionality will be available in a future update."
+                });
+                setShowUpgradeDialog(false);
+              }}
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Upgrade
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="mb-6">
-        <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">Black Market</h1>
-        <p className="text-[#C8B8DB]/80">
-          Purchase rare characters, auras, and valuable materials with your currencies.
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">Black Market</h1>
+            <p className="text-[#C8B8DB]/80">
+              Purchase rare characters, auras, and valuable materials with your currencies.
+            </p>
+          </div>
+          
+          {/* Upgrade Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-[#FF9D00]/50 text-[#FF9D00] hover:bg-[#FF9D00]/10"
+            onClick={() => setShowUpgradeDialog(true)}
+          >
+            <Shield className="h-4 w-4 mr-2" />
+            Upgrade Market
+          </Button>
+        </div>
       </div>
       
       {/* Market Header */}
@@ -213,6 +326,10 @@ const BlackMarketView = () => {
             <div className="flex items-center text-[#C8B8DB]/70">
               <Clock className="h-4 w-4 mr-1" />
               <span>Refreshes in {getTimeUntilRefresh()}</span>
+            </div>
+            <div className="flex items-center text-[#C8B8DB]/70 mt-2">
+              <Shield className="h-4 w-4 mr-1" />
+              <span>Black Market Level: {blackMarketLevel} (Slots: {maxItemsPerCategory})</span>
             </div>
           </div>
           
@@ -237,115 +354,54 @@ const BlackMarketView = () => {
         </div>
       </div>
       
-      {/* Featured Premium Items Section */}
-      {featuredPremiumListings.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center mb-4">
-            <Sparkles className="h-5 w-5 mr-2 text-[#FFD700]" />
-            <h3 className="text-xl font-cinzel font-bold text-[#FFD700]">Featured Premium Items</h3>
-          </div>
-          
-          <div className="bg-gradient-to-r from-[#432874]/40 to-[#1A1A2E] p-1 rounded-xl">
-            <motion.div
-              variants={container}
-              initial="hidden"
-              animate="show"
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 p-4"
-            >
-              {featuredPremiumListings.map(listing => {
-                const itemInfo = getItemInfo(listing);
-                
-                return (
-                  <motion.div
-                    key={listing.id}
-                    variants={item}
-                    className="bg-[#1A1A2E] border border-[#FFD700]/30 rounded-xl overflow-hidden shadow-lg shadow-[#FFD700]/10"
-                  >
-                    <div className="relative h-40">
-                      <img 
-                        src={itemInfo.image} 
-                        alt={itemInfo.title} 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A2E] to-transparent"></div>
-                      <div className="absolute top-2 right-2">
-                        <Badge className="bg-[#FFD700]/30 text-[#FFD700] border-[#FFD700]/50">
-                          <Sparkles className="h-3 w-3 mr-1" />
-                          Featured
-                        </Badge>
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h3 className="text-xl font-cinzel font-bold text-[#FFD700]">{itemInfo.title}</h3>
-                        <p className="text-sm text-[#C8B8DB]/80">{itemInfo.description}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4">
-                      {/* Item details section */}
-                      {itemInfo.detailLines && itemInfo.detailLines.length > 0 && (
-                        <div className="mb-3 text-xs text-[#C8B8DB]/80 bg-[#1A1A2E]/80 rounded p-2 border border-[#FFD700]/20">
-                          {itemInfo.detailLines.map((line, index) => 
-                            line ? <div key={index} className="mb-1">{line}</div> : null
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center">
-                          <img 
-                            src={getCurrencyIcon(listing.currencyType)} 
-                            alt={listing.currencyType} 
-                            className="w-6 h-6 rounded-full mr-2"
-                          />
-                          <span className="text-lg font-semibold text-[#FFD700]">{listing.price}</span>
-                        </div>
-                        
-                        <Button
-                          className={`${canAfford(listing) 
-                            ? 'bg-[#FFD700] hover:bg-[#FFD700]/80 text-[#1A1A2E]' 
-                            : 'bg-[#432874]/50 text-[#C8B8DB]/50 cursor-not-allowed'}`}
-                          disabled={!canAfford(listing) || isSubmitting}
-                          onClick={() => setConfirmDialog({ open: true, listing })}
-                        >
-                          <ShoppingBag className="h-4 w-4 mr-2" />
-                          {canAfford(listing) ? 'Purchase' : 'Can\'t Afford'}
-                        </Button>
-                      </div>
-                      
-                      <div className="text-xs text-[#FFD700]/60 italic">
-                        Limited time offer, exclusive premium item!
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          </div>
+      {/* Premium Items */}
+      <div className="mb-8">
+        <div className="flex items-center mb-4">
+          <Gem className="h-5 w-5 mr-2 text-[#FF9D00]" />
+          <h3 className="text-xl font-cinzel font-bold text-[#FF9D00]">Premium Items</h3>
         </div>
-      )}
-      
-      {/* Regular Premium Items */}
-      {regularPremiumListings.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center mb-4">
-            <Gem className="h-5 w-5 mr-2 text-[#FF9D00]" />
-            <h3 className="text-xl font-cinzel font-bold text-[#FF9D00]">Premium Items</h3>
-          </div>
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-          >
-            {regularPremiumListings.map(listing => {
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+        >
+          {premiumListings.length === 0 ? (
+            <div className="col-span-full bg-[#1A1A2E] rounded-xl p-8 text-center">
+              <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
+              <p className="text-[#C8B8DB]/80 mb-4">
+                No premium items are available at the moment. Check back later!
+              </p>
+            </div>
+          ) : (
+            premiumListings.map((listing, index) => {
               const itemInfo = getItemInfo(listing);
+              const isLocked = index >= blackMarketLevel + 2;
               
               return (
                 <motion.div
                   key={listing.id}
                   variants={item}
-                  className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
+                  className={`bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden relative ${isLocked ? 'opacity-60' : ''}`}
                 >
+                  {isLocked && (
+                    <div className="absolute inset-0 bg-[#1A1A2E]/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4">
+                      <Lock className="h-12 w-12 text-[#432874] mb-4" />
+                      <p className="text-center text-[#C8B8DB] font-semibold">
+                        Upgrade your Black Market to Level {Math.ceil((index + 1) / 3)} to unlock this slot
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-4 border-[#FF9D00]/50 text-[#FF9D00] hover:bg-[#FF9D00]/10"
+                        onClick={() => setShowUpgradeDialog(true)}
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Upgrade Market
+                      </Button>
+                    </div>
+                  )}
+                  
                   <div className="relative h-40">
                     <img 
                       src={itemInfo.image} 
@@ -388,11 +444,11 @@ const BlackMarketView = () => {
                         className={`${canAfford(listing) 
                           ? 'bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]' 
                           : 'bg-[#432874]/50 text-[#C8B8DB]/50 cursor-not-allowed'}`}
-                        disabled={!canAfford(listing) || isSubmitting}
+                        disabled={!canAfford(listing) || isSubmitting || isLocked}
                         onClick={() => setConfirmDialog({ open: true, listing })}
                       >
                         <ShoppingBag className="h-4 w-4 mr-2" />
-                        {canAfford(listing) ? 'Purchase' : 'Can\'t Afford'}
+                        {isLocked ? 'Locked' : canAfford(listing) ? 'Purchase' : 'Can\'t Afford'}
                       </Button>
                     </div>
                     
@@ -402,10 +458,10 @@ const BlackMarketView = () => {
                   </div>
                 </motion.div>
               );
-            })}
-          </motion.div>
-        </div>
-      )}
+            })
+          )}
+        </motion.div>
+      </div>
       
       {/* Standard Items */}
       <div className="mb-8">
@@ -427,15 +483,34 @@ const BlackMarketView = () => {
               </p>
             </div>
           ) : (
-            standardListings.map(listing => {
+            standardListings.map((listing, index) => {
               const itemInfo = getItemInfo(listing);
+              const isLocked = index >= blackMarketLevel + 2;
               
               return (
                 <motion.div
                   key={listing.id}
                   variants={item}
-                  className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
+                  className={`bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden relative ${isLocked ? 'opacity-60' : ''}`}
                 >
+                  {isLocked && (
+                    <div className="absolute inset-0 bg-[#1A1A2E]/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4">
+                      <Lock className="h-12 w-12 text-[#432874] mb-4" />
+                      <p className="text-center text-[#C8B8DB] font-semibold">
+                        Upgrade your Black Market to Level {Math.ceil((index + 1) / 3)} to unlock this slot
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-4 border-[#FF9D00]/50 text-[#FF9D00] hover:bg-[#FF9D00]/10"
+                        onClick={() => setShowUpgradeDialog(true)}
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Upgrade Market
+                      </Button>
+                    </div>
+                  )}
+                  
                   <div className="relative h-40">
                     <img 
                       src={itemInfo.image} 
@@ -478,11 +553,11 @@ const BlackMarketView = () => {
                         className={`${canAfford(listing) 
                           ? 'bg-[#432874] hover:bg-[#432874]/80' 
                           : 'bg-[#432874]/50 text-[#C8B8DB]/50 cursor-not-allowed'}`}
-                        disabled={!canAfford(listing) || isSubmitting}
+                        disabled={!canAfford(listing) || isSubmitting || isLocked}
                         onClick={() => setConfirmDialog({ open: true, listing })}
                       >
                         <ShoppingBag className="h-4 w-4 mr-2" />
-                        {canAfford(listing) ? 'Purchase' : 'Can\'t Afford'}
+                        {isLocked ? 'Locked' : canAfford(listing) ? 'Purchase' : 'Can\'t Afford'}
                       </Button>
                     </div>
                     
