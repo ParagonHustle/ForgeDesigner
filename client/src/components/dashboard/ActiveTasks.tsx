@@ -30,10 +30,12 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   const activeDungeonRuns = dungeonRuns.filter(run => !run.completed);
   const activeForgingTasks = forgingTasks.filter(task => !task.completed);
   
-  // Count completed tasks for each category
+  // Count completed tasks for each category - only count tasks that are completed AND done
   const completedFarmingCount = farmingTasks.filter(task => 
     task.completed === true && 
-    new Date(task.endTime) <= new Date()
+    new Date(task.endTime) <= new Date() &&
+    // Only show tasks that are recently completed (within the last hour)
+    new Date(task.endTime).getTime() > new Date().getTime() - (60 * 60 * 1000)
   ).length;
   const completedDungeonCount = dungeonRuns.filter(run => 
     run.completed === true && 
@@ -483,12 +485,11 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                 </div>
               </div>
 
-              {completedAura.description && (
-                <div className="bg-[#432874]/20 rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">Description</h4>
-                  <p className="text-[#C8B8DB]">{completedAura.description}</p>
-                </div>
-              )}
+              {/* Aura basic info */}
+              <div className="bg-[#432874]/20 rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Element: {completedAura.element}</h4>
+                <p className="text-[#C8B8DB]">A powerful {completedAura.element} aura that enhances your character's abilities.</p>
+              </div>
 
               {completedAura.skills && (
                 <div className="bg-[#432874]/20 rounded-lg p-4">
@@ -500,7 +501,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                     ).map((skill: any, index: number) => (
                       <div key={index} className="border border-[#432874]/40 rounded p-2">
                         <div className="font-medium text-[#FF9D00]">{skill.name}</div>
-                        <div className="text-sm text-[#C8B8DB]/80">{skill.description}</div>
+                        <div className="text-sm text-[#C8B8DB]/80">{skill.description || `Skill effect for ${skill.name}`}</div>
                       </div>
                     ))}
                   </div>
