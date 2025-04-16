@@ -606,9 +606,55 @@ const completeForging = async (taskId: number) => {
                             )}
                           </div>
                         ) : (
-                          <div className="text-sm text-[#C8B8DB]/70">
-                            Click to start crafting or fusion
-                          </div>
+                          <>
+                            <div className="text-sm text-[#C8B8DB]/70 mb-3">
+                              Select an operation for this slot
+                            </div>
+                            <div className="grid grid-cols-3 gap-1">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs border-[#432874]/30 hover:bg-[#432874]/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedSlot(index);
+                                  setSelectedTab('craft');
+                                }}
+                              >
+                                <Hammer className="h-3 w-3 mr-1" />
+                                Forge
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs border-[#432874]/30 hover:bg-[#432874]/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedSlot(index);
+                                  setSelectedTab('fusion');
+                                }}
+                              >
+                                <Flame className="h-3 w-3 mr-1" />
+                                Fuse
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs border-[#432874]/30 hover:bg-[#432874]/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setUpgradeSlotDetails({
+                                    ...upgradeSlotDetails,
+                                    slot: index
+                                  });
+                                  setShowSlotUpgradeDialog(true);
+                                }}
+                              >
+                                <ArrowUpCircle className="h-3 w-3 mr-1" />
+                                Upgrade
+                              </Button>
+                            </div>
+                          </>
                         )
                       ) : (
                         index === 3 ? (
