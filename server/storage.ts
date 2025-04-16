@@ -1,14 +1,14 @@
 import { db } from './db';
 import {
   users, characters, auras, resources, farmingTasks, dungeonTypes, dungeonRuns,
-  forgingTasks, blackMarketListings, bountyQuests, buildingUpgrades, activityLogs,
+  forgingTasks, blackMarketListings, bountyQuests, buildingUpgrades, activityLogs, metadata,
   type User, type InsertUser, type Character, type InsertCharacter,
   type Aura, type InsertAura, type Resource, type InsertResource,
   type FarmingTask, type InsertFarmingTask, 
   type DungeonType, type InsertDungeonType, type DungeonRun, type InsertDungeonRun,
   type ForgingTask, type InsertForgingTask, type BlackMarketListing, type InsertBlackMarketListing,
   type BountyQuest, type InsertBountyQuest, type BuildingUpgrade, type InsertBuildingUpgrade,
-  type ActivityLog, type InsertActivityLog
+  type ActivityLog, type InsertActivityLog, type Metadata, type InsertMetadata
 } from '@shared/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 
@@ -436,8 +436,7 @@ export class DatabaseStorage implements IStorage {
   // Building upgrades with skill paths
   async getBuildingUpgradesByUserId(userId: number): Promise<any | undefined> {
     try {
-      // In a real implementation, this would query a building_upgrades table
-      // For now, we'll check the metadata table to simulate this storage
+      // Get building upgrades from the metadata table
       const [existingData] = await db.select()
         .from(metadata)
         .where(and(
