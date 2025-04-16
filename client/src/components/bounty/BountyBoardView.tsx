@@ -312,19 +312,28 @@ const BountyBoardView = () => {
       <motion.div
         key={quest.id}
         variants={item}
-        className={`bg-[#1F1D36]/50 border border-[#432874]/30 rounded-lg p-4 ${
-          quest.completed ? 'opacity-50' : ''
+        className={`border rounded-lg p-4 ${
+          quest.completed 
+            ? 'bg-[#1F1D36]/30 border-green-700/30 shadow-[0_0_8px_rgba(34,197,94,0.1)]' 
+            : 'bg-[#1F1D36]/50 border-[#432874]/30'
         }`}
       >
         <div className="flex items-start">
           <div className="mr-3 mt-1">
-            {getQuestIcon(quest.name)}
+            {quest.completed ? 
+              <div className="bg-green-500/20 p-1 rounded-full">
+                <CheckCircle2 className="h-5 w-5 text-green-400" />
+              </div> : 
+              getQuestIcon(quest.name)
+            }
           </div>
           <div className="flex-1">
             <div className="flex justify-between items-start mb-1">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-cinzel font-semibold text-lg">{quest.name}</h3>
+                  <h3 className={`font-cinzel font-semibold text-lg ${quest.completed ? 'line-through opacity-70' : ''}`}>
+                    {quest.name}
+                  </h3>
                   {(quest as any).rarity && (
                     <Badge className={getRarityStyle((quest as any).rarity).badge}>
                       <div className={`w-2 h-2 rounded-full ${getRarityStyle((quest as any).rarity).dot} mr-1.5`}></div>
@@ -332,7 +341,9 @@ const BountyBoardView = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-[#C8B8DB]/80">{quest.description}</p>
+                <p className={`text-sm text-[#C8B8DB]/80 ${quest.completed ? 'opacity-70' : ''}`}>
+                  {quest.description}
+                </p>
               </div>
               <Badge className={getFrequencyStyle((quest as any).frequency)}>
                 {(quest as any).frequency || 'Daily'}
@@ -659,32 +670,47 @@ const BountyBoardView = () => {
               <div className="text-sm font-semibold mb-1">Quest Rarity Chance:</div>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Legendary Quests:</span>
+                  <span className="flex items-center">
+                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-yellow-500 border-0 rounded-full p-0"></Badge>
+                    Legendary Quests:
+                  </span>
                   <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 10 ? 'text-yellow-400' : 'text-[#C8B8DB]/50'}>
                     {user?.bountyBoardLevel && user.bountyBoardLevel >= 10 ? 'Unlocked' : 'Locked (Lvl 10)'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Mythic Quests:</span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 7 ? 'text-orange-400' : 'text-[#C8B8DB]/50'}>
+                  <span className="flex items-center">
+                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-purple-500 border-0 rounded-full p-0"></Badge>
+                    Mythic Quests:
+                  </span>
+                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 7 ? 'text-purple-400' : 'text-[#C8B8DB]/50'}>
                     {user?.bountyBoardLevel && user.bountyBoardLevel >= 7 ? 'Unlocked' : 'Locked (Lvl 7)'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Epic Quests:</span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 5 ? 'text-purple-400' : 'text-[#C8B8DB]/50'}>
+                  <span className="flex items-center">
+                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-blue-500 border-0 rounded-full p-0"></Badge>
+                    Epic Quests:
+                  </span>
+                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 5 ? 'text-blue-400' : 'text-[#C8B8DB]/50'}>
                     {user?.bountyBoardLevel && user.bountyBoardLevel >= 5 ? 'Unlocked' : 'Locked (Lvl 5)'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Rare Quests:</span>
-                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? 'text-blue-400' : 'text-[#C8B8DB]/50'}>
+                  <span className="flex items-center">
+                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-green-500 border-0 rounded-full p-0"></Badge>
+                    Rare Quests:
+                  </span>
+                  <span className={user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? 'text-green-400' : 'text-[#C8B8DB]/50'}>
                     {user?.bountyBoardLevel && user.bountyBoardLevel >= 3 ? 'Unlocked' : 'Locked (Lvl 3)'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Basic Quests:</span>
-                  <span className="text-green-400">Always Available</span>
+                  <span className="flex items-center">
+                    <Badge variant="outline" className="mr-2 h-2 w-2 bg-gray-500 border-0 rounded-full p-0"></Badge>
+                    Basic Quests:
+                  </span>
+                  <span className="text-gray-400">Always Available</span>
                 </div>
               </div>
             </div>
