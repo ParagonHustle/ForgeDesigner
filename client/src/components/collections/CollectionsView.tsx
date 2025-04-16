@@ -123,28 +123,35 @@ const CollectionsView = () => {
     
     // Add power from active characters with their aura bonuses
     characters.forEach(character => {
-      // Base stats from character
-      const baseStats = character.stats || {};
+      // Base stats directly from character
+      const attack = character.attack || 0;
+      const vitality = character.vitality || 0;
+      const speed = character.speed || 0;
+      const focus = character.focus || 0;
+      const accuracy = character.accuracy || 0;
+      const defense = character.defense || 0;
+      const resilience = character.resilience || 0;
       
       // Get character's equipped aura, if any
       const equippedAuraId = character.equippedAuraId;
       let auraBonus = { attack: 0, vitality: 0, speed: 0, focus: 0, accuracy: 0, defense: 0, resilience: 0 };
       
       if (equippedAuraId) {
-        const equippedAura = auraInventory.find(aura => aura.id === equippedAuraId);
+        // Find the aura in inventory
+        const equippedAura = auraInventory.find((aura: any) => aura.id === equippedAuraId);
         if (equippedAura && equippedAura.statBonuses) {
           auraBonus = equippedAura.statBonuses;
         }
       }
       
       // Sum up all character stats including aura bonuses
-      const totalAttack = (baseStats.attack || 0) + auraBonus.attack;
-      const totalVitality = (baseStats.vitality || 0) + auraBonus.vitality;
-      const totalSpeed = (baseStats.speed || 0) + auraBonus.speed;
-      const totalFocus = (baseStats.focus || 0) + auraBonus.focus;
-      const totalAccuracy = (baseStats.accuracy || 0) + auraBonus.accuracy;
-      const totalDefense = (baseStats.defense || 0) + auraBonus.defense;
-      const totalResilience = (baseStats.resilience || 0) + auraBonus.resilience;
+      const totalAttack = attack + auraBonus.attack;
+      const totalVitality = vitality + auraBonus.vitality;
+      const totalSpeed = speed + auraBonus.speed;
+      const totalFocus = focus + auraBonus.focus;
+      const totalAccuracy = accuracy + auraBonus.accuracy;
+      const totalDefense = defense + auraBonus.defense;
+      const totalResilience = resilience + auraBonus.resilience;
       
       // Add all character stats to total power
       totalPower += totalAttack + totalVitality + totalSpeed + totalFocus + 
@@ -155,7 +162,7 @@ const CollectionsView = () => {
     });
     
     // Add building levels (100 points per building level)
-    const buildingLevels = buildings.reduce((total, building) => total + (building.level || 0), 0);
+    const buildingLevels = buildings.reduce((total: number, building: any) => total + (building.level || 0), 0);
     totalPower += buildingLevels * 100;
     
     return totalPower;

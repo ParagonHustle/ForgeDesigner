@@ -124,6 +124,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   // Collections
   characters: [],
   auras: [],
+  auraInventory: [],
+  buildings: [],
   
   // Active tasks
   farmingTasks: [],
