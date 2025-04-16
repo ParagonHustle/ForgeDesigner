@@ -20,7 +20,8 @@ import {
   Mountain,
   Activity,
   BrainCircuit,
-  Lightbulb
+  Lightbulb,
+  Lock
 } from 'lucide-react';
 
 const CollectionsView = () => {
@@ -133,75 +134,151 @@ const CollectionsView = () => {
     show: { opacity: 1, y: 0 }
   };
 
-  // Mock aura collection data
-  const auraCollection = [
-    // Basic Collection - Fire, Water, Earth, Wind
+  // Collection Sets with Themes
+  const [collectionSets, setCollectionSets] = useState([
     {
       id: 1,
-      type: "Fire",
-      discovered: true,
-      icon: <Flame className="h-12 w-12 text-[#FF4500]" />,
-      description: "Fiery auras enhance attack power and focus.",
-      unlockMethod: "Automatically unlocked",
-      collection: "basic"
+      name: "Elemental Acolyte",
+      description: "Master the four basic elements to gain elemental mastery",
+      completed: false,
+      claimed: false,
+      auras: [
+        {
+          id: 1,
+          name: "Inferno's Embrace",
+          type: "Fire",
+          discovered: true,
+          imageUrl: "https://images.unsplash.com/photo-1519930439097-f5ed5657cb4f?w=150&h=150&fit=crop",
+          icon: <Flame className="h-12 w-12 text-[#FF4500]" />,
+          description: "Fiery auras enhance attack power and focus.",
+          unlockMethod: "Automatically unlocked",
+          element: "Fire"
+        },
+        {
+          id: 2,
+          name: "Ocean's Mercy",
+          type: "Water",
+          discovered: true,
+          imageUrl: "https://images.unsplash.com/photo-1551525212-a1f3d3b8e242?w=150&h=150&fit=crop",
+          icon: <Droplets className="h-12 w-12 text-[#1E90FF]" />,
+          description: "Water auras enhance defense and resilience.",
+          unlockMethod: "Automatically unlocked",
+          element: "Water"
+        },
+        {
+          id: 3,
+          name: "Stoneguard's Pact",
+          type: "Earth",
+          discovered: false,
+          imageUrl: "https://images.unsplash.com/photo-1523567353982-bd9af0d8383c?w=150&h=150&fit=crop",
+          icon: <Mountain className="h-12 w-12 text-[#8B4513]" />,
+          description: "Earth auras enhance vitality and defense.",
+          unlockMethod: "Complete Earth Cavern Dungeon",
+          element: "Earth"
+        },
+        {
+          id: 4,
+          name: "Zephyr's Whisper",
+          type: "Wind",
+          discovered: false,
+          imageUrl: "https://images.unsplash.com/photo-1533551037358-c8f7182cdb79?w=150&h=150&fit=crop",
+          icon: <Wind className="h-12 w-12 text-[#32CD32]" />,
+          description: "Wind auras enhance speed and accuracy.",
+          unlockMethod: "Complete Wind Temple Dungeon",
+          element: "Wind"
+        }
+      ],
+      reward: {
+        name: "Elemental Harmony",
+        description: "Increases all elemental damage by 15%",
+        type: "Passive Skill"
+      }
     },
     {
       id: 2,
-      type: "Water",
-      discovered: true,
-      icon: <Droplets className="h-12 w-12 text-[#1E90FF]" />,
-      description: "Water auras enhance defense and resilience.",
-      unlockMethod: "Automatically unlocked",
-      collection: "basic"
-    },
+      name: "Experimental Fusion",
+      description: "Combine rare experimental auras to unlock advanced fusion techniques",
+      completed: false,
+      claimed: false,
+      auras: [
+        {
+          id: 5,
+          name: "Aura of Growth",
+          type: "Plant",
+          discovered: false,
+          imageUrl: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=150&h=150&fit=crop",
+          icon: <Sparkles className="h-12 w-12 text-[#9C27B0]" />,
+          description: "A mysterious aura that enhances growth and resource collection. 'From earth and sky, abundance flows, when patient hands plant what they know.'",
+          unlockMethod: "Complete 20 farming tasks with Level 5+ Characters",
+          element: "Nature"
+        },
+        {
+          id: 6,
+          name: "Typhoon Aura",
+          type: "Storm",
+          discovered: false,
+          imageUrl: "https://images.unsplash.com/photo-1610741083757-1ae88e1a17f7?w=150&h=150&fit=crop",
+          icon: <Activity className="h-12 w-12 text-[#8BC34A]" />,
+          description: "A powerful storm-based aura with devastating effects. 'When mountains tremble and waters part, nature's fury finds its mark.'",
+          unlockMethod: "Clear 10 Elite Dungeons with Wind Aura-equipped Characters",
+          element: "Wind"
+        },
+        {
+          id: 7,
+          name: "Sentinel Aura",
+          type: "Guardian",
+          discovered: false,
+          imageUrl: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=150&h=150&fit=crop",
+          icon: <BrainCircuit className="h-12 w-12 text-[#7B68EE]" />,
+          description: "A mysterious aura that enhances protective prowess. 'In silent vigilance, guardians stand as the last line of defense.'",
+          unlockMethod: "Successfully defend your base from 5 raid attacks",
+          element: "Earth"
+        }
+      ],
+      reward: {
+        name: "Experimental Mastery",
+        description: "Reduces aura fusion costs by 25%",
+        type: "Passive Skill"
+      }
+    }
+  ]);
+  
+  // Completed collections for the Claimed tab
+  const [claimedCollections, setClaimedCollections] = useState([
     {
       id: 3,
-      type: "Earth",
-      discovered: true,
-      icon: <Mountain className="h-12 w-12 text-[#8B4513]" />,
-      description: "Earth auras enhance vitality and defense.",
-      unlockMethod: "Automatically unlocked",
-      collection: "basic"
-    },
-    {
-      id: 4,
-      type: "Wind",
-      discovered: true,
-      icon: <Wind className="h-12 w-12 text-[#32CD32]" />,
-      description: "Wind auras enhance speed and accuracy.",
-      unlockMethod: "Automatically unlocked",
-      collection: "basic"
-    },
-    
-    // Rare Collection - Mystery Auras
-    {
-      id: 5,
-      type: "Aura of Growth",
-      discovered: false,
-      icon: <Sparkles className="h-12 w-12 text-[#9C27B0]" />,
-      description: "A mysterious aura that enhances growth and resource collection. 'From earth and sky, abundance flows, when patient hands plant what they know.'",
-      unlockMethod: "Complete 20 farming tasks with Level 5+ Characters",
-      collection: "rare"
-    },
-    {
-      id: 6,
-      type: "Wrath of Nature",
-      discovered: false,
-      icon: <Activity className="h-12 w-12 text-[#8BC34A]" />,
-      description: "A powerful nature-based aura with devastating effects. 'When mountains tremble and waters part, nature's fury finds its mark.'",
-      unlockMethod: "Clear 10 Elite Dungeons with Earth Aura-equipped Characters",
-      collection: "rare"
-    },
-    {
-      id: 7,
-      type: "Ethereal Whisper",
-      discovered: false,
-      icon: <BrainCircuit className="h-12 w-12 text-[#7B68EE]" />,
-      description: "A mystical aura that enhances magical abilities. 'Secrets whispered on ancient winds, heard only by the enlightened mind.'",
-      unlockMethod: "Collect all basic elemental auras and reach Account Power 5000+",
-      collection: "rare"
+      name: "Arcane Artificer",
+      description: "Collect all arcane-based auras to unlock magical potential",
+      completed: true,
+      claimed: true,
+      auras: [
+        {
+          id: 8,
+          name: "Mana Weaver",
+          discovered: true,
+          imageUrl: "https://images.unsplash.com/photo-1589254065878-42c9da997008?w=150&h=150&fit=crop",
+        },
+        {
+          id: 9,
+          name: "Spellbinder",
+          discovered: true,
+          imageUrl: "https://images.unsplash.com/photo-1518542331925-4e91e9aa0074?w=150&h=150&fit=crop",
+        },
+        {
+          id: 10,
+          name: "Arcane Sight",
+          discovered: true,
+          imageUrl: "https://images.unsplash.com/photo-1629976801555-c12db8b3a330?w=150&h=150&fit=crop",
+        }
+      ],
+      reward: {
+        name: "Arcane Efficiency",
+        description: "Reduces all ability cooldowns by 15%",
+        type: "Passive Skill"
+      },
+      dateCompleted: "2025-03-12"
     }
-  ];
+  ]);
 
   // Mock titles data
   const titles = [
@@ -249,27 +326,37 @@ const CollectionsView = () => {
     });
   };
   
-  const handleClaimReward = (collectionType: string) => {
+  const handleClaimReward = (collectionId: number) => {
     // In a real implementation, this would make an API call to claim the collection reward
+    // Update the collection to mark it as claimed
+    setCollectionSets(prev => 
+      prev.map(collection => 
+        collection.id === collectionId 
+          ? { ...collection, claimed: true } 
+          : collection
+      )
+    );
     
-    // Mock rewards based on collection type
-    let rewardTitle = "";
-    let rewardDescription = "";
+    // Find the collection to get its reward info
+    const collection = collectionSets.find(c => c.id === collectionId);
     
-    if (collectionType === "basic") {
-      rewardTitle = "Basic Collection Reward Claimed!";
-      rewardDescription = "You received 5 Basic Kleos Shards for completing the Basic Element collection.";
-      setBasicRewardClaimed(true);
-    } else if (collectionType === "rare") {
-      rewardTitle = "Rare Collection Reward Claimed!";
-      rewardDescription = "You received 10 Rare Kleos Shards and 500 Forge Tokens for completing the Rare collection.";
-      setRareRewardClaimed(true);
+    // Move the claimed collection to the claimed collections list
+    if (collection) {
+      setClaimedCollections(prev => [
+        ...prev, 
+        { 
+          ...collection, 
+          claimed: true, 
+          completed: true,
+          dateCompleted: new Date().toISOString().split('T')[0]
+        }
+      ]);
+      
+      toast({
+        title: `${collection.name} Reward Claimed!`,
+        description: `You received the ${collection.reward.name} passive skill: ${collection.reward.description}`,
+      });
     }
-    
-    toast({
-      title: rewardTitle,
-      description: rewardDescription,
-    });
   };
   
   const handleEquipTitle = (titleId: number) => {
@@ -338,167 +425,207 @@ const CollectionsView = () => {
         {/* Collections Tab */}
         <TabsContent value="collections">
           <div className="mb-6">
-            <h3 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-4">Aura Collection</h3>
-            <p className="text-[#C8B8DB]/80 mb-6">
+            <h3 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-4">Aura Collections</h3>
+            <p className="text-[#C8B8DB]/80 mb-4">
               Discover and collect elemental auras to enhance your power and unlock special abilities.
             </p>
-          </div>
-          
-          {/* Basic Collection Section */}
-          <div className="mb-10">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">Basic Collection</h4>
-              
-              {!basicRewardClaimed && (
-                <Button 
-                  className="bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
-                  size="sm"
-                  onClick={() => handleClaimReward('basic')}
+            
+            {/* Collections Sub-Tabs */}
+            <Tabs value={collectionsSubTab} onValueChange={setCollectionsSubTab} className="mt-2">
+              <TabsList className="bg-[#432874]/20 mb-6">
+                <TabsTrigger 
+                  value="active-collections" 
+                  className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]"
                 >
                   <Star className="h-4 w-4 mr-2" />
-                  Claim Reward
-                </Button>
-              )}
-              
-              {basicRewardClaimed && (
-                <Badge className="bg-[#00B9AE]/20 text-[#00B9AE]">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Reward Claimed
-                </Badge>
-              )}
-            </div>
-            
-            <motion.div
-              variants={container}
-              initial="hidden"
-              animate="show"
-              className="grid gap-6 md:grid-cols-2"
-            >
-              {auraCollection.filter(aura => aura.collection === "basic").map(aura => (
-                <motion.div
-                  key={aura.id}
-                  variants={item}
-                  className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
+                  Active Collections
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="claimed-collections" 
+                  className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]"
                 >
-                  <div className="flex items-stretch">
-                    <div className="bg-[#1F1D36] p-6 flex items-center justify-center">
-                      <div className="bg-[#432874]/30 p-4 rounded-full">
-                        {aura.icon}
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Claimed Collections
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* Active Collections Tab */}
+              <TabsContent value="active-collections">
+                {collectionSets.map((collection) => (
+                  <motion.div
+                    key={collection.id}
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                    className="mb-10 bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6"
+                  >
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h4 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-1">{collection.name}</h4>
+                        <p className="text-[#C8B8DB]/80 text-sm">{collection.description}</p>
                       </div>
-                    </div>
-                    
-                    <div className="p-6 flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">{aura.type} Aura</h4>
-                        <Badge className={`${aura.discovered ? 'bg-[#432874]/30 text-[#C8B8DB]' : 'bg-[#FF9D00]/30 text-[#FF9D00]'} border-[#432874]/50`}>
-                          {aura.discovered ? 'Discovered' : 'Locked'}
+                      
+                      {/* Check if all auras are discovered */}
+                      {collection.auras.every(aura => aura.discovered) && !collection.claimed ? (
+                        <Button 
+                          className="bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
+                          size="sm"
+                          onClick={() => handleClaimReward(collection.id)}
+                        >
+                          <Star className="h-4 w-4 mr-2" />
+                          Claim Reward
+                        </Button>
+                      ) : collection.claimed ? (
+                        <Badge className="bg-[#00B9AE]/20 text-[#00B9AE]">
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Reward Claimed
                         </Badge>
-                      </div>
-                      
-                      <p className="text-[#C8B8DB]/80 mb-4 text-sm">
-                        {aura.description}
-                      </p>
-                      
-                      {aura.discovered && (
-                        <div className="bg-[#432874]/20 p-3 rounded-lg">
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
-                            <p className="text-sm text-[#C8B8DB]/90">
-                              Collection Reward: Collect all 4 elemental auras to earn 5 Basic Kleos Shards
-                            </p>
-                          </div>
-                        </div>
+                      ) : (
+                        <Badge className="bg-[#432874]/30 text-[#C8B8DB]/80 border border-[#432874]/50">
+                          <Star className="h-4 w-4 mr-2" />
+                          {collection.auras.filter(aura => aura.discovered).length}/{collection.auras.length} Collected
+                        </Badge>
                       )}
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-          
-          {/* Rare Collection Section */}
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">Rare Collection</h4>
-              
-              {!rareRewardClaimed && auraCollection.filter(a => a.collection === "rare" && a.discovered).length === auraCollection.filter(a => a.collection === "rare").length && (
-                <Button 
-                  className="bg-[#FFD700]/20 hover:bg-[#FFD700]/30 text-[#FFD700] border border-[#FFD700]/30"
-                  size="sm"
-                  onClick={() => handleClaimReward('rare')}
-                >
-                  <Star className="h-4 w-4 mr-2" />
-                  Claim Reward
-                </Button>
-              )}
-              
-              {rareRewardClaimed && (
-                <Badge className="bg-[#00B9AE]/20 text-[#00B9AE]">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Reward Claimed
-                </Badge>
-              )}
-            </div>
-            
-            <motion.div
-              variants={container}
-              initial="hidden"
-              animate="show"
-              className="grid gap-6 md:grid-cols-2"
-            >
-              {auraCollection.filter(aura => aura.collection === "rare").map(aura => (
-                <motion.div
-                  key={aura.id}
-                  variants={item}
-                  className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden"
-                >
-                  <div className="flex items-stretch">
-                    <div className="bg-[#1F1D36] p-6 flex items-center justify-center">
-                      <div className="bg-[#432874]/30 p-4 rounded-full">
-                        {aura.icon}
-                      </div>
+                    
+                    {/* Aura Circles */}
+                    <div className="flex flex-wrap justify-center gap-6 md:gap-8 mb-6">
+                      {collection.auras.map((aura) => (
+                        <motion.div
+                          key={aura.id}
+                          variants={item}
+                          className="flex flex-col items-center"
+                        >
+                          <div className={`relative rounded-full overflow-hidden w-24 h-24 mb-3 ${!aura.discovered ? 'filter grayscale opacity-50' : ''}`}>
+                            <img 
+                              src={aura.imageUrl} 
+                              alt={aura.discovered ? aura.name : "Mystery Aura"} 
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A2E]/80 to-transparent"></div>
+                            
+                            {/* Show icon on the circle */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              {aura.discovered ? (
+                                <div className="bg-[#432874]/40 p-2 rounded-full">
+                                  {aura.icon}
+                                </div>
+                              ) : (
+                                <div className="bg-[#1A1A2E]/60 p-2 rounded-full">
+                                  <Lock className="h-8 w-8 text-[#C8B8DB]/60" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <h5 className="text-center font-cinzel font-bold text-sm mb-1">
+                            {aura.discovered ? aura.name : "???"}
+                          </h5>
+                          
+                          <Badge className={`${aura.discovered ? 'bg-[#432874]/30 text-[#C8B8DB]' : 'bg-[#FF9D00]/30 text-[#FF9D00]'} border-[#432874]/50`}>
+                            {aura.discovered ? 'Discovered' : 'Locked'}
+                          </Badge>
+                        </motion.div>
+                      ))}
                     </div>
                     
-                    <div className="p-6 flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="text-lg font-cinzel font-bold text-[#FF9D00]">
-                          {aura.discovered ? `${aura.type} Aura` : "Mystery Aura"}
-                        </h4>
-                        <Badge className={`${aura.discovered ? 'bg-[#432874]/30 text-[#C8B8DB]' : 'bg-[#FF9D00]/30 text-[#FF9D00]'} border-[#432874]/50`}>
-                          {aura.discovered ? 'Discovered' : 'Locked'}
-                        </Badge>
+                    {/* Reward Info */}
+                    <div className="bg-[#432874]/20 p-4 rounded-lg">
+                      <div className="flex items-center mb-3">
+                        <Sparkles className="h-5 w-5 text-[#FFD700] mr-2 flex-shrink-0" />
+                        <h5 className="font-cinzel font-bold text-[#FFD700]">Collection Reward</h5>
                       </div>
-                      
-                      <p className="text-[#C8B8DB]/80 mb-4 text-sm">
-                        {aura.discovered 
-                          ? aura.description 
-                          : aura.description.match(/'([^']+)'/)?.[1] + "..." || "A mysterious aura waiting to be discovered..."}
-                      </p>
-                      
-                      <div className="bg-[#432874]/20 p-3 rounded-lg">
-                        <div className="flex items-center">
-                          {aura.discovered ? (
-                            <>
-                              <Star className="h-4 w-4 text-[#FFD700] mr-2 flex-shrink-0" />
-                              <p className="text-sm text-[#C8B8DB]/90">
-                                Special Aura with unique abilities
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="h-4 w-4 text-[#FF9D00] mr-2 flex-shrink-0" />
-                              <p className="text-sm text-[#C8B8DB]/90">
-                                Complete specific in-game challenges to unlock this aura
-                              </p>
-                            </>
-                          )}
-                        </div>
+                      <div className="ml-7">
+                        <p className="text-sm text-[#C8B8DB] font-semibold mb-1">{collection.reward.name}</p>
+                        <p className="text-xs text-[#C8B8DB]/80">{collection.reward.description}</p>
+                        <p className="text-xs text-[#C8B8DB]/80 mt-1">Type: {collection.reward.type}</p>
                       </div>
                     </div>
+                  </motion.div>
+                ))}
+              </TabsContent>
+              
+              {/* Claimed Collections Tab */}
+              <TabsContent value="claimed-collections">
+                {claimedCollections.length === 0 ? (
+                  <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-8 text-center">
+                    <Sparkles className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
+                    <p className="text-[#C8B8DB]/80 mb-4">
+                      You haven't claimed any collection rewards yet. Complete collection sets to earn powerful rewards!
+                    </p>
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
+                ) : (
+                  claimedCollections.map((collection) => (
+                    <motion.div
+                      key={collection.id}
+                      variants={container}
+                      initial="hidden"
+                      animate="show"
+                      className="mb-10 bg-[#1A1A2E] border border-[#00B9AE]/30 rounded-xl p-6"
+                    >
+                      <div className="flex justify-between items-start mb-6">
+                        <div>
+                          <h4 className="text-xl font-cinzel font-bold text-[#00B9AE] mb-1">{collection.name}</h4>
+                          <p className="text-[#C8B8DB]/80 text-sm">{collection.description}</p>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <Badge className="bg-[#00B9AE]/20 text-[#00B9AE] mr-3">
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Reward Claimed
+                          </Badge>
+                          
+                          <div className="text-xs text-[#C8B8DB]/70">
+                            Completed: {collection.dateCompleted}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Aura Circles */}
+                      <div className="flex flex-wrap justify-center gap-6 md:gap-8 mb-6">
+                        {collection.auras.map((aura) => (
+                          <motion.div
+                            key={aura.id}
+                            variants={item}
+                            className="flex flex-col items-center"
+                          >
+                            <div className="relative rounded-full overflow-hidden w-24 h-24 mb-3">
+                              <img 
+                                src={aura.imageUrl} 
+                                alt={aura.name || "Aura"} 
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A2E]/80 to-transparent"></div>
+                            </div>
+                            
+                            <h5 className="text-center font-cinzel font-bold text-sm mb-1">
+                              {aura.name}
+                            </h5>
+                            
+                            <Badge className="bg-[#00B9AE]/20 text-[#00B9AE] border-[#00B9AE]/30">
+                              Collected
+                            </Badge>
+                          </motion.div>
+                        ))}
+                      </div>
+                      
+                      {/* Reward Info */}
+                      <div className="bg-[#00B9AE]/10 p-4 rounded-lg">
+                        <div className="flex items-center mb-3">
+                          <Sparkles className="h-5 w-5 text-[#00B9AE] mr-2 flex-shrink-0" />
+                          <h5 className="font-cinzel font-bold text-[#00B9AE]">Claimed Reward</h5>
+                        </div>
+                        <div className="ml-7">
+                          <p className="text-sm text-[#C8B8DB] font-semibold mb-1">{collection.reward.name}</p>
+                          <p className="text-xs text-[#C8B8DB]/80">{collection.reward.description}</p>
+                          <p className="text-xs text-[#C8B8DB]/80 mt-1">Type: {collection.reward.type}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </TabsContent>
         
