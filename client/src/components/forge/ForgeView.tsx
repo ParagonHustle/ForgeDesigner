@@ -46,23 +46,21 @@ const ForgeView = () => {
   const { auras = [], resources = [], characters = [], fetchAuras, fetchResources, fetchForgingTasks, fetchCharacters } = useGameStore();
   const { toast } = useToast();
   
-  // Get building upgrades data
-  const { data: buildingUpgrades = [] } = useQuery<BuildingUpgrade[]>({ 
-    queryKey: ['/api/buildings/upgrades'], 
-  });
-  
   // Get all building upgrades for current user
-  const { data: userBuildingUpgrades = { farmSlots: [], forgeSlots: [], marketUpgrades: [] } } = useQuery<any>({
+  const { data: userBuildingUpgrades = { farmSlots: [], forgeSlots: [], marketUpgrades: [], buildings: [] } } = useQuery<any>({
     queryKey: ['/api/buildings/upgrades'],
   });
   
+  // Get individual building data
+  const buildings = userBuildingUpgrades.buildings || [];
+  
   // Get townhall building level (for slot unlocking)
-  const townhallUpgrade = buildingUpgrades.find(u => u.buildingType === 'townhall');
+  const townhallUpgrade = buildings.find((b: any) => b.buildingType === 'townhall');
   const townhallLevel = townhallUpgrade?.currentLevel || 1;
   
   // Determine available crafting slots based on forge level (1 by default, +1 per level up to 3)
   // The 4th slot is locked until townhall is upgraded
-  const forgeUpgrade = buildingUpgrades.find(u => u.buildingType === 'forge');
+  const forgeUpgrade = buildings.find((b: any) => b.buildingType === 'forge');
   const forgeLevel = forgeUpgrade?.currentLevel || 1;
   
   // Get forge slot upgrades
