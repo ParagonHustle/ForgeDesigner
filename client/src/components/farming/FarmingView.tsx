@@ -401,6 +401,53 @@ const FarmingView = () => {
                         </div>
                       </div>
                       
+                      {/* Farm Plot Bonuses */}
+                      {(() => {
+                        const bonuses = calculateSlotBonuses(slot - 1);
+                        
+                        // Only show if there are any bonuses (slot level > 1)
+                        if (bonuses.level > 1) {
+                          const isBountifulPath = bonuses.path === 'Bountiful Harvest';
+                          return (
+                            <div className={`mb-3 p-2 rounded-md text-xs ${
+                              isBountifulPath ? 'bg-[#228B22]/10 border border-[#228B22]/20' : 'bg-[#00B9AE]/10 border border-[#00B9AE]/20'
+                            }`}>
+                              <div className="flex justify-between items-center mb-1">
+                                <div className="flex items-center">
+                                  {isBountifulPath ? (
+                                    <Gem className="h-3 w-3 mr-1 text-[#228B22]" />
+                                  ) : (
+                                    <Timer className="h-3 w-3 mr-1 text-[#00B9AE]" />
+                                  )}
+                                  <span className={isBountifulPath ? 'text-[#228B22]' : 'text-[#00B9AE]'}>
+                                    {bonuses.path} (Level {bonuses.level})
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[#C8B8DB]/80">
+                                <div className="flex items-center">
+                                  <div className={`w-2 h-2 rounded-full ${isBountifulPath ? 'bg-[#228B22]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                  <span>+{bonuses.yieldBonus}% Yield</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <div className={`w-2 h-2 rounded-full ${isBountifulPath ? 'bg-[#228B22]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                  <span>+{bonuses.speedBonus}% Speed</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <div className={`w-2 h-2 rounded-full ${isBountifulPath ? 'bg-[#228B22]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                  <span>+{bonuses.qualityBonus}% Quality</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <div className={`w-2 h-2 rounded-full ${isBountifulPath ? 'bg-[#228B22]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                  <span>+{bonuses.bonusChance}% Bonus</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                      
                       {/* Resource and character info */}
                       <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center">
