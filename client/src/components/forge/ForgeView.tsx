@@ -46,9 +46,14 @@ const ForgeView = () => {
   const { auras = [], resources = [], characters = [], fetchAuras, fetchResources, fetchForgingTasks, fetchCharacters } = useGameStore();
   const { toast } = useToast();
   
-  // Get forge building level
+  // Get building upgrades data
   const { data: buildingUpgrades = [] } = useQuery<BuildingUpgrade[]>({ 
     queryKey: ['/api/buildings/upgrades'], 
+  });
+  
+  // Get all building upgrades for current user
+  const { data: userBuildingUpgrades = { farmSlots: [], forgeSlots: [], marketUpgrades: [] } } = useQuery<any>({
+    queryKey: ['/api/buildings/upgrades'],
   });
   
   // Get townhall building level (for slot unlocking)
@@ -59,6 +64,9 @@ const ForgeView = () => {
   // The 4th slot is locked until townhall is upgraded
   const forgeUpgrade = buildingUpgrades.find(u => u.buildingType === 'forge');
   const forgeLevel = forgeUpgrade?.currentLevel || 1;
+  
+  // Get forge slot upgrades
+  const forgeSlotUpgrades = userBuildingUpgrades.forgeSlots || [];
   
   // Calculate available slots: 
   // - Base: 3 slots (slots 1, 2, and 3 are now unlocked by default)
@@ -274,15 +282,34 @@ const completeForging = async (taskId: number) => {
     currentLevel: 1,
     maxLevel: 5,
     speedBonus: 5, // % reduction in crafting time per level
-    qualityBonus: 2 // % increase in quality per level
+    qualityBonus: 2, // % increase in quality per level
+    upgradePath: 1 // Default to Master Artisan path
   });
   
   const closeSlotUpgradeDialog = () => {
     setShowSlotUpgradeDialog(false);
   };
   
+  // Function to get slot upgrade details from the database
+  const getSlotUpgradeDetails = (slotIndex: number) => {
+    // Look for existing upgrade path info
+    const slotInfo = forgeSlotUpgrades.find(slot => slot.slotId === slotIndex);
+    
+    // Set defaults if no existing data
+    const currentLevel = slotInfo?.level || 1;
+    const currentPath = slotInfo?.upgradePath || 1;
+    
+    return {
+      slot: slotIndex,
+      currentLevel: currentLevel,
+      maxLevel: 5,
+      speedBonus: 5, // % reduction in crafting time per level
+      qualityBonus: 2, // % increase in quality per level
+      upgradePath: currentPath
+    };
+  };
+  
   const upgradeSlot = () => {
-    // This would be implemented with a server call in a real implementation
     setIsSubmitting(true);
     
     // Make API call to upgrade the slot with selected path
@@ -298,22 +325,24 @@ const completeForging = async (taskId: number) => {
           title: "Slot Upgraded",
           description: `Forge Slot ${upgradeSlotDetails.slot + 1} has been upgraded with ${selectedUpgradePath === 1 ? 'Master Artisan' : 'Fusion Specialist'} path.`,
         });
+        
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/buildings/upgrades'] });
       } else {
         throw new Error("Failed to upgrade slot");
       }
     })
     .catch(error => {
+      console.error('Error upgrading slot:', error);
       toast({
-        title: "Feature Coming Soon",
-        description: "The Forge slot upgrade functionality will be available in a future update.",
-        variant: "default"
+        title: "Upgrade Failed",
+        description: error.message || "Failed to upgrade slot. Please try again.",
+        variant: "destructive"
       });
     })
     .finally(() => {
       setIsSubmitting(false);
       closeSlotUpgradeDialog();
-      // Reset selected path for next time
-      setSelectedUpgradePath(1);
     });
   };
   
@@ -718,10 +747,11 @@ const completeForging = async (taskId: number) => {
                                 className="text-xs border-[#432874]/30 hover:bg-[#432874]/20"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setUpgradeSlotDetails({
-                                    ...upgradeSlotDetails,
-                                    slot: index
-                                  });
+                                  // Get slot upgrade details from database
+                                  const slotDetails = getSlotUpgradeDetails(index);
+                                  setUpgradeSlotDetails(slotDetails);
+                                  // Set the selected upgrade path based on current path
+                                  setSelectedUpgradePath(slotDetails.upgradePath);
                                   setShowSlotUpgradeDialog(true);
                                 }}
                               >
