@@ -237,279 +237,420 @@ const FarmingView = () => {
         return 'bg-slate-700/30 text-slate-300 border-slate-600/30';
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-[#FF9D00] text-xl">Loading farming data...</div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="mb-6">
-        <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">Farming</h1>
-        <p className="text-[#C8B8DB]/80">
-          Gather valuable materials for crafting Auras and upgrading your characters.
-        </p>
-      </div>
+  
+  const handleUpgradeSlot = async (slot: number) => {
+    setIsSubmitting(true);
+    try {
+      // In a real implementation, this would be an API call to upgrade the slot
+      const response = await apiRequest('POST', '/api/buildings/upgrade', {
+        buildingType: 'farmingSlot',
+        slotId: slot
+      });
       
-      {/* Farming Slots */}
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
-        {farmingSlots.map(({ slot, task }) => {
-          // Find character if a task is active
-          const character = task ? characters.find(c => c.id === task.characterId) : null;
-          
-          return (
-            <motion.div
-              key={`slot-${slot}`}
-              whileHover={{ scale: 1.02 }}
-              className={`bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden ${!task && 'cursor-pointer'}`}
-              onClick={() => !task && setSelectedSlot(slot)}
-            >
-              {task ? (
-                // Active farming task
-                <div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB]">
-                            Farming Slot {slot}
-                          </h3>
-                          <Button variant="outline" size="sm" className="h-6 px-2 py-0 text-xs bg-[#228B22]/10 border-[#228B22]/30 text-[#228B22] hover:bg-[#228B22]/20">
-                            Upgrade
-                          </Button>
-                        </div>
-                        <Badge className="bg-[#228B22]/20 text-[#228B22] border-[#228B22]/30">
-                          Active
-                        </Badge>
-                      </div>
-                      {/* Countdown timer */}
-                      <div className="text-sm text-[#C8B8DB]/70 flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        <CountdownTimer 
-                          endTime={task.endTime} 
-                          onComplete={() => task && handleCollectResources(task.id)}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Resource and character info */}
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center">
-                        <img
-                          src={farmingResources.find(r => r.name === task.resourceName)?.image || "https://via.placeholder.com/40"}
-                          alt={task.resourceName}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-[#228B22]/50"
-                        />
-                        <div className="ml-2">
-                          <div className="text-sm font-semibold">{task.resourceName}</div>
-                          <div className="text-xs text-[#C8B8DB]/70">
-                            {farmingResources.find(r => r.name === task.resourceName)?.type || "common"}
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to upgrade farming slot");
+      }
+      
+      toast({
+        title: "Slot Upgraded",
+        description: `Farming Slot ${slot} has been upgraded successfully.`,
+      });
+      
+      // Close the upgrade dialog
+      setUpgradeSlot(null);
+      
+      // Refresh data to show the upgraded slot
+      fetchFarmingTasks();
+      refetchFarmingTasks();
+    } catch (error: any) {
+      console.error('Error upgrading farming slot:', error);
+      toast({
+        title: "Upgrade Failed",
+        description: error.message || "Could not upgrade the farming slot.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Render content based on loading state and prepare main UI
+  const renderMainContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-[#FF9D00] text-xl">Loading farming data...</div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="mb-6">
+          <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">Farming</h1>
+          <p className="text-[#C8B8DB]/80">
+            Gather valuable materials for crafting Auras and upgrading your characters.
+          </p>
+        </div>
+        
+        {/* Farming Slots */}
+        <div className="grid gap-4 md:grid-cols-3 mb-8">
+          {farmingSlots.map(({ slot, task }) => {
+            // Find character if a task is active
+            const character = task ? characters.find(c => c.id === task.characterId) : null;
+            
+            return (
+              <motion.div
+                key={`slot-${slot}`}
+                whileHover={{ scale: 1.02 }}
+                className={`bg-[#1A1A2E] border border-[#432874]/30 rounded-xl overflow-hidden ${!task && 'cursor-pointer'}`}
+                onClick={() => !task && setSelectedSlot(slot)}
+              >
+                {task ? (
+                  // Active farming task
+                  <div>
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB]">
+                              Farming Slot {slot}
+                            </h3>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-6 px-2 py-0 text-xs bg-[#228B22]/10 border-[#228B22]/30 text-[#228B22] hover:bg-[#228B22]/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setUpgradeSlot(slot);
+                              }}
+                            >
+                              Upgrade
+                            </Button>
                           </div>
+                          <Badge className="bg-[#228B22]/20 text-[#228B22] border-[#228B22]/30">
+                            Active
+                          </Badge>
+                        </div>
+                        {/* Countdown timer */}
+                        <div className="text-sm text-[#C8B8DB]/70 flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          <CountdownTimer 
+                            endTime={task.endTime} 
+                            onComplete={() => task && handleCollectResources(task.id)}
+                          />
                         </div>
                       </div>
                       
-                      <div className="flex flex-col items-end">
-                        <div className="text-sm font-semibold">{character?.name || "Character"}</div>
-                        <div className="text-xs text-[#C8B8DB]/70">Level {character?.level || "?"}</div>
-                      </div>
-                    </div>
-                    
-                    {/* Collect button (only shown if task is complete) */}
-                    {new Date(task.endTime) <= new Date() && (
-                      <Button 
-                        className="w-full bg-[#228B22] hover:bg-[#228B22]/80"
-                        onClick={() => handleCollectResources(task.id)}
-                        disabled={isSubmitting}
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        {isSubmitting ? "Collecting..." : "Collect Resources"}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                // Empty farming slot
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="h-full min-h-[200px] flex flex-col items-center justify-center p-6">
-                      <div className="w-16 h-16 rounded-full bg-[#432874]/20 flex items-center justify-center mb-3">
-                        <Plus className="h-8 w-8 text-[#C8B8DB]/70" />
-                      </div>
-                      <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB] mb-1">
-                        Farming Slot {slot}
-                      </h3>
-                      <Button variant="outline" size="sm" className="h-6 px-2 py-0 mb-2 text-xs bg-[#228B22]/10 border-[#228B22]/30 text-[#228B22] hover:bg-[#228B22]/20">
-                        Upgrade
-                      </Button>
-                      <p className="text-sm text-[#C8B8DB]/70 text-center">
-                        Click to assign a character to farm resources.
-                      </p>
-                    </div>
-                  </DialogTrigger>
-                  
-                  <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB]">
-                    <DialogHeader>
-                      <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">
-                        Start Farming - Slot {slot}
-                      </DialogTitle>
-                    </DialogHeader>
-                    
-                    <div className="py-4">
-                      {/* Select Resource */}
-                      <h3 className="font-semibold mb-2">Select Resource to Farm</h3>
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        {farmingResources.map(resource => (
-                          <div
-                            key={resource.id}
-                            className={`flex items-center p-2 rounded-md border cursor-pointer ${
-                              selectedResource?.id === resource.id
-                                ? 'bg-[#432874]/40 border-[#228B22]/50'
-                                : 'bg-[#1F1D36]/50 border-[#432874]/30'
-                            }`}
-                            onClick={() => setSelectedResource(resource)}
-                          >
-                            <img
-                              src={resource.image}
-                              alt={resource.name}
-                              className="w-10 h-10 rounded-full object-cover border border-[#432874]/50"
-                            />
-                            <div className="ml-2">
-                              <div className="text-sm font-semibold">{resource.name}</div>
-                              <Badge className={`text-xs ${getTypeStyles(resource.type)}`}>
-                                {resource.type}
-                              </Badge>
+                      {/* Resource and character info */}
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center">
+                          <img
+                            src={farmingResources.find(r => r.name === task.resourceName)?.image || "https://via.placeholder.com/40"}
+                            alt={task.resourceName}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-[#228B22]/50"
+                          />
+                          <div className="ml-2">
+                            <div className="text-sm font-semibold">{task.resourceName}</div>
+                            <div className="text-xs text-[#C8B8DB]/70">
+                              {farmingResources.find(r => r.name === task.resourceName)?.type || "common"}
                             </div>
                           </div>
-                        ))}
+                        </div>
+                        
+                        <div className="flex flex-col items-end">
+                          <div className="text-sm font-semibold">{character?.name || "Character"}</div>
+                          <div className="text-xs text-[#C8B8DB]/70">Level {character?.level || "?"}</div>
+                        </div>
                       </div>
                       
-                      {/* Resource Details (if selected) */}
-                      {selectedResource && (
-                        <div className="bg-[#432874]/20 p-3 rounded-md mb-4">
-                          <h4 className="text-sm font-semibold mb-1">{selectedResource.name}</h4>
-                          <p className="text-xs text-[#C8B8DB]/80 mb-2">{selectedResource.description}</p>
-                          <div className="flex items-center text-xs">
-                            <Timer className="h-3 w-3 mr-1 text-[#C8B8DB]/70" />
-                            <span>Base Time: {Math.floor(selectedResource.baseTime / 60)} minutes</span>
-                          </div>
-                        </div>
+                      {/* Collect button (only shown if task is complete) */}
+                      {new Date(task.endTime) <= new Date() && (
+                        <Button 
+                          className="w-full bg-[#228B22] hover:bg-[#228B22]/80"
+                          onClick={() => handleCollectResources(task.id)}
+                          disabled={isSubmitting}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          {isSubmitting ? "Collecting..." : "Collect Resources"}
+                        </Button>
                       )}
-                      
-                      {/* Select Character */}
-                      <h3 className="font-semibold mb-2">Select Character</h3>
-                      {availableCharacters.length === 0 ? (
-                        <div className="bg-[#432874]/20 p-4 rounded-md text-center mb-4">
-                          <UserX className="h-8 w-8 mx-auto mb-2 text-[#DC143C]" />
-                          <p className="text-[#C8B8DB]/80 text-sm">
-                            All characters are currently busy. Wait for them to complete their current tasks or recruit new ones.
-                          </p>
+                    </div>
+                  </div>
+                ) : (
+                  // Empty farming slot
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="h-full min-h-[200px] flex flex-col items-center justify-center p-6">
+                        <div className="w-16 h-16 rounded-full bg-[#432874]/20 flex items-center justify-center mb-3">
+                          <Plus className="h-8 w-8 text-[#C8B8DB]/70" />
                         </div>
-                      ) : (
-                        <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto mb-4">
-                          {availableCharacters.map(character => (
+                        <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB] mb-1">
+                          Farming Slot {slot}
+                        </h3>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-6 px-2 py-0 mb-2 text-xs bg-[#228B22]/10 border-[#228B22]/30 text-[#228B22] hover:bg-[#228B22]/20"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUpgradeSlot(slot);
+                          }}
+                        >
+                          Upgrade
+                        </Button>
+                        <p className="text-sm text-[#C8B8DB]/70 text-center">
+                          Click to assign a character to farm resources.
+                        </p>
+                      </div>
+                    </DialogTrigger>
+                    
+                    <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB]">
+                      <DialogHeader>
+                        <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">
+                          Start Farming - Slot {slot}
+                        </DialogTitle>
+                      </DialogHeader>
+                      
+                      <div className="py-4">
+                        {/* Select Resource */}
+                        <h3 className="font-semibold mb-2">Select Resource to Farm</h3>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                          {farmingResources.map(resource => (
                             <div
-                              key={character.id}
+                              key={resource.id}
                               className={`flex items-center p-2 rounded-md border cursor-pointer ${
-                                selectedCharacter === character.id
+                                selectedResource?.id === resource.id
                                   ? 'bg-[#432874]/40 border-[#228B22]/50'
                                   : 'bg-[#1F1D36]/50 border-[#432874]/30'
                               }`}
-                              onClick={() => setSelectedCharacter(character.id)}
+                              onClick={() => setSelectedResource(resource)}
                             >
                               <img
-                                src={character.avatarUrl}
-                                alt={character.name}
+                                src={resource.image}
+                                alt={resource.name}
                                 className="w-10 h-10 rounded-full object-cover border border-[#432874]/50"
                               />
-                              <div className="ml-2 flex-1">
-                                <div className="flex justify-between">
-                                  <span className="text-sm font-semibold">{character.name}</span>
-                                  <span className="text-xs">Lvl {character.level}</span>
-                                </div>
-                                <div className="text-xs text-[#C8B8DB]/70">
-                                  {/* Character can farm faster based on level */}
-                                  Farming Efficiency: +{Math.min(40, (character.level || 1) * 2)}%
-                                </div>
+                              <div className="ml-2">
+                                <div className="text-sm font-semibold">{resource.name}</div>
+                                <Badge className={`text-xs ${getTypeStyles(resource.type)}`}>
+                                  {resource.type}
+                                </Badge>
                               </div>
                             </div>
                           ))}
                         </div>
-                      )}
+                        
+                        {/* Resource Details (if selected) */}
+                        {selectedResource && (
+                          <div className="bg-[#432874]/20 p-3 rounded-md mb-4">
+                            <h4 className="text-sm font-semibold mb-1">{selectedResource.name}</h4>
+                            <p className="text-xs text-[#C8B8DB]/80 mb-2">{selectedResource.description}</p>
+                            <div className="flex items-center text-xs">
+                              <Timer className="h-3 w-3 mr-1 text-[#C8B8DB]/70" />
+                              <span>Base Time: {Math.floor(selectedResource.baseTime / 60)} minutes</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Select Character */}
+                        <h3 className="font-semibold mb-2">Select Character</h3>
+                        {availableCharacters.length === 0 ? (
+                          <div className="bg-[#432874]/20 p-4 rounded-md text-center mb-4">
+                            <UserX className="h-8 w-8 mx-auto mb-2 text-[#DC143C]" />
+                            <p className="text-[#C8B8DB]/80 text-sm">
+                              All characters are currently busy. Wait for them to complete their current tasks or recruit new ones.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto mb-4">
+                            {availableCharacters.map(character => (
+                              <div
+                                key={character.id}
+                                className={`flex items-center p-2 rounded-md border cursor-pointer ${
+                                  selectedCharacter === character.id
+                                    ? 'bg-[#432874]/40 border-[#228B22]/50'
+                                    : 'bg-[#1F1D36]/50 border-[#432874]/30'
+                                }`}
+                                onClick={() => setSelectedCharacter(character.id)}
+                              >
+                                <img
+                                  src={character.avatarUrl}
+                                  alt={character.name}
+                                  className="w-10 h-10 rounded-full object-cover border border-[#432874]/50"
+                                />
+                                <div className="ml-2 flex-1">
+                                  <div className="flex justify-between">
+                                    <span className="text-sm font-semibold">{character.name}</span>
+                                    <span className="text-xs">Lvl {character.level}</span>
+                                  </div>
+                                  <div className="text-xs text-[#C8B8DB]/70">
+                                    {/* Character can farm faster based on level */}
+                                    Farming Efficiency: +{Math.min(40, (character.level || 1) * 2)}%
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Farming Time Estimate */}
+                        {selectedResource && selectedCharacter && (
+                          <div className="bg-[#228B22]/10 p-3 rounded-md border border-[#228B22]/30 mb-4">
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-sm font-semibold flex items-center">
+                                <Clock className="h-4 w-4 mr-1 text-[#228B22]" />
+                                Estimated Farming Time
+                              </h4>
+                              <HelpCircle className="h-4 w-4 text-[#C8B8DB]/50" />
+                            </div>
+                            <div className="text-sm mt-1">
+                              {(() => {
+                                const character = characters.find(c => c.id === selectedCharacter);
+                                const levelMultiplier = Math.max(0.6, 1 - (character?.level || 1) * 0.02);
+                                const minutes = Math.ceil((selectedResource.baseTime * levelMultiplier) / 60);
+                                return `${minutes} minutes`;
+                              })()}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
-                      {/* Farming Time Estimate */}
-                      {selectedResource && selectedCharacter && (
-                        <div className="bg-[#228B22]/10 p-3 rounded-md border border-[#228B22]/30 mb-4">
-                          <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-semibold flex items-center">
-                              <Clock className="h-4 w-4 mr-1 text-[#228B22]" />
-                              Estimated Farming Time
-                            </h4>
-                            <HelpCircle className="h-4 w-4 text-[#C8B8DB]/50" />
-                          </div>
-                          <div className="text-sm mt-1">
-                            {(() => {
-                              const character = characters.find(c => c.id === selectedCharacter);
-                              const levelMultiplier = Math.max(0.6, 1 - (character?.level || 1) * 0.02);
-                              const minutes = Math.ceil((selectedResource.baseTime * levelMultiplier) / 60);
-                              return `${minutes} minutes`;
-                            })()}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <DialogFooter>
-                      <Button
-                        className="bg-[#228B22] hover:bg-[#228B22]/80"
-                        onClick={startFarmingTask}
-                        disabled={isSubmitting || !selectedResource || !selectedCharacter || availableCharacters.length === 0}
-                      >
-                        <Gem className="h-4 w-4 mr-2" />
-                        {isSubmitting ? "Starting..." : "Start Farming"}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
-      
-      {/* Tips Section */}
-      <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6">
-        <h2 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-4">Farming Tips</h2>
-        <div className="space-y-3">
-          <div className="flex">
-            <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
-              <span className="text-[#FF9D00] font-bold">1</span>
+                      <DialogFooter>
+                        <Button
+                          className="bg-[#228B22] hover:bg-[#228B22]/80"
+                          onClick={startFarmingTask}
+                          disabled={isSubmitting || !selectedResource || !selectedCharacter || availableCharacters.length === 0}
+                        >
+                          <Gem className="h-4 w-4 mr-2" />
+                          {isSubmitting ? "Starting..." : "Start Farming"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+        
+        {/* Tips Section */}
+        <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6">
+          <h2 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-4">Farming Tips</h2>
+          <div className="space-y-3">
+            <div className="flex">
+              <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="text-[#FF9D00] font-bold">1</span>
+              </div>
+              <p className="text-[#C8B8DB]/80">
+                Higher-level characters farm resources faster, with up to 40% reduction in farming time.
+              </p>
             </div>
-            <p className="text-[#C8B8DB]/80">
-              Higher-level characters farm resources faster, with up to 40% reduction in farming time.
-            </p>
-          </div>
-          <div className="flex">
-            <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
-              <span className="text-[#FF9D00] font-bold">2</span>
+            <div className="flex">
+              <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="text-[#FF9D00] font-bold">2</span>
+              </div>
+              <p className="text-[#C8B8DB]/80">
+                Rare and epic resource types take longer to farm but provide better materials for crafting higher-quality Auras.
+              </p>
             </div>
-            <p className="text-[#C8B8DB]/80">
-              Rare and epic resource types take longer to farm but provide better materials for crafting higher-quality Auras.
-            </p>
-          </div>
-          <div className="flex">
-            <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
-              <span className="text-[#FF9D00] font-bold">3</span>
+            <div className="flex">
+              <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="text-[#FF9D00] font-bold">3</span>
+              </div>
+              <p className="text-[#C8B8DB]/80">
+                Upgrade your Townhall to unlock additional farming slots and increase your material production.
+              </p>
             </div>
-            <p className="text-[#C8B8DB]/80">
-              Upgrade your Townhall to unlock additional farming slots and increase your material production.
-            </p>
           </div>
         </div>
-      </div>
+      </>
+    );
+  };
+  
+  // Store the main content in a variable
+  const mainContent = renderMainContent();
+  
+  // Render the upgrade dialog
+  return (
+    <>
+      {/* Render the main component content */}
+      {mainContent}
+      
+      {/* Upgrade Slot Dialog */}
+      <Dialog open={upgradeSlot !== null} onOpenChange={(open) => !open && setUpgradeSlot(null)}>
+        <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB]">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">
+              Upgrade Farming Slot {upgradeSlot}
+            </DialogTitle>
+            <DialogDescription className="text-[#C8B8DB]/80">
+              Enhance your farming capabilities with upgraded slots.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="bg-[#432874]/20 p-4 rounded-lg mb-4">
+              <h3 className="font-semibold mb-2 flex items-center">
+                <ArrowUp className="h-4 w-4 mr-2 text-[#228B22]" />
+                Upgrade Benefits
+              </h3>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center">
+                  <span className="bg-[#228B22]/20 text-[#228B22] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                  <span>10% reduction in farming time</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-[#228B22]/20 text-[#228B22] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                  <span>5% increase in resource yield</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-[#228B22]/20 text-[#228B22] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                  <span>Access to rare resource variants</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div className="bg-[#1F1D36] p-4 rounded-lg border border-[#432874]/30">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-semibold">Cost:</span>
+                <div className="flex items-center">
+                  <Gem className="h-4 w-4 mr-1 text-[#FF9D00]" />
+                  <span className="text-[#FF9D00]">500 Forge Tokens</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Required Townhall Level:</span>
+                <span>3</span>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              className="bg-[#432874] hover:bg-[#432874]/80 text-white"
+              onClick={() => setUpgradeSlot(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#228B22] hover:bg-[#228B22]/80"
+              onClick={() => upgradeSlot !== null && handleUpgradeSlot(upgradeSlot)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>Upgrading...</>
+              ) : (
+                <>
+                  <ArrowUp className="h-4 w-4 mr-2" />
+                  Upgrade Slot
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
