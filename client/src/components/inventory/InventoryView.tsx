@@ -170,6 +170,19 @@ const InventoryView = () => {
   // State for selected aura detail
   const [selectedAura, setSelectedAura] = useState<Aura | null>(null);
   
+  // Calculate total stat bonus for an aura
+  const calculateTotalStats = (aura: Aura): number => {
+    let total = 0;
+    if (typeof aura.attack === 'number') total += aura.attack;
+    if (typeof aura.defense === 'number') total += aura.defense;
+    if (typeof aura.vitality === 'number') total += aura.vitality;
+    if (typeof aura.speed === 'number') total += aura.speed;
+    if (typeof aura.accuracy === 'number') total += aura.accuracy;
+    if (typeof aura.focus === 'number') total += aura.focus;
+    if (typeof aura.resilience === 'number') total += aura.resilience;
+    return total;
+  };
+  
   // Filter functions for each tab
   const filteredCharacters = characters.filter(character => {
     const matchesSearch = character.name.toLowerCase().includes(searchTerm.toLowerCase());
