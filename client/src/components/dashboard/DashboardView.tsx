@@ -1,6 +1,5 @@
-import WelcomeSection from './WelcomeSection';
+import KleosChatInterface from './KleosChatInterface';
 import ActiveTasks from './ActiveTasks';
-import DiscordChat from './DiscordChat';
 import OfferBanner from '../ui/OfferBanner';
 import { useDiscordAuth } from '@/lib/discordAuth';
 import { useGameStore } from '@/lib/zustandStore';
@@ -42,8 +41,7 @@ const DashboardView = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Main Column - Account Overview */}
         <div className="md:col-span-12 space-y-6">
-          <WelcomeSection 
-            username={user?.username || 'Adventurer'} 
+          <KleosChatInterface 
             charactersCount={characters.length}
             aurasCount={0} // Need to implement
             activeDungeons={dungeonRuns.filter(run => !run.completed).length}
@@ -55,11 +53,6 @@ const DashboardView = () => {
             dungeonRuns={dungeonRuns}
             forgingTasks={forgingTasks}
           />
-        </div>
-        
-        {/* Discord Chat - Full width */}
-        <div className="md:col-span-12">
-          <DiscordChat />
         </div>
       </div>
     </>

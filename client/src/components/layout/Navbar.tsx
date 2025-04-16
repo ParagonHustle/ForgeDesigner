@@ -3,6 +3,7 @@ import { useGameStore } from '@/lib/zustandStore';
 import { Zap } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
 import CountdownTimer from '@/components/common/CountdownTimer';
+import CompactDiscordChat from '@/components/common/CompactDiscordChat';
 
 const Navbar = () => {
   const { user, logout } = useDiscordAuth();
@@ -104,6 +105,11 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center space-x-4">
+        {/* Discord Chat */}
+        <div className="hidden md:block">
+          <CompactDiscordChat />
+        </div>
+        
         {/* Resources Display */}
         <div className="hidden md:flex items-center space-x-3">
           <div className="flex items-center">
