@@ -25,6 +25,14 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [completedAura, setCompletedAura] = useState<Aura | null>(null);
 
+  // Helper function to calculate progress percentage
+  const calculateProgress = (startTime: Date | string | null, endTime: Date | string): number => {
+    const start = startTime ? new Date(startTime).getTime() : new Date().getTime() - 3600000; // Default to 1 hour ago if no start time
+    const end = new Date(endTime).getTime();
+    const now = new Date().getTime();
+    return Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+  };
+
   // Filter tasks
   const activeFarmingTasks = farmingTasks.filter(task => !task.completed);
   const activeDungeonRuns = dungeonRuns.filter(run => !run.completed);
@@ -323,25 +331,15 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                 </div>
               </div>
 
-              {/* Display assigned character */}
-              <div className="mt-2 text-sm text-[#C8B8DB]/70 flex items-center">
-                <User className="h-3 w-3 mr-1" />
-                <span>Assigned: {characterName}</span>
-              </div>
-
               <div className="mt-2">
-                <div className="flex items-center">
-                  <img 
-                    src={charactersById[task.characterId]?.avatarUrl || "https://via.placeholder.com/150"} 
-                    alt={charactersById[task.characterId]?.name || "Farming Character"} 
-                    className="w-10 h-10 rounded-full border border-[#228B22]/50"
-                  />
-                  <div className="ml-2">
-                    <div className="text-sm font-semibold">
-                      {charactersById[task.characterId]?.name || "Character"}, Lvl {charactersById[task.characterId]?.level || "?"}
-                    </div>
-                    <div className="text-xs text-[#C8B8DB]/70">+15% Farming Efficiency</div>
-                  </div>
+                <Progress value={calculateProgress(task.startTime, task.endTime)} max={100} className="h-1.5 bg-[#432874]/20" />
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <div className="text-xs text-[#C8B8DB]/70">
+                  <span>Expected yield: {task.expectedYield || "?"} {task.resourceName}</span>
+                </div>
+                <div className="text-xs text-[#228B22]/90">
+                  <span>+15% Farming Efficiency</span>
                 </div>
               </div>
 
@@ -402,14 +400,16 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                 </div>
               </div>
 
-              {/* Display assigned character */}
-              <div className="mt-2 text-sm text-[#C8B8DB]/70 flex items-center">
-                <User className="h-3 w-3 mr-1" />
-                <span>Assigned: {characterName}</span>
-              </div>
-
               <div className="mt-2">
                 <Progress value={taskProgress} className="h-2 bg-[#1F1D36] border-[#432874]/20" />
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <div className="text-xs text-[#C8B8DB]/70">
+                  <span>Task type: {task.taskType === 'fusion' ? 'Fusion' : 'Crafting'}</span>
+                </div>
+                <div className="text-xs text-[#FF9D00]/90">
+                  <span>+10% Crafting Speed</span>
+                </div>
               </div>
               {new Date(task.endTime) <= new Date() && (
                 <Link href="/forge">
