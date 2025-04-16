@@ -12,7 +12,8 @@ import {
   List, 
   Hammer,
   Award,
-  HelpCircle
+  HelpCircle,
+  User
 } from 'lucide-react';
 
 const navItems = [

@@ -49,60 +49,55 @@ import type { BuildingUpgrade } from '@shared/schema';
 // Building definitions
 const buildings = [
   {
-    id: 'townhall',
-    name: 'Townhall',
-    description: 'The central building that determines the maximum level of other buildings and unlocks additional farming and dungeon slots.',
-    icon: <Building2 className="h-6 w-6" />,
+    id: 'forge',
+    name: 'Forge',
+    description: 'Craft and enhance auras for your characters with improved success rates.',
+    icon: <Hammer className="h-6 w-6" />,
     color: 'text-[#FF9D00] bg-[#FF9D00]/10',
     benefits: [
-      { level: 1, text: 'Unlocks basic buildings and 3 farming slots' },
-      { level: 2, text: 'Unlocks 4th farming slot' },
-      { level: 3, text: 'Unlocks 5th farming slot and increase active character tasks' },
-      { level: 4, text: 'Unlocks 6th farming slot' },
-      { level: 5, text: 'Unlocks Guild access and all farming slots' },
-      { level: 10, text: 'Allows other buildings to reach level 19' },
-      { level: 20, text: 'Allows other buildings to reach level 29' },
-      { level: 30, text: 'Allows other buildings to reach level 39' },
-      { level: 40, text: 'Allows other buildings to reach level 49' }
+      { level: 1, text: 'Basic crafting capabilities (3 slots)' },
+      { level: 2, text: '10% faster crafting speed' },
+      { level: 3, text: 'Unlocks 4th crafting slot' },
+      { level: 4, text: '20% increased success rate on fusions' },
+      { level: 5, text: '35% faster crafting speed' }
     ],
     maxLevel: 9,
-    baseUpgradeCost: { rogueCredits: 1000, forgeTokens: 100 },
-    upgradeTimeInMinutes: 60
+    baseUpgradeCost: { rogueCredits: 800, forgeTokens: 80 },
+    upgradeTimeInMinutes: 45
   },
-
   {
-    id: 'tavern',
-    name: 'Tavern',
-    description: 'Specialized trading post that offers character trades and generates energy/tickets for dungeons.',
-    icon: <User className="h-6 w-6" />,
-    color: 'text-[#4169E1] bg-[#4169E1]/10',
+    id: 'blackmarket',
+    name: 'Black Market',
+    description: 'Purchase rare characters, auras, and resources with improved availability.',
+    icon: <ShoppingBag className="h-6 w-6" />,
+    color: 'text-[#C70039] bg-[#C70039]/10',
     benefits: [
-      { level: 1, text: 'Basic trade options (3 common for 1 rare)' },
-      { level: 2, text: 'Improved trade options (3 rare for 1 epic)' },
-      { level: 3, text: 'Generate 2 dungeon tickets per day' },
-      { level: 4, text: 'Generate 4 dungeon tickets per day' },
-      { level: 5, text: 'Elite trade options (3 epic for 1 legendary)' }
+      { level: 1, text: 'Basic market items (3 standard slots, 3 premium slots)' },
+      { level: 2, text: 'Unlocks 4th premium market slot' },
+      { level: 3, text: 'Unlocks 4th standard market slot' },
+      { level: 4, text: '10% discount on all market purchases' },
+      { level: 5, text: 'Daily market refresh' }
+    ],
+    maxLevel: 9,
+    baseUpgradeCost: { rogueCredits: 750, forgeTokens: 75 },
+    upgradeTimeInMinutes: 40
+  },
+  {
+    id: 'bountyboard',
+    name: 'Bounty Board',
+    description: 'Complete quests to earn rewards with enhanced quest options and rewards.',
+    icon: <List className="h-6 w-6" />,
+    color: 'text-[#00B9AE] bg-[#00B9AE]/10',
+    benefits: [
+      { level: 1, text: 'Basic daily quests (3 slots)' },
+      { level: 2, text: 'Unlocks weekly quests' },
+      { level: 3, text: 'Increased quest rewards by 20%' },
+      { level: 4, text: 'Unlocks rare quests' },
+      { level: 5, text: 'Unlocks epic quests with premium rewards' }
     ],
     maxLevel: 9,
     baseUpgradeCost: { rogueCredits: 700, forgeTokens: 70 },
     upgradeTimeInMinutes: 35
-  },
-  {
-    id: 'farming',
-    name: 'Farming',
-    description: 'Enables resource gathering from farming tasks with improved efficiency and rewards.',
-    icon: <Wheat className="h-6 w-6" />,
-    color: 'text-[#8BC34A] bg-[#8BC34A]/10',
-    benefits: [
-      { level: 1, text: 'Basic farming efficiency (normal yields)' },
-      { level: 2, text: '10% faster farming task completion' },
-      { level: 3, text: '20% increased resource yield from farming' },
-      { level: 4, text: '40% faster farming task completion' },
-      { level: 5, text: '60% increased resource yield from farming' }
-    ],
-    maxLevel: 9,
-    baseUpgradeCost: { rogueCredits: 650, forgeTokens: 65 },
-    upgradeTimeInMinutes: 30
   }
 ];
 
