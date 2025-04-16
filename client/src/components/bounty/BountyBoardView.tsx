@@ -37,7 +37,13 @@ import {
   ChevronRight,
   Settings,
   Calendar,
-  CalendarDays
+  CalendarDays,
+  Gift as GiftIcon,
+  Coins,
+  Calculator as Coin,
+  Diamond,
+  Zap,
+  BookOpen
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -376,11 +382,11 @@ const BountyBoardView = () => {
             </div>
             
             {/* Rewards */}
-            <div className="mt-4 pt-3 border-t border-[#432874]/30">
-              <div className="flex justify-between items-center">
+            <div className="mt-3 pt-2 border-t border-[#432874]/30">
+              <div className="flex justify-between items-center mb-1">
                 <div className="flex items-center">
-                  <Package className="h-4 w-4 text-[#00B9AE] mr-1" />
-                  <span className="text-sm font-semibold">Rewards:</span>
+                  <GiftIcon className="h-4 w-4 text-[#00B9AE] mr-1" />
+                  <span className="text-xs font-semibold">Possible Rewards:</span>
                 </div>
                 
                 {!quest.completed && (
@@ -393,36 +399,53 @@ const BountyBoardView = () => {
                 )}
               </div>
               
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-1 mt-1">
                 {quest.rewards && typeof quest.rewards === 'object' && (
                   <>
                     {'rogueCredits' in quest.rewards && (quest.rewards as any).rogueCredits > 0 && (
-                      <Badge className="bg-[#432874]/20 border-[#432874]/50">
-                        {(quest.rewards as any).rogueCredits} Rogue Credits
+                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#432874]/10 border-[#432874]/30 text-[#C8B8DB]/90">
+                        <Coins className="h-3 w-3 mr-1 text-purple-400" />
+                        Rogue Credits
                       </Badge>
                     )}
                     {'forgeTokens' in quest.rewards && (quest.rewards as any).forgeTokens > 0 && (
-                      <Badge className="bg-[#FFD700]/20 text-[#FFD700] border-[#FFD700]/30">
-                        {(quest.rewards as any).forgeTokens} Forge Tokens
+                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#FFD700]/10 border-[#FFD700]/20 text-[#FFD700]/90">
+                        <Coins className="h-3 w-3 mr-1 text-yellow-400" />
+                        Forge Tokens
                       </Badge>
                     )}
                     {'soulShards' in quest.rewards && (quest.rewards as any).soulShards > 0 && (
-                      <Badge className="bg-[#00B9AE]/20 text-[#00B9AE] border-[#00B9AE]/30">
-                        {(quest.rewards as any).soulShards} Soul Shards
+                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#00B9AE]/10 border-[#00B9AE]/20 text-[#00B9AE]/90">
+                        <Diamond className="h-3 w-3 mr-1 text-teal-400" />
+                        Soul Shards
                       </Badge>
                     )}
                     {'material' in quest.rewards && (quest.rewards as any).material && (
-                      <Badge className="bg-[#C8B8DB]/20 text-[#C8B8DB] border-[#C8B8DB]/30">
-                        {((quest.rewards as any).material as any).amount} {((quest.rewards as any).material as any).name}
+                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#C8B8DB]/10 border-[#C8B8DB]/20 text-[#C8B8DB]/90">
+                        <Package className="h-3 w-3 mr-1 text-gray-400" />
+                        Materials
                       </Badge>
                     )}
                     {'materials' in quest.rewards && Array.isArray((quest.rewards as any).materials) && 
-                      (quest.rewards as any).materials.map((mat: any, idx: number) => (
-                        <Badge key={idx} className="bg-[#C8B8DB]/20 text-[#C8B8DB] border-[#C8B8DB]/30">
-                          {mat.amount} {mat.name}
+                      (quest.rewards as any).materials.length > 0 && (
+                        <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#C8B8DB]/10 border-[#C8B8DB]/20 text-[#C8B8DB]/90">
+                          <Package className="h-3 w-3 mr-1 text-gray-400" />
+                          Materials
                         </Badge>
-                      ))
+                      )
                     }
+                    {'xp' in quest.rewards && (quest.rewards as any).xp > 0 && (
+                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-[#FF9D00]/10 border-[#FF9D00]/20 text-[#FF9D00]/90">
+                        <Zap className="h-3 w-3 mr-1 text-orange-400" />
+                        XP
+                      </Badge>
+                    )}
+                    {'skillPoints' in quest.rewards && (quest.rewards as any).skillPoints > 0 && (
+                      <Badge variant="outline" className="py-0 px-2 h-5 text-xs bg-blue-500/10 border-blue-500/20 text-blue-400/90">
+                        <BookOpen className="h-3 w-3 mr-1 text-blue-400" />
+                        Skill Points
+                      </Badge>
+                    )}
                   </>
                 )}
               </div>
@@ -560,71 +583,14 @@ const BountyBoardView = () => {
           Complete daily and weekly quests to earn valuable rewards and progress your account.
         </p>
       </div>
-      
-      {/* Active Quests */}
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
-        <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6 mb-8">
-          <div className="flex items-center mb-4">
-            <List className="h-6 w-6 text-[#FF9D00] mr-2" />
-            <h2 className="text-xl font-cinzel font-bold">Active Quests</h2>
-            <div className="ml-auto flex items-center text-sm text-[#C8B8DB]/70">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>Daily Reset in 12h 34m</span>
-            </div>
-          </div>
-          
-          {bountyQuests.length === 0 ? (
-            <div className="bg-[#1F1D36]/50 rounded-lg p-8 text-center">
-              <Scroll className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
-              <p className="text-[#C8B8DB]/80 mb-4">
-                No active quests available. Check back later or upgrade your Bounty Board to unlock more quests!
-              </p>
-            </div>
-          ) : (
-            <Tabs defaultValue="daily" className="w-full">
-              <TabsList className="bg-[#1A1A2E] border border-[#432874]/30 mb-4">
-                <TabsTrigger value="daily" className="data-[state=active]:bg-[#432874]/30">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Daily Quests
-                </TabsTrigger>
-                <TabsTrigger value="weekly" className="data-[state=active]:bg-[#432874]/30">
-                  <CalendarDays className="h-4 w-4 mr-2" />
-                  Weekly Quests
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="daily" className="space-y-4">
-                {dailyQuests.length > 0 ? (
-                  dailyQuests.map(renderQuestCard)
-                ) : (
-                  <div className="bg-[#1F1D36]/50 rounded-lg p-6 text-center">
-                    <p className="text-[#C8B8DB]/80">No daily quests available right now.</p>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="weekly" className="space-y-4">
-                {weeklyQuests.length > 0 ? (
-                  weeklyQuests.map(renderQuestCard)
-                ) : (
-                  <div className="bg-[#1F1D36]/50 rounded-lg p-6 text-center">
-                    <p className="text-[#C8B8DB]/80">No weekly quests available right now.</p>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          )}
-        </div>
-      </motion.div>
-      
-      {/* Bounty Board Level Info */}
-      <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6">
+
+      {/* Bounty Board Information - Moved to the top */}
+      <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6 mb-8">
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-xl font-cinzel font-bold text-[#FF9D00]">Bounty Board Information</h2>
+          <div className="flex items-center">
+            <Shield className="h-5 w-5 text-[#00B9AE] mr-2" />
+            <h2 className="text-xl font-cinzel font-bold text-[#FF9D00]">Bounty Board Information</h2>
+          </div>
           
           {/* Upgrade Button */}
           <Button 
@@ -638,7 +604,7 @@ const BountyBoardView = () => {
           </Button>
         </div>
         
-        <div className="bg-[#1F1D36]/50 rounded-lg p-4 mb-6">
+        <div className="bg-[#1F1D36]/50 rounded-lg p-4 mb-4">
           <div className="flex items-center mb-2">
             <Shield className="h-5 w-5 text-[#00B9AE] mr-2" />
             <h3 className="font-semibold">Your Bounty Board Level: {user?.bountyBoardLevel || 1}</h3>
@@ -716,6 +682,74 @@ const BountyBoardView = () => {
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Active Quests */}
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
+        <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6 mb-8">
+          <div className="flex items-center mb-4">
+            <List className="h-6 w-6 text-[#FF9D00] mr-2" />
+            <h2 className="text-xl font-cinzel font-bold">Active Quests</h2>
+            <div className="ml-auto flex items-center text-sm text-[#C8B8DB]/70">
+              <Clock className="h-4 w-4 mr-1" />
+              <span>Daily Reset in 12h 34m</span>
+            </div>
+          </div>
+          
+          {bountyQuests.length === 0 ? (
+            <div className="bg-[#1F1D36]/50 rounded-lg p-8 text-center">
+              <Scroll className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
+              <p className="text-[#C8B8DB]/80 mb-4">
+                No active quests available. Check back later or upgrade your Bounty Board to unlock more quests!
+              </p>
+            </div>
+          ) : (
+            <Tabs defaultValue="daily" className="w-full">
+              <TabsList className="bg-[#1A1A2E] border border-[#432874]/30 mb-4">
+                <TabsTrigger value="daily" className="data-[state=active]:bg-[#432874]/30">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Daily Quests
+                </TabsTrigger>
+                <TabsTrigger value="weekly" className="data-[state=active]:bg-[#432874]/30">
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  Weekly Quests
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="daily" className="space-y-4">
+                {dailyQuests.length > 0 ? (
+                  dailyQuests.map(renderQuestCard)
+                ) : (
+                  <div className="bg-[#1F1D36]/50 rounded-lg p-6 text-center">
+                    <p className="text-[#C8B8DB]/80">No daily quests available right now.</p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="weekly" className="space-y-4">
+                {weeklyQuests.length > 0 ? (
+                  weeklyQuests.map(renderQuestCard)
+                ) : (
+                  <div className="bg-[#1F1D36]/50 rounded-lg p-6 text-center">
+                    <p className="text-[#C8B8DB]/80">No weekly quests available right now.</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          )}
+        </div>
+      </motion.div>
+      
+      {/* Tips and Information */}
+      <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6">
+        <div className="flex items-center mb-4">
+          <BookOpen className="h-6 w-6 text-[#FF9D00] mr-2" />
+          <h2 className="text-xl font-cinzel font-bold">Bounty Board Tips</h2>
+        </div>
         
         {/* Bounty Board Skills Section */}
         <div className="mb-6">
@@ -763,7 +797,6 @@ const BountyBoardView = () => {
           <Separator className="my-6 bg-[#432874]/30" />
         </div>
         
-        {/* Tips and Information */}
         <div className="space-y-4">
           <div className="flex">
             <div className="bg-[#432874]/30 rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
