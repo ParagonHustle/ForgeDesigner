@@ -376,7 +376,7 @@ const BountyBoardView = () => {
                   );
                 }
                 return null;
-              })}
+              }) as React.ReactNode}
             </div>
             
             {/* Rewards */}
@@ -445,7 +445,7 @@ const BountyBoardView = () => {
                       </Badge>
                     )}
                   </>
-                )}
+                ) as React.ReactNode}
               </div>
             </div>
             
