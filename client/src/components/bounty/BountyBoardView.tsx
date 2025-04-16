@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useGameStore } from '@/lib/zustandStore';
@@ -13,6 +13,14 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -98,6 +106,7 @@ const BountyBoardView = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showSkillTree, setShowSkillTree] = useState<boolean>(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState<boolean>(false);
   
   // Fetch bounty quests
   const { data: bountyQuests = [], isLoading: questsLoading, refetch: refetchQuests } = useQuery<BountyQuest[]>({
@@ -121,6 +130,48 @@ const BountyBoardView = () => {
         return 'bg-purple-700/30 text-purple-400 border-purple-600/30';
       default:
         return 'bg-slate-700/30 text-slate-300 border-slate-600/30';
+    }
+  };
+  
+  // Get rarity badge style and color for quest cards
+  const getRarityStyle = (rarity?: string) => {
+    if (!rarity) return { 
+      badge: 'bg-gray-700/30 text-gray-300 border-gray-600/30',
+      dot: 'bg-gray-500',
+      text: 'text-gray-400'
+    };
+    
+    switch (rarity.toLowerCase()) {
+      case 'legendary':
+        return { 
+          badge: 'bg-yellow-700/30 text-yellow-300 border-yellow-600/30',
+          dot: 'bg-yellow-500',
+          text: 'text-yellow-400'
+        };
+      case 'mythic':
+        return { 
+          badge: 'bg-purple-700/30 text-purple-300 border-purple-600/30',
+          dot: 'bg-purple-500',
+          text: 'text-purple-400'
+        };
+      case 'epic':
+        return { 
+          badge: 'bg-blue-700/30 text-blue-300 border-blue-600/30',
+          dot: 'bg-blue-500',
+          text: 'text-blue-400'
+        };
+      case 'rare':
+        return { 
+          badge: 'bg-green-700/30 text-green-300 border-green-600/30',
+          dot: 'bg-green-500',
+          text: 'text-green-400'
+        };
+      default: // Basic
+        return { 
+          badge: 'bg-gray-700/30 text-gray-300 border-gray-600/30',
+          dot: 'bg-gray-500',
+          text: 'text-gray-400'
+        };
     }
   };
 
@@ -272,7 +323,15 @@ const BountyBoardView = () => {
           <div className="flex-1">
             <div className="flex justify-between items-start mb-1">
               <div>
-                <h3 className="font-cinzel font-semibold text-lg">{quest.name}</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-cinzel font-semibold text-lg">{quest.name}</h3>
+                  {(quest as any).rarity && (
+                    <Badge className={getRarityStyle((quest as any).rarity).badge}>
+                      <div className={`w-2 h-2 rounded-full ${getRarityStyle((quest as any).rarity).dot} mr-1.5`}></div>
+                      {(quest as any).rarity}
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-[#C8B8DB]/80">{quest.description}</p>
               </div>
               <Badge className={getFrequencyStyle((quest as any).frequency)}>
@@ -388,6 +447,102 @@ const BountyBoardView = () => {
   
   return (
     <>
+      {/* Bounty Board Upgrade Dialog */}
+      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <DialogContent className="bg-[#1A1A2E] border-[#432874]/50 text-[#C8B8DB] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">Upgrade Bounty Board</DialogTitle>
+            <DialogDescription className="text-[#C8B8DB]/80">
+              Upgrading your Bounty Board unlocks better quests and increases rewards.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h4 className="font-semibold">Current Level: {user?.bountyBoardLevel || 1}</h4>
+                <p className="text-sm text-[#C8B8DB]/70">Next Level: {(user?.bountyBoardLevel || 1) + 1}</p>
+              </div>
+              <div className="bg-[#432874]/30 px-3 py-1 rounded">
+                <span className="text-[#FF9D00] font-semibold">Lv.{user?.bountyBoardLevel || 1}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-[#15152C] p-3 rounded-md">
+                <h4 className="font-semibold mb-2">Required Materials</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
+                        <Scroll className="h-4 w-4 text-[#00B9AE]" />
+                      </div>
+                      <span>Bounty Board Blueprint</span>
+                    </div>
+                    <Badge className="bg-[#15152C] border-[#432874]">
+                      {(user?.bountyBoardLevel || 1) * 2} pcs
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
+                        <span className="text-[#FF9D00] text-xs">RC</span>
+                      </div>
+                      <span>Rogue Credits</span>
+                    </div>
+                    <Badge className="bg-[#15152C] border-[#432874]">
+                      {(user?.bountyBoardLevel || 1) * 1000}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-[#15152C] p-3 rounded-md">
+                <h4 className="font-semibold mb-2">Unlocks at Level {(user?.bountyBoardLevel || 1) + 1}</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
+                    {(user?.bountyBoardLevel || 1) + 1 >= 3 ? "Rare Quest Availability" : 
+                     (user?.bountyBoardLevel || 1) + 1 >= 5 ? "Epic Quest Availability" :
+                     (user?.bountyBoardLevel || 1) + 1 >= 7 ? "Mythic Quest Availability" :
+                     (user?.bountyBoardLevel || 1) + 1 >= 10 ? "Legendary Quest Availability" :
+                     "+1 Daily Quest Slot"}
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
+                    Increased Reward Values (+10%)
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
+                    New Skill Point
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex justify-between items-center">
+            <Button variant="outline" onClick={() => setShowUpgradeDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+              onClick={() => {
+                toast({
+                  title: "Coming Soon",
+                  description: "Bounty Board upgrade functionality will be available in a future update."
+                });
+                setShowUpgradeDialog(false);
+              }}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Upgrade
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    
       <div className="mb-6">
         <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">Bounty Board</h1>
         <p className="text-[#C8B8DB]/80">
@@ -457,7 +612,20 @@ const BountyBoardView = () => {
       
       {/* Bounty Board Level Info */}
       <div className="bg-[#1A1A2E] border border-[#432874]/30 rounded-xl p-6">
-        <h2 className="text-xl font-cinzel font-bold text-[#FF9D00] mb-4">Bounty Board Information</h2>
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-xl font-cinzel font-bold text-[#FF9D00]">Bounty Board Information</h2>
+          
+          {/* Upgrade Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-[#FF9D00]/50 text-[#FF9D00] hover:bg-[#FF9D00]/10"
+            onClick={() => setShowUpgradeDialog(true)}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Upgrade
+          </Button>
+        </div>
         
         <div className="bg-[#1F1D36]/50 rounded-lg p-4 mb-6">
           <div className="flex items-center mb-2">
