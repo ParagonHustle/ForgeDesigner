@@ -391,7 +391,7 @@ const BlackMarketView = () => {
           animate="show"
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
         >
-          {premiumListings.length === 0 ? (
+          {premiumListingsWithPlaceholders.length === 0 ? (
             <div className="col-span-full bg-[#1A1A2E] rounded-xl p-8 text-center">
               <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
               <p className="text-[#C8B8DB]/80 mb-4">
@@ -399,9 +399,9 @@ const BlackMarketView = () => {
               </p>
             </div>
           ) : (
-            premiumListings.map((listing, index) => {
+            premiumListingsWithPlaceholders.map((listing, index) => {
               const itemInfo = getItemInfo(listing);
-              const isLocked = index >= blackMarketLevel + 2;
+              const isLocked = index >= blackMarketLevel + 2 || (listing as any).isPlaceholder;
               
               return (
                 <motion.div
@@ -500,7 +500,7 @@ const BlackMarketView = () => {
           animate="show"
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
         >
-          {standardListings.length === 0 ? (
+          {standardListingsWithPlaceholders.length === 0 ? (
             <div className="col-span-full bg-[#1A1A2E] rounded-xl p-8 text-center">
               <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-[#C8B8DB]/50" />
               <p className="text-[#C8B8DB]/80 mb-4">
@@ -508,9 +508,9 @@ const BlackMarketView = () => {
               </p>
             </div>
           ) : (
-            standardListings.map((listing, index) => {
+            standardListingsWithPlaceholders.map((listing, index) => {
               const itemInfo = getItemInfo(listing);
-              const isLocked = index >= blackMarketLevel + 2;
+              const isLocked = index >= blackMarketLevel + 2 || (listing as any).isPlaceholder;
               
               return (
                 <motion.div

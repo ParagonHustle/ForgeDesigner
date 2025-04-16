@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useGameStore } from '@/lib/zustandStore';
 import { useDiscordAuth } from '@/lib/discordAuth';
@@ -448,7 +449,7 @@ const BountyBoardView = () => {
                   );
                 }
                 return null;
-              })}
+              }) as React.ReactNode}
             </div>
           )}
           
@@ -461,7 +462,7 @@ const BountyBoardView = () => {
             
             {quest.completed && (
               <span className="text-[0.65rem] text-green-400">
-                Completed {new Date(quest.completedAt || Date.now()).toLocaleDateString()}
+                Completed {new Date((quest as any).completedAt || Date.now()).toLocaleDateString()}
               </span>
             )}
           </div>
@@ -473,7 +474,7 @@ const BountyBoardView = () => {
                 <span className="text-[#C8B8DB]/90">{key}: </span>
                 <span className="ml-1 text-[#FFD700]">{value}</span>
               </div>
-            ))}
+            )) as React.ReactNode}
           </div>
           
           {/* Claim button */}
