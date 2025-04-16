@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/zustandStore';
-import { Send, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, MessageSquare, ChevronDown, ChevronUp, Maximize2, MessageCircle } from 'lucide-react';
 import { useDiscordAuth } from '@/lib/discordAuth';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -44,49 +44,49 @@ const CompactDiscordChat = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <div className="relative">
-        <div className="flex items-center">
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-[#432874]/20 border-[#432874]/30 hover:bg-[#432874]/40 flex items-center"
-            >
-              <MessageSquare className="h-4 w-4 mr-1 text-[#7855FF]" />
-              <span>Discord</span>
-              {unreadCount.current > 0 && (
-                <span className="ml-1 w-4 h-4 rounded-full bg-[#FF9D00] text-[#1A1A2E] text-xs flex items-center justify-center">
-                  {unreadCount.current > 9 ? '9+' : unreadCount.current}
-                </span>
-              )}
-            </Button>
-          </DialogTrigger>
-          
-          <button 
-            onClick={() => setShowPreview(!showPreview)} 
-            className="ml-1 text-[#C8B8DB] hover:text-[#FF9D00] transition-colors"
-          >
-            {showPreview ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
-        </div>
-        
-        {/* Preview of recent messages */}
-        {showPreview && recentMessages.length > 0 && (
-          <div className="mt-1 bg-[#1F1D36]/80 border border-[#432874]/30 rounded-lg p-2 max-w-md overflow-hidden text-xs absolute z-10 w-72">
-            {recentMessages.map((msg) => (
-              <div key={msg.id} className="flex truncate mb-1 last:mb-0">
-                <span className={`font-semibold ${
-                  msg.username === 'GuildMaster' ? 'text-[#FF9D00]' : 
-                  msg.username === 'AuraCollector' ? 'text-[#00B9AE]' : 
-                  'text-[#C8B8DB]'
-                }`}>
-                  {msg.username}:
-                </span>
-                <span className="text-[#C8B8DB]/90 ml-1 truncate">{msg.content}</span>
-              </div>
-            ))}
+      <div className="relative flex-1">
+        {/* Live Discord Chat Bar */}
+        <div className="flex items-center h-9 relative">
+          {/* Chat Label */}
+          <div className="flex items-center bg-[#432874]/20 border border-[#432874]/30 rounded-l-md px-3 py-1.5">
+            <MessageCircle className="h-4 w-4 mr-2 text-[#7855FF]" />
+            <span className="text-[#C8B8DB] font-medium">Discord</span>
+            {unreadCount.current > 0 && (
+              <span className="ml-1 w-4 h-4 rounded-full bg-[#FF9D00] text-[#1A1A2E] text-xs flex items-center justify-center">
+                {unreadCount.current > 9 ? '9+' : unreadCount.current}
+              </span>
+            )}
           </div>
-        )}
+          
+          {/* Live Chat Display (Always visible) */}
+          <div className="bg-[#1F1D36]/80 border-y border-[#432874]/30 flex-1 h-full overflow-hidden px-3 py-1.5 flex items-center">
+            {recentMessages.length > 0 ? (
+              <div className="w-full">
+                {recentMessages.map((msg, index) => (
+                  <div key={msg.id} className={`flex truncate ${index === 0 ? 'mb-0.5' : ''}`}>
+                    <span className={`font-semibold text-xs ${
+                      msg.username === 'GuildMaster' ? 'text-[#FF9D00]' : 
+                      msg.username === 'AuraCollector' ? 'text-[#00B9AE]' : 
+                      'text-[#C8B8DB]'
+                    }`}>
+                      {msg.username}:
+                    </span>
+                    <span className="text-[#C8B8DB]/90 ml-1 truncate text-xs">{msg.content}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span className="text-[#C8B8DB]/50 text-xs">No messages yet</span>
+            )}
+          </div>
+          
+          {/* Expand Button */}
+          <DialogTrigger asChild>
+            <button className="bg-[#432874]/20 border border-[#432874]/30 border-l-0 rounded-r-md px-2 h-full flex items-center justify-center hover:bg-[#432874]/40 transition-colors">
+              <Maximize2 className="h-4 w-4 text-[#7855FF]" />
+            </button>
+          </DialogTrigger>
+        </div>
       </div>
       
       <DialogContent className="sm:max-w-md bg-[#1A1A2E] border-[#432874]/50">
@@ -97,20 +97,31 @@ const CompactDiscordChat = () => {
           </div>
         </div>
         
-        <div className="h-60 overflow-y-auto bg-[#1F1D36]/50 rounded-lg p-3 mb-3 text-xs space-y-2">
-          {discordMessages.map((msg) => (
-            <div key={msg.id} className="flex">
-              <span className={`font-semibold ${
-                msg.username === 'GuildMaster' ? 'text-[#FF9D00]' : 
-                msg.username === 'AuraCollector' ? 'text-[#00B9AE]' : 
-                'text-[#C8B8DB]'
-              }`}>
-                {msg.username}:
-              </span>
-              <span className="text-[#C8B8DB]/90 ml-1">{msg.content}</span>
+        <div className="h-80 overflow-y-auto bg-[#1F1D36]/50 rounded-lg p-3 mb-3 text-xs space-y-2 custom-scrollbar">
+          {discordMessages.length > 0 ? (
+            <>
+              {discordMessages.map((msg) => (
+                <div key={msg.id} className="flex items-start group hover:bg-[#432874]/10 p-1 rounded-md transition-colors">
+                  <span className={`font-semibold whitespace-nowrap ${
+                    msg.username === 'GuildMaster' ? 'text-[#FF9D00]' : 
+                    msg.username === 'AuraCollector' ? 'text-[#00B9AE]' : 
+                    'text-[#C8B8DB]'
+                  }`}>
+                    {msg.username}:
+                  </span>
+                  <span className="text-[#C8B8DB]/90 ml-1 break-words">{msg.content}</span>
+                  <span className="ml-auto text-[#C8B8DB]/40 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </span>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </>
+          ) : (
+            <div className="h-full flex items-center justify-center text-[#C8B8DB]/40">
+              No messages yet. Start the conversation!
             </div>
-          ))}
-          <div ref={messagesEndRef} />
+          )}
         </div>
         
         <div className="flex">

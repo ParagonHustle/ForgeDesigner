@@ -29,19 +29,47 @@ const KleosChatInterface = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
   
+  // Generate random witty welcome message
+  const generateWittyMessage = () => {
+    const activitySummaries = [
+      `I see you've got ${activeDungeons} brave souls risking their pixels in dungeons, while ${farmingSlotsCount} minions are farming away. Your empire grows, ${user?.username || 'Adventurer'}!`,
+      `${user?.username || 'Adventurer'}! Your ${charactersCount} characters are getting restless. Maybe send a few more on adventures? The dungeons are practically begging for heroes.`,
+      `Hot off the digital press: You've collected ${aurasCount} Auras! That's ${aurasCount > 10 ? 'impressive' : 'a good start'}. Keep it up and you'll be glowing brighter than my circuits soon.`,
+      `${activeDungeons > 0 ? `Your ${activeDungeons} active dungeons are in full swing!` : 'No active dungeons? The monsters are getting bored!'} And your ${farmingSlotsCount} farming slots are ${farmingSlotsCount > 3 ? 'working overtime' : 'looking a bit lonely'}.`,
+      `Welcome back, ${user?.username || 'Adventurer'}! I've been counting your ${aurasCount} Auras while you were away. It's not weird, it's just what AI assistants do.`,
+      `Stats update: ${charactersCount} characters, ${aurasCount} Auras, and ${activeDungeons + farmingSlotsCount} active tasks. Not to pressure you, but the leaderboards are watching!`
+    ];
+
+    const offers = [
+      `Today's special: Double essence drops in Fire dungeons! Not to be dramatic, but this is THE time to farm.`,
+      `Weekend offer: 30% off all Forge accelerations! Time to craft those Legendary Auras you've been dreaming about.`,
+      `Psst! The Black Market just got a fresh shipment. I spotted some rare items that would complement your collection nicely.`,
+      `The Townhall is buzzing with news of an upcoming event. Something about "celestial invasions" - sounds ominous and profitable!`,
+      `I heard a rumor that premium dungeon tickets will be half-price tomorrow. Just saying, your inventory could use a restock.`,
+      `Special event alert! "Eclipse of Elements" starts tomorrow. Get your team ready for some interdimensional farming.`
+    ];
+
+    const wittyTips = [
+      `Pro tip: Matching Aura elements with character affinities boosts performance by 25%. I'm not saying your current setup is wrong, but... well, you know.`,
+      `You know what would really complete your collection? That legendary Wind Aura you've been avoiding crafting. Just a thought!`,
+      `Between you and me, focusing on Speed attributes is the meta right now. Your competitors are already catching on.`,
+      `I analyzed your dungeon strategies. Have you considered actually surviving? I kid! But seriously, more vitality might help.`,
+      `Your farming efficiency is good, but with a few optimizations to your character assignments, it could be great. Just saying!`,
+      `I've been running simulations, and your current team would last approximately 2.7 seconds against the upcoming boss. Might want to prepare a bit more.`
+    ];
+
+    // Randomly select one from each category
+    const activitySummary = activitySummaries[Math.floor(Math.random() * activitySummaries.length)];
+    const offer = offers[Math.floor(Math.random() * offers.length)];
+    const wittyTip = wittyTips[Math.floor(Math.random() * wittyTips.length)];
+
+    return `${activitySummary}\n\n${offer}\n\n${wittyTip}\n\nHow can I assist you today? You can ask me about Forge mechanics, dungeon strategies, character building, market insights, or game updates.`;
+  };
+
   // Initialize with welcome message
   useEffect(() => {
     if (messages.length === 0) {
-      const initialMessage = `Welcome back, ${user?.username || 'Adventurer'}! I'm Kleos, your AI guide to The Forge. 
-      
-You currently have ${charactersCount} characters, ${aurasCount} Auras, ${activeDungeons} active dungeons, and ${farmingSlotsCount} farming slots in use.
-
-How can I assist you today? You can ask me about:
-• Forge mechanics and crafting
-• Dungeon strategies
-• Character building
-• Market insights
-• Game updates`;
+      const initialMessage = generateWittyMessage();
 
       setMessages([
         {
@@ -77,16 +105,42 @@ How can I assist you today? You can ask me about:
     
     // Simulate AI response delay
     setTimeout(() => {
-      const responses = [
-        "I'm analyzing the dungeons data now. The best strategy for your current level would be to focus on elemental synergies between your characters and auras.",
-        "Looking at the market trends, Forge Tokens are up 15% this week. It might be a good time to craft some rare auras with your resources.",
-        "Your character progression is solid! Consider investing in more vitality for your main tank to handle the upcoming dungeon challenges.",
-        "Based on your collection, you're just 3 auras away from completing the Celestial set. The Black Market might have what you need this week.",
-        "The next major game update will introduce a new dungeon tier with exclusive rewards. Make sure to prepare your team!",
-        "For optimal farming efficiency, I recommend focusing on Soul Shards during the double yield event this weekend."
+      const generalResponses = [
+        "I'm analyzing the dungeons data now. The best strategy for your level would be to focus on elemental synergies between your characters and auras. Fire and Earth combos are particularly devastating against the new Abyssal enemies.",
+        "Looking at the market trends, Forge Tokens are up 15% this week, while essence prices have stabilized. Might be a good time to craft those high-tier auras you've been planning.",
+        "Your character progression is solid! For your next upgrades, I'd recommend investing in more vitality for your tanks and accuracy for damage dealers. The upcoming dungeons have some seriously evasive bosses.",
+        "Based on your collection, you're just 3 auras away from completing the Celestial set. That 30% bonus to all elemental damage is definitely worth hunting down those last few pieces!",
+        "The next game update will introduce the Shadow Realm dungeon tier with some juicy exclusive rewards. You'll want at least 3 characters with Dark resistance above 50% - might want to start preparing!",
+        "For optimal farming efficiency this week, I'd focus on Soul Shards in the Misty Highlands. With the current event bonus, you could increase your yield by up to 75% with the right character setup."
       ];
       
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      const characterAdvice = [
+        `I've been observing your ${charactersCount > 0 ? 'favorite character' : 'characters'}, and I've noticed a potential improvement path. Have you considered focusing more on elemental specialization? The new meta heavily rewards it.`,
+        `Your character roster is looking ${charactersCount > 5 ? 'quite diverse' : 'like it could use some variety'}! A balanced team with at least one tank, two DPS, and a support character would boost your dungeon clear rate significantly.`,
+        `Did you know that pairing characters with complementary auras can increase their effectiveness by up to 35%? Your current setups could benefit from some strategic reassignments.`,
+        `Your characters' skill allocations could use some optimization. The current endgame meta favors burst damage over sustained DPS - might be worth respeccing a few skill trees.`,
+        `I've analyzed your character progression paths, and it seems you're prioritizing raw stats over synergy effects. While solid, you could gain an extra 20% efficiency by aligning your team compositions better.`
+      ];
+      
+      const personalizedTips = [
+        `By the way, I noticed you tend to prefer ${activeDungeons > farmingSlotsCount ? 'dungeon runs over farming' : 'farming over dungeon runs'}. Did you know you can optimize your rewards by balancing your activities based on the day of the week? Essence drops are boosted on weekends!`,
+        `Based on your activity patterns, you might enjoy the new Guild Challenges that are coming next week. They're designed specifically for players who enjoy ${activeDungeons > 0 ? 'challenging dungeon content' : 'strategic resource management'}.`,
+        `Your playstyle reminds me of some of the top players on the leaderboard! They also focus on ${aurasCount > 10 ? 'building diverse aura collections' : 'mastering a few powerful characters'}. You're definitely on the right track.`,
+        `I've been tracking your progress, and you're advancing 15% faster than the average player at your stage! Whatever you're doing with those ${charactersCount} characters, keep it up!`,
+        `Quick observation: players with similar profiles to yours often excel at the Celestial Trials event. With your current setup, you could potentially reach the top 10% bracket with just a few strategic adjustments.`
+      ];
+      
+      // Randomly select a response category with weighting
+      const responseType = Math.random();
+      let randomResponse;
+      
+      if (responseType < 0.4) {
+        randomResponse = generalResponses[Math.floor(Math.random() * generalResponses.length)];
+      } else if (responseType < 0.7) {
+        randomResponse = characterAdvice[Math.floor(Math.random() * characterAdvice.length)];
+      } else {
+        randomResponse = personalizedTips[Math.floor(Math.random() * personalizedTips.length)];
+      }
       
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),

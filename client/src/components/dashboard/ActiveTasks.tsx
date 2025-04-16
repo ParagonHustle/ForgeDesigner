@@ -25,10 +25,15 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [completedAura, setCompletedAura] = useState<Aura | null>(null);
 
-  // Filter only active tasks
+  // Filter tasks
   const activeFarmingTasks = farmingTasks.filter(task => !task.completed);
   const activeDungeonRuns = dungeonRuns.filter(run => !run.completed);
   const activeForgingTasks = forgingTasks.filter(task => !task.completed);
+  
+  // Count completed tasks for each category
+  const completedFarmingCount = farmingTasks.filter(task => task.completed && new Date(task.endTime) <= new Date()).length;
+  const completedDungeonCount = dungeonRuns.filter(run => run.completed && new Date(run.endTime) <= new Date()).length;
+  const completedForgingCount = forgingTasks.filter(task => task.completed && new Date(task.endTime) <= new Date()).length;
 
   // Group characters by ID for easier lookup
   const charactersById = characters.reduce<Record<number, Character>>((acc, char) => {
@@ -185,6 +190,47 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
             <button className="text-[#FF9D00] text-xs hover:underline">View All</button>
           </Link>
         </div>
+
+        {/* Completed tasks notification bar */}
+        {(completedFarmingCount > 0 || completedDungeonCount > 0 || completedForgingCount > 0) && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {completedFarmingCount > 0 && (
+              <Link href="/farming">
+                <div className="flex items-center bg-[#228B22]/20 text-[#228B22] px-2 py-1 rounded border border-[#228B22]/30 text-xs hover:bg-[#228B22]/30 transition-colors">
+                  <Gem className="h-3 w-3 mr-1" />
+                  <span>Farming</span>
+                  <span className="ml-1 w-4 h-4 bg-[#228B22] text-black rounded-full flex items-center justify-center text-[10px] font-bold">
+                    {completedFarmingCount}
+                  </span>
+                </div>
+              </Link>
+            )}
+            
+            {completedDungeonCount > 0 && (
+              <Link href="/dungeons">
+                <div className="flex items-center bg-[#DC143C]/20 text-[#DC143C] px-2 py-1 rounded border border-[#DC143C]/30 text-xs hover:bg-[#DC143C]/30 transition-colors">
+                  <Grid className="h-3 w-3 mr-1" />
+                  <span>Dungeon</span>
+                  <span className="ml-1 w-4 h-4 bg-[#DC143C] text-white rounded-full flex items-center justify-center text-[10px] font-bold">
+                    {completedDungeonCount}
+                  </span>
+                </div>
+              </Link>
+            )}
+            
+            {completedForgingCount > 0 && (
+              <Link href="/forge">
+                <div className="flex items-center bg-[#FF9D00]/20 text-[#FF9D00] px-2 py-1 rounded border border-[#FF9D00]/30 text-xs hover:bg-[#FF9D00]/30 transition-colors">
+                  <Hammer className="h-3 w-3 mr-1" />
+                  <span>Forge</span>
+                  <span className="ml-1 w-4 h-4 bg-[#FF9D00] text-black rounded-full flex items-center justify-center text-[10px] font-bold">
+                    {completedForgingCount}
+                  </span>
+                </div>
+              </Link>
+            )}
+          </div>
+        )}
 
         <motion.div 
           className="space-y-2"
