@@ -135,11 +135,53 @@ const BlackMarketView = () => {
     }
   };
 
+  // Stock images for items based on their types and rarity/element
+  const stockImages = {
+    character: {
+      warrior: "https://i.imgur.com/eYhqUWb.jpg", // Knight with armor
+      mage: "https://i.imgur.com/uEyo0gB.jpg", // Mage casting spell
+      rogue: "https://i.imgur.com/9xEcTOx.jpg", // Rogue with daggers
+      archer: "https://i.imgur.com/pK2uFQG.jpg", // Archer with bow
+      healer: "https://i.imgur.com/STy2tX0.jpg", // Healer with staff
+      default: "https://i.imgur.com/jlQM1tJ.jpg" // Generic fantasy character
+    },
+    aura: {
+      fire: "https://i.imgur.com/zZFXEfS.jpg", // Fire element
+      water: "https://i.imgur.com/HlVLv7M.jpg", // Water element
+      earth: "https://i.imgur.com/EkuS2Iy.jpg", // Earth element
+      air: "https://i.imgur.com/JA4a3kY.jpg", // Air element
+      light: "https://i.imgur.com/0bKk5n9.jpg", // Light element
+      dark: "https://i.imgur.com/rCQjyfY.jpg", // Dark element
+      default: "https://i.imgur.com/sBsT4s3.jpg" // Generic magic aura
+    },
+    resource: {
+      crystal: "https://i.imgur.com/fv7qOVB.jpg", // Magical crystals
+      herb: "https://i.imgur.com/Z5YZEBS.jpg", // Herbs and plants
+      metal: "https://i.imgur.com/gPlqXH4.jpg", // Metal ores and ingots
+      gem: "https://i.imgur.com/6O1Usyw.jpg", // Gemstones
+      wood: "https://i.imgur.com/B2v8XDM.jpg", // Rare woods
+      default: "https://i.imgur.com/RHszhSh.jpg" // Generic resource pile
+    },
+    default: "https://i.imgur.com/sBsT4s3.jpg" // Fallback image
+  };
+
   const getItemInfo = (listing: BlackMarketListing) => {
+    if (!listing) return {
+      title: 'Unknown Item',
+      description: 'Item details unavailable',
+      detailLines: [],
+      image: stockImages.default
+    };
+    
     const itemData = listing.itemData as any;
     
     switch (listing.itemType) {
       case 'character':
+        // Determine character class for appropriate image
+        let characterClass = (itemData?.class || '').toLowerCase();
+        let characterImageKey = stockImages.character[characterClass as keyof typeof stockImages.character] 
+          ? characterClass : 'default';
+          
         return {
           title: itemData?.name || 'Mystery Character',
           description: `${itemData?.rarity || 'Unknown'} ${itemData?.class || 'Character'} - Level ${itemData?.level || '?'}`,
@@ -148,9 +190,15 @@ const BlackMarketView = () => {
             itemData?.stats ? `INT: ${itemData.stats.intelligence || 0} | VIT: ${itemData.stats.vitality || 0}` : '',
             itemData?.passiveSkills?.length > 0 ? `Skills: ${itemData.passiveSkills.map((s: any) => s.name).join(', ')}` : 'No special skills'
           ],
-          image: itemData?.avatarUrl || 'https://images.unsplash.com/photo-1577095972620-2f389ca3abcd?w=150&h=150&fit=crop'
+          image: itemData?.avatarUrl || stockImages.character[characterImageKey as keyof typeof stockImages.character]
         };
+        
       case 'aura':
+        // Determine aura element for appropriate image
+        let auraElement = (itemData?.element || '').toLowerCase();
+        let auraImageKey = stockImages.aura[auraElement as keyof typeof stockImages.aura] 
+          ? auraElement : 'default';
+          
         return {
           title: itemData?.name || 'Mystery Aura',
           description: `${itemData?.element || 'Unknown'} Element - Level ${itemData?.level || '?'}`,
@@ -159,32 +207,39 @@ const BlackMarketView = () => {
             itemData?.statMultipliers ? `INT ×${itemData.statMultipliers.intelligence?.toFixed(1) || '1.0'}, VIT ×${itemData.statMultipliers.vitality?.toFixed(1) || '1.0'}` : '',
             itemData?.skills?.length > 0 ? `Skills: ${itemData.skills.map((s: any) => s.name).join(', ')}` : 'No skills'
           ],
-          image: 'https://images.unsplash.com/photo-1618325500063-14cd8117369c?w=150&h=150&fit=crop'
+          image: stockImages.aura[auraImageKey as keyof typeof stockImages.aura]
         };
+        
       case 'resource':
+        // Determine resource type for appropriate image
+        let resourceType = (itemData?.type || '').toLowerCase();
+        let resourceImageKey = stockImages.resource[resourceType as keyof typeof stockImages.resource] 
+          ? resourceType : 'default';
+          
         return {
           title: itemData?.name || 'Rare Materials',
           description: `${itemData?.quantity || '?'} ${itemData?.type || 'material'} units`,
           detailLines: [
             itemData?.description || 'Valuable crafting resource'
           ],
-          image: itemData?.iconUrl || 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
+          image: itemData?.iconUrl || stockImages.resource[resourceImageKey as keyof typeof stockImages.resource]
         };
+        
       default:
         return {
           title: 'Market Item',
           description: 'A valuable item for your collection',
           detailLines: ['Unknown item details'],
-          image: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
+          image: stockImages.default
         };
     }
   };
 
   const getCurrencyIcon = (currencyType: string) => {
     if (currencyType === 'forgeTokens') {
-      return "https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=250&h=250&fit=crop";
+      return "https://i.imgur.com/fv7qOVB.jpg"; // Forge tokens
     } else {
-      return "https://images.unsplash.com/photo-1543486958-d783bfbf7f8e?w=250&h=250&fit=crop";
+      return "https://i.imgur.com/6O1Usyw.jpg"; // Rogue credits
     }
   };
 

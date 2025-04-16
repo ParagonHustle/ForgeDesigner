@@ -115,10 +115,32 @@ const BountyBoardView = () => {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState<boolean>(false);
   
   // Fetch bounty quests
-  const { data: bountyQuests = [], isLoading: questsLoading, refetch: refetchQuests } = useQuery<BountyQuest[]>({
+  const { data: originalQuests = [], isLoading: questsLoading, refetch: refetchQuests } = useQuery<BountyQuest[]>({
     queryKey: ['/api/bounty/quests'],
     refetchInterval: 60000 // Refresh every minute
   });
+  
+  // Add different rarities to quests for demonstration
+  const bountyQuests = React.useMemo(() => {
+    return originalQuests.map((quest, index) => {
+      const enhancedQuest = {...quest};
+      
+      // Assign different rarities based on index
+      if (index % 5 === 1) {
+        (enhancedQuest as any).rarity = 'Uncommon';
+      } else if (index % 5 === 2) {
+        (enhancedQuest as any).rarity = 'Rare';
+      } else if (index % 5 === 3) {
+        (enhancedQuest as any).rarity = 'Epic';
+      } else if (index % 5 === 4) {
+        (enhancedQuest as any).rarity = 'Legendary';
+      } else {
+        (enhancedQuest as any).rarity = 'Common';
+      }
+      
+      return enhancedQuest;
+    });
+  }, [originalQuests]);
   
   // Fetch bounty board building data
   const { data: bountyBoard, isLoading: buildingLoading } = useQuery<BuildingUpgrade>({
