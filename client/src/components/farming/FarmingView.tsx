@@ -18,7 +18,8 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +31,8 @@ import {
   UserX, 
   Gem, 
   Timer, 
-  HelpCircle 
+  HelpCircle,
+  ArrowUp
 } from 'lucide-react';
 import CountdownTimer from '../common/CountdownTimer';
 import type { Character, FarmingTask } from '@shared/schema';
@@ -78,6 +80,7 @@ const FarmingView = () => {
   const [selectedResource, setSelectedResource] = useState<any>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [upgradeSlot, setUpgradeSlot] = useState<number | null>(null);
   
   // Get farming tasks
   const { data: farmingTasks = [], isLoading, refetch: refetchFarmingTasks } = useQuery<FarmingTask[]>({ 
@@ -271,9 +274,14 @@ const FarmingView = () => {
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB]">
-                          Farming Slot {slot}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB]">
+                            Farming Slot {slot}
+                          </h3>
+                          <Button variant="outline" size="sm" className="h-6 px-2 py-0 text-xs bg-[#228B22]/10 border-[#228B22]/30 text-[#228B22] hover:bg-[#228B22]/20">
+                            Upgrade
+                          </Button>
+                        </div>
                         <Badge className="bg-[#228B22]/20 text-[#228B22] border-[#228B22]/30">
                           Active
                         </Badge>
@@ -334,6 +342,9 @@ const FarmingView = () => {
                       <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB] mb-1">
                         Farming Slot {slot}
                       </h3>
+                      <Button variant="outline" size="sm" className="h-6 px-2 py-0 mb-2 text-xs bg-[#228B22]/10 border-[#228B22]/30 text-[#228B22] hover:bg-[#228B22]/20">
+                        Upgrade
+                      </Button>
                       <p className="text-sm text-[#C8B8DB]/70 text-center">
                         Click to assign a character to farm resources.
                       </p>
