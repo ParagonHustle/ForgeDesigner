@@ -2867,28 +2867,139 @@ export async function addBuildingSkillRoutes(app: Express) {
   // Building skill routes implementation
   app.post('/api/buildings/upgrade', authenticateUser, async (req: Request, res: Response) => {
     try {
-      const { buildingId } = req.body;
+      const { buildingId, buildingType, slotId, upgradePath, pathName } = req.body;
+      const userId = req.session.userId;
       
-      if (!buildingId) {
-        return res.status(400).json({ message: 'Missing required fields' });
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
       }
       
-      const building = await storage.getBuildingById(buildingId);
-      
-      if (!building) {
-        return res.status(404).json({ message: 'Building not found' });
+      // Handle different types of upgrades
+      if (buildingType === 'farmSlot' || buildingType === 'forgeSlot') {
+        // This is a slot upgrade
+        if (slotId === undefined || upgradePath === undefined) {
+          return res.status(400).json({ message: 'Missing required fields for slot upgrade' });
+        }
+        
+        // Get current upgrades for this user
+        let userUpgrades = await storage.getBuildingUpgradesByUserId(userId);
+        
+        if (!userUpgrades) {
+          // Create initial upgrades record if none exists
+          userUpgrades = await storage.createBuildingUpgrades({
+            userId,
+            farmSlots: [],
+            forgeSlots: [],
+            marketUpgrades: []
+          });
+        }
+        
+        // Create upgrade data
+        const upgradeData = {
+          slotId,
+          level: 1, // Start at level 1 or increment existing level
+          upgradePath,
+          pathName,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Update the appropriate slot category
+        let updatedUpgrades;
+        if (buildingType === 'farmSlot') {
+          // Check if this slot already has upgrades
+          const existingSlotIndex = userUpgrades.farmSlots.findIndex(
+            (slot: any) => slot.slotId === slotId
+          );
+          
+          if (existingSlotIndex >= 0) {
+            // Increment existing slot level
+            userUpgrades.farmSlots[existingSlotIndex].level += 1;
+            // Update path name if it was changed
+            userUpgrades.farmSlots[existingSlotIndex].upgradePath = upgradePath;
+            userUpgrades.farmSlots[existingSlotIndex].pathName = pathName;
+            userUpgrades.farmSlots[existingSlotIndex].timestamp = upgradeData.timestamp;
+          } else {
+            // Add new slot upgrade
+            userUpgrades.farmSlots.push(upgradeData);
+          }
+          
+          updatedUpgrades = await storage.updateBuildingUpgrades(userId, userUpgrades);
+        } else {
+          // Handle forge slots
+          const existingSlotIndex = userUpgrades.forgeSlots.findIndex(
+            (slot: any) => slot.slotId === slotId
+          );
+          
+          if (existingSlotIndex >= 0) {
+            // Increment existing slot level
+            userUpgrades.forgeSlots[existingSlotIndex].level += 1;
+            // Update path name if it was changed
+            userUpgrades.forgeSlots[existingSlotIndex].upgradePath = upgradePath;
+            userUpgrades.forgeSlots[existingSlotIndex].pathName = pathName;
+            userUpgrades.forgeSlots[existingSlotIndex].timestamp = upgradeData.timestamp;
+          } else {
+            // Add new slot upgrade
+            userUpgrades.forgeSlots.push(upgradeData);
+          }
+          
+          updatedUpgrades = await storage.updateBuildingUpgrades(userId, userUpgrades);
+        }
+        
+        return res.json({ 
+          success: true, 
+          upgrades: updatedUpgrades
+        });
+      } else {
+        // Regular building upgrade
+        if (!buildingId) {
+          return res.status(400).json({ message: 'Missing required fields' });
+        }
+        
+        const building = await storage.getBuildingById(buildingId);
+        
+        if (!building) {
+          return res.status(404).json({ message: 'Building not found' });
+        }
+        
+        // Update building level
+        const updatedBuilding = await storage.upgradeBuilding(buildingId);
+        
+        return res.json({ 
+          success: true, 
+          building: updatedBuilding
+        });
       }
-      
-      // Update building level
-      const updatedBuilding = await storage.upgradeBuilding(buildingId);
-      
-      return res.json({ 
-        success: true, 
-        building: updatedBuilding
-      });
     } catch (error) {
       console.error('Error upgrading building:', error);
       return res.status(500).json({ message: 'Failed to upgrade building' });
+    }
+  });
+  
+  // Get all building upgrades for current user
+  app.get('/api/buildings/upgrades', authenticateUser, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      // Get all upgrades for this user
+      const userUpgrades = await storage.getBuildingUpgradesByUserId(userId);
+      
+      if (!userUpgrades) {
+        // Return empty default structure if no upgrades exist
+        return res.json({
+          farmSlots: [],
+          forgeSlots: [],
+          marketUpgrades: []
+        });
+      }
+      
+      return res.json(userUpgrades);
+    } catch (error) {
+      console.error('Error getting building upgrades:', error);
+      return res.status(500).json({ message: 'Failed to get building upgrades' });
     }
   });
 }

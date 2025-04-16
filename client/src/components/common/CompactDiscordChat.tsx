@@ -47,18 +47,8 @@ const CompactDiscordChat = () => {
       <div className="relative flex-1">
         {/* Live Discord Chat Bar */}
         <div className="flex items-center h-9 relative">
-          {/* Chat Label */}
-          <div className="flex items-center bg-[#432874]/20 border border-[#432874]/30 rounded-l-md px-3 py-1.5">
-            <span className="text-[#C8B8DB] font-medium">Discord</span>
-            {unreadCount.current > 0 && (
-              <span className="ml-1 w-4 h-4 rounded-full bg-[#FF9D00] text-[#1A1A2E] text-xs flex items-center justify-center">
-                {unreadCount.current > 9 ? '9+' : unreadCount.current}
-              </span>
-            )}
-          </div>
-          
-          {/* Live Chat Display (Always visible) */}
-          <div className="bg-[#1F1D36]/80 border-y border-[#432874]/30 flex-1 h-12 overflow-y-auto scrollbar-none px-3 py-1 flex flex-col justify-center">
+          {/* Live Chat Display (Always visible) - Full width without Discord label */}
+          <div className="bg-[#1F1D36]/80 border border-[#432874]/30 rounded-l-md flex-1 h-12 overflow-y-auto scrollbar-none px-3 py-1 flex flex-col justify-center">
             {recentMessages.length > 0 ? (
               <div className="w-full">
                 {recentMessages.map((msg, index) => (
@@ -76,6 +66,11 @@ const CompactDiscordChat = () => {
               </div>
             ) : (
               <span className="text-[#C8B8DB]/50 text-xs">No messages yet</span>
+            )}
+            {unreadCount.current > 0 && (
+              <span className="absolute top-1 right-3 w-4 h-4 rounded-full bg-[#FF9D00] text-[#1A1A2E] text-xs flex items-center justify-center">
+                {unreadCount.current > 9 ? '9+' : unreadCount.current}
+              </span>
             )}
           </div>
           

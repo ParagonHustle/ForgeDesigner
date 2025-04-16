@@ -39,11 +39,15 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   ).length;
   const completedDungeonCount = dungeonRuns.filter(run => 
     run.completed === true && 
-    new Date(run.endTime) <= new Date()
+    new Date(run.endTime) <= new Date() &&
+    // Only show dungeon runs that are recently completed (within the last hour)
+    new Date(run.endTime).getTime() > new Date().getTime() - (60 * 60 * 1000)
   ).length;
   const completedForgingCount = forgingTasks.filter(task => 
     task.completed === true && 
-    new Date(task.endTime) <= new Date()
+    new Date(task.endTime) <= new Date() &&
+    // Only show forging tasks that are recently completed (within the last hour)
+    new Date(task.endTime).getTime() > new Date().getTime() - (60 * 60 * 1000)
   ).length;
 
   // Group characters by ID for easier lookup
