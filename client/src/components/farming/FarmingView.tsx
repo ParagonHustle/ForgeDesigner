@@ -81,6 +81,8 @@ const FarmingView = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [upgradeSlot, setUpgradeSlot] = useState<number | null>(null);
+  // State for tracking which skill path is selected (1: quantity path, 2: quality/speed path)
+  const [selectedUpgradePath, setSelectedUpgradePath] = useState<number>(1);
   
   // Get farming tasks
   const { data: farmingTasks = [], isLoading, refetch: refetchFarmingTasks } = useQuery<FarmingTask[]>({ 
@@ -244,7 +246,9 @@ const FarmingView = () => {
       // In a real implementation, this would be an API call to upgrade the slot
       const response = await apiRequest('POST', '/api/buildings/upgrade', {
         buildingType: 'farmingSlot',
-        slotId: slot
+        slotId: slot,
+        upgradePath: selectedUpgradePath,
+        pathName: selectedUpgradePath === 1 ? 'Bountiful Harvest' : 'Swift Cultivation'
       });
       
       if (!response.ok) {
@@ -254,11 +258,13 @@ const FarmingView = () => {
       
       toast({
         title: "Slot Upgraded",
-        description: `Farming Slot ${slot} has been upgraded successfully.`,
+        description: `Farming Slot ${slot} has been upgraded with ${selectedUpgradePath === 1 ? 'Bountiful Harvest' : 'Swift Cultivation'} path.`,
       });
       
       // Close the upgrade dialog
       setUpgradeSlot(null);
+      // Reset selected path for next time
+      setSelectedUpgradePath(1);
       
       // Refresh data to show the upgraded slot
       fetchFarmingTasks();
@@ -591,23 +597,76 @@ const FarmingView = () => {
           </DialogHeader>
           
           <div className="py-4">
+            {/* Upgrade path selection */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {/* Path 1: Quantity Focus */}
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer ${
+                  selectedUpgradePath === 1 
+                    ? 'bg-[#432874]/30 border-[#228B22]' 
+                    : 'bg-[#432874]/10 border-[#432874]/30 hover:bg-[#432874]/20'
+                }`}
+                onClick={() => setSelectedUpgradePath(1)}
+              >
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Gem className="h-4 w-4 mr-2 text-[#228B22]" />
+                  Bountiful Harvest
+                </h3>
+                <p className="text-xs mb-2 text-[#C8B8DB]/80">Focus on increasing the quantity of resources gathered from each farming session.</p>
+                <ul className="space-y-1 text-sm">
+                  <li className="flex items-center">
+                    <span className="bg-[#228B22]/20 text-[#228B22] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                    <span>15% increase in resource yield</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="bg-[#228B22]/20 text-[#228B22] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                    <span>Chance for bonus materials</span>
+                  </li>
+                </ul>
+              </div>
+              
+              {/* Path 2: Speed/Quality Focus */}
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer ${
+                  selectedUpgradePath === 2 
+                    ? 'bg-[#432874]/30 border-[#00B9AE]' 
+                    : 'bg-[#432874]/10 border-[#432874]/30 hover:bg-[#432874]/20'
+                }`}
+                onClick={() => setSelectedUpgradePath(2)}
+              >
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Timer className="h-4 w-4 mr-2 text-[#00B9AE]" />
+                  Swift Cultivation
+                </h3>
+                <p className="text-xs mb-2 text-[#C8B8DB]/80">Focus on reducing farming time and improving the quality of gathered resources.</p>
+                <ul className="space-y-1 text-sm">
+                  <li className="flex items-center">
+                    <span className="bg-[#00B9AE]/20 text-[#00B9AE] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                    <span>20% reduction in farming time</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="bg-[#00B9AE]/20 text-[#00B9AE] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                    <span>Increased chance for rare resources</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            {/* Current upgrade level and benefits */}
             <div className="bg-[#432874]/20 p-4 rounded-lg mb-4">
               <h3 className="font-semibold mb-2 flex items-center">
-                <ArrowUp className="h-4 w-4 mr-2 text-[#228B22]" />
-                Upgrade Benefits
+                <ArrowUp className="h-4 w-4 mr-2 text-[#FF9D00]" />
+                Current Level Benefits
               </h3>
-              <ul className="space-y-2 text-sm">
+              <div className="text-sm mb-3">
+                <span className="font-medium">Current Level:</span> 
+                <span className="ml-2 bg-[#FF9D00]/20 text-[#FF9D00] px-2 py-0.5 rounded">Level 2</span>
+                <span className="ml-2 text-[#C8B8DB]/70">(Max Level: 5 - Limited by Townhall)</span>
+              </div>
+              <ul className="space-y-1 text-sm">
                 <li className="flex items-center">
-                  <span className="bg-[#228B22]/20 text-[#228B22] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
-                  <span>10% reduction in farming time</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="bg-[#228B22]/20 text-[#228B22] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
-                  <span>5% increase in resource yield</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="bg-[#228B22]/20 text-[#228B22] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
-                  <span>Access to rare resource variants</span>
+                  <span className={`${selectedUpgradePath === 1 ? 'bg-[#228B22]/20 text-[#228B22]' : 'bg-[#00B9AE]/20 text-[#00B9AE]'} w-5 h-5 rounded-full flex items-center justify-center mr-2`}>+</span>
+                  <span>{selectedUpgradePath === 1 ? '15% increase in resource yield' : '20% reduction in farming time'}</span>
                 </li>
               </ul>
             </div>
@@ -635,7 +694,9 @@ const FarmingView = () => {
               Cancel
             </Button>
             <Button
-              className="bg-[#228B22] hover:bg-[#228B22]/80"
+              className={`${selectedUpgradePath === 1 
+                ? 'bg-[#228B22] hover:bg-[#228B22]/80' 
+                : 'bg-[#00B9AE] hover:bg-[#00B9AE]/80'}`}
               onClick={() => upgradeSlot !== null && handleUpgradeSlot(upgradeSlot)}
               disabled={isSubmitting}
             >
