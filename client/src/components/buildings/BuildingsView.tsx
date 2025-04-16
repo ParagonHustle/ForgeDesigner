@@ -70,23 +70,6 @@ const buildings = [
     upgradeTimeInMinutes: 60
   },
   {
-    id: 'forge',
-    name: 'Forge',
-    description: 'Determines the maximum level of your characters and allows crafting and fusion of Auras.',
-    icon: <Hammer className="h-6 w-6" />,
-    color: 'text-[#DC143C] bg-[#DC143C]/10',
-    benefits: [
-      { level: 1, text: 'Craft level 1 Auras' },
-      { level: 2, text: 'Characters can reach level 10' },
-      { level: 3, text: 'Unlock Aura fusion up to level 5' },
-      { level: 4, text: 'Characters can reach level 25' },
-      { level: 5, text: 'Aura fusion up to level 10, characters can reach level 49' }
-    ],
-    maxLevel: 9,
-    baseUpgradeCost: { rogueCredits: 800, forgeTokens: 80 },
-    upgradeTimeInMinutes: 45
-  },
-  {
     id: 'blackmarket',
     name: 'Black Market',
     description: 'Enables purchasing of premium items and eventually listing your own items for sale.',
@@ -102,23 +85,6 @@ const buildings = [
     maxLevel: 9,
     baseUpgradeCost: { rogueCredits: 750, forgeTokens: 75 },
     upgradeTimeInMinutes: 40
-  },
-  {
-    id: 'bountyboard',
-    name: 'Bounty Board',
-    description: 'Provides daily quests and missions that reward valuable resources and Soul Shards.',
-    icon: <List className="h-6 w-6" />,
-    color: 'text-[#228B22] bg-[#228B22]/10',
-    benefits: [
-      { level: 1, text: '3 daily quests (common)' },
-      { level: 2, text: '4 daily quests (chance for rare)' },
-      { level: 3, text: '5 daily quests (chance for epic)' },
-      { level: 4, text: '6 daily quests (higher chance for epic)' },
-      { level: 5, text: '7 daily quests (guaranteed epic)' }
-    ],
-    maxLevel: 9,
-    baseUpgradeCost: { rogueCredits: 600, forgeTokens: 60 },
-    upgradeTimeInMinutes: 30
   },
   {
     id: 'tavern',
