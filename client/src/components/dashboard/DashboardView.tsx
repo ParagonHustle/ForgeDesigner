@@ -39,15 +39,18 @@ const DashboardView = () => {
       <OfferBanner />
       
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Main Column - Account Overview */}
-        <div className="md:col-span-12 space-y-6">
+        {/* Kleos Chat Interface Column */}
+        <div className="md:col-span-8 space-y-6">
           <KleosChatInterface 
             charactersCount={characters.length}
             aurasCount={0} // Need to implement
             activeDungeons={dungeonRuns.filter(run => !run.completed).length}
             farmingSlotsCount={farmingTasks.filter(task => !task.completed).length}
           />
-          
+        </div>
+        
+        {/* Active Tasks Column */}
+        <div className="md:col-span-4 space-y-6">
           <ActiveTasks 
             farmingTasks={farmingTasks}
             dungeonRuns={dungeonRuns}
