@@ -490,131 +490,155 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   }, [battleLog, isOpen, isPaused]);
   
-  // CRITICAL FIX - Animation system to process battle actions with timing
+  // CRITICAL FIX - Animation system to process battle actions with timing and error handling
   useEffect(() => {
-    // Only process animations if dialog is open and not paused
+    // Skip animation processing if conditions aren't right
     if (!isOpen || isPaused || animationQueue.length === 0 || animationInProgress) {
       return;
     }
-    
-    // Take the next action from the queue
-    const nextAction = animationQueue[0];
-    
-    // Set animation in progress
-    setAnimationInProgress(true);
-    
-    // Process the action (animate attack, update health, etc.)
-    if (nextAction.type === 'attack') {
-      // Setup who's attacking whom
-      setActiveAttacker(nextAction.actor);
-      setActiveTarget(nextAction.target);
-      setCurrentSkillName(nextAction.skill);
-      
-      // CRITICAL FIX: Update target unit's actual HP during animation
-      const targetUnit = units.find(unit => unit.id === nextAction.target);
-      const actorUnit = units.find(unit => unit.id === nextAction.actor);
-      
-      // Set attack type based on skill name
-      if (nextAction.skill.toLowerCase().includes("ultimate")) {
-        setAttackAnimationType('ultimate');
-      } else if (nextAction.skill.toLowerCase().includes("advanced") || 
-                nextAction.skill.toLowerCase().includes("quick")) {
-        setAttackAnimationType('advanced');
-      } else {
-        setAttackAnimationType('basic');
-      }
-      
-      // Show attack animation
-      setShowAttackAnimation(true);
-      
-      // After a brief delay, show damage animation
-      setTimeout(() => {
-        setShowAttackAnimation(false);
-        setShowDamageAnimation(true);
-        
-        // CRITICAL FIX: Apply the actual damage/healing at the moment the animation shows
-        // This ensures the HP display is updated when the damage is visually shown
-        if (targetUnit) {
-          const isHealing = nextAction.isHealing;
-          const damage = nextAction.damage;
-          
-          // Apply damage or healing
-          if (isHealing) {
-            // Apply healing (don't exceed maxHP)
-            const healAmount = Math.abs(damage);
-            targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
-          } else {
-            // Apply damage (don't go below 0)
-            targetUnit.hp = Math.max(0, targetUnit.hp - damage);
-            
-            // CRITICAL FIX: Handle unit defeat differently for boss vs. regular enemies
-            if (targetUnit.hp <= 0) {
-              // For bosses, if it's the final boss and it should be defeated
-              if (targetUnit.name.toLowerCase().includes('boss') && 
-                  units.filter(u => u.id.toString().startsWith('enemy') && u.hp > 0).length === 1) {
-                console.log(`Final boss ${targetUnit.name} defeated!`);
-                targetUnit.hp = 0; // Ensure HP is exactly 0
-              } else if (!targetUnit.name.toLowerCase().includes('boss')) {
-                // For non-boss enemies
-                targetUnit.hp = 0;
-              }
-            }
-          }
-          
-          // Force refresh of all units to update UI
-          setUnits([...units]);
+
+    // Function to handle animation process with proper error handling
+    const processNextAnimation = () => {
+      try {
+        // Double-check queue length for safety
+        if (animationQueue.length === 0) {
+          console.error("Animation queue unexpectedly empty");
+          return;
         }
-        
-        // After damage animation completes, reset and move to next action
-        setTimeout(() => {
-          setShowDamageAnimation(false);
-          setActiveAttacker(null);
-          setActiveTarget(null);
-          
-          // Remove this action from queue and mark animation as complete
+
+        // Get next action from queue
+        const nextAction = animationQueue[0];
+        if (!nextAction) {
+          console.error("First animation queue item is undefined");
           setAnimationQueue(prev => prev.slice(1));
-          setAnimationInProgress(false);
-        }, 500); // Damage animation duration
-      }, 700); // Time between attack start and damage
-    } else if (nextAction.type === 'defeat') {
-      // Set the target unit to show defeat animation
-      setActiveTarget(nextAction.target);
-      
-      // Show defeat animation - a red flash followed by dimming
-      setShowDamageAnimation(true);
-      
-      // After animation, remove from queue and continue
-      setTimeout(() => {
-        setShowDamageAnimation(false);
-        setActiveTarget(null);
-        
-        // Find the unit that was defeated
-        const defeatedUnit = units.find(unit => unit.id === nextAction.target);
-        if (defeatedUnit) {
-          // CRITICAL FIX: Ensure its HP is exactly 0 and force the UI update
-          defeatedUnit.hp = 0;
+          return;
+        }
+
+        // Mark animation as in progress
+        setAnimationInProgress(true);
+
+        // Process different animation types
+        if (nextAction.type === 'attack') {
+          // Setup attacker and target
+          setActiveAttacker(nextAction.actor);
+          setActiveTarget(nextAction.target);
+          setCurrentSkillName(nextAction.skill);
           
-          // Special handling for boss defeat
-          if (defeatedUnit.name.toLowerCase().includes('boss')) {
-            console.log(`Boss ${defeatedUnit.name} explicitly set to defeated state`);
+          // Get references to the units
+          const targetUnit = units.find(unit => unit.id === nextAction.target);
+          const actorUnit = units.find(unit => unit.id === nextAction.actor);
+          
+          // Set animation type based on skill name
+          if (nextAction.skill.toLowerCase().includes("ultimate")) {
+            setAttackAnimationType('ultimate');
+          } else if (nextAction.skill.toLowerCase().includes("advanced") || 
+                    nextAction.skill.toLowerCase().includes("quick")) {
+            setAttackAnimationType('advanced');
+          } else {
+            setAttackAnimationType('basic');
           }
           
-          // Force refresh of all units with the updated HP
-          setUnits([...units]);
+          // Show attack animation first
+          setShowAttackAnimation(true);
+          
+          // Then show damage animation after a delay
+          setTimeout(() => {
+            setShowAttackAnimation(false);
+            setShowDamageAnimation(true);
+            
+            // Apply HP changes when damage is shown
+            if (targetUnit) {
+              const isHealing = nextAction.isHealing;
+              const damage = nextAction.damage;
+              
+              if (isHealing) {
+                // Healing logic - don't exceed max HP
+                const healAmount = Math.abs(damage);
+                targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
+              } else {
+                // Damage logic - don't go below 0
+                targetUnit.hp = Math.max(0, targetUnit.hp - damage);
+                
+                // Special handling for boss vs regular enemies
+                if (targetUnit.hp <= 0) {
+                  if (targetUnit.name.toLowerCase().includes('boss') && 
+                      units.filter(u => u.id.toString().startsWith('enemy') && u.hp > 0).length === 1) {
+                    console.log(`Final boss ${targetUnit.name} defeated!`);
+                  } 
+                  
+                  // Always set HP to exactly 0 when defeated
+                  targetUnit.hp = 0;
+                }
+              }
+              
+              // Update UI with new HP values
+              setUnits([...units]);
+            }
+            
+            // Finish animation after another delay
+            setTimeout(() => {
+              setShowDamageAnimation(false);
+              setActiveAttacker(null);
+              setActiveTarget(null);
+              
+              // Remove completed action and allow next animation
+              setAnimationQueue(prev => prev.slice(1));
+              setAnimationInProgress(false);
+            }, 500);
+          }, 700);
+        } 
+        else if (nextAction.type === 'defeat') {
+          // Defeat animation logic
+          setActiveTarget(nextAction.target);
+          setShowDamageAnimation(true);
+          
+          setTimeout(() => {
+            setShowDamageAnimation(false);
+            setActiveTarget(null);
+            
+            // Ensure defeated unit has 0 HP
+            const defeatedUnit = units.find(unit => unit.id === nextAction.target);
+            if (defeatedUnit) {
+              defeatedUnit.hp = 0;
+              
+              if (defeatedUnit.name.toLowerCase().includes('boss')) {
+                console.log(`Boss ${defeatedUnit.name} explicitly set to defeated state`);
+              }
+              
+              setUnits([...units]);
+            }
+            
+            // Remove action and continue
+            setAnimationQueue(prev => prev.slice(1));
+            setAnimationInProgress(false);
+          }, 1200);
+        } 
+        else {
+          // Handle other action types (system messages etc.)
+          setTimeout(() => {
+            setAnimationQueue(prev => prev.slice(1));
+            setAnimationInProgress(false);
+          }, 800);
         }
+      } catch (error) {
+        // Error recovery
+        console.error("Animation error:", error);
+        setActiveAttacker(null);
+        setActiveTarget(null);
+        setShowAttackAnimation(false);
+        setShowDamageAnimation(false);
+        setAnimationInProgress(false);
         
-        // Remove this action from queue and mark animation as complete
-        setAnimationQueue(prev => prev.slice(1));
-        setAnimationInProgress(false);
-      }, 1200); // Longer duration for dramatic effect
-    } else {
-      // For other non-attack actions (like system messages), process quickly
-      setTimeout(() => {
-        setAnimationQueue(prev => prev.slice(1));
-        setAnimationInProgress(false);
-      }, 800); // Default action duration
-    }
-  }, [isOpen, isPaused, animationQueue, animationInProgress, playbackSpeed]);
+        // Skip problematic action
+        if (animationQueue.length > 0) {
+          setAnimationQueue(prev => prev.slice(1));
+        }
+      }
+    };
+
+    // Start processing the next animation
+    processNextAnimation();
+  }, [isOpen, isPaused, animationQueue, animationInProgress, playbackSpeed, units]);
   
   // References for animation control
   const battleAnimationRef = useRef<NodeJS.Timeout | null>(null);
@@ -864,18 +888,19 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
               const actorUnit = units.find(unit => unit.name === action.actor);
               
               if (targetUnit && actorUnit) {
-                // Queue this action for animated processing
+                // FIXED: Safely handle potential undefined values to prevent runtime errors
+                // Queue this action for animated processing with proper type safety
                 const queuedAction = {
                   type: 'attack',
-                  actor: actorUnit.id,
-                  target: targetUnit.id,
-                  actorName: action.actor,
-                  targetName: action.target,
-                  damage: action.damage,
-                  skill: action.skill,
-                  isHealing: isHealing,
-                  isCritical: action.isCritical,
-                  message: action.message || message
+                  actor: actorUnit.id || 'unknown',
+                  target: targetUnit.id || 'unknown',
+                  actorName: action.actor || 'Unknown',
+                  targetName: action.target || 'Unknown', 
+                  damage: typeof action.damage === 'number' ? action.damage : 0,
+                  skill: action.skill || 'Unknown Attack',
+                  isHealing: Boolean(isHealing),
+                  isCritical: Boolean(action.isCritical),
+                  message: action.message || message || ''
                 };
                 
                 console.log(`Queuing battle action: ${actorUnit.name} -> ${targetUnit.name} for ${action.damage} damage`);
@@ -930,16 +955,20 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
                 defeatedUnit.hp = 0; // Ensure defeated unit shows 0 HP
                 console.log(`Unit ${defeatedUnit.name} has been defeated - setting HP to 0`);
                 
-                // Queue a defeat animation
+                // Queue a defeat animation with proper type safety
                 const queuedDefeat = {
                   type: 'defeat',
-                  target: defeatedUnit.id,
-                  targetName: action.target,
-                  message: defeatMessage
+                  target: defeatedUnit.id || 'unknown',
+                  targetName: action.target || 'Unknown',
+                  message: defeatMessage || `A unit has been defeated!`
                 };
                 
-                // Add this to animation queue
-                setAnimationQueue(prevQueue => [...prevQueue, queuedDefeat]);
+                // Add this to animation queue with error handling
+                try {
+                  setAnimationQueue(prevQueue => [...prevQueue, queuedDefeat]);
+                } catch (error) {
+                  console.error('Error adding defeat action to queue:', error);
+                }
                 
                 // Update units state to reflect the defeat
                 setUnits([...units]);
