@@ -501,7 +501,7 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
                     ).map((skill: any, index: number) => (
                       <div key={index} className="border border-[#432874]/40 rounded p-2">
                         <div className="font-medium text-[#FF9D00]">{skill.name}</div>
-                        <div className="text-sm text-[#C8B8DB]/80">{skill.description || `Skill effect for ${skill.name}`}</div>
+                        <div className="text-sm text-[#C8B8DB]/80">{typeof skill.description === 'string' ? skill.description : `Skill effect for ${skill.name}`}</div>
                       </div>
                     ))}
                   </div>
