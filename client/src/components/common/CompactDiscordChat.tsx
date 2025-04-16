@@ -46,7 +46,7 @@ const CompactDiscordChat = () => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <div className="relative flex-1">
         {/* Live Discord Chat Bar */}
-        <div className="flex items-center h-9 relative">
+        <div className="flex items-center h-9 relative w-72 md:w-96">  {/* Increased width */}
           {/* Live Chat Display (Always visible) - Full width without Discord label */}
           <div className="bg-[#1F1D36]/80 border border-[#432874]/30 rounded-l-md flex-1 h-12 overflow-y-auto scrollbar-none px-3 py-1 flex flex-col justify-center w-full">
             {recentMessages.length > 0 ? (

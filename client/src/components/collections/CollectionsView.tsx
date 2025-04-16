@@ -33,6 +33,9 @@ const CollectionsView = () => {
   const { user } = useDiscordAuth();
   const { toast } = useToast();
   
+  // Get active characters to calculate account power
+  const { characters, auraInventory, buildings } = useGameStore();
+  
   // Mock perks data (for skill tree)
   const [perks, setPerks] = useState([
     {
@@ -114,8 +117,51 @@ const CollectionsView = () => {
     }
   ]);
   
-  // Mock account power calculation
-  const accountPower = 8750; // This would be calculated based on characters, auras and buildings
+  // Calculate account power based on characters, auras, and buildings
+  const calculateAccountPower = () => {
+    let totalPower = 0;
+    
+    // Add power from active characters with their aura bonuses
+    characters.forEach(character => {
+      // Base stats from character
+      const baseStats = character.stats || {};
+      
+      // Get character's equipped aura, if any
+      const equippedAuraId = character.equippedAuraId;
+      let auraBonus = { attack: 0, vitality: 0, speed: 0, focus: 0, accuracy: 0, defense: 0, resilience: 0 };
+      
+      if (equippedAuraId) {
+        const equippedAura = auraInventory.find(aura => aura.id === equippedAuraId);
+        if (equippedAura && equippedAura.statBonuses) {
+          auraBonus = equippedAura.statBonuses;
+        }
+      }
+      
+      // Sum up all character stats including aura bonuses
+      const totalAttack = (baseStats.attack || 0) + auraBonus.attack;
+      const totalVitality = (baseStats.vitality || 0) + auraBonus.vitality;
+      const totalSpeed = (baseStats.speed || 0) + auraBonus.speed;
+      const totalFocus = (baseStats.focus || 0) + auraBonus.focus;
+      const totalAccuracy = (baseStats.accuracy || 0) + auraBonus.accuracy;
+      const totalDefense = (baseStats.defense || 0) + auraBonus.defense;
+      const totalResilience = (baseStats.resilience || 0) + auraBonus.resilience;
+      
+      // Add all character stats to total power
+      totalPower += totalAttack + totalVitality + totalSpeed + totalFocus + 
+                   totalAccuracy + totalDefense + totalResilience;
+                   
+      // Add level bonus
+      totalPower += (character.level || 1) * 100;
+    });
+    
+    // Add building levels (100 points per building level)
+    const buildingLevels = buildings.reduce((total, building) => total + (building.level || 0), 0);
+    totalPower += buildingLevels * 100;
+    
+    return totalPower;
+  };
+  
+  const accountPower = calculateAccountPower();
   const skillPoints = Math.floor(accountPower / 1000) - perks.reduce((total, perk) => total + perk.level, 0);
   
   // Animation variants

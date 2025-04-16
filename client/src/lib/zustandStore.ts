@@ -25,6 +25,8 @@ interface GameState {
   // Collections
   characters: Character[];
   auras: Aura[];
+  auraInventory: any[]; // For equipped auras with stat bonuses
+  buildings: any[]; // Building levels for account power
   
   // Active tasks
   farmingTasks: FarmingTask[];
