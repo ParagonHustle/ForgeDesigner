@@ -326,6 +326,21 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
 }));
 
+// Metadata model for storing key-value pairs
+export const metadata = pgTable("metadata", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  key: text("key").notNull(),
+  value: text("value").notNull(),
+});
+
+export const metadataRelations = relations(metadata, ({ one }) => ({
+  user: one(users, {
+    fields: [metadata.userId],
+    references: [users.id],
+  }),
+}));
+
 // Define insert schemas for each model
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
 export const insertCharacterSchema = createInsertSchema(characters).omit({ id: true });
@@ -339,6 +354,7 @@ export const insertBlackMarketListingSchema = createInsertSchema(blackMarketList
 export const insertBountyQuestSchema = createInsertSchema(bountyQuests).omit({ id: true });
 export const insertBuildingUpgradeSchema = createInsertSchema(buildingUpgrades).omit({ id: true });
 export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({ id: true });
+export const insertMetadataSchema = createInsertSchema(metadata).omit({ id: true });
 
 // Define types for each model
 export type User = typeof users.$inferSelect;
@@ -376,3 +392,6 @@ export type InsertBuildingUpgrade = z.infer<typeof insertBuildingUpgradeSchema>;
 
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
+export type Metadata = typeof metadata.$inferSelect;
+export type InsertMetadata = z.infer<typeof insertMetadataSchema>;

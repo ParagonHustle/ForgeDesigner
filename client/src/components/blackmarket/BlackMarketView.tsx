@@ -281,29 +281,121 @@ const BlackMarketView = () => {
     <>
       {/* Black Market Upgrade Dialog */}
       <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
-        <DialogContent className="bg-[#1A1A2E] border-[#432874]/50 text-[#C8B8DB] max-w-md">
+        <DialogContent className="bg-[#1A1A2E] border-[#432874]/50 text-[#C8B8DB] max-w-4xl">
           <DialogHeader>
             <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">Upgrade Black Market</DialogTitle>
             <DialogDescription className="text-[#C8B8DB]/80">
-              Upgrading your Black Market unlocks more item slots and better offerings.
+              Upgrade your Black Market to unlock better items, more slots, and exclusive deals.
             </DialogDescription>
           </DialogHeader>
           
           <div className="py-4">
-            <div className="flex justify-between items-center mb-4">
+            {/* Timeline UI for upgrade path */}
+            <div className="relative mb-8 pt-6">
+              {/* Progress line */}
+              <div className="absolute left-0 right-0 top-1/2 h-1 bg-[#432874]/30 -translate-y-1/2 z-0"></div>
+              
+              {/* Timeline nodes */}
+              <div className="relative z-10 flex justify-between">
+                {/* Define the upgrade tiers with themed names */}
+                {[
+                  { level: 1, name: "Street Stall", icon: <ShoppingBag />, unlocks: "Basic marketplace" },
+                  { level: 2, name: "Shadow Bazaar", icon: <Users />, unlocks: "+1 slot per category" },
+                  { level: 3, name: "Twilight Exchange", icon: <Gem />, unlocks: "Rare item availability" },
+                  { level: 4, name: "Phantom Emporium", icon: <Scroll />, unlocks: "Improved refresh rates" },
+                  { level: 5, name: "Rogue's Gallery", icon: <Shield />, unlocks: "Epic item availability" },
+                  { level: 6, name: "Syndicate Nexus", icon: <Sparkles />, unlocks: "Premium discounts" },
+                  { level: 7, name: "Void Market", icon: <AlertTriangle />, unlocks: "Mythic item availability" }
+                ].map((tier, index) => (
+                  <div
+                    key={tier.level}
+                    className={`flex flex-col items-center w-16 group ${
+                      tier.level <= blackMarketLevel ? 'cursor-default' : 'opacity-80'
+                    }`}
+                  >
+                    {/* Timeline node */}
+                    <div 
+                      className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 relative ${
+                        tier.level === blackMarketLevel 
+                          ? 'bg-[#FF9D00] text-[#1A1A2E]' 
+                          : tier.level < blackMarketLevel 
+                            ? 'bg-[#00B9AE] text-[#1A1A2E]' 
+                            : 'bg-[#432874]/40 text-[#C8B8DB]/70'
+                      }`}
+                    >
+                      {tier.level <= blackMarketLevel + 2 ? (
+                        tier.icon
+                      ) : (
+                        <Lock className="w-5 h-5" />
+                      )}
+                      {tier.level === blackMarketLevel && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF9D00] rounded-full border-2 border-[#1A1A2E] animate-pulse"></div>
+                      )}
+                    </div>
+                    
+                    {/* Label with rotation for space efficiency */}
+                    <div className={`text-xs font-medium ${
+                      tier.level === blackMarketLevel 
+                        ? 'text-[#FF9D00]' 
+                        : tier.level < blackMarketLevel 
+                          ? 'text-[#00B9AE]' 
+                          : 'text-[#C8B8DB]/70'
+                    }`}>
+                      {tier.level <= blackMarketLevel + 2 ? (
+                        <>Level {tier.level}</>
+                      ) : (
+                        <>???</>
+                      )}
+                    </div>
+                    
+                    {/* Detailed tooltip on hover */}
+                    <div className="absolute bottom-full mb-2 w-48 bg-[#1F1D36] rounded-md p-2 border border-[#432874]/50 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                      <h5 className={`font-semibold text-sm ${
+                        tier.level === blackMarketLevel 
+                          ? 'text-[#FF9D00]' 
+                          : tier.level < blackMarketLevel 
+                            ? 'text-[#00B9AE]' 
+                            : 'text-[#C8B8DB]'
+                      }`}>
+                        {tier.level <= blackMarketLevel + 2 ? tier.name : "Unknown Tier"}
+                      </h5>
+                      <p className="text-xs text-[#C8B8DB]/80 mt-1">
+                        {tier.level <= blackMarketLevel + 2 ? tier.unlocks : "Mysteries yet to be uncovered"}
+                      </p>
+                      {tier.level === blackMarketLevel && (
+                        <div className="mt-1 text-xs text-[#FF9D00]">Current Level</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-start mb-6">
               <div>
-                <h4 className="font-semibold">Current Level: {blackMarketLevel}</h4>
-                <p className="text-sm text-[#C8B8DB]/70">Next Level: {blackMarketLevel + 1}</p>
+                <h4 className="font-semibold text-lg">Current Level: {blackMarketLevel}</h4>
+                <p className="text-sm text-[#C8B8DB]/70">
+                  {blackMarketLevel === 1 ? "Street Stall" : 
+                   blackMarketLevel === 2 ? "Shadow Bazaar" :
+                   blackMarketLevel === 3 ? "Twilight Exchange" :
+                   blackMarketLevel === 4 ? "Phantom Emporium" :
+                   blackMarketLevel === 5 ? "Rogue's Gallery" :
+                   blackMarketLevel === 6 ? "Syndicate Nexus" : "Void Market"}
+                </p>
               </div>
               <div className="bg-[#432874]/30 px-3 py-1 rounded">
                 <span className="text-[#FF9D00] font-semibold">Lv.{blackMarketLevel}</span>
               </div>
             </div>
             
-            <div className="space-y-4">
-              <div className="bg-[#15152C] p-3 rounded-md">
-                <h4 className="font-semibold mb-2">Required Materials</h4>
-                <div className="space-y-2">
+            {/* Detailed view of next upgrade */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#15152C] p-4 rounded-md">
+                <h4 className="font-semibold mb-3 flex items-center">
+                  <Scroll className="h-4 w-4 text-[#00B9AE] mr-2" />
+                  Required Materials
+                </h4>
+                <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
                       <div className="w-8 h-8 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
@@ -327,26 +419,63 @@ const BlackMarketView = () => {
                       {blackMarketLevel * 1000}
                     </Badge>
                   </div>
+                  
+                  {blackMarketLevel >= 3 && (
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
+                          <Gem className="h-4 w-4 text-purple-400" />
+                        </div>
+                        <span>Soul Shards</span>
+                      </div>
+                      <Badge className="bg-[#15152C] border-[#432874]">
+                        {blackMarketLevel * 5}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <div className="bg-[#15152C] p-3 rounded-md">
-                <h4 className="font-semibold mb-2">Unlocks at Level {blackMarketLevel + 1}</h4>
-                <div className="space-y-2 text-sm">
+              <div className="bg-[#15152C] p-4 rounded-md">
+                <h4 className="font-semibold mb-3 flex items-center">
+                  <Sparkles className="h-4 w-4 text-[#FF9D00] mr-2" />
+                  Unlocks at Level {blackMarketLevel + 1}
+                </h4>
+                <div className="space-y-3 text-sm">
                   <div className="flex items-center">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
-                    +1 Item Slot per Category
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2 flex-shrink-0" />
+                    <div>
+                      <div className="font-medium">+1 Item Slot per Category</div>
+                      <div className="text-xs text-[#C8B8DB]/70">More items will be available in each refresh</div>
+                    </div>
                   </div>
+                  
                   <div className="flex items-center">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
-                    {blackMarketLevel + 1 >= 3 ? "Rare Item Availability" : 
-                     blackMarketLevel + 1 >= 5 ? "Epic Item Availability" :
-                     blackMarketLevel + 1 >= 7 ? "Mythic Item Availability" :
-                     "Better Price Offerings"}
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2 flex-shrink-0" />
+                    <div>
+                      <div className="font-medium">
+                        {blackMarketLevel + 1 === 3 ? "Rare Item Availability" : 
+                         blackMarketLevel + 1 === 5 ? "Epic Item Availability" :
+                         blackMarketLevel + 1 === 7 ? "Mythic Item Availability" :
+                         "Better Price Offerings"}
+                      </div>
+                      <div className="text-xs text-[#C8B8DB]/70">
+                        {blackMarketLevel + 1 === 3 ? "Uncommon and rare quality items will appear" : 
+                         blackMarketLevel + 1 === 5 ? "Epic quality items will start to appear" :
+                         blackMarketLevel + 1 === 7 ? "Mythic quality items may rarely appear" :
+                         "Items will be available at better prices"}
+                      </div>
+                    </div>
                   </div>
+                  
                   <div className="flex items-center">
-                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2" />
-                    Improved Refresh Rate
+                    <CheckCircle2 className="h-4 w-4 text-[#00B9AE] mr-2 flex-shrink-0" />
+                    <div>
+                      <div className="font-medium">Improved Market Connections</div>
+                      <div className="text-xs text-[#C8B8DB]/70">
+                        Faster refresh rates and better merchant relations
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
