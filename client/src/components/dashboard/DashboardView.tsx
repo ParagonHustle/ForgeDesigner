@@ -41,6 +41,16 @@ const DashboardView = () => {
     <>
       <OfferBanner />
       
+      {/* Speed Boost Indicator */}
+      {speedBoostActive && (
+        <div className="mb-4 flex items-center justify-end">
+          <div className="flex items-center bg-[#FF9D00]/20 text-[#FF9D00] px-3 py-1.5 rounded-md animate-pulse">
+            <Zap className="h-4 w-4 mr-2" />
+            <span className="font-bold">{speedBoostMultiplier}x Speed Boost Active</span>
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Kleos Chat Interface Column */}
         <div className="md:col-span-8 space-y-6">

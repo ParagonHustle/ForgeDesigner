@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/zustandStore';
-import { Send, MessageSquare, X } from 'lucide-react';
+import { Send, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDiscordAuth } from '@/lib/discordAuth';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ const CompactDiscordChat = () => {
   const { user } = useDiscordAuth();
   const [message, setMessage] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const unreadCount = useRef(0);
   
@@ -38,23 +39,55 @@ const CompactDiscordChat = () => {
     setMessage('');
   };
 
+  // Get the two most recent messages
+  const recentMessages = discordMessages.slice(-2);
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-[#432874]/20 border-[#432874]/30 hover:bg-[#432874]/40 flex items-center"
-        >
-          <MessageSquare className="h-4 w-4 mr-1 text-[#7855FF]" />
-          <span>Discord</span>
-          {unreadCount.current > 0 && (
-            <span className="ml-1 w-4 h-4 rounded-full bg-[#FF9D00] text-[#1A1A2E] text-xs flex items-center justify-center">
-              {unreadCount.current > 9 ? '9+' : unreadCount.current}
-            </span>
-          )}
-        </Button>
-      </DialogTrigger>
+      <div className="relative">
+        <div className="flex items-center">
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-[#432874]/20 border-[#432874]/30 hover:bg-[#432874]/40 flex items-center"
+            >
+              <MessageSquare className="h-4 w-4 mr-1 text-[#7855FF]" />
+              <span>Discord</span>
+              {unreadCount.current > 0 && (
+                <span className="ml-1 w-4 h-4 rounded-full bg-[#FF9D00] text-[#1A1A2E] text-xs flex items-center justify-center">
+                  {unreadCount.current > 9 ? '9+' : unreadCount.current}
+                </span>
+              )}
+            </Button>
+          </DialogTrigger>
+          
+          <button 
+            onClick={() => setShowPreview(!showPreview)} 
+            className="ml-1 text-[#C8B8DB] hover:text-[#FF9D00] transition-colors"
+          >
+            {showPreview ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        </div>
+        
+        {/* Preview of recent messages */}
+        {showPreview && recentMessages.length > 0 && (
+          <div className="mt-1 bg-[#1F1D36]/80 border border-[#432874]/30 rounded-lg p-2 max-w-md overflow-hidden text-xs absolute z-10 w-72">
+            {recentMessages.map((msg) => (
+              <div key={msg.id} className="flex truncate mb-1 last:mb-0">
+                <span className={`font-semibold ${
+                  msg.username === 'GuildMaster' ? 'text-[#FF9D00]' : 
+                  msg.username === 'AuraCollector' ? 'text-[#00B9AE]' : 
+                  'text-[#C8B8DB]'
+                }`}>
+                  {msg.username}:
+                </span>
+                <span className="text-[#C8B8DB]/90 ml-1 truncate">{msg.content}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       
       <DialogContent className="sm:max-w-md bg-[#1A1A2E] border-[#432874]/50">
         <div className="flex items-center justify-between mb-4">
