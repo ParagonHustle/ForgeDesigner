@@ -61,11 +61,10 @@ const ForgeView = () => {
   const forgeLevel = forgeUpgrade?.currentLevel || 1;
   
   // Calculate available slots: 
-  // - Base: 1 slot
-  // - Forge Level 2: 2 slots
-  // - Forge Level 3+: 3 slots
+  // - Base: 3 slots (slots 1, 2, and 3 are now unlocked by default)
   // - Townhall Level 3+: Unlocks 4th slot
-  const baseSlots = Math.min(3, Math.max(1, forgeLevel));
+  // Note: Previously this was tiered to forge level, but we're now unlocking all 3 slots by default
+  const baseSlots = 3; // All 3 basic slots are available
   const bonusSlots = townhallLevel >= 3 ? 1 : 0;
   
   // Use the admin status from the user to determine if unlimited slots are available
@@ -657,15 +656,9 @@ const completeForging = async (taskId: number) => {
                           </>
                         )
                       ) : (
-                        index === 3 ? (
-                          <div className="text-sm text-[#C8B8DB]/70">
-                            Requires Townhall Level 3 to unlock
-                          </div>
-                        ) : (
-                          <div className="text-sm text-[#C8B8DB]/70">
-                            Requires Forge Level {index + 1} to unlock
-                          </div>
-                        )
+                        <div className="text-sm text-[#C8B8DB]/70">
+                          Requires Townhall Level 3 to unlock
+                        </div>
                       )}
                       
                       {/* Slot upgrade button */}
@@ -696,10 +689,10 @@ const completeForging = async (taskId: number) => {
                   About Crafting Slots
                 </h4>
                 <div className="text-sm text-[#C8B8DB]/80 space-y-2">
-                  <p>• You can unlock up to 3 crafting slots by upgrading your Forge building</p>
+                  <p>• You have 3 crafting slots available by default</p>
                   <p>• The 4th slot requires Townhall Level 3 to unlock</p>
                   <p>• Each slot can be upgraded to improve crafting speed and quality</p>
-                  <p>• Select a slot to start crafting or fusion</p>
+                  <p>• Use the Forge, Fuse, or Upgrade buttons for each slot</p>
                 </div>
               </div>
             </div>
