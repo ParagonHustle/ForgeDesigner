@@ -126,13 +126,11 @@ const BountyBoardView = () => {
       const enhancedQuest = {...quest};
       
       // Assign different rarities based on index
-      if (index % 5 === 1) {
-        (enhancedQuest as any).rarity = 'Uncommon';
-      } else if (index % 5 === 2) {
+      if (index % 4 === 1) {
         (enhancedQuest as any).rarity = 'Rare';
-      } else if (index % 5 === 3) {
+      } else if (index % 4 === 2) {
         (enhancedQuest as any).rarity = 'Epic';
-      } else if (index % 5 === 4) {
+      } else if (index % 4 === 3) {
         (enhancedQuest as any).rarity = 'Legendary';
       } else {
         (enhancedQuest as any).rarity = 'Common';

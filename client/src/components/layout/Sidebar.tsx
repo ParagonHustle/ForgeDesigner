@@ -26,7 +26,6 @@ const navItems = [
   { path: "/townhall", label: "Townhall", icon: <Building2 className="h-6 w-6" /> },
   { path: "/tavern", label: "Tavern", icon: <User className="h-6 w-6" /> },
   { path: "/buildings", label: "Buildings", icon: <Building2 className="h-6 w-6" /> },
-  { path: "/bounty", label: "Bounty Board", icon: <List className="h-6 w-6" /> },
   { path: "/collections", label: "Collections", icon: <Award className="h-6 w-6" /> },
 ];
 
