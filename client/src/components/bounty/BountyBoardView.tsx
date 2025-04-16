@@ -316,53 +316,55 @@ const BountyBoardView = () => {
       <motion.div
         key={quest.id}
         variants={item}
-        className={`border rounded-lg p-4 ${
+        className={`border rounded-lg p-3 ${
           quest.completed 
             ? 'bg-[#1F1D36]/30 border-green-700/30 shadow-[0_0_8px_rgba(34,197,94,0.1)]' 
             : 'bg-[#1F1D36]/50 border-[#432874]/30'
         }`}
       >
         <div className="flex items-start">
-          <div className="mr-3 mt-1">
+          <div className="mr-2 mt-0.5">
             {quest.completed ? 
               <div className="bg-green-500/20 p-1 rounded-full">
-                <CheckCircle2 className="h-5 w-5 text-green-400" />
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
               </div> : 
-              getQuestIcon(quest.name)
+              <div className="h-4 w-4">
+                {getQuestIcon(quest.name)}
+              </div>
             }
           </div>
           <div className="flex-1">
-            <div className="flex justify-between items-start mb-1">
+            <div className="flex justify-between items-start mb-0.5">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className={`font-cinzel font-semibold text-lg ${quest.completed ? 'line-through opacity-70' : ''}`}>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <h3 className={`font-cinzel font-semibold text-base ${quest.completed ? 'line-through opacity-70' : ''}`}>
                     {quest.name}
                   </h3>
                   {(quest as any).rarity && (
-                    <Badge className={getRarityStyle((quest as any).rarity).badge}>
-                      <div className={`w-2 h-2 rounded-full ${getRarityStyle((quest as any).rarity).dot} mr-1.5`}></div>
+                    <Badge className={`${getRarityStyle((quest as any).rarity).badge} text-xs py-0 px-1.5`}>
+                      <div className={`w-1.5 h-1.5 rounded-full ${getRarityStyle((quest as any).rarity).dot} mr-1`}></div>
                       {(quest as any).rarity}
                     </Badge>
                   )}
                 </div>
-                <p className={`text-sm text-[#C8B8DB]/80 ${quest.completed ? 'opacity-70' : ''}`}>
+                <p className={`text-xs text-[#C8B8DB]/80 ${quest.completed ? 'opacity-70' : ''}`}>
                   {quest.description}
                 </p>
               </div>
-              <Badge className={getFrequencyStyle((quest as any).frequency)}>
+              <Badge className={`${getFrequencyStyle((quest as any).frequency)} text-xs py-0 px-1.5`}>
                 {(quest as any).frequency || 'Daily'}
               </Badge>
             </div>
             
             {/* Requirements */}
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 space-y-1.5">
               {quest.requirements && typeof quest.requirements === 'object' && Object.entries(quest.requirements as Record<string, any>).map(([key, requirement]) => {
                 if (typeof requirement === 'object' && 'current' in requirement && 'target' in requirement) {
                   const subProgress = Math.min(100, (requirement.current / requirement.target) * 100);
                   
                   return (
-                    <div key={key} className="text-sm">
-                      <div className="flex justify-between mb-1">
+                    <div key={key} className="text-xs">
+                      <div className="flex justify-between mb-0.5">
                         <span>{key}</span>
                         <span>
                           {requirement.current}/{requirement.target}
@@ -370,7 +372,7 @@ const BountyBoardView = () => {
                       </div>
                       <Progress 
                         value={subProgress} 
-                        className="h-1.5 bg-[#1A1A2E] border-[#432874]/20" 
+                        className="h-1 bg-[#1A1A2E] border-[#432874]/20" 
                       />
                     </div>
                   );

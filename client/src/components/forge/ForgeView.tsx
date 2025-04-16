@@ -661,23 +661,7 @@ const completeForging = async (taskId: number) => {
                         </div>
                       )}
                       
-                      {/* Slot upgrade button */}
-                      {isUnlocked && !isInUse && (
-                        <div className="mt-3 pt-3 border-t border-[#432874]/20">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="w-full text-xs border-[#432874]/30 hover:bg-[#432874]/20"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowSlotUpgradeDialog(true);
-                            }}
-                          >
-                            <ArrowUpCircle className="h-3 w-3 mr-1" />
-                            Upgrade Slot
-                          </Button>
-                        </div>
-                      )}
+                      {/* Removed duplicate slot upgrade button */}
                     </div>
                   );
                 })}
