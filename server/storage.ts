@@ -410,6 +410,93 @@ export class DatabaseStorage implements IStorage {
     const [newLog] = await db.insert(activityLogs).values(log).returning();
     return newLog;
   }
+
+  // Building upgrade methods
+  async getBuildingById(id: number): Promise<any | undefined> {
+    // This is a placeholder implementation. In a real app, we would have a buildings table
+    // For now, we'll return a mock building object
+    return {
+      id,
+      name: 'Mock Building',
+      level: 1,
+      maxLevel: 5
+    };
+  }
+
+  async upgradeBuilding(id: number): Promise<any> {
+    // This is a placeholder implementation
+    return {
+      id,
+      name: 'Mock Building',
+      level: 2, // Incremented level
+      maxLevel: 5
+    };
+  }
+
+  // Building upgrades with skill paths
+  async getBuildingUpgradesByUserId(userId: number): Promise<any | undefined> {
+    try {
+      // In a real implementation, this would query a building_upgrades table
+      // For now, we'll check the metadata table to simulate this storage
+      const [existingData] = await db.select()
+        .from(metadata)
+        .where(and(
+          eq(metadata.userId, userId),
+          eq(metadata.key, 'building_upgrades')
+        ));
+
+      if (existingData && existingData.value) {
+        return JSON.parse(existingData.value);
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Error getting building upgrades:', error);
+      return undefined;
+    }
+  }
+
+  async createBuildingUpgrades(data: any): Promise<any> {
+    try {
+      // Store the building upgrades in the metadata table as JSON
+      const [newData] = await db.insert(metadata)
+        .values({
+          userId: data.userId,
+          key: 'building_upgrades',
+          value: JSON.stringify(data)
+        })
+        .returning();
+
+      return JSON.parse(newData.value);
+    } catch (error) {
+      console.error('Error creating building upgrades:', error);
+      throw error;
+    }
+  }
+
+  async updateBuildingUpgrades(userId: number, data: any): Promise<any> {
+    try {
+      // Update the existing building upgrades in the metadata table
+      const [updatedData] = await db.update(metadata)
+        .set({
+          value: JSON.stringify(data)
+        })
+        .where(and(
+          eq(metadata.userId, userId),
+          eq(metadata.key, 'building_upgrades')
+        ))
+        .returning();
+
+      if (!updatedData) {
+        // If no records were updated, insert a new one
+        return this.createBuildingUpgrades(data);
+      }
+
+      return JSON.parse(updatedData.value);
+    } catch (error) {
+      console.error('Error updating building upgrades:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
