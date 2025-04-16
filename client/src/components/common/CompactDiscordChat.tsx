@@ -39,8 +39,8 @@ const CompactDiscordChat = () => {
     setMessage('');
   };
 
-  // Get the two most recent messages
-  const recentMessages = discordMessages.slice(-2);
+  // Get the three most recent messages to display in the header
+  const recentMessages = discordMessages.slice(-3);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -49,7 +49,6 @@ const CompactDiscordChat = () => {
         <div className="flex items-center h-9 relative">
           {/* Chat Label */}
           <div className="flex items-center bg-[#432874]/20 border border-[#432874]/30 rounded-l-md px-3 py-1.5">
-            <MessageCircle className="h-4 w-4 mr-2 text-[#7855FF]" />
             <span className="text-[#C8B8DB] font-medium">Discord</span>
             {unreadCount.current > 0 && (
               <span className="ml-1 w-4 h-4 rounded-full bg-[#FF9D00] text-[#1A1A2E] text-xs flex items-center justify-center">
@@ -59,11 +58,11 @@ const CompactDiscordChat = () => {
           </div>
           
           {/* Live Chat Display (Always visible) */}
-          <div className="bg-[#1F1D36]/80 border-y border-[#432874]/30 flex-1 h-full overflow-hidden px-3 py-1.5 flex items-center">
+          <div className="bg-[#1F1D36]/80 border-y border-[#432874]/30 flex-1 h-12 overflow-y-auto scrollbar-none px-3 py-1 flex flex-col justify-center">
             {recentMessages.length > 0 ? (
               <div className="w-full">
                 {recentMessages.map((msg, index) => (
-                  <div key={msg.id} className={`flex truncate ${index === 0 ? 'mb-0.5' : ''}`}>
+                  <div key={msg.id} className={`flex truncate ${index !== recentMessages.length - 1 ? 'mb-0.5' : ''}`}>
                     <span className={`font-semibold text-xs ${
                       msg.username === 'GuildMaster' ? 'text-[#FF9D00]' : 
                       msg.username === 'AuraCollector' ? 'text-[#00B9AE]' : 

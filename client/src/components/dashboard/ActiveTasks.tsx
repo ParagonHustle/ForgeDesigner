@@ -31,9 +31,20 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   const activeForgingTasks = forgingTasks.filter(task => !task.completed);
   
   // Count completed tasks for each category
-  const completedFarmingCount = farmingTasks.filter(task => task.completed && new Date(task.endTime) <= new Date()).length;
-  const completedDungeonCount = dungeonRuns.filter(run => run.completed && new Date(run.endTime) <= new Date()).length;
-  const completedForgingCount = forgingTasks.filter(task => task.completed && new Date(task.endTime) <= new Date()).length;
+  const completedFarmingCount = farmingTasks.filter(task => 
+    task.completed === true && 
+    task.collected !== true && 
+    new Date(task.endTime) <= new Date()
+  ).length;
+  const completedDungeonCount = dungeonRuns.filter(run => 
+    run.completed === true && 
+    new Date(run.endTime) <= new Date()
+  ).length;
+  const completedForgingCount = forgingTasks.filter(task => 
+    task.completed === true && 
+    task.collected !== true && 
+    new Date(task.endTime) <= new Date()
+  ).length;
 
   // Group characters by ID for easier lookup
   const charactersById = characters.reduce<Record<number, Character>>((acc, char) => {

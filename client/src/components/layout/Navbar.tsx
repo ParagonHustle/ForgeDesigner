@@ -16,7 +16,7 @@ const Navbar = () => {
         <span className="bg-[#00B9AE]/20 text-[#00B9AE] text-xs px-2 py-0.5 rounded">Alpha v0.1</span>
 
         {/* Discord Chat */}
-        <div className="ml-4 flex-1">
+        <div className="ml-4 flex-1 w-full max-w-2xl">
           <CompactDiscordChat />
         </div>
       </div>
