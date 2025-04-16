@@ -805,6 +805,12 @@ const InventoryView = () => {
                             )}
                             
                             {/* All source information removed as requested */}
+                                  <div className="bg-[#432874]/20 p-2 rounded-lg">
+                                    Origin unknown
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -922,7 +928,30 @@ const InventoryView = () => {
                       
                       {/* Note: Stat bonuses are now displayed directly in the attributes above */}
                       
-                      {/* Forge information removed as requested */}
+                      {/* Forge information - showing which character classes were used */}
+                      {(() => {
+                        // Use safer type checking for sourceCharacterIds
+                        const sourceIds = aura.sourceCharacterIds as number[] | undefined;
+                        
+                        if (!sourceIds || !Array.isArray(sourceIds) || sourceIds.length === 0) {
+                          return null; // Removed Power Source section as requested
+                        }
+                        
+                        // Find the source characters
+                        const sourceChars = characters.filter(c => sourceIds.includes(c.id));
+                        
+                        return (
+                          <div className="mt-3 pt-3 border-t border-[#432874]/30">
+                            <h4 className="text-xs font-semibold mb-1 text-[#00B9AE]">Forged Using:</h4>
+                            <div className="text-xs text-[#C8B8DB]/80">
+                              {sourceChars.length === 0 
+                                ? 'Unknown characters' 
+                                : sourceChars.map(char => `${char.name} (${char.class})`).join(', ')
+                              }
+                            </div>
+                          </div>
+                        );
+                      })()}
                       
                       {/* Skills list */}
                       {aura.skills && (typeof aura.skills === 'object' || typeof aura.skills === 'string') && (
