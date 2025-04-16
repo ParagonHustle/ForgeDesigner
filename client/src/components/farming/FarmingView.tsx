@@ -84,6 +84,11 @@ const FarmingView = () => {
   // State for tracking which skill path is selected (1: quantity path, 2: quality/speed path)
   const [selectedUpgradePath, setSelectedUpgradePath] = useState<number>(1);
   
+  // Get all building upgrades for current user
+  const { data: userBuildingUpgrades = { farmSlots: [], forgeSlots: [], marketUpgrades: [], buildings: [] } } = useQuery<any>({
+    queryKey: ['/api/buildings/upgrades'],
+  });
+  
   // Get farming tasks
   const { data: farmingTasks = [], isLoading, refetch: refetchFarmingTasks } = useQuery<FarmingTask[]>({ 
     queryKey: ['/api/farming/tasks'],
@@ -240,6 +245,53 @@ const FarmingView = () => {
     }
   };
   
+  // Calculate bonuses for a given farming slot based on its upgrades
+  const calculateSlotBonuses = (slotIndex: number) => {
+    // Find the upgrade for this slot
+    const slotUpgrades = userBuildingUpgrades?.farmSlots || [];
+    const slotUpgrade = slotUpgrades.find((upgrade: any) => upgrade.slotId === slotIndex + 1);
+    
+    // Default values if no upgrades found
+    const defaultBonuses = {
+      level: 1,
+      path: "Not Upgraded",
+      yieldBonus: 0,
+      speedBonus: 0,
+      qualityBonus: 0,
+      bonusChance: 0
+    };
+    
+    if (!slotUpgrade) return defaultBonuses;
+    
+    // Get upgrade level and path
+    const level = slotUpgrade.level || 1;
+    const path = slotUpgrade.pathName || "Not Upgraded";
+    
+    // Calculate different bonuses based on the path and level
+    const isBountifulPath = path === "Bountiful Harvest";
+    
+    // Base bonuses
+    const baseYieldBonus = isBountifulPath ? level * 5 : level * 2;
+    const baseSpeedBonus = isBountifulPath ? level * 2 : level * 4;
+    const baseQualityBonus = isBountifulPath ? level * 1 : level * 3;
+    const baseBonusChance = isBountifulPath ? level * 3 : level * 1;
+    
+    // Enhanced bonuses based on path specialization
+    const yieldBonus = isBountifulPath ? baseYieldBonus + level * 3 : baseYieldBonus;
+    const speedBonus = !isBountifulPath ? baseSpeedBonus + level * 2 : baseSpeedBonus;
+    const qualityBonus = !isBountifulPath ? baseQualityBonus + level * 2 : baseQualityBonus;
+    const bonusChance = isBountifulPath ? baseBonusChance + level * 2 : baseBonusChance;
+    
+    return {
+      level,
+      path,
+      yieldBonus,
+      speedBonus,
+      qualityBonus,
+      bonusChance
+    };
+  };
+
   const handleUpgradeSlot = async (slot: number) => {
     setIsSubmitting(true);
     try {
@@ -395,6 +447,54 @@ const FarmingView = () => {
                         <h3 className="font-cinzel font-bold text-lg text-[#C8B8DB] mb-1">
                           Farming Slot {slot}
                         </h3>
+                        
+                        {/* Farm Plot Bonuses */}
+                        {(() => {
+                          const bonuses = calculateSlotBonuses(slot - 1);
+                          
+                          // Only show if there are any bonuses (slot level > 1)
+                          if (bonuses.level > 1) {
+                            const isBountifulPath = bonuses.path === 'Bountiful Harvest';
+                            return (
+                              <div className={`mb-2 p-2 rounded-md text-xs ${
+                                isBountifulPath ? 'bg-[#228B22]/10 border border-[#228B22]/20' : 'bg-[#00B9AE]/10 border border-[#00B9AE]/20'
+                              }`}>
+                                <div className="flex justify-between items-center mb-1">
+                                  <div className="flex items-center">
+                                    {isBountifulPath ? (
+                                      <Gem className="h-3 w-3 mr-1 text-[#228B22]" />
+                                    ) : (
+                                      <Timer className="h-3 w-3 mr-1 text-[#00B9AE]" />
+                                    )}
+                                    <span className={isBountifulPath ? 'text-[#228B22]' : 'text-[#00B9AE]'}>
+                                      {bonuses.path} (Level {bonuses.level})
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[#C8B8DB]/80">
+                                  <div className="flex items-center">
+                                    <div className={`w-2 h-2 rounded-full ${isBountifulPath ? 'bg-[#228B22]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                    <span>+{bonuses.yieldBonus}% Yield</span>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <div className={`w-2 h-2 rounded-full ${isBountifulPath ? 'bg-[#228B22]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                    <span>+{bonuses.speedBonus}% Speed</span>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <div className={`w-2 h-2 rounded-full ${isBountifulPath ? 'bg-[#228B22]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                    <span>+{bonuses.qualityBonus}% Quality</span>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <div className={`w-2 h-2 rounded-full ${isBountifulPath ? 'bg-[#228B22]/50' : 'bg-[#00B9AE]/50'} mr-1`}></div>
+                                    <span>+{bonuses.bonusChance}% Bonus</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                        
                         <Button 
                           variant="outline" 
                           size="sm" 
