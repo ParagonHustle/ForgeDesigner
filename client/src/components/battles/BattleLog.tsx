@@ -510,6 +510,10 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setActiveTarget(nextAction.target);
       setCurrentSkillName(nextAction.skill);
       
+      // CRITICAL FIX: Update target unit's actual HP during animation
+      const targetUnit = units.find(unit => unit.id === nextAction.target);
+      const actorUnit = units.find(unit => unit.id === nextAction.actor);
+      
       // Set attack type based on skill name
       if (nextAction.skill.toLowerCase().includes("ultimate")) {
         setAttackAnimationType('ultimate');
@@ -527,6 +531,39 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
       setTimeout(() => {
         setShowAttackAnimation(false);
         setShowDamageAnimation(true);
+        
+        // CRITICAL FIX: Apply the actual damage/healing at the moment the animation shows
+        // This ensures the HP display is updated when the damage is visually shown
+        if (targetUnit) {
+          const isHealing = nextAction.isHealing;
+          const damage = nextAction.damage;
+          
+          // Apply damage or healing
+          if (isHealing) {
+            // Apply healing (don't exceed maxHP)
+            const healAmount = Math.abs(damage);
+            targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
+          } else {
+            // Apply damage (don't go below 0)
+            targetUnit.hp = Math.max(0, targetUnit.hp - damage);
+            
+            // CRITICAL FIX: Handle unit defeat differently for boss vs. regular enemies
+            if (targetUnit.hp <= 0) {
+              // For bosses, if it's the final boss and it should be defeated
+              if (targetUnit.name.toLowerCase().includes('boss') && 
+                  units.filter(u => u.id.toString().startsWith('enemy') && u.hp > 0).length === 1) {
+                console.log(`Final boss ${targetUnit.name} defeated!`);
+                targetUnit.hp = 0; // Ensure HP is exactly 0
+              } else if (!targetUnit.name.toLowerCase().includes('boss')) {
+                // For non-boss enemies
+                targetUnit.hp = 0;
+              }
+            }
+          }
+          
+          // Force refresh of all units to update UI
+          setUnits([...units]);
+        }
         
         // After damage animation completes, reset and move to next action
         setTimeout(() => {
@@ -554,8 +591,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         // Find the unit that was defeated
         const defeatedUnit = units.find(unit => unit.id === nextAction.target);
         if (defeatedUnit) {
-          // Ensure its HP is 0
+          // CRITICAL FIX: Ensure its HP is exactly 0 and force the UI update
           defeatedUnit.hp = 0;
+          
+          // Special handling for boss defeat
+          if (defeatedUnit.name.toLowerCase().includes('boss')) {
+            console.log(`Boss ${defeatedUnit.name} explicitly set to defeated state`);
+          }
+          
+          // Force refresh of all units with the updated HP
           setUnits([...units]);
         }
         

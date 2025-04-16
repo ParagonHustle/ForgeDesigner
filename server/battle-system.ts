@@ -664,8 +664,10 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
           const isLastAlly = aliveAllies.length === 1 && aliveAllies[0] === target;
           const isFinalStage = currentStage === TOTAL_STAGES;
           
-          if (isAlly && isLastEnemy && isBoss && !isFinalStage) {
-            // Let boss survive with 1 HP if it's not the final stage
+          if (isAlly && isLastEnemy && isBoss && !isFinalStage && target.hp < 0) {
+            // CRITICAL FIX: Only activate boss invulnerability if it's not the final stage
+            // AND it's the last enemy in the current stage
+            // AND the boss's HP is actually negative (not just 0 or already defeated)
             target.hp = 1;
             battleLog.push({
               type: 'system_message',
@@ -736,8 +738,9 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
         
         // Check if enemy is defeated
         if (enemy.hp <= 0) {
-          if (aliveEnemies.length === 1 && enemy.name.includes('Boss') && currentStage < TOTAL_STAGES) {
-            // Let boss survive with 1 HP
+          if (aliveEnemies.length === 1 && enemy.name.includes('Boss') && currentStage < TOTAL_STAGES && enemy.hp < 0) {
+            // CRITICAL FIX: Only let boss survive with 1 HP if it's not the final stage
+            // AND it's the last enemy AND its HP is actually negative (not just 0)
             enemy.hp = 1;
           } else {
             aliveEnemies = aliveEnemies.filter(e => e !== enemy);
