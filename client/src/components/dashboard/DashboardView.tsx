@@ -4,6 +4,7 @@ import OfferBanner from '../ui/OfferBanner';
 import { useDiscordAuth } from '@/lib/discordAuth';
 import { useGameStore } from '@/lib/zustandStore';
 import { useEffect } from 'react';
+import { Zap } from 'lucide-react';
 
 const DashboardView = () => {
   const { user } = useDiscordAuth();
@@ -14,7 +15,9 @@ const DashboardView = () => {
     characters,
     farmingTasks,
     dungeonRuns,
-    forgingTasks
+    forgingTasks,
+    speedBoostActive,
+    speedBoostMultiplier
   } = useGameStore();
   
   // Refresh active tasks periodically

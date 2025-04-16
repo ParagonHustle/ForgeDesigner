@@ -16,16 +16,9 @@ const Navbar = () => {
         <span className="bg-[#00B9AE]/20 text-[#00B9AE] text-xs px-2 py-0.5 rounded">Alpha v0.1</span>
 
         {/* Discord Chat */}
-        <div className="ml-4">
+        <div className="ml-4 flex-1">
           <CompactDiscordChat />
         </div>
-
-        {speedBoostActive && (
-          <div className="ml-2 flex items-center bg-[#FF9D00]/20 text-[#FF9D00] text-xs px-2 py-0.5 rounded animate-pulse">
-            <Zap className="h-3 w-3 mr-1" />
-            <span>{speedBoostMultiplier}x Speed Boost</span>
-          </div>
-        )}
       </div>
 
       <div className="flex items-center space-x-4">
