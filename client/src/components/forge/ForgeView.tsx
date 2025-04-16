@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useGameStore } from "@/lib/zustandStore";
@@ -290,10 +290,13 @@ const completeForging = async (taskId: number) => {
     setShowSlotUpgradeDialog(false);
   };
   
+  // Initialize the query client
+  const queryClient = useQueryClient();
+  
   // Function to get slot upgrade details from the database
   const getSlotUpgradeDetails = (slotIndex: number) => {
     // Look for existing upgrade path info
-    const slotInfo = forgeSlotUpgrades.find(slot => slot.slotId === slotIndex);
+    const slotInfo = forgeSlotUpgrades.find((slot: any) => slot.slotId === slotIndex);
     
     // Set defaults if no existing data
     const currentLevel = slotInfo?.level || 1;
