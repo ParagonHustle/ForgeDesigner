@@ -2,57 +2,12 @@ import { useDiscordAuth } from '@/lib/discordAuth';
 import { useGameStore } from '@/lib/zustandStore';
 import { Zap } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
-import CountdownTimer from '@/components/common/CountdownTimer';
 import CompactDiscordChat from '@/components/common/CompactDiscordChat';
 
 const Navbar = () => {
   const { user, logout } = useDiscordAuth();
-  const { forgeTokens, rogueCredits, speedBoostActive, speedBoostMultiplier, farmingTasks, dungeonRuns, forgingTasks } = useGameStore();
+  const { forgeTokens, rogueCredits, speedBoostActive, speedBoostMultiplier } = useGameStore();
   const location = useLocation();
-
-  // Get activity timers and counts
-  const getActivityTimers = () => {
-    const now = new Date().getTime();
-    const activities = {
-      dungeon: { time: Infinity, path: '/dungeons', count: 0 },
-      forge: { time: Infinity, path: '/forge', count: 0 },
-      farming: { time: Infinity, path: '/farming', count: 0 }
-    };
-
-    dungeonRuns?.forEach(run => {
-      if (!run.completed) {
-        activities.dungeon.count++;
-        const endTime = new Date(run.endTime).getTime();
-        if (endTime - now < activities.dungeon.time) {
-          activities.dungeon.time = endTime - now;
-        }
-      }
-    });
-
-    forgingTasks?.forEach(task => {
-      if (!task.completed) {
-        activities.forge.count++;
-        const endTime = new Date(task.endTime).getTime();
-        if (endTime - now < activities.forge.time) {
-          activities.forge.time = endTime - now;
-        }
-      }
-    });
-
-    farmingTasks?.forEach(task => {
-      if (!task.completed) {
-        activities.farming.count++;
-        const endTime = new Date(task.endTime).getTime();
-        if (endTime - now < activities.farming.time) {
-          activities.farming.time = endTime - now;
-        }
-      }
-    });
-
-    return activities;
-  };
-
-  const activityTimers = getActivityTimers();
 
   return (
     <nav className="bg-[#1A1A2E] border-b border-[#432874]/50 px-4 py-2 flex justify-between items-center sticky top-0 z-50">
