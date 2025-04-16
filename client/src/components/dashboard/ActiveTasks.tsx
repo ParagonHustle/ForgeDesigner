@@ -33,7 +33,6 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   // Count completed tasks for each category
   const completedFarmingCount = farmingTasks.filter(task => 
     task.completed === true && 
-    task.collected !== true && 
     new Date(task.endTime) <= new Date()
   ).length;
   const completedDungeonCount = dungeonRuns.filter(run => 
@@ -42,7 +41,6 @@ const ActiveTasks = ({ farmingTasks, dungeonRuns, forgingTasks }: ActiveTasksPro
   ).length;
   const completedForgingCount = forgingTasks.filter(task => 
     task.completed === true && 
-    task.collected !== true && 
     new Date(task.endTime) <= new Date()
   ).length;
 

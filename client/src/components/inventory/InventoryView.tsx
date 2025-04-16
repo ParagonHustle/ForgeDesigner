@@ -641,7 +641,12 @@ const InventoryView = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                         {/* Left Column - Stats */}
                         <div>
-                          <h3 className="font-semibold text-[#FF9D00] mb-3">Stats</h3>
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-semibold text-[#FF9D00]">Stats</h3>
+                            <div className="px-3 py-1 rounded-md bg-[#00B9AE]/20 text-[#00B9AE] text-sm font-semibold">
+                              Total Bonus: +{calculateTotalStats(selectedAura)}%
+                            </div>
+                          </div>
                           <div className="bg-[#1F1D36]/80 p-4 rounded-lg">
                             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                               <div className="flex justify-between">
@@ -826,7 +831,11 @@ const InventoryView = () => {
                 </DialogContent>
               </Dialog>
               
-              {filteredAuras.map((aura) => (
+              {/* Sort auras by total stat bonus */}
+              {filteredAuras
+                .slice()
+                .sort((a, b) => calculateTotalStats(b) - calculateTotalStats(a))
+                .map((aura) => (
                 <motion.div
                   key={aura.id}
                   variants={item}
@@ -858,8 +867,13 @@ const InventoryView = () => {
                         <h3 className="font-cinzel font-semibold text-[#FF9D00]">
                           {aura.name || `${aura.element || 'Mysterious'} Aura`}
                         </h3>
-                        <div className="text-sm text-[#C8B8DB]/80">
-                          Level {aura.level || 1}
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm text-[#C8B8DB]/80">
+                            Level {aura.level || 1}
+                          </div>
+                          <div className="px-2 py-0.5 rounded bg-[#00B9AE]/20 text-[#00B9AE] text-xs font-semibold">
+                            Total: +{calculateTotalStats(aura)}%
+                          </div>
                         </div>
                       </div>
                     </div>
