@@ -69,23 +69,7 @@ const buildings = [
     baseUpgradeCost: { rogueCredits: 1000, forgeTokens: 100 },
     upgradeTimeInMinutes: 60
   },
-  {
-    id: 'blackmarket',
-    name: 'Black Market',
-    description: 'Enables purchasing of premium items and eventually listing your own items for sale.',
-    icon: <ShoppingBag className="h-6 w-6" />,
-    color: 'text-[#00B9AE] bg-[#00B9AE]/10',
-    benefits: [
-      { level: 1, text: 'Access to basic market offers' },
-      { level: 2, text: 'Unlock 1 personal listing slot' },
-      { level: 3, text: 'Unlock 2 personal listing slots' },
-      { level: 4, text: 'Unlock 4 personal listing slots' },
-      { level: 5, text: 'Unlock all 6 personal listing slots' }
-    ],
-    maxLevel: 9,
-    baseUpgradeCost: { rogueCredits: 750, forgeTokens: 75 },
-    upgradeTimeInMinutes: 40
-  },
+
   {
     id: 'tavern',
     name: 'Tavern',
