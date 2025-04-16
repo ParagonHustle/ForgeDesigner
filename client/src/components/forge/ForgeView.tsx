@@ -75,6 +75,8 @@ const ForgeView = () => {
   // Additional state for slot selection
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [showSlotUpgradeDialog, setShowSlotUpgradeDialog] = useState(false);
+  // State for tracking which skill path is selected (1: base stats path, 2: fusion bonus path)
+  const [selectedUpgradePath, setSelectedUpgradePath] = useState<number>(1);
   
   // Original state
   const [selectedTab, setSelectedTab] = useState('slots'); // Changed default to slots
@@ -281,11 +283,38 @@ const completeForging = async (taskId: number) => {
   
   const upgradeSlot = () => {
     // This would be implemented with a server call in a real implementation
-    toast({
-      title: "Feature coming soon",
-      description: "Slot upgrade functionality will be available in a future update.",
+    setIsSubmitting(true);
+    
+    // Make API call to upgrade the slot with selected path
+    apiRequest('POST', '/api/buildings/upgrade', {
+      buildingType: 'forgeSlot',
+      slotId: upgradeSlotDetails.slot,
+      upgradePath: selectedUpgradePath,
+      pathName: selectedUpgradePath === 1 ? 'Master Artisan' : 'Fusion Specialist'
+    })
+    .then(response => {
+      if (response.ok) {
+        toast({
+          title: "Slot Upgraded",
+          description: `Forge Slot ${upgradeSlotDetails.slot + 1} has been upgraded with ${selectedUpgradePath === 1 ? 'Master Artisan' : 'Fusion Specialist'} path.`,
+        });
+      } else {
+        throw new Error("Failed to upgrade slot");
+      }
+    })
+    .catch(error => {
+      toast({
+        title: "Feature Coming Soon",
+        description: "The Forge slot upgrade functionality will be available in a future update.",
+        variant: "default"
+      });
+    })
+    .finally(() => {
+      setIsSubmitting(false);
+      closeSlotUpgradeDialog();
+      // Reset selected path for next time
+      setSelectedUpgradePath(1);
     });
-    closeSlotUpgradeDialog();
   };
   
   return (
@@ -313,36 +342,80 @@ const completeForging = async (taskId: number) => {
               </div>
             </div>
             
+            {/* Upgrade path selection */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {/* Path 1: Forge Quality Focus */}
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer ${
+                  selectedUpgradePath === 1 
+                    ? 'bg-[#432874]/30 border-[#FF9D00]' 
+                    : 'bg-[#432874]/10 border-[#432874]/30 hover:bg-[#432874]/20'
+                }`}
+                onClick={() => setSelectedUpgradePath(1)}
+              >
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Hammer className="h-4 w-4 mr-2 text-[#FF9D00]" />
+                  Master Artisan
+                </h3>
+                <p className="text-xs mb-2 text-[#C8B8DB]/80">Focus on improving the base stats of newly crafted Auras.</p>
+                <ul className="space-y-1 text-sm">
+                  <li className="flex items-center">
+                    <span className="bg-[#FF9D00]/20 text-[#FF9D00] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                    <span>15% higher base stats</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="bg-[#FF9D00]/20 text-[#FF9D00] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                    <span>Chance for rare skills</span>
+                  </li>
+                </ul>
+              </div>
+              
+              {/* Path 2: Fusion Bonus Focus */}
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer ${
+                  selectedUpgradePath === 2 
+                    ? 'bg-[#432874]/30 border-[#00B9AE]' 
+                    : 'bg-[#432874]/10 border-[#432874]/30 hover:bg-[#432874]/20'
+                }`}
+                onClick={() => setSelectedUpgradePath(2)}
+              >
+                <h3 className="font-semibold mb-2 flex items-center">
+                  <Sparkles className="h-4 w-4 mr-2 text-[#00B9AE]" />
+                  Fusion Specialist
+                </h3>
+                <p className="text-xs mb-2 text-[#C8B8DB]/80">Focus on enhancing fusion bonuses when combining Auras.</p>
+                <ul className="space-y-1 text-sm">
+                  <li className="flex items-center">
+                    <span className="bg-[#00B9AE]/20 text-[#00B9AE] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                    <span>20% fusion bonus effect</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="bg-[#00B9AE]/20 text-[#00B9AE] w-5 h-5 rounded-full flex items-center justify-center mr-2">+</span>
+                    <span>Additional skill transfers</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
             {upgradeSlotDetails.currentLevel < upgradeSlotDetails.maxLevel ? (
               <>
                 <div className="space-y-3 mb-4">
                   <div className="bg-[#15152C] p-3 rounded-md">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
-                        <Clock className="h-4 w-4 text-[#00B9AE] mr-2" />
-                        <span>Crafting Speed</span>
+                        {selectedUpgradePath === 1 ? (
+                          <Hammer className="h-4 w-4 text-[#FF9D00] mr-2" />
+                        ) : (
+                          <Sparkles className="h-4 w-4 text-[#00B9AE] mr-2" />
+                        )}
+                        <span>{selectedUpgradePath === 1 ? 'Base Aura Quality' : 'Fusion Bonus Effect'}</span>
                       </div>
-                      <Badge variant="outline" className="border-[#00B9AE]/30 text-[#00B9AE]">
-                        +{upgradeSlotDetails.speedBonus * upgradeSlotDetails.currentLevel}%
+                      <Badge variant="outline" className={`${selectedUpgradePath === 1 ? 'border-[#FF9D00]/30 text-[#FF9D00]' : 'border-[#00B9AE]/30 text-[#00B9AE]'}`}>
+                        +{(selectedUpgradePath === 1 ? upgradeSlotDetails.qualityBonus : upgradeSlotDetails.speedBonus) * upgradeSlotDetails.currentLevel}%
                       </Badge>
                     </div>
                     <p className="text-xs text-[#C8B8DB]/60 mt-1 ml-6">
-                      Next Level: +{upgradeSlotDetails.speedBonus * (upgradeSlotDetails.currentLevel + 1)}%
-                    </p>
-                  </div>
-                  
-                  <div className="bg-[#15152C] p-3 rounded-md">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <Sparkles className="h-4 w-4 text-[#FF9D00] mr-2" />
-                        <span>Aura Quality</span>
-                      </div>
-                      <Badge variant="outline" className="border-[#FF9D00]/30 text-[#FF9D00]">
-                        +{upgradeSlotDetails.qualityBonus * upgradeSlotDetails.currentLevel}%
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-[#C8B8DB]/60 mt-1 ml-6">
-                      Next Level: +{upgradeSlotDetails.qualityBonus * (upgradeSlotDetails.currentLevel + 1)}%
+                      Next Level: +{(selectedUpgradePath === 1 ? upgradeSlotDetails.qualityBonus : upgradeSlotDetails.speedBonus) * (upgradeSlotDetails.currentLevel + 1)}%
                     </p>
                   </div>
                 </div>
@@ -366,8 +439,11 @@ const completeForging = async (taskId: number) => {
                 </div>
                 
                 <Button 
-                  className="w-full bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+                  className={`w-full ${selectedUpgradePath === 1 
+                    ? 'bg-[#FF9D00] hover:bg-[#FF9D00]/80' 
+                    : 'bg-[#00B9AE] hover:bg-[#00B9AE]/80'} text-[#1A1A2E]`}
                   onClick={upgradeSlot}
+                  disabled={isSubmitting}
                 >
                   <ArrowUpCircle className="h-4 w-4 mr-2" />
                   Upgrade Slot
