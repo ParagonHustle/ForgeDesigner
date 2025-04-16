@@ -49,40 +49,6 @@ import type { BuildingUpgrade } from '@shared/schema';
 // Building definitions
 const buildings = [
   {
-    id: 'forge',
-    name: 'Forge',
-    description: 'Craft and enhance auras for your characters with improved success rates.',
-    icon: <Hammer className="h-6 w-6" />,
-    color: 'text-[#FF9D00] bg-[#FF9D00]/10',
-    benefits: [
-      { level: 1, text: 'Basic crafting capabilities (3 slots)' },
-      { level: 2, text: '10% faster crafting speed' },
-      { level: 3, text: 'Unlocks 4th crafting slot' },
-      { level: 4, text: '20% increased success rate on fusions' },
-      { level: 5, text: '35% faster crafting speed' }
-    ],
-    maxLevel: 9,
-    baseUpgradeCost: { rogueCredits: 800, forgeTokens: 80 },
-    upgradeTimeInMinutes: 45
-  },
-  {
-    id: 'blackmarket',
-    name: 'Black Market',
-    description: 'Purchase rare characters, auras, and resources with improved availability.',
-    icon: <ShoppingBag className="h-6 w-6" />,
-    color: 'text-[#C70039] bg-[#C70039]/10',
-    benefits: [
-      { level: 1, text: 'Basic market items (3 standard slots, 3 premium slots)' },
-      { level: 2, text: 'Unlocks 4th premium market slot' },
-      { level: 3, text: 'Unlocks 4th standard market slot' },
-      { level: 4, text: '10% discount on all market purchases' },
-      { level: 5, text: 'Daily market refresh' }
-    ],
-    maxLevel: 9,
-    baseUpgradeCost: { rogueCredits: 750, forgeTokens: 75 },
-    upgradeTimeInMinutes: 40
-  },
-  {
     id: 'bountyboard',
     name: 'Bounty Board',
     description: 'Complete quests to earn rewards with enhanced quest options and rewards.',

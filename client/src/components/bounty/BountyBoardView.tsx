@@ -167,8 +167,6 @@ const BountyBoardView = () => {
   const getRarityColor = (rarity: string) => {
     switch (rarity?.toLowerCase()) {
       case 'common':
-        return { text: 'text-[#A0A0A0]', bg: 'bg-[#A0A0A0]' };
-      case 'uncommon':
         return { text: 'text-[#4CAF50]', bg: 'bg-[#4CAF50]' };
       case 'rare':
         return { text: 'text-[#2196F3]', bg: 'bg-[#2196F3]' };
@@ -177,7 +175,7 @@ const BountyBoardView = () => {
       case 'legendary':
         return { text: 'text-[#FF9D00]', bg: 'bg-[#FF9D00]' };
       default:
-        return { text: 'text-[#A0A0A0]', bg: 'bg-[#A0A0A0]' };
+        return { text: 'text-[#4CAF50]', bg: 'bg-[#4CAF50]' };
     }
   };
 
