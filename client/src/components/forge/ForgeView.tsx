@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useGameStore } from "@/lib/zustandStore";
 import { useDiscordAuth } from "@/lib/discordAuth";
 import { motion } from "framer-motion";
-import { Clock, Flame, Hammer, Sparkles, User, Info } from "lucide-react";
+import { ArrowUpCircle, Clock, Flame, Hammer, LayoutGrid, Sparkles, User, Info } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -17,6 +17,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -50,15 +51,34 @@ const ForgeView = () => {
     queryKey: ['/api/buildings/upgrades'], 
   });
   
-  // Determine available crafting slots based on forge level (1 by default, +1 per level)
+  // Get townhall building level (for slot unlocking)
+  const townhallUpgrade = buildingUpgrades.find(u => u.buildingType === 'townhall');
+  const townhallLevel = townhallUpgrade?.currentLevel || 1;
+  
+  // Determine available crafting slots based on forge level (1 by default, +1 per level up to 3)
+  // The 4th slot is locked until townhall is upgraded
   const forgeUpgrade = buildingUpgrades.find(u => u.buildingType === 'forge');
   const forgeLevel = forgeUpgrade?.currentLevel || 1;
+  
+  // Calculate available slots: 
+  // - Base: 1 slot
+  // - Forge Level 2: 2 slots
+  // - Forge Level 3+: 3 slots
+  // - Townhall Level 3+: Unlocks 4th slot
+  const baseSlots = Math.min(3, Math.max(1, forgeLevel));
+  const bonusSlots = townhallLevel >= 3 ? 1 : 0;
   
   // Use the admin status from the user to determine if unlimited slots are available
   const { user } = useDiscordAuth();
   const isAdmin = user?.isAdmin || false;
-  const maxCraftingSlots = isAdmin ? 999 : forgeLevel; // Admin gets unlimited slots (999)
-  const [selectedTab, setSelectedTab] = useState('craft');
+  const maxCraftingSlots = isAdmin ? 999 : baseSlots + bonusSlots; // Admin gets unlimited slots (999)
+  
+  // Additional state for slot selection
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [showSlotUpgradeDialog, setShowSlotUpgradeDialog] = useState(false);
+  
+  // Original state
+  const [selectedTab, setSelectedTab] = useState('slots'); // Changed default to slots
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [primaryAura, setPrimaryAura] = useState<Aura | null>(null);
@@ -247,8 +267,139 @@ const completeForging = async (taskId: number) => {
     show: { opacity: 1, y: 0 }
   };
   
+  // Add slot upgrade dialog
+  const [upgradeSlotDetails, setUpgradeSlotDetails] = useState({
+    slot: 0,
+    currentLevel: 1,
+    maxLevel: 5,
+    speedBonus: 5, // % reduction in crafting time per level
+    qualityBonus: 2 // % increase in quality per level
+  });
+  
+  const closeSlotUpgradeDialog = () => {
+    setShowSlotUpgradeDialog(false);
+  };
+  
+  const upgradeSlot = () => {
+    // This would be implemented with a server call in a real implementation
+    toast({
+      title: "Feature coming soon",
+      description: "Slot upgrade functionality will be available in a future update.",
+    });
+    closeSlotUpgradeDialog();
+  };
+  
   return (
     <>
+      {/* Slot Upgrade Dialog */}
+      <Dialog open={showSlotUpgradeDialog} onOpenChange={setShowSlotUpgradeDialog}>
+        <DialogContent className="bg-[#1A1A2E] border-[#432874]/50 text-[#C8B8DB] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#FF9D00] font-cinzel text-xl">Upgrade Crafting Slot</DialogTitle>
+            <DialogDescription className="text-[#C8B8DB]/80">
+              Upgrade this slot to improve crafting speed and aura quality.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h4 className="font-semibold">Crafting Slot {upgradeSlotDetails.slot + 1}</h4>
+                <p className="text-sm text-[#C8B8DB]/70">
+                  Current Level: {upgradeSlotDetails.currentLevel}/{upgradeSlotDetails.maxLevel}
+                </p>
+              </div>
+              <div className="bg-[#432874]/30 px-3 py-1 rounded">
+                <span className="text-[#FF9D00] font-semibold">Lv.{upgradeSlotDetails.currentLevel}</span>
+              </div>
+            </div>
+            
+            {upgradeSlotDetails.currentLevel < upgradeSlotDetails.maxLevel ? (
+              <>
+                <div className="space-y-3 mb-4">
+                  <div className="bg-[#15152C] p-3 rounded-md">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 text-[#00B9AE] mr-2" />
+                        <span>Crafting Speed</span>
+                      </div>
+                      <Badge variant="outline" className="border-[#00B9AE]/30 text-[#00B9AE]">
+                        +{upgradeSlotDetails.speedBonus * upgradeSlotDetails.currentLevel}%
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-[#C8B8DB]/60 mt-1 ml-6">
+                      Next Level: +{upgradeSlotDetails.speedBonus * (upgradeSlotDetails.currentLevel + 1)}%
+                    </p>
+                  </div>
+                  
+                  <div className="bg-[#15152C] p-3 rounded-md">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <Sparkles className="h-4 w-4 text-[#FF9D00] mr-2" />
+                        <span>Aura Quality</span>
+                      </div>
+                      <Badge variant="outline" className="border-[#FF9D00]/30 text-[#FF9D00]">
+                        +{upgradeSlotDetails.qualityBonus * upgradeSlotDetails.currentLevel}%
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-[#C8B8DB]/60 mt-1 ml-6">
+                      Next Level: +{upgradeSlotDetails.qualityBonus * (upgradeSlotDetails.currentLevel + 1)}%
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-[#1F1D36] p-3 rounded-md mb-4">
+                  <h4 className="font-semibold mb-2">Upgrade Cost</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
+                        <span className="text-[#FF9D00] text-xs">RC</span>
+                      </div>
+                      <span>{1000 * upgradeSlotDetails.currentLevel} Rogue Credits</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 rounded-full bg-[#432874]/30 flex items-center justify-center mr-2">
+                        <span className="text-[#00B9AE] text-xs">FT</span>
+                      </div>
+                      <span>{100 * upgradeSlotDetails.currentLevel} Forge Tokens</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <Button 
+                  className="w-full bg-[#FF9D00] hover:bg-[#FF9D00]/80 text-[#1A1A2E]"
+                  onClick={upgradeSlot}
+                >
+                  <ArrowUpCircle className="h-4 w-4 mr-2" />
+                  Upgrade Slot
+                </Button>
+              </>
+            ) : (
+              <div className="bg-[#432874]/20 p-4 rounded-md text-center">
+                <Badge className="bg-[#00B9AE]/20 text-[#00B9AE] mb-2">Maximum Level</Badge>
+                <p className="text-sm">This crafting slot has reached its maximum level.</p>
+                <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-[#1F1D36] p-2 rounded">
+                    <div className="text-[#00B9AE] font-semibold">-{upgradeSlotDetails.speedBonus * upgradeSlotDetails.maxLevel}%</div>
+                    <div className="text-[#C8B8DB]/70">Crafting Time</div>
+                  </div>
+                  <div className="bg-[#1F1D36] p-2 rounded">
+                    <div className="text-[#FF9D00] font-semibold">+{upgradeSlotDetails.qualityBonus * upgradeSlotDetails.maxLevel}%</div>
+                    <div className="text-[#C8B8DB]/70">Aura Quality</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={closeSlotUpgradeDialog}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <div className="mb-6">
         <h1 className="text-3xl font-cinzel font-bold text-[#FF9D00] mb-2">The Forge</h1>
         <p className="text-[#C8B8DB]/80">
@@ -355,17 +506,158 @@ const completeForging = async (taskId: number) => {
       
       {/* Forge Interface */}
       <div className="bg-[#1A1A2E] rounded-xl border border-[#432874]/30 p-6">
-        <Tabs defaultValue="craft" value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+        <Tabs defaultValue="slots" value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <TabsList className="bg-[#432874]/20 mb-6">
-            <TabsTrigger value="craft" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
+            <TabsTrigger value="slots" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Crafting Slots
+            </TabsTrigger>
+            <TabsTrigger value="craft" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]" disabled={selectedSlot === null}>
               <Hammer className="h-4 w-4 mr-2" />
               Craft Aura
             </TabsTrigger>
-            <TabsTrigger value="fusion" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]">
+            <TabsTrigger value="fusion" className="data-[state=active]:bg-[#FF9D00] data-[state=active]:text-[#1A1A2E]" disabled={selectedSlot === null}>
               <Flame className="h-4 w-4 mr-2" />
               Aura Fusion
             </TabsTrigger>
           </TabsList>
+          
+          {/* Crafting Slots Tab */}
+          <TabsContent value="slots" className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Select a Crafting Slot</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* Display maximum 4 crafting slots */}
+                {Array.from({ length: 4 }).map((_, index) => {
+                  const isUnlocked = index < baseSlots || (index === 3 && bonusSlots > 0);
+                  const isInUse = activeForgingTasks[index] !== undefined;
+                  const task = activeForgingTasks[index];
+                  
+                  // Calculate progress for in-use slots
+                  const progress = isInUse ? (() => {
+                    const startTime = new Date(task?.startTime || Date.now()).getTime();
+                    const endTime = new Date(task?.endTime || Date.now()).getTime();
+                    const now = new Date().getTime();
+                    return Math.min(100, Math.max(0, ((now - startTime) / (endTime - startTime)) * 100));
+                  })() : 0;
+                  
+                  // Determine if task is complete
+                  const isComplete = isInUse && new Date().getTime() >= new Date(task?.endTime || Date.now()).getTime();
+                  
+                  return (
+                    <div 
+                      key={index}
+                      className={`border rounded-lg p-4 ${
+                        !isUnlocked ? 'bg-[#1F1D36]/50 border-[#432874]/20 opacity-70' :
+                        isInUse ? 'bg-[#15152C] border-[#432874]/50' :
+                        selectedSlot === index ? 'bg-[#432874]/30 border-[#432874] cursor-pointer' :
+                        'bg-[#15152C] border-[#432874]/30 hover:border-[#432874] cursor-pointer'
+                      }`}
+                      onClick={() => {
+                        if (isUnlocked && !isInUse) {
+                          setSelectedSlot(index);
+                          // Change to craft tab when slot is selected
+                          setSelectedTab('craft');
+                        } else if (isUnlocked && isInUse && isComplete) {
+                          // Complete task if it's ready
+                          completeForging(task?.id || 0);
+                        }
+                      }}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-semibold">Crafting Slot {index + 1}</h4>
+                        {isUnlocked ? (
+                          isInUse ? (
+                            <Badge className={isComplete ? 'bg-green-700/30 text-green-300' : 'bg-blue-700/30 text-blue-300'}>
+                              {isComplete ? 'Ready' : 'In Use'}
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-[#432874]/30 text-[#C8B8DB]">Available</Badge>
+                          )
+                        ) : (
+                          <Badge className="bg-red-700/30 text-red-300">Locked</Badge>
+                        )}
+                      </div>
+                      
+                      {isUnlocked ? (
+                        isInUse ? (
+                          <div>
+                            <div className="text-sm mb-2">
+                              {task?.taskType === 'craft' 
+                                ? `Crafting ${task?.targetElement} Aura` 
+                                : 'Fusing Auras'
+                              }
+                            </div>
+                            <Progress value={progress} max={100} className="h-2 bg-[#432874]/20 mb-2" />
+                            {isComplete ? (
+                              <div className="flex items-center text-green-400 text-sm">
+                                <Sparkles className="h-4 w-4 mr-1" />
+                                Ready to claim!
+                              </div>
+                            ) : (
+                              <div className="flex items-center text-sm text-[#C8B8DB]/80">
+                                <Clock className="h-4 w-4 mr-1" />
+                                <CountdownTimer 
+                                  endTime={task?.endTime} 
+                                  onComplete={() => completeForging(task?.id || 0)}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-[#C8B8DB]/70">
+                            Click to start crafting or fusion
+                          </div>
+                        )
+                      ) : (
+                        index === 3 ? (
+                          <div className="text-sm text-[#C8B8DB]/70">
+                            Requires Townhall Level 3 to unlock
+                          </div>
+                        ) : (
+                          <div className="text-sm text-[#C8B8DB]/70">
+                            Requires Forge Level {index + 1} to unlock
+                          </div>
+                        )
+                      )}
+                      
+                      {/* Slot upgrade button */}
+                      {isUnlocked && !isInUse && (
+                        <div className="mt-3 pt-3 border-t border-[#432874]/20">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full text-xs border-[#432874]/30 hover:bg-[#432874]/20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowSlotUpgradeDialog(true);
+                            }}
+                          >
+                            <ArrowUpCircle className="h-3 w-3 mr-1" />
+                            Upgrade Slot
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="bg-[#1F1D36]/50 p-4 rounded-lg mt-4">
+                <h4 className="font-semibold mb-2 flex items-center">
+                  <Info className="h-4 w-4 mr-2 text-[#00B9AE]" />
+                  About Crafting Slots
+                </h4>
+                <div className="text-sm text-[#C8B8DB]/80 space-y-2">
+                  <p>• You can unlock up to 3 crafting slots by upgrading your Forge building</p>
+                  <p>• The 4th slot requires Townhall Level 3 to unlock</p>
+                  <p>• Each slot can be upgraded to improve crafting speed and quality</p>
+                  <p>• Select a slot to start crafting or fusion</p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
           
           {/* Crafting Interface */}
           <TabsContent value="craft" className="space-y-6">
