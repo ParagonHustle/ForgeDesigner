@@ -28,7 +28,7 @@ function Router() {
       <Route path="/townhall" component={Townhall} />
       <Route path="/tavern" component={Tavern} />
       <Route path="/buildings" component={Buildings} />
-      <Route path="/bounty" component={Bounty} />
+      <Route path="/bountyboard" component={Bounty} />
       <Route path="/collections" component={Collections} />
       <Route component={NotFound} />
     </Switch>

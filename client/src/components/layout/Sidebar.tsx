@@ -13,7 +13,8 @@ import {
   Hammer,
   Award,
   HelpCircle,
-  User
+  User,
+  Scroll
 } from 'lucide-react';
 
 const navItems = [
@@ -23,6 +24,7 @@ const navItems = [
   { path: "/farming", label: "Farming", icon: <Gem className="h-6 w-6" /> },
   { path: "/forge", label: "Forge", icon: <Hammer className="h-6 w-6" /> },
   { path: "/blackmarket", label: "Black Market", icon: <ShoppingBag className="h-6 w-6" /> },
+  { path: "/bountyboard", label: "Bounty Board", icon: <Scroll className="h-6 w-6" /> },
   { path: "/townhall", label: "Townhall", icon: <Building2 className="h-6 w-6" /> },
   { path: "/tavern", label: "Tavern", icon: <User className="h-6 w-6" /> },
   { path: "/buildings", label: "Buildings", icon: <Building2 className="h-6 w-6" /> },
@@ -40,8 +42,8 @@ const Sidebar = () => {
           
           return (
             <Link key={item.path} href={item.path}>
-              <a 
-                className={`flex items-center w-full px-3 py-2.5 rounded-lg ${
+              <div 
+                className={`flex items-center w-full px-3 py-2.5 rounded-lg cursor-pointer ${
                   isActive 
                     ? "bg-[#432874]/20 text-[#FF9D00] border-l-2 border-[#FF9D00]" 
                     : "hover:bg-[#432874]/10 text-[#C8B8DB]"
@@ -49,7 +51,7 @@ const Sidebar = () => {
               >
                 {item.icon}
                 <span className="ml-3 hidden md:block">{item.label}</span>
-              </a>
+              </div>
             </Link>
           );
         })}
