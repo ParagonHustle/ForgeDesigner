@@ -13,6 +13,8 @@ import BlackMarket from "@/pages/blackmarket";
 import Buildings from "@/pages/buildings";
 import Bounty from "@/pages/bounty";
 import Collections from "@/pages/collections";
+import Townhall from "@/pages/townhall";
+import Tavern from "@/pages/tavern";
 
 function Router() {
   return (
@@ -23,6 +25,8 @@ function Router() {
       <Route path="/farming" component={Farming} />
       <Route path="/forge" component={Forge} />
       <Route path="/blackmarket" component={BlackMarket} />
+      <Route path="/townhall" component={Townhall} />
+      <Route path="/tavern" component={Tavern} />
       <Route path="/buildings" component={Buildings} />
       <Route path="/bounty" component={Bounty} />
       <Route path="/collections" component={Collections} />
