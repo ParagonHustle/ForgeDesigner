@@ -33,8 +33,13 @@ const CollectionsView = () => {
   const { user } = useDiscordAuth();
   const { toast } = useToast();
   
-  // Get active characters to calculate account power
-  const { characters, auraInventory, buildings } = useGameStore();
+  // Get active characters and auras to calculate account power
+  // Destructure explicitly to ensure the component rerenders when these values change
+  const { 
+    characters, 
+    auraInventory, 
+    buildings 
+  } = useGameStore();
   
   // Mock perks data (for skill tree)
   const [perks, setPerks] = useState([
@@ -139,8 +144,17 @@ const CollectionsView = () => {
       if (equippedAuraId) {
         // Find the aura in inventory
         const equippedAura = auraInventory.find((aura: any) => aura.id === equippedAuraId);
-        if (equippedAura && equippedAura.statBonuses) {
-          auraBonus = equippedAura.statBonuses;
+        if (equippedAura) {
+          // Get the actual aura stats directly
+          auraBonus = {
+            attack: equippedAura.attack || 0,
+            vitality: equippedAura.vitality || 0,
+            speed: equippedAura.speed || 0,
+            focus: equippedAura.focus || 0,
+            accuracy: equippedAura.accuracy || 0,
+            defense: equippedAura.defense || 0,
+            resilience: equippedAura.resilience || 0
+          };
         }
       }
       
