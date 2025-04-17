@@ -452,7 +452,10 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   
   // Create enemies based on dungeon level (adjust number based on ally count)
   const numEnemies = Math.min(5, Math.max(2, allies.length));
-  const enemies = generateEnemies(dungeonLevel, dungeonElement, numEnemies);
+  // Determine total stages 
+  const totalStages = run.totalStages || 3; // Default to 3 stages if not specified
+  // Generate enemies for first stage
+  const enemies = generateEnemies(dungeonLevel, dungeonElement, numEnemies, 1, totalStages);
   
   // Add battle start event
   battleLog.push({
@@ -569,8 +572,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     }
   }
   
-  // Set up multi-stage dungeon progression
-  const totalStages = run.totalStages || 3; // Default to 3 stages if not specified
+  // Set up multi-stage dungeon progression using totalStages declared above
   let currentStage = 1;
   let stagesCompleted = 0;
   let partyDefeated = livingAllies.length === 0;
@@ -619,11 +621,13 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     while (currentStage < totalStages && !partyDefeated) {
       currentStage++;
       
-      // Generate new enemies for this stage (slightly stronger)
+      // Generate new enemies for this stage (with appropriate difficulty scaling)
       const stageEnemies = generateEnemies(
         dungeonLevel + Math.floor(currentStage / 2), 
         dungeonElement,
-        numEnemies
+        numEnemies,
+        currentStage,  // Pass current stage number
+        totalStages    // Pass total stages
       );
       
       // Add stage start event
