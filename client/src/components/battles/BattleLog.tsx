@@ -195,7 +195,120 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   
   // Function to handle playback controls
   const togglePlayback = () => {
+    console.log("Toggle playback called, current isPaused:", isPaused);
+    
+    if (isPaused) {
+      // Starting playback
+      if (!battleAnimationRef.current) {
+        console.log("Starting battle animation");
+        advanceBattle();
+      }
+    } else {
+      // Pausing playback
+      if (battleAnimationRef.current) {
+        console.log("Pausing battle animation");
+        clearTimeout(battleAnimationRef.current);
+        battleAnimationRef.current = null;
+      }
+    }
+    
     setIsPaused(!isPaused);
+  };
+  
+  // Function to advance the battle animation
+  const advanceBattle = () => {
+    console.log("Advancing battle, current step:", battleStepRef.current);
+    
+    // Increment action counter
+    setCurrentAction(prev => prev + 1);
+    
+    // Update battle state based on log
+    if (battleLog && battleLog.length > battleStepRef.current) {
+      const event = battleLog[battleStepRef.current];
+      console.log("Processing event:", event.type);
+      
+      // Process event based on type
+      if (event.type === 'round') {
+        // Round events have actions
+        if (event.actions && event.actions.length > 0) {
+          // Add log entries for each action
+          event.actions.forEach(action => {
+            setActionLog(prev => [...prev, 
+              `${action.actor} used ${action.skill} on ${action.target} for ${action.damage} damage${action.isCritical ? ' (CRITICAL!)' : ''}`
+            ]);
+          });
+        }
+        
+        // Update unit health based on remaining units
+        if (event.allies && Array.isArray(event.allies)) {
+          setUnits(prev => {
+            const updatedUnits = [...prev];
+            // Update ally units
+            for (const ally of event.allies || []) {
+              const allyIndex = updatedUnits.findIndex(u => u.id === ally.id);
+              if (allyIndex >= 0) {
+                updatedUnits[allyIndex] = {
+                  ...updatedUnits[allyIndex],
+                  ...ally
+                };
+              }
+            }
+            return updatedUnits;
+          });
+        }
+        
+        if (event.enemies && Array.isArray(event.enemies)) {
+          setUnits(prev => {
+            const updatedUnits = [...prev];
+            // Update enemy units
+            for (const enemy of event.enemies || []) {
+              const enemyIndex = updatedUnits.findIndex(u => u.id === enemy.id);
+              if (enemyIndex >= 0) {
+                updatedUnits[enemyIndex] = {
+                  ...updatedUnits[enemyIndex],
+                  ...enemy
+                };
+              }
+            }
+            return updatedUnits;
+          });
+        }
+      } else if (event.type === 'stage_complete') {
+        // Stage completion
+        setCurrentStage(event.currentStage || 0);
+        if (event.message && typeof event.message === 'string') {
+          setActionLog(prev => [...prev, event.message as string]);
+        }
+      } else if (event.type === 'battle_end') {
+        // Battle ended
+        setIsComplete(true);
+        if (event.message && typeof event.message === 'string') {
+          setActionLog(prev => [...prev, event.message as string]);
+        }
+      } else if (event.type === 'system_message') {
+        // System message
+        if (event.system_message && typeof event.system_message === 'string') {
+          setActionLog(prev => [...prev, event.system_message as string]);
+        }
+      }
+      
+      // Increment step
+      battleStepRef.current += 1;
+    } else {
+      // End of battle log
+      setActionLog(prev => [...prev, "Battle playback complete"]);
+      setIsPaused(true);
+      return;
+    }
+    
+    // Schedule next step with delay based on playback speed
+    const delay = Math.max(200, 1000 / playbackSpeed);
+    battleAnimationRef.current = setTimeout(() => {
+      // Only continue if still in playback mode
+      if (!isPaused) {
+        advanceBattle();
+      }
+    }, delay);
   };
   
   // Function to handle changing playback speed
@@ -413,8 +526,41 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const restartBattle = () => {
     // Reset state
     setCurrentStage(0);
+    setCurrentAction(0);
     setIsPaused(true);
+    
+    // Clear any pending animation
+    if (battleAnimationRef.current) {
+      clearTimeout(battleAnimationRef.current);
+      battleAnimationRef.current = null;
+    }
+    
+    // Reset battle step counter
+    battleStepRef.current = 0;
+    
+    // Reset action log
     setActionLog(['Battle restarted. Press Play to begin...']);
+    
+    // Re-extract initial units from battle log
+    const initEvent = battleLog.find(event => 
+      event.type === 'battle_start' || 
+      event.type === 'init'
+    );
+    
+    if (initEvent) {
+      // Extract allies and enemies
+      const allies = (initEvent.allies || []).map(unit => ({
+        ...unit,
+        isAlly: true
+      }));
+      const enemies = (initEvent.enemies || []).map(unit => ({
+        ...unit,
+        isAlly: false
+      }));
+      
+      // Set units state
+      setUnits([...allies, ...enemies]);
+    }
   };
   
   // Function to handle complete dungeon button
