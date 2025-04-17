@@ -83,11 +83,16 @@ interface BattleEvent {
   remainingEnemies?: number;  // Number of enemies still alive after round
   // Stage progression properties
   currentStage?: number;
+  totalStages?: number;       // Total number of stages in the dungeon
   message?: string;
   aliveAllies?: BattleUnit[];
   newEnemies?: BattleUnit[];
   // System message
   system_message?: string;
+  // Battle completion
+  summary?: string;           // Summary of the battle outcome
+  victory?: boolean;          // Whether the battle was won
+  survivingAllies?: string[]; // Names of surviving allies
 }
 
 interface BattleLogProps {
@@ -407,20 +412,27 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             setUnits(prev => {
               // Filter out dead allies and keep enemies for visualization
               const updatedUnits = prev.filter(unit => 
-                !unit.isAlly || (unit.isAlly && event.aliveAllies.some(a => a.id === unit.id))
+                !unit.isAlly || (unit.isAlly && 
+                  event.aliveAllies && 
+                  Array.isArray(event.aliveAllies) && 
+                  event.aliveAllies.some(a => a && a.id === unit.id))
               );
               
               // Update ally stats
-              for (const ally of event.aliveAllies) {
-                const allyIndex = updatedUnits.findIndex(u => u.id === ally.id);
-                if (allyIndex >= 0) {
-                  updatedUnits[allyIndex] = {
-                    ...updatedUnits[allyIndex],
-                    ...ally,
-                    isAlly: true,
-                    hp: ally.hp || ally.maxHp, // Ensure HP is set
-                    attackMeter: 0 // Reset attack meter for next stage
-                  };
+              if (event.aliveAllies && Array.isArray(event.aliveAllies)) {
+                for (const ally of event.aliveAllies) {
+                  if (ally) {
+                    const allyIndex = updatedUnits.findIndex(u => u.id === ally.id);
+                    if (allyIndex >= 0) {
+                      updatedUnits[allyIndex] = {
+                        ...updatedUnits[allyIndex],
+                        ...ally,
+                        isAlly: true,
+                        hp: (ally.hp != null) ? ally.hp : ally.maxHp, // Ensure HP is set
+                        attackMeter: 0 // Reset attack meter for next stage
+                      };
+                    }
+                  }
                 }
               }
               
@@ -455,11 +467,15 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         } else if (event.type === 'battle_end') {
           // Battle ended
           setIsComplete(true);
-          const message = typeof event.message === 'string' 
-            ? event.message 
-            : event.summary 
-              ? event.summary 
-              : "Battle completed!";
+          // Handle battle end message with proper type checking
+          let message = "Battle completed!";
+          
+          if (typeof event.message === 'string') {
+            message = event.message;
+          } else if (typeof event.summary === 'string') {
+            message = event.summary;
+          }
+          
           setActionLog(prev => [...prev, message]);
         } else if (event.type === 'system_message') {
           // System message

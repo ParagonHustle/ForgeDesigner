@@ -180,7 +180,8 @@ export function registerDungeonRoutes(app: Express) {
         endTime: endTime || new Date(Date.now() + 3600000).toISOString(), // Default 1 hour
         completed: false,
         success: false,
-        battleLog: null
+        battleLog: null,
+        totalStages: 3 // Set up multi-stage dungeon with 3 stages by default
       };
       
       const run = await storage.createDungeonRun(runData);
@@ -303,6 +304,8 @@ export function registerDungeonRoutes(app: Express) {
       
       // Create a battle log if needed
       if (!run.battleLog) {
+        // Make sure we include totalStages
+        run.totalStages = run.totalStages || 3; // Default to 3 stages
         run.battleLog = await processBattleLog(run, success);
       }
       
