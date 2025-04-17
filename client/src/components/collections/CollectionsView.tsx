@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/lib/zustandStore';
 import { useDiscordAuth } from '@/lib/discordAuth';
 import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,16 @@ const CollectionsView = () => {
     auraInventory, 
     buildings 
   } = useGameStore();
+  
+  // Force refresh character and aura data when the collections component mounts
+  useEffect(() => {
+    // Refresh character and aura data to ensure we have the latest stats
+    console.log('Collections component mounted - refreshing character and aura data');
+    queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/auras'] });
+    queryClient.refetchQueries({ queryKey: ['/api/characters'] });
+    queryClient.refetchQueries({ queryKey: ['/api/auras'] });
+  }, []);
   
   // Mock perks data (for skill tree)
   const [perks, setPerks] = useState([
@@ -179,9 +190,14 @@ const CollectionsView = () => {
     const buildingLevels = buildings.reduce((total: number, building: any) => total + (building.level || 0), 0);
     totalPower += buildingLevels * 100;
     
+    console.log('Account power calculated:', totalPower);
+    console.log('Characters count:', characters.length);
+    console.log('Auras count:', auraInventory.length);
+    
     return totalPower;
   };
   
+  // Recalculate account power whenever any of the dependencies change
   const accountPower = calculateAccountPower();
   const skillPoints = Math.floor(accountPower / 1000) - perks.reduce((total, perk) => total + perk.level, 0);
   
