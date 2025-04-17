@@ -194,6 +194,24 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(auras).where(eq(auras.id, id));
     return !!result.rowCount;
   }
+  
+  async getCharacterAuras(characterId: number): Promise<Aura[]> {
+    // Find the character first to get its userId
+    const character = await this.getCharacterById(characterId);
+    if (!character) {
+      return [];
+    }
+    
+    // Get all auras for this user that are equipped on this character
+    return db.select()
+      .from(auras)
+      .where(
+        and(
+          eq(auras.userId, character.userId),
+          eq(auras.equippedByCharacterId, characterId)
+        )
+      );
+  }
 
   async getResources(userId: number): Promise<Resource[]> {
     return db.select().from(resources).where(eq(resources.userId, userId));

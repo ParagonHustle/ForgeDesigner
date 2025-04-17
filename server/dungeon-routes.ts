@@ -61,16 +61,15 @@ async function processBattleLog(run: any, success: boolean) {
       
       if (auras && auras.length > 0) {
         auras.forEach(aura => {
-          if (aura.equipped) {
-            // Add stat bonuses from this aura
-            if (aura.statType === 'attack') auraBonus.attack += aura.statBonus;
-            if (aura.statType === 'vitality') auraBonus.vitality += aura.statBonus;
-            if (aura.statType === 'speed') auraBonus.speed += aura.statBonus;
-            if (aura.statType === 'focus') auraBonus.focus += aura.statBonus;
-            if (aura.statType === 'accuracy') auraBonus.accuracy += aura.statBonus;
-            if (aura.statType === 'defense') auraBonus.defense += aura.statBonus;
-            if (aura.statType === 'resilience') auraBonus.resilience += aura.statBonus;
-          }
+          // Add stat bonuses directly from aura stats fields
+          // Note: Auras are already filtered to only include those equipped on this character
+          if (aura.attack) auraBonus.attack += aura.attack;
+          if (aura.vitality) auraBonus.vitality += aura.vitality;
+          if (aura.speed) auraBonus.speed += aura.speed;
+          if (aura.focus) auraBonus.focus += aura.focus;
+          if (aura.accuracy) auraBonus.accuracy += aura.accuracy;
+          if (aura.defense) auraBonus.defense += aura.defense;
+          if (aura.resilience) auraBonus.resilience += aura.resilience;
         });
       }
       
@@ -166,12 +165,16 @@ export function registerDungeonRoutes(app: Express) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
       
+      // Get dungeon type to retrieve element
+      const dungeonType = await storage.getDungeonTypeById(dungeonTypeId);
+      
       // Create the dungeon run
       const runData = {
         userId: req.user.id,
         dungeonTypeId,
         dungeonName: dungeonName || 'Unknown Dungeon',
         dungeonLevel: dungeonLevel || 1,
+        elementalType: dungeonType?.elementalType || 'neutral',
         characterIds,
         startTime: startTime || new Date().toISOString(),
         endTime: endTime || new Date(Date.now() + 3600000).toISOString(), // Default 1 hour

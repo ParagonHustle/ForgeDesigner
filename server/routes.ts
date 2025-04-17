@@ -885,8 +885,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Determine success (70% chance for simplicity)
       const success = Math.random() < 0.7;
       
-      // Generate battle log using proper battle system with character ID preprocessing
-      const battleLog = await processBattleLog(run, success);
+      // Note: Using the imported dungeon-routes module for processing
+      // This is a fallback that should never be called in practice
+      const battleLog = [{ 
+        type: 'system_message', 
+        timestamp: Date.now(), 
+        message: 'Dungeon run processing has been moved to the dungeon-routes module. Please use the new APIs.'
+      }];
       
       // Generate rewards if successful
       let rewards = null;
