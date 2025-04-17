@@ -1,0 +1,185 @@
+714:  app.get('/api/dungeons/types', authenticateUser, async (req, res) => {
+715-    try {
+716-      let dungeonTypes;
+717-      const { element, difficulty } = req.query;
+718-      
+719-      if (element) {
+720-        dungeonTypes = await storage.getDungeonTypesByElement(element as string);
+721-      } else if (difficulty) {
+722-        dungeonTypes = await storage.getDungeonTypesByDifficulty(difficulty as string);
+723-      } else {
+724-        dungeonTypes = await storage.getDungeonTypes();
+725-      }
+726-      
+727-      res.json(dungeonTypes);
+728-    } catch (error) {
+729-      console.error('Error fetching dungeon types:', error);
+730-      res.status(500).json({ message: 'Failed to fetch dungeon types' });
+731-    }
+732-  });
+733-
+734:  app.get('/api/dungeons/types/:id', authenticateUser, async (req, res) => {
+735-    try {
+736-      const dungeonType = await storage.getDungeonTypeById(parseInt(req.params.id));
+737-      
+738-      if (!dungeonType) {
+739-        return res.status(404).json({ message: 'Dungeon type not found' });
+740-      }
+741-      
+742-      res.json(dungeonType);
+743-    } catch (error) {
+744-      console.error('Error fetching dungeon type:', error);
+745-      res.status(500).json({ message: 'Failed to fetch dungeon type' });
+746-    }
+747-  });
+748-  
+749:  app.post('/api/dungeons/types', authenticateUser, async (req, res) => {
+750-    try {
+751-      // Only admins can create dungeon types
+752-      const user = await storage.getUserById(req.session.userId!);
+753-      if (!user?.isAdmin) {
+754-        return res.status(403).json({ message: 'Unauthorized to create dungeon types' });
+755-      }
+756-      
+757-      const dungeonType = await storage.createDungeonType(req.body);
+758-      res.status(201).json(dungeonType);
+759-    } catch (error) {
+760-      console.error('Error creating dungeon type:', error);
+761-      res.status(500).json({ message: 'Failed to create dungeon type' });
+762-    }
+763-  });
+764-  
+765:  app.patch('/api/dungeons/types/:id', authenticateUser, async (req, res) => {
+766-    try {
+767-      // Only admins can update dungeon types
+768-      const user = await storage.getUserById(req.session.userId!);
+769-      if (!user?.isAdmin) {
+770-        return res.status(403).json({ message: 'Unauthorized to update dungeon types' });
+771-      }
+772-      
+773-      const dungeonType = await storage.updateDungeonType(parseInt(req.params.id), req.body);
+774-      
+775-      if (!dungeonType) {
+776-        return res.status(404).json({ message: 'Dungeon type not found' });
+777-      }
+778-      
+779-      res.json(dungeonType);
+780-    } catch (error) {
+781-      console.error('Error updating dungeon type:', error);
+782-      res.status(500).json({ message: 'Failed to update dungeon type' });
+783-    }
+784-  });
+785-
+786:  app.get('/api/dungeons/runs', authenticateUser, async (req, res) => {
+787-    try {
+788-      const runs = await storage.getDungeonRuns(req.session.userId!);
+789-      res.json(runs);
+790-    } catch (error) {
+791-      console.error('Error fetching dungeon runs:', error);
+792-      res.status(500).json({ message: 'Failed to fetch dungeon runs' });
+793-    }
+794-  });
+795-  
+796:  app.post('/api/dungeons/start', authenticateUser, async (req, res) => {
+797-    try {
+798-      // Convert the endTime string to a Date object if it's a string
+799-      let endTimeData = req.body.endTime;
+800-      if (typeof endTimeData === 'string') {
+801-        endTimeData = new Date(endTimeData);
+802-        console.log('Converted dungeon endTime to Date object');
+803-      }
+804-      
+805-      // Apply speed boost to dungeon run time if needed
+806-      // We need to preserve the original end time from client but boost it server-side
+807-      const dungeonEndTime = new Date();
+808-      const duration = new Date(endTimeData).getTime() - dungeonEndTime.getTime();
+809-      const boostedDuration = applySpeedBoost(duration);
+810-      const boostedEndTime = new Date(dungeonEndTime.getTime() + boostedDuration);
+811-      console.log(`Applied speed boost: Original duration ${duration}ms, boosted ${boostedDuration}ms`);
+812-      endTimeData = boostedEndTime;
+813-      
+814-      const runData = insertDungeonRunSchema.parse({
+815-        ...req.body,
+816-        userId: req.session.userId,
+817-        startTime: new Date(),
+818-        endTime: endTimeData,
+819-        completed: false
+820-      });
+821-      
+822-      // Check if all characters are available
+823-      for (const charId of runData.characterIds) {
+824-        const character = await storage.getCharacterById(charId);
+825-        if (!character) {
+826-          return res.status(404).json({ message: `Character ${charId} not found` });
+827-        }
+828-        
+829-        if (character.isActive) {
+830-          return res.status(400).json({
+831-            message: `Character ${character.name} is already active in another task`
+832-          });
+833-        }
+834-        
+835-        // Check if character has an aura equipped
+836-        if (!character.equippedAuraId) {
+837-          return res.status(400).json({ 
+838-            message: `Character ${character.name} must have an aura equipped to enter dungeons` 
+839-          });
+840-        }
+841-      }
+842-      
+843-      // Mark all characters as active
+844-      for (const charId of runData.characterIds) {
+845-        await storage.updateCharacter(charId, {
+846-          isActive: true,
+--
+868:  app.post('/api/dungeons/complete/:id', authenticateUser, async (req, res) => {
+869-    try {
+870-      const runId = parseInt(req.params.id);
+871-      const run = await storage.getDungeonRunById(runId);
+872-      
+873-      if (!run) {
+874-        return res.status(404).json({ message: 'Dungeon run not found' });
+875-      }
+876-      
+877-      if (run.userId !== req.session.userId) {
+878-        return res.status(403).json({ message: 'Not authorized to access this run' });
+879-      }
+880-      
+881-      if (run.completed) {
+882-        return res.status(400).json({ message: 'Run already completed' });
+883-      }
+884-      
+885-      // Determine success (70% chance for simplicity)
+886-      const success = Math.random() < 0.7;
+887-      
+888-      // Generate battle log using proper battle system with character ID preprocessing
+889-      const battleLog = await processBattleLog(run, success);
+890-      
+891-      // Generate rewards if successful
+892-      let rewards = null;
+893-      if (success) {
+894-        rewards = {
+895-          rogueCredits: Math.floor(Math.random() * 101) + 50,
+896-          soulShards: Math.floor(Math.random() * 3) + 1,
+897-          materials: [
+898-            { name: 'Celestial Ore', amount: Math.floor(Math.random() * 11) + 5 }
+899-          ]
+900-        };
+901-        
+902-        // Update user resources
+903-        const user = await storage.getUserById(req.session.userId!);
+904-        if (user) {
+905-          await storage.updateUser(user.id, {
+906-            rogueCredits: user.rogueCredits + rewards.rogueCredits,
+907-            soulShards: user.soulShards + rewards.soulShards
+908-          });
+909-        }
+910-        
+911-        // Update material resources
+912-        for (const material of rewards.materials) {
+913-          const resource = await storage.getResourceByNameAndUserId(material.name, req.session.userId!);
+914-          if (resource) {
+915-            await storage.updateResource(resource.id, {
+916-              quantity: resource.quantity + material.amount
+917-            });
+918-          } else {
