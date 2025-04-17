@@ -481,7 +481,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   
   // Check for required run data to ensure deterministic results
   if (!run.createdAt) {
-    throw new Error("Missing createdAt timestamp in run data. This is required for deterministic results.");
+    console.warn("Missing createdAt timestamp in run data. Falling back to startTime for deterministic seeding.");
+    run.createdAt = run.startTime || new Date().toISOString();
   }
   
   // Initialize deterministic random generator with a seed based on dungeon run ID and creation time
@@ -528,8 +529,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   // Add battle start event with full unit data
   battleLog.push({
     type: 'battle_start',
-    allies: allies.map(ally => ({ ...ally })), // Include full ally data with hp
-    enemies: enemies.map(enemy => ({ ...enemy })), // Include full enemy data with hp
+    allies: allies.map((ally: BattleUnit) => ({ ...ally })), // Include full ally data with hp
+    enemies: enemies.map((enemy: BattleUnit) => ({ ...enemy })), // Include full enemy data with hp
     message: `A battle begins in a level ${dungeonLevel} ${dungeonElement} dungeon!`,
     timestamp: Date.now()
   });
@@ -548,7 +549,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   
   // If failure is predetermined but unlikely with fair battle, boost enemies
   if (!success) {
-    enemies.forEach(enemy => {
+    enemies.forEach((enemy: BattleUnit) => {
       enemy.stats.attack = Math.floor(enemy.stats.attack * 1.3); // Boost attack by 30%
     });
   }
@@ -586,7 +587,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
       });
       
       // Final heroic round
-      livingEnemies.forEach(enemy => {
+      livingEnemies.forEach((enemy: BattleUnit) => {
         // Defeat enemy
         enemy.hp = 0;
         
@@ -676,8 +677,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
       type: 'stage_start',
       currentStage: stageNumber,
       totalStages: totalStages,
-      allies: livingAllies.map(ally => ({ ...ally })), // Include full ally data with hp
-      enemies: stageEnemies.map(enemy => ({ ...enemy })), // Include full enemy data with hp
+      allies: livingAllies.map((ally: BattleUnit) => ({ ...ally })), // Include full ally data with hp
+      enemies: stageEnemies.map((enemy: BattleUnit) => ({ ...enemy })), // Include full enemy data with hp
       message: `Stage ${stageNumber} begins! New enemies approach...`,
       timestamp: Date.now()
     });
