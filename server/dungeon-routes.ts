@@ -139,12 +139,12 @@ export function registerDungeonRoutes(app: Express) {
   
   // Get all dungeon runs for the current user
   app.get('/api/dungeons/runs', async (req: Request, res: Response) => {
-    if (!req.user) {
+    if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     
     try {
-      const runs = await storage.getDungeonRuns(req.user.id);
+      const runs = await storage.getDungeonRuns(req.session.userId);
       res.json(runs);
     } catch (error) {
       console.error('Failed to fetch dungeon runs:', error);
@@ -154,7 +154,7 @@ export function registerDungeonRoutes(app: Express) {
   
   // Start a new dungeon run
   app.post('/api/dungeons/start', async (req: Request, res: Response) => {
-    if (!req.user) {
+    if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     
@@ -170,7 +170,7 @@ export function registerDungeonRoutes(app: Express) {
       
       // Create the dungeon run
       const runData = {
-        userId: req.user.id,
+        userId: req.session.userId,
         dungeonTypeId,
         dungeonName: dungeonName || 'Unknown Dungeon',
         dungeonLevel: dungeonLevel || 1,
@@ -193,7 +193,7 @@ export function registerDungeonRoutes(app: Express) {
   
   // Get a specific dungeon run
   app.get('/api/dungeons/runs/:id', async (req: Request, res: Response) => {
-    if (!req.user) {
+    if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     
@@ -205,7 +205,7 @@ export function registerDungeonRoutes(app: Express) {
         return res.status(404).json({ error: 'Dungeon run not found' });
       }
       
-      if (run.userId !== req.user.id) {
+      if (run.userId !== req.session.userId) {
         return res.status(403).json({ error: 'Unauthorized access to dungeon run' });
       }
       
@@ -218,7 +218,7 @@ export function registerDungeonRoutes(app: Express) {
   
   // Get battle log for a dungeon run
   app.get('/api/dungeons/runs/:id/battlelog', async (req: Request, res: Response) => {
-    if (!req.user) {
+    if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     
@@ -230,7 +230,7 @@ export function registerDungeonRoutes(app: Express) {
         return res.status(404).json({ error: 'Dungeon run not found' });
       }
       
-      if (run.userId !== req.user.id) {
+      if (run.userId !== req.session.userId) {
         return res.status(403).json({ error: 'Unauthorized access to dungeon run' });
       }
       
@@ -271,7 +271,7 @@ export function registerDungeonRoutes(app: Express) {
   
   // Complete a dungeon run
   app.post('/api/dungeons/complete/:id', async (req: Request, res: Response) => {
-    if (!req.user) {
+    if (!req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     
@@ -283,7 +283,7 @@ export function registerDungeonRoutes(app: Express) {
         return res.status(404).json({ error: 'Dungeon run not found' });
       }
       
-      if (run.userId !== req.user.id) {
+      if (run.userId !== req.session.userId) {
         return res.status(403).json({ error: 'Unauthorized access to dungeon run' });
       }
       
