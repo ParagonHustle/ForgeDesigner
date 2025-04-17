@@ -2791,77 +2791,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add error handling middleware
   app.use(handleErrors);
   
+  // Register dungeon routes from new, modular implementation
+  registerDungeonRoutes(app);
+  
   return httpServer;
 }
 
-// IMPORTANT: Using the battle system imported at the top of the file
+// NOTE: The battle log generation has been moved to the new modular dungeon-routes.ts implementation.
+// The following function is kept for reference but is no longer used.
 
-// Helper function to generate battle log with proper Attack Meter turn-based system
-// Implements the dungeon battle system as specified in the documentation
-/**
- * Processes character IDs and generates a proper battle log using the battle system
- */
+/*
 async function processBattleLog(run: any, success: boolean) {
-  // CRITICAL FIX: Before calling the battle system, ensure character IDs are processed correctly
-  if (!run.characterIds && typeof run.characterIds !== 'object') {
-    console.error('Missing or invalid characterIds in run:', run);
-    // Use an empty array as fallback if characterIds is missing
-    run.characterIds = [];
-  }
-  
-  // CRITICAL FIX: Add a note that reminds the battle system that characters MUST start at full health
-  console.log('CRITICAL REQUIREMENT: Characters must begin dungeon with FULL health (HP)');
-  // This informs the battle system that it's a fresh dungeon run and HP should be at max
-  
-  // Add special flag to ensure battle system knows to enforce full health
-  run._enforceFullHealth = true;
-  
-  // CRITICAL FIX: If any characters in the run have 0 HP, we need to 
-  // ensure a full reset occurs before battle start
-  if (run.characters && Array.isArray(run.characters)) {
-    let healthFixed = false;
-    run.characters.forEach((character: any) => {
-      if (character && (character.hp === 0 || character.hp !== character.maxHp)) {
-        console.warn(`Pre-battle health check: Character ${character.name || 'Unknown'} has incorrect HP (${character.hp}). Will be fixed in battle system.`);
-        healthFixed = true;
-      }
-    });
-    
-    if (healthFixed) {
-      console.log('Health issues detected in characters - battle system will enforce full health');
-    }
-  }
-  
-  // Make characterIds always an array
-  if (!Array.isArray(run.characterIds)) {
-    // If it's a string or other format, try to parse it if possible
-    try {
-      if (typeof run.characterIds === 'string') {
-        run.characterIds = JSON.parse(run.characterIds);
-      } else {
-        // If it's not a string, convert to string and try to parse
-        const idString = String(run.characterIds);
-        // Check if it looks like a Postgres array representation
-        if (idString.startsWith('{') && idString.endsWith('}')) {
-          // Parse Postgres array format {1,2,3} to JavaScript array [1,2,3]
-          run.characterIds = idString.slice(1, -1).split(',').map(id => parseInt(id.trim()));
-        } else {
-          // Default to empty array if we can't parse
-          console.error('Could not parse characterIds:', run.characterIds);
-          run.characterIds = [];
-        }
-      }
-    } catch (error) {
-      console.error('Error parsing characterIds:', error);
-      run.characterIds = [];
-    }
-  }
-  
-  console.log('Processed characterIds for battle log:', run.characterIds);
-  
-  // Call the dedicated battle system implementation
-  return await generateBattleLog(run, success);
+  // See dungeon-routes.ts for the new implementation
+  return [];
 }
+*/
 
 // Function to handle building skill routes
 export async function addBuildingSkillRoutes(app: Express) {

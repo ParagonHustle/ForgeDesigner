@@ -30,6 +30,7 @@ export interface IStorage {
   // Aura methods
   getAuras(userId: number): Promise<Aura[]>;
   getAuraById(id: number): Promise<Aura | undefined>;
+  getCharacterAuras(characterId: number): Promise<Aura[]>;
   createAura(aura: InsertAura): Promise<Aura>;
   updateAura(id: number, updates: Partial<Aura>): Promise<Aura | undefined>;
   deleteAura(id: number): Promise<boolean>;
