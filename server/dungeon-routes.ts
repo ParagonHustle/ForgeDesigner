@@ -8,7 +8,7 @@ import { generateBattleLog } from "./new-battle-system";
  * @param success Whether the run should succeed
  * @returns Battle log data
  */
-async function processBattleLog(run: any, success: boolean) {
+async function processBattleLog(run: any, success: boolean): Promise<any[]> {
   // Check if we've already generated a battle log for this run
   if (run.battleLog && Array.isArray(run.battleLog) && run.battleLog.length > 0) {
     console.log('Using existing battle log for run', run.id);
@@ -16,7 +16,7 @@ async function processBattleLog(run: any, success: boolean) {
   }
   
   // Process character IDs
-  let characterIds = [];
+  let characterIds: number[] = [];
   
   if (Array.isArray(run.characterIds)) {
     characterIds = run.characterIds;
@@ -25,7 +25,7 @@ async function processBattleLog(run: any, success: boolean) {
       characterIds = JSON.parse(run.characterIds);
     } catch (error) {
       console.error('Failed to parse character IDs:', error);
-      characterIds = run.characterIds.split(',').map(id => parseInt(id.trim()));
+      characterIds = run.characterIds.split(',').map((id: string) => parseInt(id.trim()));
     }
   }
   
