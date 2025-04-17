@@ -116,11 +116,18 @@ export default function BattleLog({
   
   // Process battle log on initial load
   useEffect(() => {
-    if (isOpen && battleLog && battleLog.length > 0) {
+    if (isOpen) {
       console.log('Processing battle log:', battleLog);
       
       // Initialize messages
       const messages: string[] = [];
+      
+      // If there's no battle log data or it's empty, add a default message
+      if (!battleLog || battleLog.length === 0) {
+        messages.push('No battle data available. You can still complete this dungeon to free your characters.');
+        setBattleMessages(messages);
+        return;
+      }
       
       // Process each event in the log
       battleLog.forEach(event => {
@@ -234,8 +241,11 @@ export default function BattleLog({
           <TabsContent value="battle" className="flex-1 min-h-0 flex flex-col">
             <ScrollArea className="flex-1 rounded-md border border-[#432874] p-4 bg-[#251942]">
               {battleMessages.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-[#C8B8DB]">
-                  No battle data available
+                <div className="flex flex-col items-center justify-center h-full text-[#C8B8DB] space-y-2 py-8">
+                  <div className="text-center">
+                    <p className="font-medium text-[#E5DBFF]">No battle data available</p>
+                    <p className="text-sm mt-1">Click the "Complete Dungeon & Claim Rewards" button below to free your characters</p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -354,16 +364,21 @@ export default function BattleLog({
           </TabsContent>
         </Tabs>
         
-        <DialogFooter>
-          {isVictory !== null && (
-            <Button 
-              onClick={handleComplete} 
-              className="w-full"
-              variant={isVictory ? "default" : "destructive"}
-            >
-              {isVictory ? 'Claim Rewards' : 'Return to Town'}
-            </Button>
-          )}
+        <DialogFooter className="flex flex-col gap-2 sm:gap-0">
+          {/* Always show a button to claim rewards/complete dungeon, 
+              regardless of battle log state */}
+          <Button 
+            onClick={handleComplete} 
+            className="w-full"
+            variant="default"
+            size="lg"
+          >
+            Complete Dungeon & Claim Rewards
+          </Button>
+          
+          <div className="text-xs text-center text-muted-foreground mt-1">
+            Completing this dungeon will free your characters for other tasks
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
