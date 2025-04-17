@@ -125,7 +125,9 @@ const CharacterCard = ({
   };
 
   // Calculate total stat bonus for an aura (sum of all stat percentages)
-  const calculateTotalStats = (aura: Aura): number => {
+  const calculateTotalStats = (aura: Aura | null | undefined): number => {
+    if (!aura) return 0;
+    
     let total = 0;
     total += aura.attack || 0;
     total += aura.vitality || 0;
@@ -434,7 +436,12 @@ const CharacterCard = ({
                         {getElementIcon(aura.element)} 
                         <span className="ml-2 font-semibold text-[#FF9D00]">{aura.name}</span>
                       </div>
-                      <span className="text-xs px-2 py-0.5 bg-[#432874]/60 rounded-full">Level {aura.level}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs px-2 py-0.5 bg-[#432874]/60 rounded-full">Level {aura.level}</span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-[#00B9AE]/20 text-[#00B9AE] font-semibold">
+                          +{calculateTotalStats(aura)}%
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 text-xs mt-3">
@@ -542,6 +549,9 @@ const CharacterCard = ({
                         <div>Element: {selectedAura.element}</div>
                         <div>Level: {selectedAura.level}</div>
                         <div>Tier: {selectedAura.tier}</div>
+                        <div className="text-[#00B9AE] font-semibold">
+                          Total Bonus: +{calculateTotalStats(selectedAura)}%
+                        </div>
                       </div>
 
                       {skills && skills.length > 0 && (
@@ -818,8 +828,15 @@ const CharacterCard = ({
                         </div>
                         <div>
                           <div className="text-[#00B9AE] font-semibold">{(aura || equippedAura)?.name}</div>
-                          <div className="text-xs text-[#C8B8DB]/80">
-                            Level {(aura || equippedAura)?.level} • Tier {(aura || equippedAura)?.tier} • {(aura || equippedAura)?.element}
+                          <div className="flex items-center gap-2">
+                            <div className="text-xs text-[#C8B8DB]/80">
+                              Level {(aura || equippedAura)?.level} • Tier {(aura || equippedAura)?.tier} • {(aura || equippedAura)?.element}
+                            </div>
+                            {(aura || equippedAura) && (
+                              <div className="px-2 py-0.5 rounded bg-[#00B9AE]/20 text-[#00B9AE] text-xs font-semibold">
+                                Total: +{calculateTotalStats(aura || equippedAura)}%
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1521,8 +1538,15 @@ const CharacterCard = ({
                             </div>
                             <div>
                               <div className="text-[#00B9AE] text-sm">{(aura || equippedAura)?.name}</div>
-                              <div className="text-xs text-[#C8B8DB]/80">
-                                Level {(aura || equippedAura)?.level} • Tier {(aura || equippedAura)?.tier}
+                              <div className="flex items-center gap-2">
+                                <div className="text-xs text-[#C8B8DB]/80">
+                                  Level {(aura || equippedAura)?.level} • Tier {(aura || equippedAura)?.tier}
+                                </div>
+                                {(aura || equippedAura) && (
+                                  <div className="px-2 py-0.5 rounded bg-[#00B9AE]/20 text-[#00B9AE] text-xs font-semibold">
+                                    Total: +{calculateTotalStats(aura || equippedAura)}%
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
