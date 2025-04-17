@@ -232,9 +232,44 @@ export default function DungeonView() {
     });
   };
   
-  // Function to view battle log for a completed run
-  const handleViewBattleLog = (run: DungeonRun) => {
-    setActiveBattleLog(run.battleLog || []);
+  // Function to view battle log for a run
+  const handleViewBattleLog = async (run: DungeonRun) => {
+    // If the run is not yet completed but the endTime has passed, 
+    // we should fetch the battle log or generate it
+    if (!run.completed && new Date(run.endTime) <= new Date()) {
+      try {
+        // First try to fetch the battle log if it exists
+        if (!run.battleLog) {
+          const response = await fetch(`/api/dungeons/runs/${run.id}/battlelog`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data && Array.isArray(data)) {
+              setActiveBattleLog(data);
+            } else {
+              // If no battle log exists, we'll just show an empty array
+              // The BattleLog component should handle this gracefully
+              setActiveBattleLog([]);
+            }
+          } else {
+            setActiveBattleLog([]);
+          }
+        } else {
+          setActiveBattleLog(run.battleLog);
+        }
+      } catch (error) {
+        console.error("Error fetching battle log:", error);
+        toast({
+          title: 'Error fetching battle log',
+          description: 'There was a problem retrieving the battle data',
+          variant: 'destructive',
+        });
+        setActiveBattleLog([]);
+      }
+    } else {
+      // For already completed runs, just use the battleLog from the run
+      setActiveBattleLog(run.battleLog || []);
+    }
+    
     setActiveRunId(run.id);
     setShowBattleLog(true);
   };
@@ -272,21 +307,22 @@ export default function DungeonView() {
     ? (dungeonRuns as DungeonRun[]).filter((run: DungeonRun) => filterCompleted ? run.completed : true)
     : [];
   
-  // Debug to console for inspection
-  console.log('All dungeon runs:', dungeonRuns);
-  console.log('Filtered runs:', filteredRuns);
-  
-  // Group runs by completion status - Check for character IDs too
+  // Fix dungeon display issues: Show any run that's not completed
   const activeRuns = filteredRuns.filter((run: DungeonRun) => {
-    console.log('Checking run:', run);
-    return !run.completed && new Date(run.endTime) > new Date() && 
-           run.characterIds && run.characterIds.length > 0;
+    // Convert endTime to Date object for proper comparison
+    const endTimeDate = new Date(run.endTime);
+    
+    // Debug information (will remove once fixed)
+    console.log(`Run ${run.id} - completed: ${run.completed}, endTime: ${endTimeDate}, now: ${new Date()}`);
+    
+    // Any run that is not marked as completed should be shown in active runs
+    // regardless of end time to match dashboard behavior
+    return !run.completed;
   });
   
-  console.log('Active runs after filter:', activeRuns);
-  
   const completedRuns = filteredRuns.filter((run: DungeonRun) => 
-    run.completed || new Date(run.endTime) <= new Date()
+    // Only show runs explicitly marked as completed
+    run.completed === true
   );
   
   // Loading states
@@ -511,17 +547,15 @@ export default function DungeonView() {
                         </div>
                       </div>
                       
-                      {progress >= 100 && (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="mt-3 w-full"
-                          onClick={() => handleViewBattleLog(run)}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          View Battle Report
-                        </Button>
-                      )}
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="mt-3 w-full"
+                        onClick={() => handleViewBattleLog(run)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Battle Report
+                      </Button>
                     </div>
                   );
                 })}
