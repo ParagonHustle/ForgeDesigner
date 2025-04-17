@@ -130,7 +130,7 @@ export default function DungeonView() {
   // Mutation to start a dungeon run
   const startDungeonMutation = useMutation({
     mutationFn: (data: any) => {
-      return apiRequest('/api/dungeons/start', 'POST', data);
+      return apiRequest('POST', '/api/dungeons/start', data);
     },
     onSuccess: () => {
       toast({
@@ -151,7 +151,7 @@ export default function DungeonView() {
   // Mutation to complete a dungeon run
   const completeDungeonMutation = useMutation({
     mutationFn: (runId: number) => {
-      return apiRequest(`/api/dungeons/complete/${runId}`, 'POST');
+      return apiRequest('POST', `/api/dungeons/complete/${runId}`);
     },
     onSuccess: (data: any) => {
       toast({
