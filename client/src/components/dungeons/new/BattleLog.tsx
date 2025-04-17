@@ -112,6 +112,9 @@ export default function BattleLog({
   const [enemies, setEnemies] = useState<BattleUnit[]>([]);
   const [battleMessages, setBattleMessages] = useState<string[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
+  const [currentStage, setCurrentStage] = useState(1);
+  const [totalStages, setTotalStages] = useState(1);
+  const [stagesCompleted, setStagesCompleted] = useState(0);
   const [isVictory, setIsVictory] = useState<boolean | null>(null);
   
   // Process battle log on initial load
@@ -129,20 +132,48 @@ export default function BattleLog({
         return;
       }
       
+      console.log('Analyzing battle log for stage transitions');
+      const eventTypes = battleLog.map(event => event.type).join(', ');
+      console.log('Event types found:', eventTypes);
+      
+      // Look for stage_complete and stage_start events specifically
+      const stageCompleteEvents = battleLog.filter(event => event.type === 'stage_complete');
+      const stageStartEvents = battleLog.filter(event => event.type === 'stage_start');
+      
+      console.log(`Found ${stageCompleteEvents.length} stage_complete events and ${stageStartEvents.length} stage_start events`);
+      
       // Process each event in the log
-      battleLog.forEach(event => {
-        // Extract allies and enemies from battle_start event
+      battleLog.forEach((event, index) => {
+        // Extract battle configuration from battle_start event
         if (event.type === 'battle_start' || event.type === 'init') {
-          if (event.allies) setAllies(event.allies);
-          if (event.enemies) setEnemies(event.enemies);
+          if (event.allies) {
+            setAllies(event.allies);
+            console.log(`Set ${event.allies.length} initial allies`);
+          }
+          if (event.enemies) {
+            setEnemies(event.enemies);
+            console.log(`Set ${event.enemies.length} initial enemies`);
+          }
+          
+          // Set total stages if available 
+          if (event.totalStages) {
+            setTotalStages(event.totalStages);
+            console.log(`Set total stages to ${event.totalStages}`);
+          }
+          
           messages.push('Battle initialized.');
+          messages.push(`Entering a dungeon with ${event.totalStages || 'multiple'} stages.`);
         }
         
         // Process round events
         if (event.type === 'round') {
           const roundNum = event.number || 0;
           setCurrentRound(roundNum);
-          messages.push(`Round ${roundNum} begins.`);
+          
+          // Only add round begins message if this is a normal combat round (not a special transition round)
+          if (event.actions && event.actions.length > 0) {
+            messages.push(`Round ${roundNum} begins.`);
+          }
           
           // Process actions in the round
           if (event.actions) {
@@ -156,13 +187,23 @@ export default function BattleLog({
                 if (action.isCritical) actionText += ' (Critical hit!)';
               }
               
+              if (action.message) {
+                actionText = action.message;  // Override with custom message if provided
+              }
+              
               messages.push(actionText);
             });
           }
           
           // Update remaining combatants
           if (typeof event.remainingAllies === 'number' && typeof event.remainingEnemies === 'number') {
-            messages.push(`End of round: ${event.remainingAllies} allies and ${event.remainingEnemies} enemies remaining.`);
+            if (event.remainingEnemies === 0) {
+              messages.push(`All enemies defeated! End of round ${roundNum}.`);
+            } else if (event.remainingAllies === 0) {
+              messages.push(`Your party has been defeated! End of round ${roundNum}.`);
+            } else {
+              messages.push(`End of round ${roundNum}: ${event.remainingAllies} allies and ${event.remainingEnemies} enemies remaining.`);
+            }
           }
         }
         
@@ -174,7 +215,10 @@ export default function BattleLog({
         // Process stage transitions
         if (event.type === 'stage_complete') {
           console.log('Processing stage_complete event:', event);
-          if (event.currentStage) {
+          
+          if (event.currentStage !== undefined) {
+            setCurrentStage(event.currentStage);
+            setStagesCompleted(event.currentStage);
             messages.push(`Stage ${event.currentStage} completed! ${event.message || ''}`);
           }
           
@@ -188,7 +232,9 @@ export default function BattleLog({
         // Process new stage starting
         if (event.type === 'stage_start') {
           console.log('Processing stage_start event:', event);
-          if (event.currentStage) {
+          
+          if (event.currentStage !== undefined) {
+            setCurrentStage(event.currentStage);
             messages.push(`Stage ${event.currentStage} begins! ${event.message || ''}`);
           }
           
@@ -198,17 +244,26 @@ export default function BattleLog({
             setEnemies(event.enemies);
             messages.push(`New enemies appear for stage ${event.currentStage}!`);
           }
+          
+          // Mark start of a new stage in the battle log
+          messages.push(`--- Stage ${event.currentStage || '?'} ---`);
         }
         
         // Process battle end
         if (event.type === 'battle_end') {
           setIsVictory(!!event.victory);
+          
+          // Set completed stages if provided
+          if (event.completedStages !== undefined) {
+            setStagesCompleted(event.completedStages);
+          }
+          
           if (event.summary) {
             messages.push(event.summary);
           } else {
             messages.push(event.victory 
-              ? 'Victory! Your party defeated all enemies.' 
-              : 'Defeat! Your party was overwhelmed.');
+              ? `Victory! Your party conquered ${event.completedStages || stagesCompleted}/${event.totalStages || totalStages} stages.` 
+              : `Defeat! Your party was overwhelmed at stage ${event.currentStage || currentStage}.`);
           }
         }
       });
@@ -220,10 +275,14 @@ export default function BattleLog({
   
   // Handle closing the dialog
   const handleClose = () => {
+    // Reset all state
     setAllies([]);
     setEnemies([]);
     setBattleMessages([]);
     setCurrentRound(0);
+    setCurrentStage(1);
+    setTotalStages(1);
+    setStagesCompleted(0);
     setIsVictory(null);
     onClose();
   };
@@ -239,14 +298,33 @@ export default function BattleLog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Swords className="h-5 w-5" />
-            Battle Report {currentRound > 0 && `- Round ${currentRound}`}
+            {totalStages > 1 
+              ? `Battle Report - Stage ${currentStage}/${totalStages}` 
+              : 'Battle Report'} 
+            {currentRound > 0 && ` (Round ${currentRound})`}
           </DialogTitle>
           <DialogDescription>
-            {isVictory === true && 'Your party was victorious!'}
-            {isVictory === false && 'Your party was defeated.'}
-            {isVictory === null && 'Watch how your party performed in battle'}
+            {isVictory === true && `Your party completed ${stagesCompleted}/${totalStages} stages successfully!`}
+            {isVictory === false && `Your party was defeated at stage ${currentStage}.`}
+            {isVictory === null && `Multi-stage dungeon - progress through all ${totalStages} stages`}
           </DialogDescription>
         </DialogHeader>
+        
+        {/* Stage Progress Bar */}
+        {totalStages > 1 && (
+          <div className="mb-4">
+            <div className="flex justify-between text-xs mb-1">
+              <span>Stage Progress</span>
+              <span>{stagesCompleted}/{totalStages} Stages</span>
+            </div>
+            <div className="h-2 bg-[#1D1128] rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-[#7B4AE2] to-[#4AE292]"
+                style={{ width: `${(stagesCompleted / totalStages) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
         
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="flex-1 min-h-0 flex flex-col">
           <TabsList className="grid w-full grid-cols-2">
