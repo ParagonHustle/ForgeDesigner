@@ -172,14 +172,31 @@ export default function BattleLog({
         }
         
         // Process stage transitions
-        if (event.type === 'stage_transition') {
+        if (event.type === 'stage_complete') {
+          console.log('Processing stage_complete event:', event);
           if (event.currentStage) {
-            messages.push(`Advancing to stage ${event.currentStage}`);
+            messages.push(`Stage ${event.currentStage} completed! ${event.message || ''}`);
           }
           
-          if (event.enemies) {
+          // Update allies with the alive allies from this event
+          if (event.aliveAllies && Array.isArray(event.aliveAllies)) {
+            console.log(`Setting ${event.aliveAllies.length} alive allies from stage_complete event`);
+            setAllies(event.aliveAllies);
+          }
+        }
+        
+        // Process new stage starting
+        if (event.type === 'stage_start') {
+          console.log('Processing stage_start event:', event);
+          if (event.currentStage) {
+            messages.push(`Stage ${event.currentStage} begins! ${event.message || ''}`);
+          }
+          
+          // Update enemies with the new enemies for this stage
+          if (event.enemies && Array.isArray(event.enemies)) {
+            console.log(`Setting ${event.enemies.length} enemies from stage_start event`);
             setEnemies(event.enemies);
-            messages.push(`New enemies appear!`);
+            messages.push(`New enemies appear for stage ${event.currentStage}!`);
           }
         }
         
