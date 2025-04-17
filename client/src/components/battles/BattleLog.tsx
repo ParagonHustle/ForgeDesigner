@@ -220,6 +220,46 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     }
   };
   
+  // CRITICAL FIX: Update attack meters during battle animation
+  useEffect(() => {
+    // Only run this effect when battle is active and not paused
+    if (!isOpen || isPaused || units.length === 0) {
+      return;
+    }
+    
+    console.log("Setting up attack meter animation for active battle");
+    
+    // Create an interval to increment attack meters based on unit speed
+    const meterInterval = setInterval(() => {
+      setUnits(prevUnits => {
+        // Create a new array to ensure React triggers a re-render
+        return prevUnits.map(unit => {
+          // Skip defeated units
+          if (unit.hp <= 0) {
+            return unit;
+          }
+          
+          // Calculate speed-based meter gain (faster units fill meter quicker)
+          const speedMultiplier = unit.stats.speed / 50; // Base speed reference
+          const meterGain = 5 * Math.max(0.5, Math.min(2, speedMultiplier));
+          
+          // Create a new unit object with updated attack meter
+          return {
+            ...unit,
+            // Increment the attack meter without exceeding 100%
+            attackMeter: Math.min(100, (unit.attackMeter || 0) + meterGain)
+          };
+        });
+      });
+    }, 300); // Update every 300ms for smoother animation
+    
+    // Clean up interval on unmount or when battle state changes
+    return () => {
+      clearInterval(meterInterval);
+      console.log("Cleaned up attack meter animation interval");
+    };
+  }, [isOpen, isPaused, units.length]);
+  
   // Function to handle dialog close
   const handleClose = (open: boolean) => {
     if (!open) {
