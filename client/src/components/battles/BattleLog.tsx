@@ -119,24 +119,37 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   
   // Effect to process battle log when opened
   useEffect(() => {
-    if (isOpen && battleLog && battleLog.length > 0) {
-      // Initialize battle state
-      setActionLog(['Battle initialized. Press Play to begin...']);
-      setDetailedActionLog(['Welcome to the new dungeon battle system.']);
-      
-      // Extract initial units from battle_start event
-      const initEvent = battleLog.find(event => 
-        event.type === 'battle_start' || 
-        event.type === 'init'
-      );
-      
-      if (initEvent) {
-        // Extract allies and enemies
-        const allies = initEvent.allies || [];
-        const enemies = initEvent.enemies || [];
+    if (isOpen) {
+      if (battleLog && battleLog.length > 0) {
+        // Initialize battle state
+        setActionLog(['Battle initialized. Press Play to begin...']);
+        setDetailedActionLog(['Welcome to the new dungeon battle system.']);
         
-        // Set units state
-        setUnits([...allies, ...enemies]);
+        // Extract initial units from battle_start event
+        const initEvent = battleLog.find(event => 
+          event.type === 'battle_start' || 
+          event.type === 'init'
+        );
+        
+        if (initEvent) {
+          // Extract allies and enemies
+          const allies = initEvent.allies || [];
+          const enemies = initEvent.enemies || [];
+          
+          // Set units state
+          setUnits([...allies, ...enemies]);
+        }
+      } else {
+        // No battle log data
+        setActionLog([
+          'No battle data available.',
+          'You can still complete this dungeon to free your characters.',
+          'Click the "Complete Dungeon & Claim Rewards" button below.'
+        ]);
+        setDetailedActionLog([
+          'This dungeon has no battle log, but you can still complete it.',
+          'Completing the dungeon will free your characters for other tasks.'
+        ]);
       }
     }
   }, [isOpen, battleLog]);
@@ -508,8 +521,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           </TabsContent>
         </Tabs>
         
-        <DialogFooter className="flex justify-between items-center">
-          <div className="flex gap-2">
+        <DialogFooter className="flex flex-col gap-2">
+          <div className="flex justify-between items-center w-full">
             <Button 
               size="sm" 
               variant="outline" 
@@ -518,32 +531,33 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             >
               Restart
             </Button>
-            {runId && onCompleteDungeon && (
-              <Button 
-                size="lg" 
-                onClick={handleCompleteDungeon}
-                className="w-full mt-2 bg-[#6A3FB5] hover:bg-[#8352D3]"
-              >
-                Complete Dungeon & Claim Rewards
-              </Button>
-            )}
             
-            {runId && onCompleteDungeon && (
-              <div className="text-xs text-center text-[#C8B8DB] mt-1">
-                Completing this dungeon will free your characters for other tasks
-              </div>
-            )}
+            <DialogClose asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-8"
+              >
+                Close
+              </Button>
+            </DialogClose>
           </div>
           
-          <DialogClose asChild>
+          {runId && onCompleteDungeon && (
             <Button 
-              variant="outline" 
-              size="sm"
-              className="h-8"
+              size="lg" 
+              onClick={handleCompleteDungeon}
+              className="w-full mt-2 bg-[#6A3FB5] hover:bg-[#8352D3]"
             >
-              Close
+              Complete Dungeon & Claim Rewards
             </Button>
-          </DialogClose>
+          )}
+          
+          {runId && onCompleteDungeon && (
+            <div className="text-xs text-center text-[#C8B8DB] mt-1">
+              Completing this dungeon will free your characters for other tasks
+            </div>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
