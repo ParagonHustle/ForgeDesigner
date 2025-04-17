@@ -240,6 +240,9 @@ export function registerDungeonRoutes(app: Express) {
         const success = Math.random() < 0.7;
         
         // Process the battle log
+        // Make sure we include totalStages in the run object
+        run.totalStages = run.totalStages || 3; // Default to 3 stages
+        
         const battleLog = await processBattleLog(run, success);
         
         // Mark as completed but don't save yet
