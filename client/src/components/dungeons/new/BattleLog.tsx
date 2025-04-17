@@ -97,8 +97,8 @@ interface BattleLogProps {
 }
 
 /**
- * BattleLog Component - Simplified Version
- * Displays battle log events in a structured format
+ * BattleLog Component - Enhanced Version
+ * Displays battle log events in a structured format with stage progression
  */
 export default function BattleLog({ 
   isOpen, 
@@ -116,11 +116,18 @@ export default function BattleLog({
   const [totalStages, setTotalStages] = useState(1);
   const [stagesCompleted, setStagesCompleted] = useState(0);
   const [isVictory, setIsVictory] = useState<boolean | null>(null);
+  const [currentView, setCurrentView] = useState<'start' | 'battle' | 'end'>('start');
   
   // Process battle log on initial load
   useEffect(() => {
     if (isOpen) {
       console.log('Processing battle log:', battleLog);
+      
+      // Reset state when opening a new battle log
+      setCurrentStage(1);
+      setStagesCompleted(0);
+      setCurrentRound(0);
+      setIsVictory(null);
       
       // Initialize messages
       const messages: string[] = [];
@@ -133,14 +140,59 @@ export default function BattleLog({
       }
       
       console.log('Analyzing battle log for stage transitions');
-      const eventTypes = battleLog.map(event => event.type).join(', ');
-      console.log('Event types found:', eventTypes);
+      
+      // Find the initial battle_start event to properly initialize character stats
+      const battleStartEvent = battleLog.find(event => 
+        event.type === 'battle_start' || 
+        event.type === 'init' || 
+        (event.type === 'stage_start' && event.currentStage === 1)
+      );
+      
+      // Find the first stage event to correctly handle character HP
+      if (battleStartEvent) {
+        console.log('Found initial battle setup event:', battleStartEvent);
+        
+        // Set initial allies with proper HP
+        if (battleStartEvent.allies && battleStartEvent.allies.length > 0) {
+          // Make sure initial characters have their full HP
+          const initialAllies = battleStartEvent.allies.map(ally => ({
+            ...ally,
+            hp: ally.maxHp // Start with full health
+          }));
+          setAllies(initialAllies);
+          console.log(`Set ${initialAllies.length} initial allies with full HP`);
+        }
+        
+        // Set initial enemies
+        if (battleStartEvent.enemies && battleStartEvent.enemies.length > 0) {
+          setEnemies(battleStartEvent.enemies);
+          console.log(`Set ${battleStartEvent.enemies.length} initial enemies`);
+        }
+        
+        // Set total stages if available
+        if (battleStartEvent.totalStages) {
+          setTotalStages(battleStartEvent.totalStages);
+          console.log(`Set total stages to ${battleStartEvent.totalStages}`);
+        }
+      }
       
       // Look for stage_complete and stage_start events specifically
       const stageCompleteEvents = battleLog.filter(event => event.type === 'stage_complete');
       const stageStartEvents = battleLog.filter(event => event.type === 'stage_start');
       
+      // Find the final battle result for proper stage counting
+      const battleEndEvent = battleLog.find(event => event.type === 'battle_end');
+      if (battleEndEvent) {
+        if (battleEndEvent.completedStages) {
+          setStagesCompleted(battleEndEvent.completedStages);
+        }
+        setIsVictory(!!battleEndEvent.victory);
+      }
+      
       console.log(`Found ${stageCompleteEvents.length} stage_complete events and ${stageStartEvents.length} stage_start events`);
+      
+      // Ensure battle log is processed in the right order
+      messages.push('Battle begins! Your party enters the dungeon.');
       
       // Process each event in the log
       battleLog.forEach((event, index) => {
@@ -296,17 +348,32 @@ export default function BattleLog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Swords className="h-5 w-5" />
-            {totalStages > 1 
-              ? `Battle Report - Stage ${currentStage}/${totalStages}` 
-              : 'Battle Report'} 
-            {currentRound > 0 && ` (Round ${currentRound})`}
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Swords className="h-5 w-5" />
+              <span>
+                {totalStages > 1 
+                  ? `Battle Report - Stage ${currentStage}/${totalStages}` 
+                  : 'Battle Report'} 
+                {currentRound > 0 && ` (Round ${currentRound})`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 px-2 py-0 text-xs"
+                onClick={() => setCurrentStage(1)}
+              >
+                <Play className="h-3 w-3 mr-1" />
+                Restart
+              </Button>
+            </div>
           </DialogTitle>
           <DialogDescription>
             {isVictory === true && `Your party completed ${stagesCompleted}/${totalStages} stages successfully!`}
             {isVictory === false && `Your party was defeated at stage ${currentStage}.`}
-            {isVictory === null && `Multi-stage dungeon - progress through all ${totalStages} stages`}
+            {isVictory === null && `Multi-stage dungeon - battle through all ${totalStages} stages to complete`}
           </DialogDescription>
         </DialogHeader>
         
