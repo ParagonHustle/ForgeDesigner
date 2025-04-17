@@ -118,6 +118,7 @@ export const dungeonRuns = pgTable("dungeon_runs", {
   characterIds: integer("character_ids").array().notNull(),
   startTime: timestamp("start_time").defaultNow(),
   endTime: timestamp("end_time").notNull(),
+  createdAt: timestamp("created_at").defaultNow(), // Required for deterministic battle log generation
   completed: boolean("completed").default(false),
   success: boolean("success"),
   completedStages: integer("completed_stages").default(0),
