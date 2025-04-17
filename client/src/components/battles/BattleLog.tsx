@@ -640,6 +640,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     processNextAnimation();
   }, [isOpen, isPaused, animationQueue, animationInProgress, playbackSpeed, units]);
   
+
+  
   // References for animation control
   const battleAnimationRef = useRef<NodeJS.Timeout | null>(null);
   const battleStepRef = useRef<number>(0);
