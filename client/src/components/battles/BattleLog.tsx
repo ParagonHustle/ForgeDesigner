@@ -31,6 +31,7 @@ interface BattleUnit {
   hp: number;
   maxHp: number;
   attackMeter: number;
+  isAlly?: boolean;
   totalDamageDealt: number;
   totalDamageReceived: number;
   totalHealingDone: number;
@@ -133,8 +134,14 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         
         if (initEvent) {
           // Extract allies and enemies
-          const allies = initEvent.allies || [];
-          const enemies = initEvent.enemies || [];
+          const allies = (initEvent.allies || []).map(unit => ({
+            ...unit,
+            isAlly: true
+          }));
+          const enemies = (initEvent.enemies || []).map(unit => ({
+            ...unit,
+            isAlly: false
+          }));
           
           // Set units state
           setUnits([...allies, ...enemies]);
@@ -484,10 +491,115 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           
           <TabsContent value="battle" className="flex-1 overflow-hidden flex flex-col">
             <div className="flex-1 min-h-0 bg-[#1D1128] rounded-md p-4 relative">
-              {/* Battle visualization will go here */}
-              <div className="text-center text-gray-400 italic">
-                New battle visualization system is being implemented...
-              </div>
+              {units.length > 0 ? (
+                <div className="h-full flex flex-col">
+                  {/* Battle Arena */}
+                  <div className="flex-1 flex flex-col">
+                    {/* Enemies Section */}
+                    <div className="mb-6">
+                      <h3 className="text-red-400 font-semibold mb-2">Enemies</h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        {units
+                          .filter(unit => unit.id?.toString().includes('enemy') || (!unit.id?.toString().includes('player') && !unit.id?.toString().includes('ally')))
+                          .map((enemy, index) => (
+                            <div key={`enemy-${index}`} className="bg-[#251942] p-3 rounded-md border border-red-900/30">
+                              <div className="text-sm font-medium">{enemy.name}</div>
+                              <div className="mt-2 bg-gray-800 h-2 rounded-full w-full overflow-hidden">
+                                <div 
+                                  className="bg-red-500 h-full rounded-full" 
+                                  style={{ width: `${calculateHealthPercent(enemy.hp, enemy.maxHp)}%` }}
+                                />
+                              </div>
+                              <div className="flex justify-between text-xs mt-1">
+                                <span>HP: {Math.max(0, enemy.hp)}/{enemy.maxHp}</span>
+                                <span>{calculateHealthPercent(enemy.hp, enemy.maxHp).toFixed(0)}%</span>
+                              </div>
+                              
+                              {/* Attack Meter */}
+                              <div className="mt-3 bg-gray-800 h-1.5 rounded-full w-full overflow-hidden">
+                                <div 
+                                  className="bg-yellow-500 h-full rounded-full" 
+                                  style={{ width: `${enemy.attackMeter || 0}%` }}
+                                />
+                              </div>
+                              <div className="text-xs text-center mt-1">Attack: {(enemy.attackMeter || 0).toFixed(0)}%</div>
+                              
+                              {/* Status Effects */}
+                              {enemy.statusEffects && enemy.statusEffects.length > 0 && (
+                                <div className="flex gap-1 mt-2 flex-wrap">
+                                  {enemy.statusEffects.map((effect, i) => 
+                                    renderStatusEffect(effect, i, false)
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                    
+                    {/* Center Battle Area */}
+                    <div className="my-4 border-t border-b border-[#6A3FB5]/30 py-3 text-center">
+                      <div className="text-sm text-[#C8B8DB]">
+                        {currentAction > 0 ? 
+                          `Round ${Math.ceil(currentAction / (units.length || 1))}` : 
+                          'Battle initialized. Press Play to begin...'}
+                      </div>
+                    </div>
+                    
+                    {/* Allies Section */}
+                    <div className="mt-6">
+                      <h3 className="text-green-400 font-semibold mb-2">Your Team</h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        {units
+                          .filter(unit => unit.id?.toString().includes('player') || unit.id?.toString().includes('ally'))
+                          .map((ally, index) => (
+                            <div key={`ally-${index}`} className="bg-[#251942] p-3 rounded-md border border-green-900/30">
+                              <div className="text-sm font-medium">{ally.name}</div>
+                              <div className="mt-2 bg-gray-800 h-2 rounded-full w-full overflow-hidden">
+                                <div 
+                                  className="bg-green-500 h-full rounded-full" 
+                                  style={{ width: `${calculateHealthPercent(ally.hp, ally.maxHp)}%` }}
+                                />
+                              </div>
+                              <div className="flex justify-between text-xs mt-1">
+                                <span>HP: {Math.max(0, ally.hp)}/{ally.maxHp}</span>
+                                <span>{calculateHealthPercent(ally.hp, ally.maxHp).toFixed(0)}%</span>
+                              </div>
+                              
+                              {/* Attack Meter */}
+                              <div className="mt-3 bg-gray-800 h-1.5 rounded-full w-full overflow-hidden">
+                                <div 
+                                  className="bg-blue-500 h-full rounded-full" 
+                                  style={{ width: `${ally.attackMeter || 0}%` }}
+                                />
+                              </div>
+                              <div className="text-xs text-center mt-1">Attack: {(ally.attackMeter || 0).toFixed(0)}%</div>
+                              
+                              {/* Status Effects */}
+                              {ally.statusEffects && ally.statusEffects.length > 0 && (
+                                <div className="flex gap-1 mt-2 flex-wrap">
+                                  {ally.statusEffects.map((effect, i) => 
+                                    renderStatusEffect(effect, i, true)
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center">
+                  <div className="text-center text-gray-400 italic mb-4">
+                    No battle data available.
+                  </div>
+                  <div className="text-center text-sm max-w-md">
+                    You can still complete this dungeon to free your characters for other tasks.
+                    Click the "Complete Dungeon & Claim Rewards" button below.
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
           
