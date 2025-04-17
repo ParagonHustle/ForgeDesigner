@@ -55,7 +55,8 @@ import {
   Swords,
   Loader2,
   Flame,
-  User
+  User,
+  Zap
 } from 'lucide-react';
 
 // Custom components
@@ -457,12 +458,37 @@ export default function DungeonView() {
                     
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Badge variant="outline" className="bg-[#1D1128]">
-                        <Flame className="w-3 h-3 mr-1" />
-                        {(dungeonTypes as DungeonType[])?.find((d: DungeonType) => d.id === selectedDungeonId)?.element || 'Unknown'}
+                        {(() => {
+                          const element = (dungeonTypes as DungeonType[])?.find((d: DungeonType) => d.id === selectedDungeonId)?.element || 'Unknown';
+                          return (
+                            <>
+                              {element === 'Fire' && <Flame className="h-3 w-3 mr-1 text-orange-500" />}
+                              {element === 'Water' && <svg className="h-3 w-3 mr-1 text-blue-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>}
+                              {element === 'Earth' && <svg className="h-3 w-3 mr-1 text-green-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>}
+                              {element === 'Air' && <svg className="h-3 w-3 mr-1 text-sky-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" /></svg>}
+                              {element === 'Lightning' && <Zap className="h-3 w-3 mr-1 text-yellow-300" />}
+                              {element === 'Dark' && <svg className="h-3 w-3 mr-1 text-purple-700" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>}
+                              {element === 'Light' && <svg className="h-3 w-3 mr-1 text-yellow-200" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>}
+                              {!['Fire', 'Water', 'Earth', 'Air', 'Lightning', 'Dark', 'Light'].includes(element) && <Flame className="h-3 w-3 mr-1" />}
+                              {element}
+                            </>
+                          );
+                        })()}
                       </Badge>
                       <Badge variant="outline" className="bg-[#1D1128]">
-                        <Skull className="w-3 h-3 mr-1" />
-                        {(dungeonTypes as DungeonType[])?.find((d: DungeonType) => d.id === selectedDungeonId)?.difficulty || 'Normal'}
+                        {(() => {
+                          const difficulty = (dungeonTypes as DungeonType[])?.find((d: DungeonType) => d.id === selectedDungeonId)?.difficulty || 'Normal';
+                          return (
+                            <>
+                              {difficulty === 'Easy' && <svg className="h-3 w-3 mr-1 text-green-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+                              {difficulty === 'Normal' && <svg className="h-3 w-3 mr-1 text-blue-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>}
+                              {difficulty === 'Hard' && <Skull className="h-3 w-3 mr-1 text-orange-500" />}
+                              {difficulty === 'Heroic' && <svg className="h-3 w-3 mr-1 text-red-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>}
+                              {!['Easy', 'Normal', 'Hard', 'Heroic'].includes(difficulty) && <Skull className="h-3 w-3 mr-1" />}
+                              {difficulty}
+                            </>
+                          );
+                        })()}
                       </Badge>
                     </div>
                   </div>
@@ -609,14 +635,23 @@ export default function DungeonView() {
                       
                       <Progress value={progress} className="h-2 mb-3" />
                       
-                      <div className="flex justify-between items-center text-xs text-[#C8B8DB]">
-                        <div className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          <span>{getRemainingTimeText(run)}</span>
+                      <div className="flex justify-between items-start text-xs text-[#C8B8DB]">
+                        <div className="space-y-1">
+                          <div className="flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            <span>{getRemainingTimeText(run)}</span>
+                          </div>
+                          {run.totalStages && run.completedStages !== undefined && (
+                            <div className="flex items-center">
+                              <Flame className="h-3 w-3 mr-1 text-[#E97451]" />
+                              <span>Stage Progress: {run.completedStages}/{run.totalStages}</span>
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex items-center">
-                          <span>Characters: {run.characterIds.length}</span>
+                          <User className="h-3 w-3 mr-1" />
+                          <span>Party Size: {run.characterIds.length}</span>
                         </div>
                       </div>
                       
@@ -703,15 +738,32 @@ export default function DungeonView() {
                         <p className="font-medium">{run.dungeonLevel}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-sm text-[#C8B8DB]">Characters</p>
-                        <p className="font-medium">{run.characterIds.length} adventurers</p>
+                        <p className="text-sm text-[#C8B8DB]">Stage Progress</p>
+                        <p className="font-medium">
+                          {run.completedStages !== undefined && run.totalStages ? 
+                            `${run.completedStages}/${run.totalStages} Stages` : 
+                            run.success ? 'All Stages Completed' : 'Incomplete'}
+                        </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-sm text-[#C8B8DB]">Duration</p>
-                        <p className="font-medium">
-                          {formatDistanceToNow(new Date(run.startTime), { 
-                            addSuffix: false 
-                          })}
+                        <p className="text-sm text-[#C8B8DB]">Party Details</p>
+                        <p className="font-medium flex items-center">
+                          <User className="h-3 w-3 mr-1" />
+                          {run.characterIds.length} adventurers
+                          {run.elementalType && (
+                            <span className="flex items-center ml-2">
+                              •
+                              {run.elementalType === 'Fire' && <Flame className="h-3 w-3 mx-1 text-orange-500" />}
+                              {run.elementalType === 'Water' && <svg className="h-3 w-3 mx-1 text-blue-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>}
+                              {run.elementalType === 'Earth' && <svg className="h-3 w-3 mx-1 text-green-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>}
+                              {run.elementalType === 'Air' && <svg className="h-3 w-3 mx-1 text-sky-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" /></svg>}
+                              {run.elementalType === 'Lightning' && <Zap className="h-3 w-3 mx-1 text-yellow-300" />}
+                              {run.elementalType === 'Dark' && <svg className="h-3 w-3 mx-1 text-purple-700" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>}
+                              {run.elementalType === 'Light' && <svg className="h-3 w-3 mx-1 text-yellow-200" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>}
+                              {!['Fire', 'Water', 'Earth', 'Air', 'Lightning', 'Dark', 'Light'].includes(run.elementalType) && <Flame className="h-3 w-3 mx-1" />}
+                              {run.elementalType}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
