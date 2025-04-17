@@ -365,6 +365,36 @@ export function registerDungeonRoutes(app: Express) {
         completedStages
       });
       
+      // Free up characters when dungeon completes
+      try {
+        // Extract characterIds from the run data
+        let characterIds: number[] = [];
+        if (Array.isArray(run.characterIds)) {
+          characterIds = run.characterIds;
+        } else if (typeof run.characterIds === 'string') {
+          try {
+            characterIds = JSON.parse(run.characterIds);
+          } catch (e) {
+            // Handle case where characterIds might be a comma-separated string
+            characterIds = run.characterIds.split(',').map((id: string) => parseInt(id.trim()));
+          }
+        }
+        
+        console.log(`Freeing ${characterIds.length} characters from dungeon run ${runId}`);
+        
+        // Update each character to set isActive = false
+        for (const charId of characterIds) {
+          const character = await storage.getCharacterById(charId);
+          if (character && character.isActive) {
+            await storage.updateCharacter(charId, { isActive: false });
+            console.log(`Set character ${charId} (${character.name}) to not active`);
+          }
+        }
+      } catch (e) {
+        console.error('Error freeing characters from dungeon:', e);
+        // Don't fail the request if character updates fail
+      }
+      
       // TODO: Award rewards based on dungeon level and success/failure
       
       res.json({ 

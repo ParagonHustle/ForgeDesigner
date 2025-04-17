@@ -480,14 +480,19 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   console.log('Success preset:', success);
   
   // Check for required run data to ensure deterministic results
-  if (!run.createdAt) {
-    console.warn("Missing createdAt timestamp in run data. Falling back to startTime for deterministic seeding.");
-    run.createdAt = run.startTime || new Date().toISOString();
+  // Support both camelCase and snake_case database column formats
+  const createdTimestamp = run.createdAt || run.created_at || run.startTime || run.start_time || new Date().toISOString();
+  
+  if (!run.createdAt && !run.created_at) {
+    console.warn("Missing createdAt/created_at timestamp in run data. Falling back to startTime for deterministic seeding.");
   }
+  
+  // Ensure createdAt is set for future reference
+  run.createdAt = createdTimestamp;
   
   // Initialize deterministic random generator with a seed based on dungeon run ID and creation time
   // This ensures the same dungeon will always generate the same battle sequence
-  const createdAtTime = new Date(run.createdAt).getTime();
+  const createdAtTime = new Date(createdTimestamp).getTime();
   const seed = run.id * 1000 + (createdAtTime % 1000);
   dungeonRNG = new DeterministicRandom(seed);
   console.log(`Initialized deterministic RNG with seed: ${seed}`);
