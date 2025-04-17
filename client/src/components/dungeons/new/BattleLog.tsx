@@ -180,8 +180,35 @@ export default function BattleLog({
       const stageCompleteEvents = battleLog.filter(event => event.type === 'stage_complete');
       const stageStartEvents = battleLog.filter(event => event.type === 'stage_start');
       
-      // Find the final battle result for proper stage counting
+      // Find the dungeon_complete or battle_end event for final stage information
+      const dungeonCompleteEvent = battleLog.find(event => event.type === 'dungeon_complete');
       const battleEndEvent = battleLog.find(event => event.type === 'battle_end');
+      
+      // Extract the most accurate stage information
+      if (dungeonCompleteEvent) {
+        // Most reliable source of stage completion data
+        if (dungeonCompleteEvent.stagesCompleted !== undefined && dungeonCompleteEvent.totalStages !== undefined) {
+          setStagesCompleted(dungeonCompleteEvent.stagesCompleted);
+          setTotalStages(dungeonCompleteEvent.totalStages);
+          console.log(`From dungeon_complete: Completed ${dungeonCompleteEvent.stagesCompleted}/${dungeonCompleteEvent.totalStages} stages`);
+        }
+      } else if (battleEndEvent) {
+        // Second best source of stage completion data
+        if (battleEndEvent.completedStages !== undefined && battleEndEvent.totalStages !== undefined) {
+          setStagesCompleted(battleEndEvent.completedStages);
+          setTotalStages(battleEndEvent.totalStages);
+          console.log(`From battle_end: Completed ${battleEndEvent.completedStages}/${battleEndEvent.totalStages} stages`);
+        }
+      } else if (stageCompleteEvents.length > 0) {
+        // Third best - count the stage_complete events
+        setStagesCompleted(stageCompleteEvents.length);
+        if (stageCompleteEvents[0].totalStages) {
+          setTotalStages(stageCompleteEvents[0].totalStages);
+        }
+        console.log(`From stage_complete events: Completed ${stageCompleteEvents.length} stages`);
+      }
+      
+      // Process the battle log events for display
       if (battleEndEvent) {
         if (battleEndEvent.completedStages) {
           setStagesCompleted(battleEndEvent.completedStages);
