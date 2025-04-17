@@ -178,7 +178,11 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     const meterInterval = setInterval(() => {
       setUnits(prevUnits => {
         // Create a new array to ensure React detects the change
-        return prevUnits.map(unit => {
+        let updatedUnits = [...prevUnits];
+        let anyUnitReachedFull = false;
+        
+        // First pass: update meters for all units
+        updatedUnits = updatedUnits.map(unit => {
           // Skip defeated units
           if (unit.hp <= 0) {
             return unit;
@@ -187,13 +191,70 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           // Calculate speed-based meter gain
           const speedMultiplier = unit.stats.speed / 50;
           const meterGain = 5 * Math.max(0.5, Math.min(2, speedMultiplier));
+          const newMeterValue = Math.min(100, (unit.attackMeter || 0) + meterGain);
+          
+          // Check if any unit has reached 100%
+          if (newMeterValue >= 100 && (unit.attackMeter || 0) < 100) {
+            anyUnitReachedFull = true;
+          }
           
           // Return updated unit with new attack meter value
           return {
             ...unit,
-            attackMeter: Math.min(100, (unit.attackMeter || 0) + meterGain)
+            attackMeter: newMeterValue
           };
         });
+        
+        // Second pass: if any unit reached 100%, process an attack
+        if (anyUnitReachedFull) {
+          // Find the first unit with a full meter
+          const attackingUnitIndex = updatedUnits.findIndex(unit => unit.hp > 0 && unit.attackMeter >= 100);
+          
+          if (attackingUnitIndex >= 0) {
+            const attacker = updatedUnits[attackingUnitIndex];
+            
+            // Determine target (enemies target allies, allies target enemies)
+            const possibleTargets = updatedUnits.filter(unit => 
+              unit.hp > 0 && unit.isAlly !== attacker.isAlly
+            );
+            
+            if (possibleTargets.length > 0) {
+              // Choose a random target
+              const targetIndex = Math.floor(Math.random() * possibleTargets.length);
+              const target = possibleTargets[targetIndex];
+              const targetUnitIndex = updatedUnits.findIndex(u => u.id === target.id);
+              
+              // Calculate damage (basic attack)
+              const damage = Math.floor(attacker.stats.attack * 0.8 + Math.random() * attacker.stats.attack * 0.4);
+              const isCritical = Math.random() < 0.1; // 10% critical chance
+              const finalDamage = isCritical ? Math.floor(damage * 1.5) : damage;
+              
+              // Update target's health
+              const newHp = Math.max(0, target.hp - finalDamage);
+              updatedUnits[targetUnitIndex] = {
+                ...updatedUnits[targetUnitIndex],
+                hp: newHp
+              };
+              
+              // Reset attacker's meter
+              updatedUnits[attackingUnitIndex] = {
+                ...updatedUnits[attackingUnitIndex],
+                attackMeter: 0
+              };
+              
+              // Add attack log
+              const attackMessage = `${attacker.name} used ${attacker.skills.basic.name} on ${target.name} for ${finalDamage} damage${isCritical ? ' (CRITICAL!)' : ''}`;
+              setActionLog(prev => [...prev, attackMessage]);
+              
+              // If target defeated, add log
+              if (newHp <= 0) {
+                setActionLog(prev => [...prev, `${target.name} was defeated!`]);
+              }
+            }
+          }
+        }
+        
+        return updatedUnits;
       });
     }, 300); // Update every 300ms
     
@@ -312,11 +373,8 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           }
         } else if (event.type === 'battle_start' || event.type === 'init') {
           // Battle initialization
-          if (event.message && typeof event.message === 'string') {
-            setActionLog(prev => [...prev, event.message]);
-          } else {
-            setActionLog(prev => [...prev, "Battle initialized"]);
-          }
+          const message = typeof event.message === 'string' ? event.message : "Battle initialized";
+          setActionLog(prev => [...prev, message]);
           
           // Set initial units if needed
           if (units.length === 0 && event.allies && event.enemies) {
