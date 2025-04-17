@@ -1,7 +1,41 @@
 /**
  * New Battle System for The Forge
- * Simplified implementation with improved architecture
+ * Deterministic implementation with improved architecture
  */
+
+/**
+ * Random Number Generator with seeding for deterministic results
+ * This ensures dungeons always generate the same results when viewed multiple times
+ */
+class DeterministicRandom {
+  private seed: number;
+  private m: number = 2147483647;  // 2^31 - 1
+  private a: number = 16807;       // 7^5
+  private c: number = 0;
+
+  constructor(seed: number) {
+    this.seed = seed;
+  }
+
+  // Linear Congruential Generator formula: (a * seed + c) % m
+  next(): number {
+    this.seed = (this.a * this.seed + this.c) % this.m;
+    return this.seed / this.m; // Normalize to [0, 1)
+  }
+
+  // Get random integer between min (inclusive) and max (exclusive)
+  nextInt(min: number, max: number): number {
+    return Math.floor(this.next() * (max - min) + min);
+  }
+
+  // Random boolean with probability
+  nextBool(probability: number = 0.5): boolean {
+    return this.next() < probability;
+  }
+}
+
+// Global dungeon RNG
+let dungeonRNG: DeterministicRandom;
 
 /**
  * Type definitions for the battle system
@@ -269,8 +303,8 @@ function isCriticalHit(attacker: BattleUnit): boolean {
   // Cap critical chance at 30%
   criticalChance = Math.min(30, criticalChance);
   
-  // Determine if critical hit occurs
-  return Math.random() * 100 < criticalChance;
+  // Determine if critical hit occurs with deterministic RNG
+  return dungeonRNG.next() * 100 < criticalChance;
 }
 
 /**
@@ -335,8 +369,8 @@ function processRound(allies: BattleUnit[], enemies: BattleUnit[], roundNumber: 
     // Skip if no living enemies remain
     if (livingEnemies.length === 0) break;
     
-    // Select a random living enemy
-    const targetIndex = Math.floor(Math.random() * livingEnemies.length);
+    // Select a random living enemy using deterministic RNG
+    const targetIndex = dungeonRNG.nextInt(0, livingEnemies.length);
     const target = livingEnemies[targetIndex];
     
     // Determine which skill to use (simple implementation)
@@ -379,8 +413,8 @@ function processRound(allies: BattleUnit[], enemies: BattleUnit[], roundNumber: 
     // Skip if no living allies remain
     if (livingAllies.length === 0) break;
     
-    // Select a random living ally
-    const targetIndex = Math.floor(Math.random() * livingAllies.length);
+    // Select a random living ally using deterministic RNG
+    const targetIndex = dungeonRNG.nextInt(0, livingAllies.length);
     const target = livingAllies[targetIndex];
     
     // Determine which skill to use (simple implementation)
@@ -444,6 +478,12 @@ function processRound(allies: BattleUnit[], enemies: BattleUnit[], roundNumber: 
 export async function generateBattleLog(run: any, success: boolean): Promise<BattleEvent[]> {
   console.log('Generating battle log for run:', run.id);
   console.log('Success preset:', success);
+  
+  // Initialize deterministic random generator with a seed based on dungeon run ID and creation time
+  // This ensures the same dungeon will always generate the same battle sequence
+  const seed = run.id * 1000 + (new Date(run.createdAt || Date.now()).getTime() % 1000);
+  dungeonRNG = new DeterministicRandom(seed);
+  console.log(`Initialized deterministic RNG with seed: ${seed}`);
   
   // Create an empty battle log
   const battleLog: BattleEvent[] = [];
@@ -544,8 +584,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
         // Defeat enemy
         enemy.hp = 0;
         
-        // Random ally lands the finishing blow
-        const randomAlly = livingAllies[Math.floor(Math.random() * livingAllies.length)];
+        // Random ally lands the finishing blow using deterministic RNG
+        const randomAlly = livingAllies[dungeonRNG.nextInt(0, livingAllies.length)];
         
         battleLog.push({
           type: 'round',
