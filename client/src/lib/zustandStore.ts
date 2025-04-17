@@ -2,6 +2,18 @@ import { create } from 'zustand';
 import { apiRequest } from './queryClient';
 import type { User, Character, Aura, Resource, FarmingTask, DungeonRun, ForgingTask, BlackMarketListing, BountyQuest } from '@shared/schema';
 
+// Add selected character IDs to the store
+interface StoreState {
+  selectedCharacterIds: number[];
+  setSelectedCharacterIds: (characterIds: number[]) => void;
+}
+
+// Export a store specifically for selected character IDs
+export const useStore = create<StoreState>((set) => ({
+  selectedCharacterIds: [],
+  setSelectedCharacterIds: (characterIds) => set({ selectedCharacterIds: characterIds }),
+}));
+
 interface AuthState {
   user: User | null;
   isLoading: boolean;
