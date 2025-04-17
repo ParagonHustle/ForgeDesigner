@@ -272,10 +272,18 @@ export default function DungeonView() {
     ? (dungeonRuns as DungeonRun[]).filter((run: DungeonRun) => filterCompleted ? run.completed : true)
     : [];
   
-  // Group runs by completion status
-  const activeRuns = filteredRuns.filter((run: DungeonRun) => 
-    !run.completed && new Date(run.endTime) > new Date()
-  );
+  // Debug to console for inspection
+  console.log('All dungeon runs:', dungeonRuns);
+  console.log('Filtered runs:', filteredRuns);
+  
+  // Group runs by completion status - Check for character IDs too
+  const activeRuns = filteredRuns.filter((run: DungeonRun) => {
+    console.log('Checking run:', run);
+    return !run.completed && new Date(run.endTime) > new Date() && 
+           run.characterIds && run.characterIds.length > 0;
+  });
+  
+  console.log('Active runs after filter:', activeRuns);
   
   const completedRuns = filteredRuns.filter((run: DungeonRun) => 
     run.completed || new Date(run.endTime) <= new Date()
