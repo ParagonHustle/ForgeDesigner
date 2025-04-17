@@ -59,7 +59,7 @@ import {
 } from 'lucide-react';
 
 // Custom components
-import BattleLog from '../battles/BattleLog';
+import BattleLog from './new/BattleLog';
 // We'll handle character selection directly in this component for now
 // import CharacterSelection from '../characters/CharacterSelection';
 
