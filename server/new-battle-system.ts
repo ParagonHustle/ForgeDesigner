@@ -479,9 +479,15 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   console.log('Generating battle log for run:', run.id);
   console.log('Success preset:', success);
   
+  // Check for required run data to ensure deterministic results
+  if (!run.createdAt) {
+    throw new Error("Missing createdAt timestamp in run data. This is required for deterministic results.");
+  }
+  
   // Initialize deterministic random generator with a seed based on dungeon run ID and creation time
   // This ensures the same dungeon will always generate the same battle sequence
-  const seed = run.id * 1000 + (new Date(run.createdAt || Date.now()).getTime() % 1000);
+  const createdAtTime = new Date(run.createdAt).getTime();
+  const seed = run.id * 1000 + (createdAtTime % 1000);
   dungeonRNG = new DeterministicRandom(seed);
   console.log(`Initialized deterministic RNG with seed: ${seed}`);
   
@@ -519,11 +525,11 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   // Generate enemies for first stage
   const enemies = generateEnemies(dungeonLevel, dungeonElement, numEnemies, 1, totalStages);
   
-  // Add battle start event
+  // Add battle start event with full unit data
   battleLog.push({
     type: 'battle_start',
-    allies,
-    enemies,
+    allies: allies.map(ally => ({ ...ally })), // Include full ally data with hp
+    enemies: enemies.map(enemy => ({ ...enemy })), // Include full enemy data with hp
     message: `A battle begins in a level ${dungeonLevel} ${dungeonElement} dungeon!`,
     timestamp: Date.now()
   });
@@ -643,140 +649,146 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   console.log(`[STAGE SETUP] Initial living allies: ${livingAllies.length}`);
   console.log(`[STAGE SETUP] Party defeated status: ${partyDefeated}`);
   
+  /**
+   * Simulates a dungeon stage battle
+   * @param stageNumber The current stage number
+   * @param livingAllies The array of living allies
+   * @param enemies The array of enemies for this stage
+   * @param maxRounds Maximum rounds to simulate
+   * @returns Object with stage result data
+   */
+  function simulateStage(
+    stageNumber: number, 
+    livingAllies: BattleUnit[], 
+    stageEnemies: BattleUnit[], 
+    maxRounds: number
+  ): { 
+    victorious: boolean, 
+    remainingAllies: BattleUnit[], 
+    remainingEnemies: BattleUnit[], 
+    stageEvents: BattleEvent[] 
+  } {
+    // Create a local array of events for this stage
+    const stageEvents: BattleEvent[] = [];
+    
+    // Add stage start event with full HP data for all units
+    stageEvents.push({
+      type: 'stage_start',
+      currentStage: stageNumber,
+      totalStages: totalStages,
+      allies: livingAllies.map(ally => ({ ...ally })), // Include full ally data with hp
+      enemies: stageEnemies.map(enemy => ({ ...enemy })), // Include full enemy data with hp
+      message: `Stage ${stageNumber} begins! New enemies approach...`,
+      timestamp: Date.now()
+    });
+    
+    // Prepare local copies of units so we don't modify the originals directly
+    const localEnemies: BattleUnit[] = stageEnemies.map(enemy => ({ ...enemy }));
+    
+    // Simulate battle for this stage
+    let battleOngoing = true;
+    let roundNumber = 1;
+    
+    while (battleOngoing && roundNumber <= maxRounds) {
+      // Process the round
+      const roundEvent = processRound(livingAllies, localEnemies, roundNumber);
+      stageEvents.push(roundEvent);
+      
+      // Check battle status after the round
+      console.log(`[STAGE ${stageNumber}] Round ${roundNumber}: ${roundEvent.remainingAllies} allies vs ${roundEvent.remainingEnemies} enemies`);
+      
+      // Check if battle is over
+      if (roundEvent.remainingAllies === 0 || roundEvent.remainingEnemies === 0) {
+        console.log(`[STAGE ${stageNumber}] Battle ended after round ${roundNumber}`);
+        battleOngoing = false;
+      }
+      
+      // Move to next round
+      roundNumber++;
+    }
+    
+    // If battle reached max rounds limit without resolution
+    if (battleOngoing && roundNumber > maxRounds) {
+      console.log(`[STAGE ${stageNumber}] Battle reached max rounds (${maxRounds}) without resolution`);
+    }
+    
+    // Update living allies and enemies after this stage
+    const updatedLivingAllies = livingAllies.filter((unit: BattleUnit) => unit.hp > 0);
+    const updatedLivingEnemies = localEnemies.filter((unit: BattleUnit) => unit.hp > 0);
+    
+    console.log(`[STAGE ${stageNumber}] After battle: ${updatedLivingAllies.length} allies alive, ${updatedLivingEnemies.length} enemies alive`);
+    
+    // Determine if stage was victorious
+    const victorious = updatedLivingEnemies.length === 0 && updatedLivingAllies.length > 0;
+    
+    // Add stage completion message if victorious
+    if (victorious) {
+      console.log(`[STAGE ${stageNumber}] Stage completed!`);
+      
+      // Add stage completion event with up-to-date ally health
+      stageEvents.push({
+        type: 'stage_complete',
+        currentStage: stageNumber,
+        totalStages: totalStages,
+        message: `Stage ${stageNumber} completed!${stageNumber === totalStages ? ' You have conquered the dungeon!' : ' Preparing for the next challenge...'}`,
+        aliveAllies: updatedLivingAllies.map(ally => ({ ...ally })), // Full ally data with current hp
+        timestamp: Date.now()
+      });
+      
+      console.log(`[STAGE ${stageNumber}] ${updatedLivingAllies.length} allies preparing for next stage`);
+    } 
+    // Add defeat message if defeated
+    else if (updatedLivingAllies.length === 0) {
+      console.log(`[STAGE ${stageNumber}] Party defeated, ending dungeon progression`);
+      
+      // Add defeat message
+      stageEvents.push({
+        type: 'system_message',
+        message: `Your party has been defeated at stage ${stageNumber}!`,
+        timestamp: Date.now()
+      });
+    }
+    // For unusual outcomes
+    else {
+      console.log(`[STAGE ${stageNumber}] WARNING: Battle ended without clear victor after max rounds`);
+      console.log(`[STAGE ${stageNumber}] ${updatedLivingAllies.length} allies vs ${updatedLivingEnemies.length} enemies`);
+    }
+    
+    return {
+      victorious,
+      remainingAllies: updatedLivingAllies,
+      remainingEnemies: updatedLivingEnemies,
+      stageEvents
+    };
+  }
+
   // Process all stages of the dungeon
   if (!partyDefeated) {
     console.log(`[DUNGEON] Starting to process all dungeon stages (Total: ${totalStages})`);
     
-    // First stage has just been simulated above - check if it was successful
-    const firstStageEnemiesRemaining = enemies.filter(unit => unit.hp > 0).length;
-    
-    if (firstStageEnemiesRemaining === 0) {
-      // First stage was successful
-      console.log(`[STAGE ${currentStage}] First stage successfully completed`);
-      stagesCompleted++;
-      
-      // Add stage completion event
-      battleLog.push({
-        type: 'stage_complete',
-        currentStage,
-        totalStages,
-        message: `Stage ${currentStage} completed! Preparing for the next challenge...`,
-        aliveAllies: livingAllies,
-        timestamp: Date.now()
-      });
-    } else {
-      console.log(`[STAGE ${currentStage}] First stage incomplete - enemies remaining: ${firstStageEnemiesRemaining}`);
-      console.log(`[STAGE ${currentStage}] Living allies: ${livingAllies.length}`);
-      
-      // Add battle event indicating first stage isn't complete yet
-      battleLog.push({
-        type: 'system_message',
-        message: `The battle continues with the first stage...`,
-        timestamp: Date.now()
-      });
-      
-      // Don't proceed to next stage since first stage isn't complete
-      partyDefeated = true;
-    }
-    
-    // Process additional stages if first stage was successful
-    while (currentStage < totalStages && !partyDefeated) {
-      currentStage++;
-      
-      // Generate new enemies for this stage (with appropriate difficulty scaling)
+    // Process each stage sequentially, starting from stage 1
+    for (let stageNumber = 1; stageNumber <= totalStages && !partyDefeated; stageNumber++) {
+      // Generate enemies for this stage
       const stageEnemies = generateEnemies(
-        dungeonLevel + Math.floor(currentStage / 2), 
+        dungeonLevel + Math.floor((stageNumber - 1) / 2), 
         dungeonElement,
         numEnemies,
-        currentStage,  // Pass current stage number
-        totalStages    // Pass total stages
+        stageNumber,
+        totalStages
       );
       
-      // Add stage start event
-      battleLog.push({
-        type: 'stage_start',
-        currentStage,
-        totalStages,
-        enemies: stageEnemies,
-        message: `Stage ${currentStage} begins! New enemies approach...`,
-        timestamp: Date.now()
-      });
+      // Simulate the stage battle
+      const stageResult = simulateStage(stageNumber, livingAllies, stageEnemies, maxRounds);
       
-      // Reset existing enemies for the battle simulation
-      enemies.length = 0;
-      stageEnemies.forEach(enemy => enemies.push(enemy));
+      // Add all stage events to the battle log
+      stageResult.stageEvents.forEach(event => battleLog.push(event));
       
-      // Simulate battle for this stage
-      battleOngoing = true;
-      roundNumber = 1;
-      
-      while (battleOngoing && roundNumber <= maxRounds) {
-        // Process the round
-        const roundEvent = processRound(livingAllies, enemies, roundNumber);
-        battleLog.push(roundEvent);
-        
-        // Check battle status after the round
-        console.log(`[STAGE ${currentStage}] Round ${roundNumber}: ${roundEvent.remainingAllies} allies vs ${roundEvent.remainingEnemies} enemies`);
-        
-        // Check if battle is over
-        if (roundEvent.remainingAllies === 0 || roundEvent.remainingEnemies === 0) {
-          console.log(`[STAGE ${currentStage}] Battle ended after round ${roundNumber}`);
-          battleOngoing = false;
-        }
-        
-        // Move to next round
-        roundNumber++;
-      }
-      
-      // If battle reached max rounds limit without resolution
-      if (battleOngoing && roundNumber > maxRounds) {
-        console.log(`[STAGE ${currentStage}] Battle reached max rounds (${maxRounds}) without resolution`);
-      }
-      
-      // Update living allies and enemies after this stage
-      const updatedLivingAllies = livingAllies.filter((unit: BattleUnit) => unit.hp > 0);
-      const updatedLivingEnemies = enemies.filter((unit: BattleUnit) => unit.hp > 0);
-      
-      console.log(`[STAGE ${currentStage}] After battle: ${updatedLivingAllies.length} allies alive, ${updatedLivingEnemies.length} enemies alive`);
-      
-      // Check if party defeated
-      if (updatedLivingAllies.length === 0) {
-        partyDefeated = true;
-        console.log(`[STAGE ${currentStage}] Party defeated, ending dungeon progression`);
-        
-        // Add defeat message
-        battleLog.push({
-          type: 'system_message',
-          message: `Your party has been defeated at stage ${currentStage}!`,
-          timestamp: Date.now()
-        });
-      } 
-      // Check if stage cleared
-      else if (updatedLivingEnemies.length === 0) {
-        // Stage completed
-        stagesCompleted++;
-        console.log(`[STAGE ${currentStage}] Stage completed! Stages completed: ${stagesCompleted}/${totalStages}`);
-        
-        // Add stage completion event
-        battleLog.push({
-          type: 'stage_complete',
-          currentStage,
-          totalStages,
-          message: `Stage ${currentStage} completed!${currentStage === totalStages ? ' You have conquered the dungeon!' : ' Preparing for the next challenge...'}`,
-          aliveAllies: updatedLivingAllies, // Pass the updated allies array
-          timestamp: Date.now()
-        });
-        
-        // IMPORTANT FIX: Replace the livingAllies array for the next stage
-        // This ensures living allies are properly tracked between stages
-        livingAllies = [...updatedLivingAllies];
-        
-        // No HP restoration between stages as requested
-        console.log(`[STAGE ${currentStage}] ${livingAllies.length} allies preparing for next stage`);
+      // Update our allies for the next stage if we were victorious
+      if (stageResult.victorious) {
+        livingAllies = [...stageResult.remainingAllies]; // No HP recovery between stages
+        stagesCompleted++; // Increment completed stages counter
       } else {
-        // Something unexpected happened - both allies and enemies still alive after max rounds
-        console.log(`[STAGE ${currentStage}] WARNING: Battle ended without clear victor after max rounds`);
-        console.log(`[STAGE ${currentStage}] ${updatedLivingAllies.length} allies vs ${updatedLivingEnemies.length} enemies`);
+        partyDefeated = true; // Stop dungeon progression
       }
     }
   }
@@ -798,6 +810,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     stagesCompleted = totalStages;
   }
   
+  // Add battle_end event
   battleLog.push({
     type: 'battle_end',
     victory: victorious,
@@ -807,6 +820,14 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     summary: victorious
       ? `Victory! Your party completed ${stagesCompleted} of ${totalStages} stages.`
       : `Defeat! Your party completed ${stagesCompleted} of ${totalStages} stages before being overwhelmed.`,
+    timestamp: Date.now()
+  });
+  
+  // Add dungeon_complete event with final status (required for client-side tracking)
+  battleLog.push({
+    type: 'dungeon_complete',
+    stagesCompleted: stagesCompleted,
+    totalStages: totalStages,
     timestamp: Date.now()
   });
   

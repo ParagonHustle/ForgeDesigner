@@ -1,0 +1,55 @@
+Absolutely. Here’s a clear set of prompts you can use to instruct your AI builder for each issue. These are written to be specific, focused, and compatible with dev toolchains or copilot-style agents:
+
+---
+
+### 🛠️ Prompt 1: Fix broken ally list update between stages
+> Replace the incorrect line `livingAllies = [.updatedLivingAllies];` with the correct syntax `livingAllies = [...updatedLivingAllies];` in the dungeon battle system to properly carry over surviving allies between stages.
+
+---
+
+### 🛠️ Prompt 2: Simulate the first dungeon stage properly
+> Refactor the dungeon battle logic to treat Stage 1 like all other stages by running a full simulation of battle rounds. Move stage simulation into a reusable function like `simulateStage(stageNumber, allies, enemies)` and use it for all 8 stages.
+
+---
+
+### 🛠️ Prompt 3: Enforce deterministic seeding from run data
+> In the `generateBattleLog` function, throw an error if `run.createdAt` is missing. Use only `run.id` and `run.createdAt` to construct a seed for deterministic RNG. Do not allow fallback to `Date.now()`.
+
+Example:
+```ts
+if (!run.createdAt) throw new Error("Missing createdAt timestamp");
+const seed = run.id * 1000 + (new Date(run.createdAt).getTime() % 1000);
+```
+
+---
+
+### 🛠️ Prompt 4: Add HP state to all battle log events
+> Make sure each battle log event that sends unit data (`battle_start`, `stage_start`, `stage_complete`) includes full character objects with `hp` and `maxHp` fields so the client can display unit health correctly.
+
+Example:
+```ts
+battleLog.push({
+  type: 'stage_start',
+  stageNumber: currentStage,
+  allies: livingAllies.map(ally => ({ ...ally, hp: ally.hp })),
+  enemies: generatedEnemies,
+});
+```
+
+---
+
+### 🛠️ Prompt 5: Ensure accurate stage tracking in battle logs
+> Fix the `stagesCompleted` logic so it only increments when a stage is actually completed (i.e. all enemies defeated). Don’t increment it prematurely or based on incorrect assumptions.
+
+Also make sure the final log includes:
+```ts
+{
+  type: 'dungeon_complete',
+  stagesCompleted: X,
+  totalStages: 8
+}
+```
+
+---
+
+Let me know if you'd like a JSON or YAML file of these as task entries. I can also help you integrate these into a checklist or codebase comment system if you're delegating to devs.
