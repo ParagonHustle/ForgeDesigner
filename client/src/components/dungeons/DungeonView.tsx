@@ -684,12 +684,12 @@ export default function DungeonView() {
       </Card>
       
       {/* Battle Log Dialog */}
-      {showBattleLog && (
+      {showBattleLog && activeRunId !== null && (
         <BattleLog
           isOpen={showBattleLog}
           onClose={() => setShowBattleLog(false)}
           battleLog={activeBattleLog}
-          runId={activeRunId}
+          runId={activeRunId as number}
           onCompleteDungeon={handleCompleteDungeon}
         />
       )}
