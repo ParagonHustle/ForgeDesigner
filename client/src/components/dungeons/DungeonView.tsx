@@ -214,6 +214,7 @@ export default function DungeonView() {
       dungeonTypeId: selectedDungeonId,
       dungeonName: selectedDungeon.name,
       dungeonLevel: selectedDungeon.level,
+      elementalType: selectedDungeon.element,  // Use element from dungeon type
       characterIds: selectedCharacters,
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
