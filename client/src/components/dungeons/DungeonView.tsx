@@ -82,11 +82,15 @@ interface DungeonRun {
   dungeonTypeId: number;
   dungeonName: string;
   dungeonLevel: number;
+  elementalType: string;
   characterIds: number[];
   startTime: string;
   endTime: string;
+  createdAt?: string;
   completed: boolean;
   success: boolean;
+  completedStages?: number;
+  totalStages?: number;
   battleLog?: any[];
 }
 
@@ -286,6 +290,17 @@ export default function DungeonView() {
     const end = new Date(run.endTime).getTime();
     
     if (now >= end) return 100;
+    
+    // If the run has battle log with completed stages, use that for more accurate progress
+    if (run.battleLog && Array.isArray(run.battleLog) && run.totalStages) {
+      // Count completed stages from battle log
+      const completedStages = run.battleLog.filter(event => event.type === 'stage_complete').length;
+      if (completedStages > 0) {
+        return Math.min(Math.max(0, (completedStages / run.totalStages) * 100), 99); // Never reach 100% until endTime
+      }
+    }
+    
+    // Default time-based progress
     const progress = ((now - start) / (end - start)) * 100;
     return Math.min(Math.max(0, progress), 100);
   };
@@ -297,6 +312,14 @@ export default function DungeonView() {
     
     if (now >= endTime) {
       return 'Complete - Collect rewards';
+    }
+    
+    // If we have battle log info, show completed stages
+    if (run.battleLog && Array.isArray(run.battleLog) && run.totalStages) {
+      const completedStages = run.battleLog.filter(event => event.type === 'stage_complete').length;
+      if (completedStages > 0) {
+        return `Stage ${completedStages}/${run.totalStages} - ${formatDistanceToNow(endTime, { addSuffix: true })}`;
+      }
     }
     
     return formatDistanceToNow(endTime, { addSuffix: true });
