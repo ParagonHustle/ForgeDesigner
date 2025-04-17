@@ -525,14 +525,131 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
     }
   }
   
-  // Add battle end event
+  // Set up multi-stage dungeon progression
+  const totalStages = run.totalStages || 3; // Default to 3 stages if not specified
+  let currentStage = 1;
+  let stagesCompleted = 0;
+  let partyDefeated = livingAllies.length === 0;
+  
+  // Add stage completion event for the first stage
+  if (!partyDefeated) {
+    // First stage completed
+    stagesCompleted++;
+    
+    // Add stage completion event
+    battleLog.push({
+      type: 'stage_complete',
+      currentStage,
+      totalStages,
+      message: `Stage ${currentStage} completed! Preparing for the next challenge...`,
+      aliveAllies: livingAllies,
+      timestamp: Date.now()
+    });
+    
+    // Process additional stages
+    while (currentStage < totalStages && !partyDefeated) {
+      currentStage++;
+      
+      // Generate new enemies for this stage (slightly stronger)
+      const stageEnemies = generateEnemies(
+        dungeonLevel + Math.floor(currentStage / 2), 
+        dungeonElement,
+        numEnemies
+      );
+      
+      // Add stage start event
+      battleLog.push({
+        type: 'stage_start',
+        currentStage,
+        totalStages,
+        enemies: stageEnemies,
+        message: `Stage ${currentStage} begins! New enemies approach...`,
+        timestamp: Date.now()
+      });
+      
+      // Reset existing enemies for the battle simulation
+      enemies.length = 0;
+      stageEnemies.forEach(enemy => enemies.push(enemy));
+      
+      // Simulate battle for this stage
+      battleOngoing = true;
+      roundNumber = 1;
+      
+      while (battleOngoing && roundNumber <= maxRounds) {
+        // Process the round
+        const roundEvent = processRound(livingAllies, enemies, roundNumber);
+        battleLog.push(roundEvent);
+        
+        // Check if battle is over
+        if (roundEvent.remainingAllies === 0 || roundEvent.remainingEnemies === 0) {
+          battleOngoing = false;
+        }
+        
+        // Move to next round
+        roundNumber++;
+      }
+      
+      // Update living allies and enemies after this stage
+      const updatedLivingAllies = livingAllies.filter(unit => unit.hp > 0);
+      const updatedLivingEnemies = enemies.filter(unit => unit.hp > 0);
+      
+      // Check if party defeated
+      if (updatedLivingAllies.length === 0) {
+        partyDefeated = true;
+        
+        // Add defeat message
+        battleLog.push({
+          type: 'system_message',
+          message: `Your party has been defeated at stage ${currentStage}!`,
+          timestamp: Date.now()
+        });
+      } 
+      // Check if stage cleared
+      else if (updatedLivingEnemies.length === 0) {
+        // Stage completed
+        stagesCompleted++;
+        
+        // Add stage completion event
+        battleLog.push({
+          type: 'stage_complete',
+          currentStage,
+          totalStages,
+          message: `Stage ${currentStage} completed!${currentStage === totalStages ? ' You have conquered the dungeon!' : ' Preparing for the next challenge...'}`,
+          aliveAllies: updatedLivingAllies,
+          timestamp: Date.now()
+        });
+        
+        // Update living allies - create a new array instead of reassigning the const
+        for (let i = 0; i < livingAllies.length; i++) {
+          if (livingAllies[i].hp <= 0) {
+            livingAllies.splice(i, 1);
+            i--;
+          }
+        }
+      }
+    }
+  }
+  
+  // Scale rewards based on stages completed
+  const rewardMultiplier = Math.max(0.3, stagesCompleted / totalStages);
+  
+  // Add final battle end event with all stages information
   const victorious = success; // Use the predetermined outcome
+  
+  // Override stages completed if needed to ensure the success outcome
+  if (victorious && stagesCompleted < totalStages && !partyDefeated) {
+    stagesCompleted = totalStages;
+  }
+  
   battleLog.push({
     type: 'battle_end',
     victory: victorious,
-    summary: victorious 
-      ? 'Victory! Your party has conquered the dungeon.' 
-      : 'Defeat! Your party has failed to complete the dungeon.',
+    completedStages: stagesCompleted,
+    totalStages,
+    rewardMultiplier,
+    summary: victorious
+      ? `Victory! Your party completed ${stagesCompleted} of ${totalStages} stages.`
+      : `Defeat! Your party completed ${stagesCompleted} of ${totalStages} stages before being overwhelmed.`,
     timestamp: Date.now()
   });
   

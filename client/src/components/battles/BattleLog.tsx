@@ -397,19 +397,70 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         } else if (event.type === 'stage_complete') {
           // Stage completion
           setCurrentStage(event.currentStage || 0);
-          if (event.message && typeof event.message === 'string') {
-            setActionLog(prev => [...prev, event.message]);
-          } else {
-            setActionLog(prev => [...prev, `Stage ${event.currentStage || '?'} completed!`]);
+          const message = typeof event.message === 'string' 
+            ? event.message 
+            : `Stage ${event.currentStage || '?'} completed!`;
+          setActionLog(prev => [...prev, message]);
+          
+          // Update units with living allies for next stage
+          if (event.aliveAllies && Array.isArray(event.aliveAllies)) {
+            setUnits(prev => {
+              // Filter out dead allies and keep enemies for visualization
+              const updatedUnits = prev.filter(unit => 
+                !unit.isAlly || (unit.isAlly && event.aliveAllies.some(a => a.id === unit.id))
+              );
+              
+              // Update ally stats
+              for (const ally of event.aliveAllies) {
+                const allyIndex = updatedUnits.findIndex(u => u.id === ally.id);
+                if (allyIndex >= 0) {
+                  updatedUnits[allyIndex] = {
+                    ...updatedUnits[allyIndex],
+                    ...ally,
+                    isAlly: true,
+                    hp: ally.hp || ally.maxHp, // Ensure HP is set
+                    attackMeter: 0 // Reset attack meter for next stage
+                  };
+                }
+              }
+              
+              return updatedUnits;
+            });
+          }
+        } else if (event.type === 'stage_start') {
+          // Start of a new stage
+          setCurrentStage(event.currentStage || 0);
+          const message = typeof event.message === 'string' 
+            ? event.message 
+            : `Stage ${event.currentStage || '?'} begins!`;
+          setActionLog(prev => [...prev, message]);
+          
+          // Add new enemies for this stage
+          if (event.enemies && Array.isArray(event.enemies)) {
+            const newEnemies = event.enemies.map(enemy => ({
+              ...enemy,
+              isAlly: false,
+              hp: enemy.hp || enemy.maxHp,
+              attackMeter: 0
+            }));
+            
+            // Update units by replacing enemies and keeping allies
+            setUnits(prev => {
+              // Keep only allies from previous stage
+              const allies = prev.filter(unit => unit.isAlly);
+              // Add new enemies
+              return [...allies, ...newEnemies];
+            });
           }
         } else if (event.type === 'battle_end') {
           // Battle ended
           setIsComplete(true);
-          if (event.message && typeof event.message === 'string') {
-            setActionLog(prev => [...prev, event.message]);
-          } else {
-            setActionLog(prev => [...prev, "Battle completed!"]);
-          }
+          const message = typeof event.message === 'string' 
+            ? event.message 
+            : event.summary 
+              ? event.summary 
+              : "Battle completed!";
+          setActionLog(prev => [...prev, message]);
         } else if (event.type === 'system_message') {
           // System message
           if (event.system_message && typeof event.system_message === 'string') {
