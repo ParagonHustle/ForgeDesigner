@@ -531,22 +531,47 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   let stagesCompleted = 0;
   let partyDefeated = livingAllies.length === 0;
   
-  // Add stage completion event for the first stage
+  console.log(`[STAGE SETUP] Starting dungeon with ${totalStages} total stages`);
+  console.log(`[STAGE SETUP] Initial living allies: ${livingAllies.length}`);
+  console.log(`[STAGE SETUP] Party defeated status: ${partyDefeated}`);
+  
+  // Process all stages of the dungeon
   if (!partyDefeated) {
-    // First stage completed
-    stagesCompleted++;
+    console.log(`[DUNGEON] Starting to process all dungeon stages (Total: ${totalStages})`);
     
-    // Add stage completion event
-    battleLog.push({
-      type: 'stage_complete',
-      currentStage,
-      totalStages,
-      message: `Stage ${currentStage} completed! Preparing for the next challenge...`,
-      aliveAllies: livingAllies,
-      timestamp: Date.now()
-    });
+    // First stage has just been simulated above - check if it was successful
+    const firstStageEnemiesRemaining = enemies.filter(unit => unit.hp > 0).length;
     
-    // Process additional stages
+    if (firstStageEnemiesRemaining === 0) {
+      // First stage was successful
+      console.log(`[STAGE ${currentStage}] First stage successfully completed`);
+      stagesCompleted++;
+      
+      // Add stage completion event
+      battleLog.push({
+        type: 'stage_complete',
+        currentStage,
+        totalStages,
+        message: `Stage ${currentStage} completed! Preparing for the next challenge...`,
+        aliveAllies: livingAllies,
+        timestamp: Date.now()
+      });
+    } else {
+      console.log(`[STAGE ${currentStage}] First stage incomplete - enemies remaining: ${firstStageEnemiesRemaining}`);
+      console.log(`[STAGE ${currentStage}] Living allies: ${livingAllies.length}`);
+      
+      // Add battle event indicating first stage isn't complete yet
+      battleLog.push({
+        type: 'system_message',
+        message: `The battle continues with the first stage...`,
+        timestamp: Date.now()
+      });
+      
+      // Don't proceed to next stage since first stage isn't complete
+      partyDefeated = true;
+    }
+    
+    // Process additional stages if first stage was successful
     while (currentStage < totalStages && !partyDefeated) {
       currentStage++;
       
@@ -580,8 +605,12 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
         const roundEvent = processRound(livingAllies, enemies, roundNumber);
         battleLog.push(roundEvent);
         
+        // Check battle status after the round
+        console.log(`[STAGE ${currentStage}] Round ${roundNumber}: ${roundEvent.remainingAllies} allies vs ${roundEvent.remainingEnemies} enemies`);
+        
         // Check if battle is over
         if (roundEvent.remainingAllies === 0 || roundEvent.remainingEnemies === 0) {
+          console.log(`[STAGE ${currentStage}] Battle ended after round ${roundNumber}`);
           battleOngoing = false;
         }
         
@@ -589,13 +618,21 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
         roundNumber++;
       }
       
+      // If battle reached max rounds limit without resolution
+      if (battleOngoing && roundNumber > maxRounds) {
+        console.log(`[STAGE ${currentStage}] Battle reached max rounds (${maxRounds}) without resolution`);
+      }
+      
       // Update living allies and enemies after this stage
       const updatedLivingAllies = livingAllies.filter(unit => unit.hp > 0);
       const updatedLivingEnemies = enemies.filter(unit => unit.hp > 0);
       
+      console.log(`[STAGE ${currentStage}] After battle: ${updatedLivingAllies.length} allies alive, ${updatedLivingEnemies.length} enemies alive`);
+      
       // Check if party defeated
       if (updatedLivingAllies.length === 0) {
         partyDefeated = true;
+        console.log(`[STAGE ${currentStage}] Party defeated, ending dungeon progression`);
         
         // Add defeat message
         battleLog.push({
@@ -608,6 +645,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
       else if (updatedLivingEnemies.length === 0) {
         // Stage completed
         stagesCompleted++;
+        console.log(`[STAGE ${currentStage}] Stage completed! Stages completed: ${stagesCompleted}/${totalStages}`);
         
         // Add stage completion event
         battleLog.push({
@@ -629,6 +667,12 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
           const recoveryAmount = Math.floor(ally.maxHp * 0.2);
           ally.hp = Math.min(ally.maxHp, ally.hp + recoveryAmount);
         });
+        
+        console.log(`[STAGE ${currentStage}] HP restored for ${livingAllies.length} allies, preparing for next stage`);
+      } else {
+        // Something unexpected happened - both allies and enemies still alive after max rounds
+        console.log(`[STAGE ${currentStage}] WARNING: Battle ended without clear victor after max rounds`);
+        console.log(`[STAGE ${currentStage}] ${updatedLivingAllies.length} allies vs ${updatedLivingEnemies.length} enemies`);
       }
     }
   }
@@ -639,8 +683,14 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   // Add final battle end event with all stages information
   const victorious = success; // Use the predetermined outcome
   
+  console.log(`[BATTLE END] Stages completed: ${stagesCompleted}/${totalStages}`);
+  console.log(`[BATTLE END] Living allies remaining: ${livingAllies.length}`);
+  console.log(`[BATTLE END] Party defeated status: ${partyDefeated}`);
+  console.log(`[BATTLE END] Predetermined outcome (success): ${success}`);
+  
   // Override stages completed if needed to ensure the success outcome
   if (victorious && stagesCompleted < totalStages && !partyDefeated) {
+    console.log(`[BATTLE END] Overriding stages completed from ${stagesCompleted} to ${totalStages} to match predetermined success`);
     stagesCompleted = totalStages;
   }
   
