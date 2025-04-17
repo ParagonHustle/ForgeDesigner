@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { townhallSkillTree, hasBuildingPlans, consumeBuildingPlan } from './townhallSkills';
-import { generateBattleLog } from './battle-system';
+import { registerDungeonRoutes } from './dungeon-routes';
 import {
   insertUserSchema,
   insertCharacterSchema,

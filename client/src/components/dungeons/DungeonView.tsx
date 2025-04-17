@@ -333,7 +333,7 @@ export default function DungeonView() {
                       </Badge>
                       <Badge variant="outline" className="bg-[#1D1128]">
                         <Skull className="w-3 h-3 mr-1" />
-                        {dungeonTypes?.find((d: DungeonType) => d.id === selectedDungeonId)?.difficulty || 'Normal'}
+                        {(dungeonTypes as DungeonType[])?.find((d: DungeonType) => d.id === selectedDungeonId)?.difficulty || 'Normal'}
                       </Badge>
                     </div>
                   </div>
