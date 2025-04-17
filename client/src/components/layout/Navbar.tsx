@@ -15,31 +15,31 @@ const Navbar = () => {
         <div className="text-2xl font-cinzel font-bold text-[#FF9D00] mr-2">The Forge</div>
         <span className="bg-[#00B9AE]/20 text-[#00B9AE] text-xs px-2 py-0.5 rounded">Alpha v0.1</span>
 
-        {/* Discord Chat - Expanded for more width */}
-        <div className="ml-4 flex-1 w-full max-w-3xl">
+        {/* Discord Chat - Further expanded width */}
+        <div className="ml-5 flex-1 w-full max-w-4xl">
           <CompactDiscordChat />
         </div>
       </div>
 
       <div className="flex items-center space-x-4">
         
-        {/* Resources Display */}
+        {/* Resources Display - More compact */}
         <div className="hidden md:flex items-center space-x-3">
           <div className="flex items-center">
             <img 
               src="https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=250&h=250&fit=crop" 
               alt="Forge Tokens" 
-              className="w-5 h-5 rounded-full mr-1"
+              className="w-4 h-4 rounded-full mr-1"
             />
-            <span className="text-[#FFD700]">{forgeTokens}</span>
+            <span className="text-[#FFD700] text-xs">{forgeTokens}</span>
           </div>
           <div className="flex items-center">
             <img 
               src="https://images.unsplash.com/photo-1543486958-d783bfbf7f8e?w=250&h=250&fit=crop" 
               alt="Rogue Credits" 
-              className="w-5 h-5 rounded-full mr-1"
+              className="w-4 h-4 rounded-full mr-1"
             />
-            <span>{rogueCredits}</span>
+            <span className="text-xs">{rogueCredits}</span>
           </div>
         </div>
 
