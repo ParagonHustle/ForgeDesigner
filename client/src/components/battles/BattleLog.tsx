@@ -332,9 +332,9 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           if (event.actions && event.actions.length > 0) {
             // Add log entries for each action
             event.actions.forEach(action => {
-              setActionLog(prev => [...prev, 
-                `${action.actor} used ${action.skill} on ${action.target} for ${action.damage} damage${action.isCritical ? ' (CRITICAL!)' : ''}`
-              ]);
+              // Create a formatted action message string
+              const actionMessage = `${action.actor} used ${action.skill} on ${action.target} for ${action.damage} damage${action.isCritical ? ' (CRITICAL!)' : ''}`;
+              setActionLog(prev => [...prev, actionMessage]);
             });
           }
           
