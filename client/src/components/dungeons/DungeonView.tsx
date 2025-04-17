@@ -71,7 +71,8 @@ interface DungeonType {
   baseDuration: number;
   difficulty: string;
   level: number;
-  element: string;
+  element: string;           // Frontend uses 'element'
+  elementalType: string;     // Backend uses 'elementalType'
   rewards: any;
 }
 
@@ -223,8 +224,8 @@ export default function DungeonView() {
     startDungeonMutation.mutate({
       dungeonTypeId: selectedDungeonId,
       dungeonName: selectedDungeon.name,
-      dungeonLevel: selectedDungeon.level,
-      elementalType: selectedDungeon.element,  // Use element from dungeon type
+      dungeonLevel: selectedDungeon.level || 1,  // Ensure we have a valid level
+      elementalType: selectedDungeon.elementalType || selectedDungeon.element || 'neutral', // Prefer elementalType, fallback to element
       characterIds: selectedCharacters,
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
