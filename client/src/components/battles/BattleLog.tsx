@@ -133,15 +133,22 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         );
         
         if (initEvent) {
-          // Extract allies and enemies
+          // Extract allies and enemies and ensure they have proper health values
           const allies = (initEvent.allies || []).map(unit => ({
             ...unit,
-            isAlly: true
+            isAlly: true,
+            hp: unit.hp || unit.maxHp, // Ensure HP is set (fallback to maxHp if hp is 0)
+            attackMeter: unit.attackMeter || 0 // Ensure attack meter is set
           }));
+          
           const enemies = (initEvent.enemies || []).map(unit => ({
             ...unit,
-            isAlly: false
+            isAlly: false,
+            hp: unit.hp || unit.maxHp, // Ensure HP is set (fallback to maxHp if hp is 0)
+            attackMeter: unit.attackMeter || 0 // Ensure attack meter is set
           }));
+          
+          console.log("Initial units:", [...allies, ...enemies]);
           
           // Set units state
           setUnits([...allies, ...enemies]);
@@ -197,11 +204,30 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
   const togglePlayback = () => {
     console.log("Toggle playback called, current isPaused:", isPaused);
     
-    if (isPaused) {
+    const newIsPaused = !isPaused;
+    setIsPaused(newIsPaused);
+    
+    if (!newIsPaused) {
       // Starting playback
       if (!battleAnimationRef.current) {
         console.log("Starting battle animation");
-        advanceBattle();
+        
+        // Add a small delay to ensure state is updated
+        setTimeout(() => {
+          if (units.length > 0) {
+            // Find the first unit with 0 attack meter and set it to a small value
+            // to kickstart the animation
+            setUnits(prevUnits => 
+              prevUnits.map(unit => ({
+                ...unit,
+                attackMeter: unit.attackMeter > 0 ? unit.attackMeter : 5
+              }))
+            );
+            
+            // Start the battle animation
+            advanceBattle();
+          }
+        }, 100);
       }
     } else {
       // Pausing playback
@@ -211,8 +237,6 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
         battleAnimationRef.current = null;
       }
     }
-    
-    setIsPaused(!isPaused);
   };
   
   // Function to advance the battle animation
@@ -222,74 +246,126 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     // Increment action counter
     setCurrentAction(prev => prev + 1);
     
+    // Check if we have battle logs to process
+    if (!battleLog || battleLog.length === 0) {
+      console.log("No battle logs available");
+      setActionLog(prev => [...prev, "No battle log data available"]);
+      setIsPaused(true);
+      return;
+    }
+    
     // Update battle state based on log
     if (battleLog && battleLog.length > battleStepRef.current) {
       const event = battleLog[battleStepRef.current];
-      console.log("Processing event:", event.type);
+      console.log("Processing event:", event.type, event);
       
-      // Process event based on type
-      if (event.type === 'round') {
-        // Round events have actions
-        if (event.actions && event.actions.length > 0) {
-          // Add log entries for each action
-          event.actions.forEach(action => {
-            setActionLog(prev => [...prev, 
-              `${action.actor} used ${action.skill} on ${action.target} for ${action.damage} damage${action.isCritical ? ' (CRITICAL!)' : ''}`
-            ]);
-          });
-        }
-        
-        // Update unit health based on remaining units
-        if (event.allies && Array.isArray(event.allies)) {
-          setUnits(prev => {
-            const updatedUnits = [...prev];
-            // Update ally units
-            for (const ally of event.allies || []) {
-              const allyIndex = updatedUnits.findIndex(u => u.id === ally.id);
-              if (allyIndex >= 0) {
-                updatedUnits[allyIndex] = {
-                  ...updatedUnits[allyIndex],
-                  ...ally
-                };
+      try {
+        // Process event based on type
+        if (event.type === 'round') {
+          // Round events have actions
+          if (event.actions && event.actions.length > 0) {
+            // Add log entries for each action
+            event.actions.forEach(action => {
+              setActionLog(prev => [...prev, 
+                `${action.actor} used ${action.skill} on ${action.target} for ${action.damage} damage${action.isCritical ? ' (CRITICAL!)' : ''}`
+              ]);
+            });
+          }
+          
+          // Update unit health based on remaining units
+          if (event.allies && Array.isArray(event.allies)) {
+            setUnits(prev => {
+              const updatedUnits = [...prev];
+              // Update ally units
+              for (const ally of event.allies || []) {
+                const allyIndex = updatedUnits.findIndex(u => u.id === ally.id);
+                if (allyIndex >= 0) {
+                  updatedUnits[allyIndex] = {
+                    ...updatedUnits[allyIndex],
+                    ...ally,
+                    hp: ally.hp || 0, // Ensure HP is not undefined
+                    attackMeter: ally.attackMeter || 0
+                  };
+                }
               }
-            }
-            return updatedUnits;
-          });
-        }
-        
-        if (event.enemies && Array.isArray(event.enemies)) {
-          setUnits(prev => {
-            const updatedUnits = [...prev];
-            // Update enemy units
-            for (const enemy of event.enemies || []) {
-              const enemyIndex = updatedUnits.findIndex(u => u.id === enemy.id);
-              if (enemyIndex >= 0) {
-                updatedUnits[enemyIndex] = {
-                  ...updatedUnits[enemyIndex],
-                  ...enemy
-                };
+              return updatedUnits;
+            });
+          }
+          
+          if (event.enemies && Array.isArray(event.enemies)) {
+            setUnits(prev => {
+              const updatedUnits = [...prev];
+              // Update enemy units
+              for (const enemy of event.enemies || []) {
+                const enemyIndex = updatedUnits.findIndex(u => u.id === enemy.id);
+                if (enemyIndex >= 0) {
+                  updatedUnits[enemyIndex] = {
+                    ...updatedUnits[enemyIndex],
+                    ...enemy,
+                    hp: enemy.hp || 0, // Ensure HP is not undefined
+                    attackMeter: enemy.attackMeter || 0
+                  };
+                }
               }
-            }
-            return updatedUnits;
-          });
+              return updatedUnits;
+            });
+          }
+        } else if (event.type === 'battle_start' || event.type === 'init') {
+          // Battle initialization
+          if (event.message && typeof event.message === 'string') {
+            setActionLog(prev => [...prev, event.message]);
+          } else {
+            setActionLog(prev => [...prev, "Battle initialized"]);
+          }
+          
+          // Set initial units if needed
+          if (units.length === 0 && event.allies && event.enemies) {
+            const allies = (event.allies || []).map(unit => ({
+              ...unit,
+              isAlly: true,
+              hp: unit.hp || unit.maxHp,
+              attackMeter: unit.attackMeter || 0
+            }));
+            
+            const enemies = (event.enemies || []).map(unit => ({
+              ...unit,
+              isAlly: false,
+              hp: unit.hp || unit.maxHp,
+              attackMeter: unit.attackMeter || 0
+            }));
+            
+            setUnits([...allies, ...enemies]);
+          }
+        } else if (event.type === 'stage_complete') {
+          // Stage completion
+          setCurrentStage(event.currentStage || 0);
+          if (event.message && typeof event.message === 'string') {
+            setActionLog(prev => [...prev, event.message]);
+          } else {
+            setActionLog(prev => [...prev, `Stage ${event.currentStage || '?'} completed!`]);
+          }
+        } else if (event.type === 'battle_end') {
+          // Battle ended
+          setIsComplete(true);
+          if (event.message && typeof event.message === 'string') {
+            setActionLog(prev => [...prev, event.message]);
+          } else {
+            setActionLog(prev => [...prev, "Battle completed!"]);
+          }
+        } else if (event.type === 'system_message') {
+          // System message
+          if (event.system_message && typeof event.system_message === 'string') {
+            setActionLog(prev => [...prev, event.system_message]);
+          } else if (event.message && typeof event.message === 'string') {
+            setActionLog(prev => [...prev, event.message]);
+          }
+        } else {
+          // Unknown event type
+          setActionLog(prev => [...prev, `Unknown event: ${event.type}`]);
         }
-      } else if (event.type === 'stage_complete') {
-        // Stage completion
-        setCurrentStage(event.currentStage || 0);
-        if (event.message && typeof event.message === 'string') {
-          setActionLog(prev => [...prev, event.message as string]);
-        }
-      } else if (event.type === 'battle_end') {
-        // Battle ended
-        setIsComplete(true);
-        if (event.message && typeof event.message === 'string') {
-          setActionLog(prev => [...prev, event.message as string]);
-        }
-      } else if (event.type === 'system_message') {
-        // System message
-        if (event.system_message && typeof event.system_message === 'string') {
-          setActionLog(prev => [...prev, event.system_message as string]);
-        }
+      } catch (error) {
+        console.error("Error processing battle event:", error);
+        setActionLog(prev => [...prev, `Error: ${error.message}`]);
       }
       
       // Increment step
@@ -548,15 +624,22 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
     );
     
     if (initEvent) {
-      // Extract allies and enemies
+      // Extract allies and enemies with proper health values
       const allies = (initEvent.allies || []).map(unit => ({
         ...unit,
-        isAlly: true
+        isAlly: true,
+        hp: unit.hp || unit.maxHp, // Ensure HP is set (fallback to maxHp if hp is 0)
+        attackMeter: unit.attackMeter || 0 // Ensure attack meter is set
       }));
+      
       const enemies = (initEvent.enemies || []).map(unit => ({
         ...unit,
-        isAlly: false
+        isAlly: false,
+        hp: unit.hp || unit.maxHp, // Ensure HP is set (fallback to maxHp if hp is 0)
+        attackMeter: unit.attackMeter || 0 // Ensure attack meter is set
       }));
+      
+      console.log("Restarting with units:", [...allies, ...enemies]);
       
       // Set units state
       setUnits([...allies, ...enemies]);
