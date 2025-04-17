@@ -289,20 +289,39 @@ export default function DungeonView() {
     const start = new Date(run.startTime).getTime();
     const end = new Date(run.endTime).getTime();
     
-    if (now >= end) return 100;
+    // If run is completed, return 100%
+    if (run.completed || now >= end) return 100;
+
+    // Handle runs with completedStages field (from database)
+    if (run.totalStages && run.completedStages !== undefined) {
+      // Use stored completedStages value if available (recommended approach)
+      return Math.min(Math.max(0, (run.completedStages / run.totalStages) * 100), 99);
+    }
     
-    // If the run has battle log with completed stages, use that for more accurate progress
+    // If the run has battle log, calculate progress from stage_complete events
     if (run.battleLog && Array.isArray(run.battleLog) && run.totalStages) {
       // Count completed stages from battle log
       const completedStages = run.battleLog.filter(event => event.type === 'stage_complete').length;
       if (completedStages > 0) {
         return Math.min(Math.max(0, (completedStages / run.totalStages) * 100), 99); // Never reach 100% until endTime
       }
+      
+      // If we have a dungeon_complete event, check its stagesCompleted property
+      const completeEvent = run.battleLog.find(event => event.type === 'dungeon_complete');
+      if (completeEvent && completeEvent.stagesCompleted !== undefined) {
+        return Math.min(Math.max(0, (completeEvent.stagesCompleted / run.totalStages) * 100), 99);
+      }
+      
+      // If we have a battle_end event with completedStages, use that
+      const endEvent = run.battleLog.find(event => event.type === 'battle_end');
+      if (endEvent && endEvent.completedStages !== undefined) {
+        return Math.min(Math.max(0, (endEvent.completedStages / run.totalStages) * 100), 99);
+      }
     }
     
-    // Default time-based progress
+    // Default time-based progress as a fallback
     const progress = ((now - start) / (end - start)) * 100;
-    return Math.min(Math.max(0, progress), 100);
+    return Math.min(Math.max(0, progress), 99); // Cap at 99% for time-based progress
   };
   
   // Function to calculate remaining time text
@@ -310,18 +329,49 @@ export default function DungeonView() {
     const endTime = new Date(run.endTime);
     const now = new Date();
     
-    if (now >= endTime) {
+    // If the run is completed or time's up
+    if (run.completed || now >= endTime) {
       return 'Complete - Collect rewards';
     }
     
-    // If we have battle log info, show completed stages
+    // If run has completedStages from database (preferred method)
+    if (run.totalStages && run.completedStages !== undefined) {
+      return `Stage ${run.completedStages}/${run.totalStages} - ${formatDistanceToNow(endTime, { addSuffix: true })}`;
+    }
+    
+    // If we have battle log, extract stages information
     if (run.battleLog && Array.isArray(run.battleLog) && run.totalStages) {
+      // First try to get completed stages from stage_complete events
       const completedStages = run.battleLog.filter(event => event.type === 'stage_complete').length;
       if (completedStages > 0) {
         return `Stage ${completedStages}/${run.totalStages} - ${formatDistanceToNow(endTime, { addSuffix: true })}`;
       }
+      
+      // Then check dungeon_complete event
+      const completeEvent = run.battleLog.find(event => event.type === 'dungeon_complete');
+      if (completeEvent && completeEvent.stagesCompleted !== undefined) {
+        return `Stage ${completeEvent.stagesCompleted}/${run.totalStages} - ${formatDistanceToNow(endTime, { addSuffix: true })}`;
+      }
+      
+      // Finally check battle_end event
+      const endEvent = run.battleLog.find(event => event.type === 'battle_end');
+      if (endEvent && endEvent.completedStages !== undefined) {
+        return `Stage ${endEvent.completedStages}/${run.totalStages} - ${formatDistanceToNow(endTime, { addSuffix: true })}`;
+      }
+      
+      // If there's a current stage marker in any event, use that
+      const stageEvents = run.battleLog.filter(event => 
+        event.currentStage !== undefined && 
+        event.totalStages !== undefined
+      );
+      if (stageEvents.length > 0) {
+        // Get the latest stage event
+        const latestStageEvent = stageEvents[stageEvents.length - 1];
+        return `Stage ${latestStageEvent.currentStage}/${latestStageEvent.totalStages} - ${formatDistanceToNow(endTime, { addSuffix: true })}`;
+      }
     }
     
+    // Default fallback to just showing time
     return formatDistanceToNow(endTime, { addSuffix: true });
   };
   
