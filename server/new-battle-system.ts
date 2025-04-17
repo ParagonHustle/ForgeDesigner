@@ -146,75 +146,97 @@ function generateEnemies(
   // Generate enemies
   for (let i = 0; i < actualNumEnemies; i++) {
     // Determine enemy type - make the last enemy stronger
-    // In later stages, more enemies are elite
-    const isElite = (i === actualNumEnemies - 1) || 
-                    (stageProgress > 0.5 && i === actualNumEnemies - 2);
-    
-    // Final stage boss enemy
-    const isBoss = (currentStage === totalStages && i === actualNumEnemies - 1);
+    // Define boss and elite criteria properly - only do this once with proper hierarchy
+    const isFinalBoss = (currentStage === totalStages && i === actualNumEnemies - 1);
+    const isStageBoss = (!isFinalBoss && i === actualNumEnemies - 1);
+    const isElite = (!isFinalBoss && !isStageBoss && stageProgress > 0.5 && i === actualNumEnemies - 2);
     
     // Define enemy name based on type and element
     let enemyName = '';
     if (element === 'fire') {
-      enemyName = isBoss ? 'Infernal Overlord' : 
+      enemyName = isFinalBoss ? 'Infernal Overlord' : 
+                 isStageBoss ? 'Flame Commander' :
                  isElite ? 'Flame Sentinel' : 'Fire Imp';
     } else if (element === 'ice') {
-      enemyName = isBoss ? 'Glacial Titan' :
+      enemyName = isFinalBoss ? 'Glacial Titan' :
+                 isStageBoss ? 'Frost Lord' :
                  isElite ? 'Frost Giant' : 'Ice Elemental';
     } else if (element === 'nature') {
-      enemyName = isBoss ? 'Ancient Elderwood' :
+      enemyName = isFinalBoss ? 'Ancient Elderwood' :
+                 isStageBoss ? 'Elder Treant' :
                  isElite ? 'Ancient Treant' : 'Thorn Beast';
     } else if (element === 'shadow') {
-      enemyName = isBoss ? 'Void Harbinger' :
+      enemyName = isFinalBoss ? 'Void Harbinger' :
+                 isStageBoss ? 'Shadow Master' :
                  isElite ? 'Shadow Fiend' : 'Void Wraith';
     } else if (element === 'arcane') {
-      enemyName = isBoss ? 'Archmage Construct' :
+      enemyName = isFinalBoss ? 'Archmage Construct' :
+                 isStageBoss ? 'Arcane Overseer' :
                  isElite ? 'Arcane Golem' : 'Magic Construct';
     } else {
-      enemyName = isBoss ? 'Dungeon Overlord' :
+      enemyName = isFinalBoss ? 'Dungeon Overlord' :
+                 isStageBoss ? 'Dungeon Master' :
                  isElite ? 'Dungeon Guardian' : 'Dungeon Creature';
     }
     
     // Apply enemy strength multipliers
-    const eliteMultiplier = isElite ? 1.5 : 1.0;
-    const bossMultiplier = isBoss ? 2.0 : eliteMultiplier;
+    const regularMultiplier = 1.0;
+    const eliteMultiplier = isElite ? 1.5 : regularMultiplier;
+    const stageBossMultiplier = isStageBoss ? 1.8 : eliteMultiplier;
+    const finalBossMultiplier = isFinalBoss ? 2.2 : stageBossMultiplier;
     
-    // Add stage indicator for bosses to make it clear this is a final stage enemy
-    if (isBoss && currentStage === totalStages) {
+    // Use the highest applicable multiplier
+    const strengthMultiplier = isFinalBoss ? finalBossMultiplier : 
+                               isStageBoss ? stageBossMultiplier : 
+                               isElite ? eliteMultiplier : 
+                               regularMultiplier;
+    
+    // Add stage number indicator ONLY for the final boss
+    if (isFinalBoss) {
       enemyName = `Stage ${currentStage} ${enemyName}`;
+    }
+    
+    // For regular stage bosses, just add the stage number
+    if (isStageBoss) {
+      enemyName = `${enemyName} (Stage ${currentStage})`;
     }
     
     // Create the enemy unit
     const enemy: BattleUnit = {
       id: `enemy-${i}`,
       name: enemyName,
-      hp: Math.floor(baseHP * bossMultiplier),
-      maxHp: Math.floor(baseHP * bossMultiplier),
+      hp: Math.floor(baseHP * strengthMultiplier),
+      maxHp: Math.floor(baseHP * strengthMultiplier),
       attackMeter: 0,
       stats: {
-        attack: Math.floor(baseAttack * bossMultiplier),
-        vitality: Math.floor(baseVitality * bossMultiplier),
-        speed: Math.floor(baseSpeed * (isBoss ? 1.1 : isElite ? 0.9 : 1.0)) 
+        attack: Math.floor(baseAttack * strengthMultiplier),
+        vitality: Math.floor(baseVitality * strengthMultiplier),
+        speed: Math.floor(baseSpeed * (isFinalBoss ? 1.1 : isStageBoss ? 1.0 : isElite ? 0.9 : 1.0)) 
       },
       skills: {
         basic: {
-          name: isBoss ? 'Devastating Strike' : 
-                isElite ? 'Powerful Strike' : 'Strike',
-          damage: Math.floor(baseAttack * 0.9 * bossMultiplier)
+          name: isFinalBoss ? 'Devastating Strike' : 
+                isStageBoss ? 'Powerful Strike' :
+                isElite ? 'Strong Strike' : 'Strike',
+          damage: Math.floor(baseAttack * 0.9 * strengthMultiplier)
         },
-        advanced: (isElite || stageProgress > 0.3) ? {
+        advanced: (isElite || isStageBoss || stageProgress > 0.3) ? {
           name: `${element.charAt(0).toUpperCase() + element.slice(1)} Blast`,
-          damage: Math.floor(baseAttack * 1.5 * bossMultiplier),
+          damage: Math.floor(baseAttack * 1.5 * strengthMultiplier),
           cooldown: 3
         } : null,
-        ultimate: isBoss ? {
+        ultimate: isFinalBoss ? {
           name: 'Annihilation',
-          damage: Math.floor(baseAttack * 3.0 * bossMultiplier),
+          damage: Math.floor(baseAttack * 3.0 * strengthMultiplier),
           cooldown: 4
-        } : isElite ? {
+        } : isStageBoss ? {
           name: 'Overwhelming Force',
-          damage: Math.floor(baseAttack * 2.5 * bossMultiplier),
+          damage: Math.floor(baseAttack * 2.5 * strengthMultiplier),
           cooldown: 5
+        } : isElite ? {
+          name: 'Powerful Attack',
+          damage: Math.floor(baseAttack * 2.0 * strengthMultiplier),
+          cooldown: 6
         } : null
       },
       advancedSkillCooldown: 0,
