@@ -455,7 +455,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   }
   
   // Force the outcome if it doesn't match the predetermined result
-  const livingAllies = allies.filter(unit => unit.hp > 0);
+  let livingAllies = allies.filter(unit => unit.hp > 0);
   const livingEnemies = enemies.filter(unit => unit.hp > 0);
   
   const actualSuccess = livingEnemies.length === 0;
@@ -615,17 +615,20 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
           currentStage,
           totalStages,
           message: `Stage ${currentStage} completed!${currentStage === totalStages ? ' You have conquered the dungeon!' : ' Preparing for the next challenge...'}`,
-          aliveAllies: updatedLivingAllies,
+          aliveAllies: updatedLivingAllies, // Pass the updated allies array
           timestamp: Date.now()
         });
         
-        // Update living allies - create a new array instead of reassigning the const
-        for (let i = 0; i < livingAllies.length; i++) {
-          if (livingAllies[i].hp <= 0) {
-            livingAllies.splice(i, 1);
-            i--;
-          }
-        }
+        // IMPORTANT FIX: Replace the livingAllies array for the next stage
+        // This ensures living allies are properly tracked between stages
+        livingAllies = [...updatedLivingAllies];
+        
+        // Restore some HP for surviving allies (recovery between stages)
+        livingAllies.forEach(ally => {
+          // Recover 20% of max HP between stages
+          const recoveryAmount = Math.floor(ally.maxHp * 0.2);
+          ally.hp = Math.min(ally.maxHp, ally.hp + recoveryAmount);
+        });
       }
     }
   }

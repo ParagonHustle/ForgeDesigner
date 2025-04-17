@@ -478,19 +478,24 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
           
           setActionLog(prev => [...prev, message]);
         } else if (event.type === 'system_message') {
-          // System message
+          // System message - ensure we always add a valid string to the log
+          let message = "System notification";
+          
           if (event.system_message && typeof event.system_message === 'string') {
-            setActionLog(prev => [...prev, event.system_message]);
+            message = event.system_message;
           } else if (event.message && typeof event.message === 'string') {
-            setActionLog(prev => [...prev, event.message]);
+            message = event.message;
           }
+          
+          setActionLog(prev => [...prev, message]);
         } else {
           // Unknown event type
           setActionLog(prev => [...prev, `Unknown event: ${event.type}`]);
         }
       } catch (error) {
         console.error("Error processing battle event:", error);
-        setActionLog(prev => [...prev, `Error: ${error.message}`]);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setActionLog(prev => [...prev, `Error: ${errorMessage}`]);
       }
       
       // Increment step
