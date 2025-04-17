@@ -272,6 +272,8 @@ export default function BattleLog({
                       className={`px-3 py-2 rounded-md ${
                         message.includes('Critical') ? 'bg-[#432874]' : 
                         message.includes('System:') ? 'bg-[#1D1128] border border-[#432874]' :
+                        message.includes('Stage') && message.includes('begins') ? 'bg-[#432874] border border-[#7B4AE2] mt-4 font-medium' :
+                        message.includes('Stage') && message.includes('completed') ? 'bg-[#1D4136] border border-[#4AE292] mt-2 font-medium' :
                         i % 2 === 0 ? 'bg-[#321959]/50' : 'bg-transparent'
                       }`}
                     >

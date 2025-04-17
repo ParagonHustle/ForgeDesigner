@@ -181,7 +181,7 @@ export function registerDungeonRoutes(app: Express) {
         completed: false,
         success: false,
         battleLog: null,
-        totalStages: 3 // Set up multi-stage dungeon with 3 stages by default
+        totalStages: 3 // Default to 3 stages for standard dungeons
       };
       
       const run = await storage.createDungeonRun(runData);

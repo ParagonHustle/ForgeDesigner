@@ -108,70 +108,112 @@ export interface BattleEvent {
 }
 
 /**
- * Generates appropriate enemy units based on dungeon level
+ * Generates appropriate enemy units based on dungeon level and current stage
  * @param dungeonLevel The level of the dungeon
  * @param element The elemental type of the dungeon
  * @param numEnemies The number of enemies to generate
+ * @param currentStage The current stage number
+ * @param totalStages The total number of stages in the dungeon
  * @returns Array of generated enemy units
  */
-function generateEnemies(dungeonLevel: number, element: string = 'neutral', numEnemies: number = 3): BattleUnit[] {
+function generateEnemies(
+  dungeonLevel: number, 
+  element: string = 'neutral', 
+  numEnemies: number = 3,
+  currentStage: number = 1, 
+  totalStages: number = 3
+): BattleUnit[] {
   const enemies: BattleUnit[] = [];
   
-  // Calculate base stats based on dungeon level
-  const baseAttack = 8 + Math.floor(dungeonLevel * 1.5);
-  const baseVitality = 10 + Math.floor(dungeonLevel * 1.4);
-  const baseSpeed = 10 + Math.floor(dungeonLevel * 0.7);
+  // Calculate stage progression and difficulty scaling
+  // Difficulty increases as stages progress
+  const stageProgress = currentStage / totalStages;
+  const stageDifficultyMod = 1 + (stageProgress * 0.7); // 1.23 for stage 1/3, 1.47 for stage 2/3, 1.7 for stage 3/3
+  
+  // Scale base stats based on dungeon level and current stage
+  const baseAttack = (8 + Math.floor(dungeonLevel * 1.5)) * stageDifficultyMod;
+  const baseVitality = (10 + Math.floor(dungeonLevel * 1.4)) * stageDifficultyMod;
+  const baseSpeed = (10 + Math.floor(dungeonLevel * 0.7)) * stageDifficultyMod;
   const baseHP = baseVitality * 8;
   
+  // Potentially increase enemy count in later stages
+  let actualNumEnemies = numEnemies;
+  if (currentStage >= Math.ceil(totalStages * 0.7)) {
+    // For the final 30% of stages, add an additional enemy (if we're not already at max)
+    actualNumEnemies = Math.min(numEnemies + 1, 3);
+  }
+  
   // Generate enemies
-  for (let i = 0; i < numEnemies; i++) {
+  for (let i = 0; i < actualNumEnemies; i++) {
     // Determine enemy type - make the last enemy stronger
-    const isElite = i === numEnemies - 1;
+    // In later stages, more enemies are elite
+    const isElite = (i === actualNumEnemies - 1) || 
+                    (stageProgress > 0.5 && i === actualNumEnemies - 2);
+    
+    // Final stage boss enemy
+    const isBoss = (currentStage === totalStages && i === actualNumEnemies - 1);
     
     // Define enemy name based on type and element
     let enemyName = '';
     if (element === 'fire') {
-      enemyName = isElite ? 'Flame Sentinel' : 'Fire Imp';
+      enemyName = isBoss ? 'Infernal Overlord' : 
+                 isElite ? 'Flame Sentinel' : 'Fire Imp';
     } else if (element === 'ice') {
-      enemyName = isElite ? 'Frost Giant' : 'Ice Elemental';
+      enemyName = isBoss ? 'Glacial Titan' :
+                 isElite ? 'Frost Giant' : 'Ice Elemental';
     } else if (element === 'nature') {
-      enemyName = isElite ? 'Ancient Treant' : 'Thorn Beast';
+      enemyName = isBoss ? 'Ancient Elderwood' :
+                 isElite ? 'Ancient Treant' : 'Thorn Beast';
     } else if (element === 'shadow') {
-      enemyName = isElite ? 'Shadow Fiend' : 'Void Wraith';
+      enemyName = isBoss ? 'Void Harbinger' :
+                 isElite ? 'Shadow Fiend' : 'Void Wraith';
     } else if (element === 'arcane') {
-      enemyName = isElite ? 'Arcane Golem' : 'Magic Construct';
+      enemyName = isBoss ? 'Archmage Construct' :
+                 isElite ? 'Arcane Golem' : 'Magic Construct';
     } else {
-      enemyName = isElite ? 'Dungeon Guardian' : 'Dungeon Creature';
+      enemyName = isBoss ? 'Dungeon Overlord' :
+                 isElite ? 'Dungeon Guardian' : 'Dungeon Creature';
     }
     
-    // Apply elite bonuses if applicable
+    // Apply enemy strength multipliers
     const eliteMultiplier = isElite ? 1.5 : 1.0;
+    const bossMultiplier = isBoss ? 2.0 : eliteMultiplier;
+    
+    // Add stage indicator for bosses to make it clear this is a final stage enemy
+    if (isBoss && currentStage === totalStages) {
+      enemyName = `Stage ${currentStage} ${enemyName}`;
+    }
     
     // Create the enemy unit
     const enemy: BattleUnit = {
       id: `enemy-${i}`,
       name: enemyName,
-      hp: Math.floor(baseHP * eliteMultiplier),
-      maxHp: Math.floor(baseHP * eliteMultiplier),
+      hp: Math.floor(baseHP * bossMultiplier),
+      maxHp: Math.floor(baseHP * bossMultiplier),
       attackMeter: 0,
       stats: {
-        attack: Math.floor(baseAttack * eliteMultiplier),
-        vitality: Math.floor(baseVitality * eliteMultiplier),
-        speed: Math.floor(baseSpeed * (isElite ? 0.9 : 1.0)) // Elites hit harder but slightly slower
+        attack: Math.floor(baseAttack * bossMultiplier),
+        vitality: Math.floor(baseVitality * bossMultiplier),
+        speed: Math.floor(baseSpeed * (isBoss ? 1.1 : isElite ? 0.9 : 1.0)) 
       },
       skills: {
         basic: {
-          name: isElite ? 'Powerful Strike' : 'Strike',
-          damage: Math.floor(baseAttack * 0.9 * eliteMultiplier)
+          name: isBoss ? 'Devastating Strike' : 
+                isElite ? 'Powerful Strike' : 'Strike',
+          damage: Math.floor(baseAttack * 0.9 * bossMultiplier)
         },
-        advanced: isElite ? {
+        advanced: (isElite || stageProgress > 0.3) ? {
           name: `${element.charAt(0).toUpperCase() + element.slice(1)} Blast`,
-          damage: Math.floor(baseAttack * 1.5 * eliteMultiplier),
+          damage: Math.floor(baseAttack * 1.5 * bossMultiplier),
           cooldown: 3
         } : null,
-        ultimate: isElite ? {
+        ultimate: isBoss ? {
+          name: 'Annihilation',
+          damage: Math.floor(baseAttack * 3.0 * bossMultiplier),
+          cooldown: 4
+        } : isElite ? {
           name: 'Overwhelming Force',
-          damage: Math.floor(baseAttack * 2.5 * eliteMultiplier),
+          damage: Math.floor(baseAttack * 2.5 * bossMultiplier),
           cooldown: 5
         } : null
       },
@@ -182,6 +224,8 @@ function generateEnemies(dungeonLevel: number, element: string = 'neutral', numE
     
     enemies.push(enemy);
   }
+  
+  console.log(`Created ${enemies.length} enemies for stage ${currentStage}/${totalStages}, difficulty mod: ${stageDifficultyMod.toFixed(2)}`);
   
   return enemies;
 }
@@ -661,14 +705,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
         // This ensures living allies are properly tracked between stages
         livingAllies = [...updatedLivingAllies];
         
-        // Restore some HP for surviving allies (recovery between stages)
-        livingAllies.forEach(ally => {
-          // Recover 20% of max HP between stages
-          const recoveryAmount = Math.floor(ally.maxHp * 0.2);
-          ally.hp = Math.min(ally.maxHp, ally.hp + recoveryAmount);
-        });
-        
-        console.log(`[STAGE ${currentStage}] HP restored for ${livingAllies.length} allies, preparing for next stage`);
+        // No HP restoration between stages as requested
+        console.log(`[STAGE ${currentStage}] ${livingAllies.length} allies preparing for next stage`);
       } else {
         // Something unexpected happened - both allies and enemies still alive after max rounds
         console.log(`[STAGE ${currentStage}] WARNING: Battle ended without clear victor after max rounds`);
