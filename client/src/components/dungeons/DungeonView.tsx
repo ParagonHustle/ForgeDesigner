@@ -54,7 +54,8 @@ import {
   ChevronRight,
   Swords,
   Loader2,
-  Flame
+  Flame,
+  User
 } from 'lucide-react';
 
 // Custom components
@@ -125,6 +126,15 @@ export default function DungeonView() {
   } = useQuery({
     queryKey: ['/api/dungeons/runs'],
     refetchInterval: 10000, // Refresh every 10 seconds to update run progress
+  });
+  
+  // Fetch available characters
+  const {
+    data: characters,
+    isLoading: isLoadingCharacters,
+    error: charactersError
+  } = useQuery({
+    queryKey: ['/api/characters'],
   });
   
   // Mutation to start a dungeon run
@@ -360,25 +370,50 @@ export default function DungeonView() {
                 
                 <div className="space-y-2">
                   <Label>Select Characters</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(id => (
-                      <Button
-                        key={id}
-                        variant={selectedCharacters.includes(id) ? "default" : "outline"}
-                        size="sm"
-                        className="p-2 h-auto aspect-square"
-                        onClick={() => {
-                          if (selectedCharacters.includes(id)) {
-                            handleCharacterSelection(selectedCharacters.filter(cid => cid !== id));
-                          } else if (selectedCharacters.length < 4) {
-                            handleCharacterSelection([...selectedCharacters, id]);
-                          }
-                        }}
-                      >
-                        <span>{id}</span>
-                      </Button>
-                    ))}
-                  </div>
+                  {isLoadingCharacters ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                    </div>
+                  ) : charactersError ? (
+                    <Alert variant="destructive">
+                      <AlertDescription>
+                        Failed to load characters. Please try refreshing.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (characters as any[])?.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <p>No characters available</p>
+                      <p className="text-sm mt-1">Create characters in the Character section</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-4 gap-2">
+                      {(characters as any[])?.map((character: any) => (
+                        <Button
+                          key={character.id}
+                          variant={selectedCharacters.includes(character.id) ? "default" : "outline"}
+                          size="sm"
+                          className="p-2 h-auto flex flex-col justify-center items-center"
+                          onClick={() => {
+                            if (selectedCharacters.includes(character.id)) {
+                              handleCharacterSelection(selectedCharacters.filter(cid => cid !== character.id));
+                            } else if (selectedCharacters.length < 4) {
+                              handleCharacterSelection([...selectedCharacters, character.id]);
+                            }
+                          }}
+                        >
+                          <div className="w-7 h-7 rounded-full bg-[#432874] mb-1 flex items-center justify-center overflow-hidden">
+                            {character.avatarUrl ? (
+                              <img src={character.avatarUrl} alt={character.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <User className="w-4 h-4" />
+                            )}
+                          </div>
+                          <span className="text-xs line-clamp-1">{character.name}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">
                     {selectedCharacters.length}/4 characters selected
                   </p>
