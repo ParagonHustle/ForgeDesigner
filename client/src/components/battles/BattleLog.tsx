@@ -518,14 +518,20 @@ const BattleLog = ({ isOpen, onClose, battleLog, runId, onCompleteDungeon }: Bat
             >
               Restart
             </Button>
-            {isComplete && runId && onCompleteDungeon && (
+            {runId && onCompleteDungeon && (
               <Button 
-                size="sm" 
+                size="lg" 
                 onClick={handleCompleteDungeon}
-                className="h-8 text-sm bg-[#6A3FB5] hover:bg-[#8352D3]"
+                className="w-full mt-2 bg-[#6A3FB5] hover:bg-[#8352D3]"
               >
-                Complete Dungeon
+                Complete Dungeon & Claim Rewards
               </Button>
+            )}
+            
+            {runId && onCompleteDungeon && (
+              <div className="text-xs text-center text-[#C8B8DB] mt-1">
+                Completing this dungeon will free your characters for other tasks
+              </div>
             )}
           </div>
           
