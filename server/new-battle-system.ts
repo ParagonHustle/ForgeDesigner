@@ -534,7 +534,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   
   // If success is predetermined but unlikely with fair battle, boost allies
   if (success) {
-    allies.forEach(ally => {
+    allies.forEach((ally: BattleUnit) => {
       ally.stats.attack = Math.floor(ally.stats.attack * 1.2); // Boost attack by 20%
       ally.hp = ally.maxHp; // Ensure full health
     });
@@ -564,8 +564,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
   }
   
   // Force the outcome if it doesn't match the predetermined result
-  let livingAllies = allies.filter(unit => unit.hp > 0);
-  const livingEnemies = enemies.filter(unit => unit.hp > 0);
+  let livingAllies = allies.filter((unit: BattleUnit) => unit.hp > 0);
+  const livingEnemies = enemies.filter((unit: BattleUnit) => unit.hp > 0);
   
   const actualSuccess = livingEnemies.length === 0;
   
@@ -612,7 +612,7 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
       });
       
       // Defeat all allies with a trap
-      livingAllies.forEach(ally => {
+      livingAllies.forEach((ally: BattleUnit) => {
         ally.hp = 0;
       });
       
@@ -734,8 +734,8 @@ export async function generateBattleLog(run: any, success: boolean): Promise<Bat
       }
       
       // Update living allies and enemies after this stage
-      const updatedLivingAllies = livingAllies.filter(unit => unit.hp > 0);
-      const updatedLivingEnemies = enemies.filter(unit => unit.hp > 0);
+      const updatedLivingAllies = livingAllies.filter((unit: BattleUnit) => unit.hp > 0);
+      const updatedLivingEnemies = enemies.filter((unit: BattleUnit) => unit.hp > 0);
       
       console.log(`[STAGE ${currentStage}] After battle: ${updatedLivingAllies.length} allies alive, ${updatedLivingEnemies.length} enemies alive`);
       
