@@ -1,4 +1,4 @@
-Combined Code Files - Thu 17 Apr 2025 10:15:04 PM UTC
+Combined Code Files - Fri 18 Apr 2025 09:57:06 AM UTC
 
 
 === client/src/components/ui/accordion.tsx ===
@@ -22061,6 +22061,173 @@ const TavernView = () => {
 
 export default TavernView;
 
+=== client/src/components/admin/AdminTools.tsx ===
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from '@tanstack/react-query';
+import { useGameStore } from '@/lib/zustandStore';
+
+/**
+ * Component for admin tools and actions
+ */
+export function AdminTools() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useGameStore();
+  
+  const freeCharacters = async () => {
+    try {
+      const response = await fetch('/api/admin/free-characters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id || 1 }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "Characters Freed",
+          description: `Successfully freed ${data.characters.length} characters`,
+        });
+        
+        // Refresh characters query
+        queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: data.message || "Failed to free characters",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred",
+      });
+      console.error('Error in freeCharacters:', error);
+    }
+  };
+  
+  const completeDungeons = async () => {
+    try {
+      const response = await fetch('/api/admin/complete-dungeons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id || 1 }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "Dungeons Completed",
+          description: `Successfully completed ${data.dungeons.length} dungeon runs`,
+        });
+        
+        // Refresh dungeons query
+        queryClient.invalidateQueries({ queryKey: ['/api/dungeons/runs'] });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: data.message || "Failed to complete dungeons",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred",
+      });
+      console.error('Error in completeDungeons:', error);
+    }
+  };
+  
+  const addResources = async () => {
+    try {
+      // Add essence
+      const essenceResponse = await fetch('/api/admin/add-essence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      // Add currency
+      const currencyResponse = await fetch('/api/admin/add-currency', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (essenceResponse.ok && currencyResponse.ok) {
+        toast({
+          title: "Resources Added",
+          description: "Successfully added resources and currency",
+        });
+        
+        // Refresh resources and user
+        queryClient.invalidateQueries({ queryKey: ['/api/resources'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to add some resources",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred",
+      });
+      console.error('Error in addResources:', error);
+    }
+  };
+
+  return (
+    <div className="border border-purple-800 bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-4 text-purple-400">Admin Tools</h2>
+      
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold mb-2 text-purple-300">Character Management</h3>
+          <Button 
+            variant="outline" 
+            onClick={freeCharacters}
+            className="border-purple-600 hover:bg-purple-900/50"
+          >
+            Free Stuck Characters
+          </Button>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-semibold mb-2 text-purple-300">Dungeon Management</h3>
+          <Button 
+            variant="outline" 
+            onClick={completeDungeons}
+            className="border-purple-600 hover:bg-purple-900/50"
+          >
+            Complete All Dungeons
+          </Button>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-semibold mb-2 text-purple-300">Resource Management</h3>
+          <Button 
+            variant="outline" 
+            onClick={addResources}
+            className="border-purple-600 hover:bg-purple-900/50"
+          >
+            Add Resources & Currency
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 === client/src/hooks/use-mobile.tsx ===
 import * as React from "react"
 
@@ -23405,93 +23572,6 @@ app.use((req, res, next) => {
   });
 })();
 
-
-=== server/admin.ts ===
-import { Express, Request, Response } from 'express';
-import { storage } from './storage';
-
-export async function registerAdminRoutes(app: Express) {
-  // Admin endpoint to add 15,000 Essence
-  app.post('/api/admin/add-essence', async (req: Request, res: Response) => {
-    try {
-      // Get user ID (using ID 1 for development)
-      const userId = 1;
-      
-      // Check if Essence resource exists
-      let essence = await storage.getResourceByNameAndUserId('Essence', userId);
-      
-      if (essence) {
-        // Update existing resource
-        const updatedEssence = await storage.updateResource(essence.id, {
-          quantity: (essence.quantity || 0) + 15000
-        });
-        res.json(updatedEssence);
-      } else {
-        // Create new Essence resource
-        const newEssence = await storage.createResource({
-          userId,
-          name: 'Essence',
-          description: 'Magical essence used for crafting and upgrading',
-          type: 'crafting',
-          iconUrl: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=150&h=150&fit=crop',
-          quantity: 15000
-        });
-        res.json(newEssence);
-      }
-      
-      // Log activity
-      await storage.createActivityLog({
-        userId,
-        activityType: 'resource_added',
-        description: 'Added 15,000 Essence',
-        relatedIds: {}
-      });
-      
-      console.log('Added 15,000 Essence to user account');
-      
-    } catch (error) {
-      console.error('Error adding essence:', error);
-      res.status(500).json({ message: 'Failed to add essence' });
-    }
-  });
-  
-  // Admin endpoint to add 5,000 Rogue Credits and 5,000 Forge Tokens
-  app.post('/api/admin/add-currency', async (req: Request, res: Response) => {
-    try {
-      // Get user ID (using ID 1 for development)
-      const userId = 1;
-      
-      // Get the user
-      const user = await storage.getUserById(userId);
-      
-      if (user) {
-        // Update user with additional currency
-        const updatedUser = await storage.updateUser(userId, {
-          rogueCredits: (user.rogueCredits || 0) + 5000,
-          forgeTokens: (user.forgeTokens || 0) + 5000
-        });
-        
-        // Log activity
-        await storage.createActivityLog({
-          userId,
-          activityType: 'currency_added',
-          description: 'Added 5,000 Rogue Credits and 5,000 Forge Tokens',
-          relatedIds: {}
-        });
-        
-        console.log('Added currency to user account', updatedUser);
-        res.json({ success: true, user: updatedUser });
-      } else {
-        res.status(404).json({ message: 'User not found' });
-      }
-    } catch (error) {
-      console.error('Error adding currency:', error);
-      res.status(500).json({ message: 'Failed to add currency' });
-    }
-  });
-  
-  // Add more admin routes here as needed
-}
 
 === server/townhallSkills.ts ===
 // Townhall skill tree structure
@@ -28584,6 +28664,256 @@ export function registerDungeonRoutes(app: Express) {
     } catch (error) {
       console.error('Failed to complete dungeon run:', error);
       res.status(500).json({ error: 'Failed to complete dungeon run' });
+    }
+  });
+}
+
+=== server/fix-stuck-characters.ts ===
+/**
+ * One-time script to fix characters that are stuck in dungeons
+ * This will free all characters that are marked as active but should be available
+ */
+
+import { db } from './db';
+import { characters } from '@shared/schema';
+import { eq } from 'drizzle-orm';
+
+async function fixStuckCharacters() {
+  try {
+    console.log('Starting character fix process...');
+    
+    // Get all characters that are marked as active
+    const activeCharacters = await db.query.characters.findMany({
+      where: eq(characters.isActive, true)
+    });
+    
+    console.log(`Found ${activeCharacters.length} active characters`);
+    
+    // Update each character to set isActive = false
+    let fixedCount = 0;
+    for (const character of activeCharacters) {
+      try {
+        // Update the character in the database
+        await db.update(characters)
+          .set({ isActive: false })
+          .where(eq(characters.id, character.id));
+        
+        console.log(`Fixed character: ${character.name} (ID: ${character.id})`);
+        fixedCount++;
+      } catch (e) {
+        console.error(`Error fixing character ${character.id}:`, e);
+      }
+    }
+    
+    console.log(`Successfully fixed ${fixedCount} out of ${activeCharacters.length} characters`);
+    console.log('Character fix process completed');
+  } catch (error) {
+    console.error('Error in fix stuck characters process:', error);
+  }
+}
+
+// Run the fix
+fixStuckCharacters()
+  .then(() => {
+    console.log('Fix script completed successfully');
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error('Fix script failed:', err);
+    process.exit(1);
+  });
+
+=== server/admin.ts ===
+import { Express, Request, Response } from 'express';
+import { storage } from './storage';
+import { db } from './db';
+import { characters } from '@shared/schema';
+import { eq } from 'drizzle-orm';
+
+export async function registerAdminRoutes(app: Express) {
+  // Admin endpoint to add 15,000 Essence
+  app.post('/api/admin/add-essence', async (req: Request, res: Response) => {
+    try {
+      // Get user ID (using ID 1 for development)
+      const userId = 1;
+      
+      // Check if Essence resource exists
+      let essence = await storage.getResourceByNameAndUserId('Essence', userId);
+      
+      if (essence) {
+        // Update existing resource
+        const updatedEssence = await storage.updateResource(essence.id, {
+          quantity: (essence.quantity || 0) + 15000
+        });
+        res.json(updatedEssence);
+      } else {
+        // Create new Essence resource
+        const newEssence = await storage.createResource({
+          userId,
+          name: 'Essence',
+          description: 'Magical essence used for crafting and upgrading',
+          type: 'crafting',
+          iconUrl: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=150&h=150&fit=crop',
+          quantity: 15000
+        });
+        res.json(newEssence);
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId,
+        activityType: 'resource_added',
+        description: 'Added 15,000 Essence',
+        relatedIds: {}
+      });
+      
+      console.log('Added 15,000 Essence to user account');
+      
+    } catch (error) {
+      console.error('Error adding essence:', error);
+      res.status(500).json({ message: 'Failed to add essence' });
+    }
+  });
+  
+  // Admin endpoint to add 5,000 Rogue Credits and 5,000 Forge Tokens
+  app.post('/api/admin/add-currency', async (req: Request, res: Response) => {
+    try {
+      // Get user ID (using ID 1 for development)
+      const userId = 1;
+      
+      // Get the user
+      const user = await storage.getUserById(userId);
+      
+      if (user) {
+        // Update user with additional currency
+        const updatedUser = await storage.updateUser(userId, {
+          rogueCredits: (user.rogueCredits || 0) + 5000,
+          forgeTokens: (user.forgeTokens || 0) + 5000
+        });
+        
+        // Log activity
+        await storage.createActivityLog({
+          userId,
+          activityType: 'currency_added',
+          description: 'Added 5,000 Rogue Credits and 5,000 Forge Tokens',
+          relatedIds: {}
+        });
+        
+        console.log('Added currency to user account', updatedUser);
+        res.json({ success: true, user: updatedUser });
+      } else {
+        res.status(404).json({ message: 'User not found' });
+      }
+    } catch (error) {
+      console.error('Error adding currency:', error);
+      res.status(500).json({ message: 'Failed to add currency' });
+    }
+  });
+  
+  // Admin endpoint to free stuck characters
+  app.post('/api/admin/free-characters', async (req: Request, res: Response) => {
+    try {
+      // Get user ID from session or use a specific user ID as fallback
+      const userId = req.session?.userId || req.body.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+      
+      // Get all active characters for this user
+      const activeCharacters = await db.query.characters.findMany({
+        where: (characters, { and, eq }) => 
+          and(eq(characters.userId, userId), eq(characters.isActive, true))
+      });
+      
+      console.log(`Found ${activeCharacters.length} active characters for user ${userId}`);
+      
+      // Update each character to set isActive = false
+      const results = [];
+      for (const character of activeCharacters) {
+        await db.update(characters)
+          .set({ isActive: false })
+          .where(eq(characters.id, character.id));
+        
+        results.push({
+          id: character.id,
+          name: character.name,
+          freed: true
+        });
+        
+        console.log(`Freed character: ${character.name} (ID: ${character.id})`);
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId,
+        activityType: 'characters_freed',
+        description: `Freed ${results.length} stuck characters`,
+        relatedIds: { characterIds: results.map(c => c.id) }
+      });
+      
+      return res.json({
+        success: true,
+        message: `Freed ${results.length} characters`,
+        characters: results
+      });
+    } catch (error) {
+      console.error('Error freeing characters:', error);
+      return res.status(500).json({ message: 'Failed to free characters', error: error.message });
+    }
+  });
+  
+  // Admin endpoint to force complete all dungeon runs
+  app.post('/api/admin/complete-dungeons', async (req: Request, res: Response) => {
+    try {
+      // Get user ID from session or use a specific user ID as fallback
+      const userId = req.session?.userId || req.body.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+      
+      // Get all incomplete dungeon runs for this user
+      const dungeonRuns = await storage.getDungeonRuns(userId);
+      const incompleteDungeons = dungeonRuns.filter(run => !run.completed);
+      
+      console.log(`Found ${incompleteDungeons.length} incomplete dungeons for user ${userId}`);
+      
+      // Force complete each dungeon
+      const results = [];
+      for (const run of incompleteDungeons) {
+        // Force the dungeon to complete with success=true
+        const updatedRun = await storage.updateDungeonRun(run.id, {
+          completed: true,
+          success: true,
+          completedStages: run.totalStages || 8
+        });
+        
+        results.push({
+          id: updatedRun.id,
+          name: updatedRun.dungeonName,
+          completed: true
+        });
+        
+        console.log(`Completed dungeon: ${run.dungeonName} (ID: ${run.id})`);
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId,
+        activityType: 'dungeons_completed',
+        description: `Force-completed ${results.length} dungeons`,
+        relatedIds: { dungeonIds: results.map(d => d.id) }
+      });
+      
+      return res.json({
+        success: true,
+        message: `Completed ${results.length} dungeons`,
+        dungeons: results
+      });
+    } catch (error) {
+      console.error('Error completing dungeons:', error);
+      return res.status(500).json({ message: 'Failed to complete dungeons', error: error.message });
     }
   });
 }

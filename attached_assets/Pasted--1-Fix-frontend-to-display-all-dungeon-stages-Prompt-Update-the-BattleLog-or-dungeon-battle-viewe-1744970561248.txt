@@ -1,0 +1,27 @@
+✅ 1. Fix frontend to display all dungeon stages
+Prompt:
+Update the BattleLog or dungeon battle viewer component so it correctly groups and displays events from all dungeon stages. Right now, it only shows events from Stage 1. The component should loop through all battleLog events and organize them by stage_start and round types, showing stage numbers and enemy actions per stage.
+
+✅ 2. Add battle replay support with stage-by-stage playback
+Prompt:
+Create a battle replay system that uses the pre-generated battleLog array. It should support playback stage-by-stage and round-by-round. Include a “Next Round” button, “Next Stage” button, and an auto-play toggle. Use round.number and currentStage from the logs to control progression.
+
+✅ 3. Display full character visuals, HP bars, and skills used
+Prompt:
+Render full character visuals (sprite or avatar), HP bars, action meters, and skills used during each round. Parse the battleLog events to extract actions, targets, HP changes, and update visuals accordingly. Animate skill activations using the skillUsed field and animate damage taken using the updated hp.
+
+✅ 4. Correct mismatch between stage numbers and enemy actions
+Prompt:
+Fix the UI mismatch that shows Stage 7 in the header but only Stage 1 events in the log. Make the header reflect the currently viewed stage, not the last completed one. Group events by currentStage and sync the visual display with the stage selected in the replay or log.
+
+✅ 5. Fix missing or incorrect replay data
+Prompt:
+Ensure that the backend returns a complete battleLog for all dungeon stages. Confirm that each log contains stage_start, multiple round, and stage_complete entries for each stage from 1 to 8. Do not regenerate new results on reload—always reuse the stored battleLog.
+
+✅ 6. Improve stage navigation in UI
+Prompt:
+Add a vertical or tabbed layout for navigating between stages (e.g., “Stage 1”, “Stage 2”, etc.). When a stage is selected, show all rounds and character actions within that stage. Default to the latest unlocked stage when opening the battle viewer, but allow backward navigation.
+
+✅ 7. Animate action order by speed stat
+Prompt:
+In each round, display the order of character actions based on their speed stat. Show this as a visual queue (turn order bar or floating icons) and animate each action in the order they appear in the round.actions array.
