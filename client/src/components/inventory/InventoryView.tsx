@@ -70,7 +70,7 @@ const InventoryView = () => {
       characterClass: "Warrior",
       characterName: "Kleos",
       rarity: "common",
-      avatarUrl: "/images/kleos.jpg"
+      avatarUrl: "/public/images/kleos.jpg"
     },
     {
       id: 50002,
