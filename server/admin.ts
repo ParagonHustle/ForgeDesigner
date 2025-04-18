@@ -1,5 +1,8 @@
 import { Express, Request, Response } from 'express';
 import { storage } from './storage';
+import { db } from './db';
+import { characters } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 export async function registerAdminRoutes(app: Express) {
   // Admin endpoint to add 15,000 Essence
@@ -81,5 +84,110 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
   
-  // Add more admin routes here as needed
+  // Admin endpoint to free stuck characters
+  app.post('/api/admin/free-characters', async (req: Request, res: Response) => {
+    try {
+      // Get user ID from session or use a specific user ID as fallback
+      const userId = req.session?.userId || req.body.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+      
+      // Get all active characters for this user
+      const activeCharacters = await db.query.characters.findMany({
+        where: (characters, { and, eq }) => 
+          and(eq(characters.userId, userId), eq(characters.isActive, true))
+      });
+      
+      console.log(`Found ${activeCharacters.length} active characters for user ${userId}`);
+      
+      // Update each character to set isActive = false
+      const results = [];
+      for (const character of activeCharacters) {
+        await db.update(characters)
+          .set({ isActive: false })
+          .where(eq(characters.id, character.id));
+        
+        results.push({
+          id: character.id,
+          name: character.name,
+          freed: true
+        });
+        
+        console.log(`Freed character: ${character.name} (ID: ${character.id})`);
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId,
+        activityType: 'characters_freed',
+        description: `Freed ${results.length} stuck characters`,
+        relatedIds: { characterIds: results.map(c => c.id) }
+      });
+      
+      return res.json({
+        success: true,
+        message: `Freed ${results.length} characters`,
+        characters: results
+      });
+    } catch (error) {
+      console.error('Error freeing characters:', error);
+      return res.status(500).json({ message: 'Failed to free characters', error: error.message });
+    }
+  });
+  
+  // Admin endpoint to force complete all dungeon runs
+  app.post('/api/admin/complete-dungeons', async (req: Request, res: Response) => {
+    try {
+      // Get user ID from session or use a specific user ID as fallback
+      const userId = req.session?.userId || req.body.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+      
+      // Get all incomplete dungeon runs for this user
+      const dungeonRuns = await storage.getDungeonRuns(userId);
+      const incompleteDungeons = dungeonRuns.filter(run => !run.completed);
+      
+      console.log(`Found ${incompleteDungeons.length} incomplete dungeons for user ${userId}`);
+      
+      // Force complete each dungeon
+      const results = [];
+      for (const run of incompleteDungeons) {
+        // Force the dungeon to complete with success=true
+        const updatedRun = await storage.updateDungeonRun(run.id, {
+          completed: true,
+          success: true,
+          completedStages: run.totalStages || 8
+        });
+        
+        results.push({
+          id: updatedRun.id,
+          name: updatedRun.dungeonName,
+          completed: true
+        });
+        
+        console.log(`Completed dungeon: ${run.dungeonName} (ID: ${run.id})`);
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId,
+        activityType: 'dungeons_completed',
+        description: `Force-completed ${results.length} dungeons`,
+        relatedIds: { dungeonIds: results.map(d => d.id) }
+      });
+      
+      return res.json({
+        success: true,
+        message: `Completed ${results.length} dungeons`,
+        dungeons: results
+      });
+    } catch (error) {
+      console.error('Error completing dungeons:', error);
+      return res.status(500).json({ message: 'Failed to complete dungeons', error: error.message });
+    }
+  });
 }
