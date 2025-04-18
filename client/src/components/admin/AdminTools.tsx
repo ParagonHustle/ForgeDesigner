@@ -121,6 +121,43 @@ export function AdminTools() {
       console.error('Error in addResources:', error);
     }
   };
+  
+  const addAdvancedContent = async () => {
+    try {
+      const response = await fetch('/api/admin/add-advanced-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "Advanced Content Added",
+          description: `Added 99999 Essence, ${data.auras} auras, and ${data.characters} characters`,
+        });
+        
+        // Refresh queries
+        queryClient.invalidateQueries({ queryKey: ['/api/resources'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/auras'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: data.message || "Failed to add advanced content",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred",
+      });
+      console.error('Error in addAdvancedContent:', error);
+    }
+  };
 
   return (
     <div className="border border-purple-800 bg-black/30 backdrop-blur-sm p-4 rounded-lg shadow-md">
@@ -151,13 +188,23 @@ export function AdminTools() {
         
         <div>
           <h3 className="text-lg font-semibold mb-2 text-purple-300">Resource Management</h3>
-          <Button 
-            variant="outline" 
-            onClick={addResources}
-            className="border-purple-600 hover:bg-purple-900/50"
-          >
-            Add Resources & Currency
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              onClick={addResources}
+              className="border-purple-600 hover:bg-purple-900/50"
+            >
+              Add Resources & Currency
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={addAdvancedContent}
+              className="border-yellow-600 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-300"
+            >
+              Add 99999 Essence + Characters & Auras
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -5,6 +5,176 @@ import { characters } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 export async function registerAdminRoutes(app: Express) {
+  // Admin endpoint to add advanced content (99999 Essence, Auras, and characters)
+  app.post('/api/admin/add-advanced-content', async (req: Request, res: Response) => {
+    try {
+      // Get user ID from session
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+      
+      // Add 99999 Essence
+      let essence = await storage.getResourceByNameAndUserId('Essence', userId);
+      if (essence) {
+        await storage.updateResource(essence.id, {
+          quantity: (essence.quantity || 0) + 99999
+        });
+      } else {
+        await storage.createResource({
+          userId,
+          name: 'Essence',
+          description: 'Magical essence used for crafting and upgrading',
+          type: 'crafting',
+          iconUrl: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=150&h=150&fit=crop',
+          quantity: 99999
+        });
+      }
+      
+      console.log('Added 99999 Essence to user account');
+      
+      // Create Level 1 Auras
+      const auraTypes = [
+        { name: 'Flame Aura', element: 'fire', rarity: 'common', tier: 1 },
+        { name: 'Ice Barrier', element: 'ice', rarity: 'common', tier: 1 },
+        { name: 'Lightning Shield', element: 'lightning', rarity: 'uncommon', tier: 1 },
+        { name: 'Earth Embrace', element: 'earth', rarity: 'common', tier: 1 },
+        { name: 'Void Mantle', element: 'void', rarity: 'rare', tier: 1 }
+      ];
+      
+      const createdAuras = [];
+      for (const aura of auraTypes) {
+        const newAura = await storage.createAura({
+          userId,
+          name: aura.name,
+          description: `A level 1 ${aura.element} aura that provides elemental protection.`,
+          element: aura.element,
+          tier: aura.tier,
+          rarity: aura.rarity,
+          level: 1,
+          requiredLevel: 1,
+          power: 10 + Math.floor(Math.random() * 5),
+          defense: 5 + Math.floor(Math.random() * 5),
+          vitality: 3 + Math.floor(Math.random() * 3),
+          energy: 5 + Math.floor(Math.random() * 5),
+          iconUrl: `https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=150&h=150&fit=crop&auto=format&q=80&crop=entropy&cs=tinysrgb&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTY5MTkxMjcwMw&ixlib=rb-4.0.3`,
+          skills: [],
+          equippedByCharacterId: null,
+          isFusing: false
+        });
+        createdAuras.push(newAura);
+      }
+      
+      console.log(`Created ${createdAuras.length} auras`);
+      
+      // Create duplicate characters
+      const existingCharacters = await storage.getCharacters(userId);
+      const duplicateCharacters = [];
+      
+      if (existingCharacters.length > 0) {
+        // Duplicate the first character twice
+        const baseChar = existingCharacters[0];
+        
+        for (let i = 1; i <= 2; i++) {
+          const newChar = await storage.createCharacter({
+            userId,
+            name: `${baseChar.name} Clone ${i}`,
+            level: baseChar.level,
+            class: baseChar.class,
+            element: baseChar.element,
+            rarity: baseChar.rarity,
+            attack: baseChar.attack,
+            defense: baseChar.defense,
+            vitality: baseChar.vitality,
+            speed: baseChar.speed,
+            focus: baseChar.focus,
+            accuracy: baseChar.accuracy,
+            resilience: baseChar.resilience,
+            iconUrl: baseChar.iconUrl,
+            equippedAuraId: null,
+            isActive: false
+          });
+          duplicateCharacters.push(newChar);
+        }
+      }
+      
+      console.log(`Created ${duplicateCharacters.length} duplicate characters`);
+      
+      // Create new characters with avatars
+      const newCharacters = [
+        {
+          name: "Dragonfire",
+          class: "battlemage",
+          element: "fire",
+          rarity: "legendary",
+          level: 15,
+          iconUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop"
+        },
+        {
+          name: "Frostbite",
+          class: "assassin",
+          element: "ice",
+          rarity: "epic",
+          level: 12,
+          iconUrl: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150&h=150&fit=crop"
+        },
+        {
+          name: "Thunderclap",
+          class: "berserker",
+          element: "lightning",
+          rarity: "rare",
+          level: 10,
+          iconUrl: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&h=150&fit=crop"
+        }
+      ];
+      
+      const createdCharacters = [];
+      for (const char of newCharacters) {
+        const newChar = await storage.createCharacter({
+          userId,
+          name: char.name,
+          level: char.level,
+          class: char.class,
+          element: char.element,
+          rarity: char.rarity,
+          attack: 10 + (char.level * 3) + Math.floor(Math.random() * 10),
+          defense: 8 + (char.level * 2) + Math.floor(Math.random() * 8),
+          vitality: 100 + (char.level * 10) + Math.floor(Math.random() * 20),
+          speed: 5 + (char.level * 1) + Math.floor(Math.random() * 5),
+          focus: 8 + (char.level * 2) + Math.floor(Math.random() * 7),
+          accuracy: 80 + Math.floor(Math.random() * 10),
+          resilience: 10 + (char.level * 1) + Math.floor(Math.random() * 5),
+          iconUrl: char.iconUrl,
+          equippedAuraId: null,
+          isActive: false
+        });
+        createdCharacters.push(newChar);
+      }
+      
+      console.log(`Created ${createdCharacters.length} new characters`);
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId,
+        activityType: 'admin_content_added',
+        description: `Added 99999 Essence, ${createdAuras.length} auras, and ${duplicateCharacters.length + createdCharacters.length} characters`,
+        relatedIds: {}
+      });
+      
+      return res.json({
+        success: true,
+        message: `Added advanced content to account`,
+        auras: createdAuras.length,
+        characters: duplicateCharacters.length + createdCharacters.length,
+        essence: 99999
+      });
+    } catch (error) {
+      console.error('Error adding advanced content:', error);
+      return res.status(500).json({ message: 'Failed to add advanced content', error: error.message });
+    }
+  });
+  
   // Admin endpoint to add 15,000 Essence
   app.post('/api/admin/add-essence', async (req: Request, res: Response) => {
     try {
