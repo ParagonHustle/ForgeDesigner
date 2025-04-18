@@ -22,10 +22,16 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     fetchBountyQuests
   } = useGameStore();
 
-  // Load user data on mount
+  // Load user data on mount and auto-login for prototype
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    fetchUser().then(user => {
+      // For prototype: Auto-login if not authenticated
+      if (!user) {
+        console.log('Auto-login for prototype initiated');
+        login();
+      }
+    });
+  }, [fetchUser, login]);
 
   // Fetch game data when authenticated
   useEffect(() => {
@@ -69,7 +75,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         <div className="bg-[#432874]/20 border border-[#432874]/50 rounded-xl p-8 max-w-md w-full">
           <h1 className="text-4xl font-cinzel font-bold text-[#FF9D00] text-center mb-6">The Forge</h1>
           <p className="text-[#C8B8DB] text-center mb-8">
-            Welcome to The Forge - the management platform for Aura Forge. Log in with Discord to begin your journey.
+            Welcome to The Forge - the management platform for Aura Forge. 
+            <br/><span className="text-[#FF9D00]">(Prototype: Click below to log in automatically as an admin with full access)</span>
           </p>
           
           {/* Universal login button that uses the dev/prod logic in the store */}
@@ -93,13 +100,13 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 const indicator = document.getElementById('dev-indicator');
                 const buttonText = document.getElementById('login-button-text');
                 if (indicator) indicator.classList.remove('hidden');
-                if (buttonText) buttonText.textContent = 'Dev Login (No Discord Required)';
+                if (buttonText) buttonText.textContent = 'Auto-Login as Admin';
               }
             })();
           `}} />
           
           <div className="mt-6 text-center text-[#C8B8DB]/60 text-sm">
-            Alpha v0.1 - Connect your Discord account to start your adventure
+            Alpha v0.1 - Prototype Mode - No Discord Account Required
           </div>
         </div>
       </div>

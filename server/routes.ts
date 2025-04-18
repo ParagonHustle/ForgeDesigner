@@ -77,215 +77,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // WebSocket functionality temporarily removed to fix startup issues
   
-  // Discord OAuth routes
-  app.get('/api/auth/discord', (req, res) => {
-    // In a real implementation, you would redirect to Discord OAuth
-    // For this MVP, we'll simulate a successful login
-    res.redirect('/api/auth/discord/callback?code=mock_code');
-  });
-  
-  // Direct login route for development
-  app.get('/api/auth/dev-login', async (req, res) => {
+  // Auto-login route - bypasses Discord OAuth completely for prototyping
+  app.get('/api/auth/auto-login', async (req, res) => {
     try {
-      console.log('Starting dev login process');
+      console.log('Starting auto-login process for admin access');
       
-      // Define a default dev user
-      const devUserId = 'dev123456';
+      // Define the admin user ID
+      const adminUserId = 'admin123456';
       
-      let user;
+      let userData = null;
       
-      // First try to find an existing user
+      // Check if admin user exists
       try {
-        user = await storage.getUserByDiscordId(devUserId);
-        console.log('User exists check result:', user ? 'Found existing user' : 'No user found, creating new one');
+        userData = await storage.getUserByDiscordId(adminUserId);
+        console.log('Admin user check:', userData ? 'Found existing admin' : 'No admin found, will create');
       } catch (findError) {
-        console.error('Error checking for existing user:', findError);
-        user = null;
+        console.error('Error checking for admin user:', findError);
+        userData = null;
       }
       
-      if (!user) {
-        try {
-          // Create new dev user with fixed details
-          const mockUser = {
-            discordId: devUserId,
-            username: 'DevUser',
-            avatarUrl: 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
-            roles: ['member'],
-            forgeTokens: 5000,
-            rogueCredits: 2000,
-            soulShards: 25,
-            lastLogin: new Date(),
-            isAdmin: true
-          };
-          
-          // Create new dev user
-          user = await storage.createUser(mockUser);
-          console.log('Created new dev user with ID:', user.id);
-          
-          // Create initial resources
-          await storage.createResource({
-            userId: user.id,
+      if (!userData) {
+        // Create new admin user with enhanced privileges
+        console.log('Creating new admin user');
+        userData = await storage.createUser({
+          discordId: adminUserId,
+          username: 'Admin',
+          avatarUrl: 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
+          roles: ['admin', 'member'],
+          forgeTokens: 99999,
+          rogueCredits: 99999,
+          soulShards: 9999,
+          lastLogin: new Date(),
+          isAdmin: true
+        });
+        console.log('Created admin user with ID:', userData.id);
+        
+        // Create starter resources
+        await Promise.all([
+          storage.createResource({
+            userId: userData.id,
             name: 'Celestial Ore',
             type: 'material',
-            quantity: 100,
+            quantity: 1000,
             description: 'A rare material used in crafting Auras',
             iconUrl: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
-          });
-          
-          // Add more starter resources
-          await storage.createResource({
-            userId: user.id,
+          }),
+          storage.createResource({
+            userId: userData.id,
             name: 'Abyssal Pearl',
             type: 'material',
-            quantity: 50,
+            quantity: 1000,
             description: 'A rare material from the ocean depths',
             iconUrl: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=150&h=150&fit=crop'
-          });
-          
-          // Create a starter character
-          await storage.createCharacter({
-            userId: user.id,
+          }),
+          storage.createResource({
+            userId: userData.id,
+            name: 'Mystic Crystal',
+            type: 'material',
+            quantity: 1000,
+            description: 'Crystal with magical properties',
+            iconUrl: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=150&h=150&fit=crop'
+          })
+        ]);
+        
+        // Create starter characters
+        await Promise.all([
+          storage.createCharacter({
+            userId: userData.id,
             name: 'Dragonslayer',
             class: 'Warrior',
-            level: 15,
-            attack: 25,
-            defense: 30,
-            vitality: 150,
-            speed: 20,
-            focus: 15,
-            accuracy: 22,
-            resilience: 28,
+            level: 30,
+            attack: 50,
+            defense: 60,
+            vitality: 300,
+            speed: 40,
+            focus: 30,
+            accuracy: 45,
+            resilience: 55,
             avatarUrl: 'https://images.unsplash.com/photo-1580519542036-c47de6d5f458?w=250&h=250&fit=crop'
-          });
-          
-          console.log('Created initial resources and starter character');
-        } catch (createError) {
-          console.error('Error creating dev user or starter content:', createError);
-          return res.status(500).json({ 
-            message: 'Dev login failed - Could not create user', 
-            error: String(createError) 
-          });
-        }
-      } else {
-        console.log('Using existing dev user with ID:', user.id);
+          }),
+          storage.createCharacter({
+            userId: userData.id,
+            name: 'Shadowmage',
+            class: 'Mage',
+            level: 30,
+            attack: 60,
+            defense: 30,
+            vitality: 200,
+            speed: 45,
+            focus: 70,
+            accuracy: 60,
+            resilience: 40,
+            avatarUrl: 'https://images.unsplash.com/photo-1618336753974-aae8e04506a7?w=250&h=250&fit=crop'
+          }),
+          storage.createCharacter({
+            userId: userData.id,
+            name: 'Swiftblade',
+            class: 'Rogue',
+            level: 30,
+            attack: 55,
+            defense: 35,
+            vitality: 220,
+            speed: 70,
+            focus: 50,
+            accuracy: 65,
+            resilience: 35,
+            avatarUrl: 'https://images.unsplash.com/photo-1524117074681-31bd4de22ad3?w=250&h=250&fit=crop'
+          })
+        ]);
         
-        // Update login time
-        try {
-          user = await storage.updateUser(user.id, { lastLogin: new Date() });
-          console.log('Updated user login time');
-        } catch (updateError) {
-          console.error('Failed to update login time:', updateError);
-          // Continue anyway as this is not critical
-        }
+        console.log('Created starter resources and characters');
+      } else {
+        // Update existing admin login time
+        console.log('Updating existing admin login time');
+        userData = await storage.updateUser(userData.id, { lastLogin: new Date() });
       }
       
-      if (!user || !user.id) {
-        throw new Error('Failed to get a valid user object');
-      }
+      // Set session with admin user
+      req.session.userId = userData.id;
+      console.log('Set session userId to admin ID:', userData.id);
       
-      // Set session
-      req.session.userId = user.id;
-      console.log('Set session userId to:', user.id);
-      
-      // Redirect to client
-      res.redirect('/?dev=true');
+      // Redirect to client with admin flag
+      res.redirect('/?admin=true');
     } catch (error) {
-      console.error('Dev login error:', error);
+      console.error('Auto-login error:', error);
       res.status(500).json({ 
-        message: 'Dev login failed', 
+        message: 'Auto-login failed', 
         error: error instanceof Error ? error.message : String(error)
       });
     }
   });
+
+  // Discord OAuth routes (redirect to auto-login for prototype)
+  app.get('/api/auth/discord', (req, res) => {
+    // For the prototype, redirect to auto-login
+    res.redirect('/api/auth/auto-login');
+  });
+  
+  // Direct login route for development (redirects to auto-login for prototype)
+  app.get('/api/auth/dev-login', async (req, res) => {
+    // For the prototype, redirect to auto-login
+    return res.redirect('/api/auth/auto-login');
+  });
   
   app.get('/api/auth/discord/callback', async (req, res) => {
-    try {
-      // Simulate getting user from Discord
-      const mockDiscordUser = {
-        id: '123456789',
-        username: 'ForgeHero',
-        avatar: 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
-        roles: ['member']
-      };
-      
-      console.log('In Discord callback route with mock user:', mockDiscordUser);
-      
-      // Declare the user variable outside the try/catch block so it's accessible throughout the function
-      let userData = null;
-      
-      try {
-        // Check if user exists
-        userData = await storage.getUserByDiscordId(mockDiscordUser.id);
-        console.log('Retrieved user from database:', userData ? 'User found' : 'User not found');
-        
-        if (!userData) {
-          // Create new user
-          console.log('Creating new user');
-          userData = await storage.createUser({
-            discordId: mockDiscordUser.id,
-            username: mockDiscordUser.username,
-            avatarUrl: mockDiscordUser.avatar,
-            roles: mockDiscordUser.roles,
-            forgeTokens: 6200,
-            rogueCredits: 2450,
-            soulShards: 34,
-            lastLogin: new Date(),
-            isAdmin: false // Explicitly set isAdmin field for new users
-          });
-          console.log('New user created with ID:', userData.id);
-          
-          // Create initial resources for new user
-          await storage.createResource({
-            userId: userData.id,
-            name: 'Celestial Ore',
-            type: 'material',
-            quantity: 156,
-            description: 'A rare material used in crafting Auras',
-            iconUrl: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
-          });
-          console.log('Initial resources created for new user');
-        } else {
-          // Update existing user's login time
-          console.log('Updating existing user login time, ID:', userData.id);
-          userData = await storage.updateUser(userData.id, { lastLogin: new Date() });
-        }
-      } catch (dbError) {
-        console.error('Database error during user lookup/creation:', dbError);
-        // Create a temporary user to continue with the auth flow for debugging
-        const tempUser = {
-          id: 1,
-          discordId: mockDiscordUser.id,
-          username: mockDiscordUser.username,
-          avatarUrl: mockDiscordUser.avatar,
-          roles: mockDiscordUser.roles,
-          lastLogin: new Date(),
-          forgeTokens: 1000,
-          rogueCredits: 500,
-          soulShards: 10,
-          isAdmin: true
-        };
-        console.log('Created temporary user for debugging:', tempUser);
-        
-        // Set session with temp user
-        req.session.userId = tempUser.id;
-        return res.redirect('/?debug=true');
-      }
-      
-      // If we get here, we should check the userData object
-      if (!userData || !userData.id) {
-        return res.status(500).json({ message: 'Failed to create or retrieve user' });
-      }
-      
-      // Set session
-      req.session.userId = userData.id;
-      console.log('Setting session userId to:', userData.id);
-      
-      // Redirect to client
-      res.redirect('/');
-    } catch (error) {
-      console.error('Auth error:', error);
-      res.status(500).json({ message: 'Authentication failed' });
-    }
+    // For the prototype, redirect to auto-login
+    return res.redirect('/api/auth/auto-login');
   });
   
   app.get('/api/auth/logout', (req, res) => {

@@ -75,16 +75,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   
   loginWithDiscord: () => {
-    // In development mode, we can use the dev-login endpoint
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname.includes('replit');
-    
-    if (isLocal) {
-      console.log('Using dev login route for local/replit development');
-      window.location.href = '/api/auth/dev-login';
-    } else {
-      // Use real Discord auth in production
-      window.location.href = '/api/auth/discord';
-    }
+    // For prototype - redirect to auto-login that creates admin account
+    console.log('Using auto-login for prototype');
+    window.location.href = '/api/auth/auto-login';
   },
   
   logout: async () => {
