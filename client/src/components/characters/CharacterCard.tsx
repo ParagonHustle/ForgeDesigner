@@ -77,7 +77,7 @@ const CharacterCard = ({
   const [selectedAuraId, setSelectedAuraId] = useState<number | null>(null);
   const [isEquipping, setIsEquipping] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
-  
+
   // Mock data for character duplicates and soul shards - will need to be updated with real data later
   const [duplicateCount, setDuplicateCount] = useState(Math.floor(Math.random() * 5)); // Placeholder
   const [soulShardCount, setSoulShardCount] = useState(Math.floor(Math.random() * 100)); // Placeholder
@@ -104,7 +104,7 @@ const CharacterCard = ({
   // Function to calculate status text based on a stat's multiplier
   const getStatModifierText = (statValue: number | null) => {
     if (!statValue) return <span className="text-gray-500">±0%</span>;
-    
+
     if (statValue > 0) {
       return <span className="text-green-500">+{statValue}%</span>;
     } else if (statValue < 0) {
@@ -113,12 +113,12 @@ const CharacterCard = ({
       return <span className="text-gray-500">±0%</span>;
     }
   };
-  
+
   // Calculate stat values with aura modifiers applied
   const getAdjustedStat = (baseStat: number | null, auraStat: number | null): number => {
     if (!baseStat) return 0;
     if (!auraStat) return baseStat;
-    
+
     // Apply percentage modifier from aura
     const adjustedValue = Math.round(baseStat * (1 + auraStat / 100));
     return adjustedValue;
@@ -127,7 +127,7 @@ const CharacterCard = ({
   // Calculate total stat bonus for an aura (sum of all stat percentages)
   const calculateTotalStats = (aura: Aura | null | undefined): number => {
     if (!aura) return 0;
-    
+
     let total = 0;
     total += aura.attack || 0;
     total += aura.vitality || 0;
@@ -141,13 +141,13 @@ const CharacterCard = ({
 
   // State for filtering auras by element
   const [elementFilter, setElementFilter] = useState<string>("all");
-  
+
   // Get a list of all unique aura elements
   const uniqueElements = Array.from(new Set(availableAuras
     .map(a => a.element)
     .filter(element => element !== undefined && element !== null)
   )) as string[];
-  
+
   // Filter and sort auras
   const unequippedAuras = availableAuras 
     ? availableAuras
@@ -172,26 +172,26 @@ const CharacterCard = ({
     try {
       const response = await apiRequest('POST', `/api/characters/${character.id}/equip-aura/${selectedAuraId}`);
       console.log("Equip aura response:", response);
-      
+
       // Update character in place with the new equippedAuraId
       // This ensures we don't have to wait for the query invalidation
       character.equippedAuraId = selectedAuraId;
-      
+
       // Force immediate refresh of ALL related data
       queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auras'] });
       queryClient.refetchQueries({ queryKey: ['/api/characters'] });
       queryClient.refetchQueries({ queryKey: ['/api/auras'] });
-      
+
       // We also need to directly refetch the specific aura data
       if (refetchAura) refetchAura();
       if (refetchAllAuras) refetchAllAuras();
-      
+
       // Force fetch for the newly equipped aura
       queryClient.fetchQuery({ 
         queryKey: [`/api/auras/${selectedAuraId}`]
       });
-      
+
       // Wait a moment and then perform a second round of refreshes
       // This handles any potential race conditions
       setTimeout(() => {
@@ -199,7 +199,7 @@ const CharacterCard = ({
         if (refetchAllAuras) refetchAllAuras();
         queryClient.refetchQueries({ queryKey: ['/api/characters'] });
         console.log("Completed second round of data refreshes");
-        
+
         // Create a simulated cache update for immediate UI feedback
         // This makes the UI show the new aura right away
         const auraToEquip = allAuras.find(a => a.id === selectedAuraId);
@@ -280,25 +280,25 @@ const CharacterCard = ({
       default: return 'bg-gradient-to-r from-purple-500 to-pink-500';
     }
   };
-  
+
   // Function to generate skill logic text from skill properties
   const generateSkillLogic = (skill: any): string => {
     let logic = '';
-    
+
     // Special case for Soothing Current
     if (skill.name === "Soothing Current") {
       return `${skill.damage}x Damage to 1 Target and Heal the lowest HP Ally for ${skill.healing || 5}% of the Caster's Max Health`;
     }
-    
+
     // Damage component
     if (skill.damage) {
       logic += `${skill.damage}x Damage to ${skill.targets || 1} Target${skill.targets > 1 ? 's' : ''}`;
     }
-    
+
     // Healing component
     if (skill.healing) {
       if (logic) logic += ' and ';
-      
+
       let healingText = `Heal `;
       if (skill.healTargetType === "lowest") {
         healingText += "the lowest HP Ally";
@@ -307,13 +307,13 @@ const CharacterCard = ({
       } else {
         healingText += `${skill.healTargets || 1} Target${(skill.healTargets || 1) > 1 ? 's' : ''}`;
       }
-      
+
       healingText += ` for ${skill.healing}% of `;
       healingText += "the Caster's Max Health";
-      
+
       logic += healingText;
     }
-    
+
     // Effect component
     if (skill.effect) {
       if (logic) logic += ' and ';
@@ -321,22 +321,22 @@ const CharacterCard = ({
       if (skill.effectStacks) logic += ` (${skill.effectStacks} stacks)`;
       if (skill.effectChance && skill.effectChance < 100) logic += ` with ${skill.effectChance}% chance`;
     }
-    
 
-    
+
+
     // Special case for known skills that need hardcoded logic
     if (skill.name === "Soothing Current" && !logic) {
       return `${skill.damage || 0.8}x Damage to 1 Target and Heal the lowest HP Ally for ${skill.healing || 5}% of the Caster's Max Health`;
     }
-    
+
     // If we couldn't generate logic, use description as fallback
     if (!logic && skill.description) {
       return skill.description;
     }
-    
+
     return logic || 'Attack a single target';
   };
-  
+
   // Function to upgrade character level
   const upgradeCharacter = async () => {
     setIsUpgrading(true);
@@ -345,28 +345,28 @@ const CharacterCard = ({
       const currentLevel = character.level || 1;
       const requiredShards = currentLevel * 5;
       const requiredEssence = currentLevel * 100;
-      
+
       // Mock API call for now - will be replaced with actual API endpoint
       console.log(`Upgrading character ${character.name} from level ${currentLevel} to ${currentLevel + 1}`);
       console.log(`Required: ${requiredShards} Soul Shards, ${requiredEssence} Essence`);
-      
+
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       // Update character level locally for immediate feedback
       character.level = currentLevel + 1;
-      
+
       // Update local state for soul shards
       setSoulShardCount(prev => prev - requiredShards);
-      
+
       // Force refresh of characters data
       queryClient.invalidateQueries({ queryKey: ['/api/characters'] });
-      
+
       toast({
         title: "Character Upgraded",
         description: `${character.name} is now level ${character.level}!`,
       });
-      
+
       setUpgradeDialogOpen(false);
     } catch (error) {
       console.error('Failed to upgrade character:', error);
@@ -408,13 +408,13 @@ const CharacterCard = ({
                   <option key={element} value={element}>{element}</option>
                 ))}
               </select>
-              
+
               {/* Total stats indicator */}
               <div className="ml-auto text-xs text-[#C8B8DB]/70">
                 Sorted by total stat bonuses
               </div>
             </div>
-            
+
             {unequippedAuras.length === 0 ? (
               <div className="py-8 text-center text-[#C8B8DB]/60">
                 No available auras to equip. Craft new auras in the Forge.
@@ -443,7 +443,7 @@ const CharacterCard = ({
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-2 text-xs mt-3">
                       {aura.attack !== null && (
                         <div className="flex items-center">
@@ -488,14 +488,14 @@ const CharacterCard = ({
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Show related aura skills if they exist */}
                     {(() => {
                       try {
                         const skills = aura.skills ? 
                           (typeof aura.skills === 'string' ? JSON.parse(aura.skills) : aura.skills) : 
                           [];
-                        
+
                         if (skills && skills.length > 0) {
                           return (
                             <div className="mt-2 border-t border-[#432874]/30 pt-2">
@@ -681,7 +681,7 @@ const CharacterCard = ({
               Character details and equipped aura information
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="my-4 space-y-6">
             {/* Character stats and details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -689,7 +689,7 @@ const CharacterCard = ({
                 <div className="flex items-center space-x-4">
                   <div className="relative">
                     <img
-                      src={character.avatarUrl}
+                      src={character.avatarUrl || "./images/default-avatar.jpg"} // Added default avatar path here
                       alt={character.name}
                       className="w-24 h-24 rounded-full object-cover border-2 border-[#432874]"
                     />
@@ -699,7 +699,7 @@ const CharacterCard = ({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="font-cinzel font-bold text-xl text-[#C8B8DB]">
                       {character.name}
@@ -714,7 +714,7 @@ const CharacterCard = ({
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 bg-[#432874]/20 p-4 rounded-lg">
                   <div className="flex items-center space-x-2">
                     <Swords className="h-4 w-4 text-red-400" />
@@ -816,7 +816,7 @@ const CharacterCard = ({
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 {aura || equippedAura ? (
                   <>
@@ -840,7 +840,7 @@ const CharacterCard = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
@@ -907,7 +907,7 @@ const CharacterCard = ({
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="bg-[#432874]/20 rounded-lg p-4">
                       <h4 className="font-semibold text-sm mb-2 text-[#00B9AE]">Aura Skills</h4>
                       <div className="space-y-2">
@@ -925,9 +925,9 @@ const CharacterCard = ({
                               <div className="text-xs text-amber-300 mt-1 italic">
                                 "{skill.logic || generateSkillLogic(skill)}"
                               </div>
-                              
+
                               <div className="text-xs text-[#C8B8DB]/80 mt-1">{skill.description}</div>
-                              
+
                               {/* Enhanced skill details */}
                               <div className="mt-2 text-xs">
                                 {skill.damage && (
@@ -938,7 +938,7 @@ const CharacterCard = ({
                                     </span>
                                   </div>
                                 )}
-                                
+
                                 {skill.effect && (
                                   <div className="flex items-center mt-1">
                                     <Flame className="h-3 w-3 mr-1 text-orange-400" />
@@ -949,7 +949,7 @@ const CharacterCard = ({
                                     </span>
                                   </div>
                                 )}
-                                
+
                                 {skill.healing && (
                                   <div className="flex items-center mt-1">
                                     <Heart className="h-3 w-3 mr-1 text-green-400" />
@@ -959,7 +959,7 @@ const CharacterCard = ({
                                     </span>
                                   </div>
                                 )}
-                                
+
                                 {skill.cooldown && (
                                   <div className="flex items-center mt-1">
                                     <Clock className="h-3 w-3 mr-1 text-blue-400" />
@@ -969,7 +969,7 @@ const CharacterCard = ({
                                   </div>
                                 )}
                               </div>
-                              
+
                               <div className="flex justify-between mt-2 text-xs text-[#C8B8DB]/60">
                                 <span>Type: 
                                   <span className={
@@ -999,7 +999,7 @@ const CharacterCard = ({
                 )}
               </div>
             </div>
-            
+
             {/* Character management section */}
             <div className="flex flex-col space-y-4">
               {/* Soul shard & duplicate info */}
@@ -1078,7 +1078,7 @@ const CharacterCard = ({
               View and manage character duplicates to obtain Soul Shards
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="my-4 space-y-4">
             {/* Soul Shard Summary */}
             <div className="flex items-center justify-between bg-[#432874]/20 p-3 rounded-lg">
@@ -1091,19 +1091,19 @@ const CharacterCard = ({
                   <div className="text-xl font-bold text-purple-400">{soulShardCount}</div>
                 </div>
               </div>
-              
+
               <div className="text-sm text-[#C8B8DB]/60">
                 Soul Shards are used to upgrade character levels.<br />
                 Convert duplicates to gain more Soul Shards.
               </div>
             </div>
-            
+
             {/* Character Duplicates List */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-[#C8B8DB]">
                 Character Duplicates ({duplicateCount})
               </h3>
-              
+
               {duplicateCount > 0 ? (
                 <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
                   {/* This would be mapped from actual duplicates - using example for now */}
@@ -1127,7 +1127,7 @@ const CharacterCard = ({
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Set as primary button */}
                         <Button 
                           variant="outline" 
@@ -1146,7 +1146,7 @@ const CharacterCard = ({
                           Set as Primary
                         </Button>
                       </div>
-                      
+
                       {/* Character stats summary */}
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 my-2 text-sm text-[#C8B8DB]/90">
                         <div className="flex justify-between">
@@ -1166,7 +1166,7 @@ const CharacterCard = ({
                           <span className="text-blue-400">{character.accuracy || 0}</span>
                         </div>
                       </div>
-                      
+
                       {/* Passive skills if available */}
                       {character.passiveSkills && character.passiveSkills.length > 0 && (
                         <div className="mb-2 text-sm">
@@ -1180,7 +1180,7 @@ const CharacterCard = ({
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Convert button */}
                       <div className="flex justify-end mt-3">
                         <Button 
@@ -1211,7 +1211,7 @@ const CharacterCard = ({
               )}
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button 
               variant="outline" 
@@ -1223,7 +1223,7 @@ const CharacterCard = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Upgrade Character Dialog */}
       <Dialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen}>
         <DialogContent className="bg-[#1A1A2E] border border-[#432874] text-[#C8B8DB] max-w-lg">
@@ -1235,7 +1235,7 @@ const CharacterCard = ({
               Upgrade your character to increase their stats and abilities
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="my-4 space-y-5">
             {/* Current Level */}
             <div className="flex items-center justify-center space-x-4">
@@ -1245,9 +1245,9 @@ const CharacterCard = ({
                   <span className="text-2xl font-bold">{character.level}</span>
                 </div>
               </div>
-              
+
               <ChevronRight className="h-6 w-6 text-[#C8B8DB]/40" />
-              
+
               <div className="flex flex-col items-center">
                 <div className="text-[#C8B8DB]/60 text-sm">Next Level</div>
                 <div className="bg-gradient-to-br from-[#432874] to-[#9370DB] h-16 w-16 rounded-full flex items-center justify-center shadow-lg shadow-purple-900/30">
@@ -1255,11 +1255,11 @@ const CharacterCard = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Resource Requirements */}
             <div className="bg-[#432874]/20 p-4 rounded-lg space-y-3">
               <h3 className="text-sm font-semibold text-[#C8B8DB]">Upgrade Requirements</h3>
-              
+
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <Star className="h-5 w-5 text-purple-400" />
@@ -1273,7 +1273,7 @@ const CharacterCard = ({
                   <span>{(character.level || 1) * 5}</span>
                 </div>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <Sparkles className="h-5 w-5 text-blue-400" />
@@ -1286,11 +1286,11 @@ const CharacterCard = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Stat Improvements */}
             <div className="bg-[#432874]/20 p-4 rounded-lg">
               <h3 className="text-sm font-semibold text-[#C8B8DB] mb-2">Stat Improvements</h3>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
@@ -1299,7 +1299,7 @@ const CharacterCard = ({
                   </div>
                   <div className="text-sm text-green-400">+{Math.ceil((character.attack || 0) * 0.1)}</div>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <Shield className="h-4 w-4 text-blue-400" />
@@ -1307,7 +1307,7 @@ const CharacterCard = ({
                   </div>
                   <div className="text-sm text-green-400">+{Math.ceil((character.defense || 0) * 0.1)}</div>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <Heart className="h-4 w-4 text-red-500" />
@@ -1315,7 +1315,7 @@ const CharacterCard = ({
                   </div>
                   <div className="text-sm text-green-400">+{Math.ceil((character.vitality || 0) * 0.1)}</div>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <Target className="h-4 w-4 text-yellow-400" />
@@ -1326,7 +1326,7 @@ const CharacterCard = ({
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button 
               variant="outline" 
@@ -1364,12 +1364,12 @@ const CharacterCard = ({
         >
           {/* Activity Indicator */}
           {getActivityText()}
-          
+
           <div className="p-4">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <img
-                  src={character.avatarUrl}
+                  src={character.avatarUrl || "./images/default-avatar.jpg"} // Corrected avatar path
                   alt={character.name}
                   className="w-16 h-16 rounded-full object-cover border-2 border-[#432874]"
                 />
@@ -1400,32 +1400,32 @@ const CharacterCard = ({
                 <Swords className="h-3 w-3 mr-1 text-red-400" />
                 <span>ATK: {character.attack}</span>
               </div>
-              
+
               <div className="flex items-center">
                 <Target className="h-3 w-3 mr-1 text-yellow-400" />
                 <span>ACC: {character.accuracy}</span>
               </div>
-              
+
               <div className="flex items-center">
                 <Shield className="h-3 w-3 mr-1 text-blue-400" />
                 <span>DEF: {character.defense}</span>
               </div>
-              
+
               <div className="flex items-center">
                 <Heart className="h-3 w-3 mr-1 text-red-500" />
                 <span>VIT: {character.vitality}</span>
               </div>
-              
+
               <div className="flex items-center">
                 <Zap className="h-3 w-3 mr-1 text-cyan-400" />
                 <span>SPD: {character.speed}</span>
               </div>
-              
+
               <div className="flex items-center">
                 <Brain className="h-3 w-3 mr-1 text-purple-400" />
                 <span>FOC: {character.focus || 0}</span>
               </div>
-              
+
               <div className="flex items-center">
                 <CircleOff className="h-3 w-3 mr-1 text-purple-400" />
                 <span>RES: {character.resilience || 0}</span>
@@ -1463,9 +1463,9 @@ const CharacterCard = ({
                                 <div className="text-xs text-amber-300 mt-1 italic">
                                   "{skill.logic || generateSkillLogic(skill)}"
                                 </div>
-                                
+
                                 <div className="text-xs text-[#C8B8DB]/80 mt-1">{skill.description}</div>
-                                
+
                                 {/* Enhanced skill details */}
                                 <div className="mt-2 text-xs">
                                   {skill.damage && (
@@ -1476,7 +1476,7 @@ const CharacterCard = ({
                                       </span>
                                     </div>
                                   )}
-                                  
+
                                   {skill.effect && (
                                     <div className="flex items-center mt-1">
                                       <Flame className="h-3 w-3 mr-1 text-orange-400" />
@@ -1487,7 +1487,7 @@ const CharacterCard = ({
                                       </span>
                                     </div>
                                   )}
-                                  
+
                                   {skill.healing && (
                                     <div className="flex items-center mt-1">
                                       <Heart className="h-3 w-3 mr-1 text-green-400" />
@@ -1507,7 +1507,7 @@ const CharacterCard = ({
                                     </div>
                                   )}
                                 </div>
-                                
+
                                 <div className="flex justify-between mt-2 text-xs text-[#C8B8DB]/60">
                                   <span>Type: 
                                     <span className={
@@ -1550,19 +1550,19 @@ const CharacterCard = ({
                               </div>
                             </div>
                           </div>
-                          
+
                           {/* Display Aura Skills */}
                           {(() => {
                             try {
                               const currentAura = aura || equippedAura;
                               if (!currentAura) return null;
-                              
+
                               const skills = currentAura.skills ? 
                                 (typeof currentAura.skills === 'string' ? 
                                   JSON.parse(currentAura.skills as string) : 
                                   currentAura.skills) : 
                                 [];
-                                
+
                               if (skills && skills.length > 0) {
                                 return (
                                   <div className="mb-3 border-b border-[#432874]/30 pb-2">
@@ -1681,7 +1681,7 @@ const CharacterCard = ({
                           <div key={index} className="border-b border-[#432874]/30 pb-2 last:border-b-0 last:pb-0">
                             <div className="text-xs font-medium text-[#00B9AE]">{passive.name}</div>
                             <div className="text-xs text-[#C8B8DB]/80">{passive.description}</div>
-                            
+
                             <div className="mt-2 text-xs">
                               {passive.effect && (
                                 <div className="flex items-center">
@@ -1691,7 +1691,7 @@ const CharacterCard = ({
                                   </span>
                                 </div>
                               )}
-                              
+
                               {passive.trigger && (
                                 <div className="flex items-center mt-1">
                                   <Bolt className="h-3 w-3 mr-1 text-yellow-400" />

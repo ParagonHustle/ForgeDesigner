@@ -56,12 +56,12 @@ const CharactersView = () => {
 
   // Default avatar mapping
   const characterAvatars: Record<string, string> = {
-    "Kleos": "/images/kleos.jpg",
-    "Brawler Frank": "/images/brawlerfrank.jpg",
-    "G-Wolf": "/images/gwolf.jpg",
-    "Seraphina": "/images/seraphina.jpg",
-    "Dumbleboom": "/images/dumbleboom.jpg",
-    "Gideon": "/images/gideon.jpg",
+    "Kleos": "./images/kleos.jpg",
+    "Brawler Frank": "./images/brawlerfrank.jpg", 
+    "G-Wolf": "./images/gwolf.jpg",
+    "Seraphina": "./images/seraphina.jpg", 
+    "Dumbleboom": "./images/dumbleboom.jpg",
+    "Gideon": "./images/gideon.jpg",
   };
 
   const handleRecruitCharacter = async () => {
