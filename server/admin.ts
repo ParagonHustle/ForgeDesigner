@@ -82,8 +82,6 @@ export async function registerAdminRoutes(app: Express) {
             name: `${baseChar.name} Clone ${i}`,
             level: baseChar.level,
             class: baseChar.class,
-            element: baseChar.element,
-            rarity: baseChar.rarity,
             attack: baseChar.attack,
             defense: baseChar.defense,
             vitality: baseChar.vitality,
@@ -91,7 +89,7 @@ export async function registerAdminRoutes(app: Express) {
             focus: baseChar.focus,
             accuracy: baseChar.accuracy,
             resilience: baseChar.resilience,
-            iconUrl: baseChar.iconUrl,
+            avatarUrl: baseChar.avatarUrl || 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
             equippedAuraId: null,
             isActive: false
           });
@@ -145,7 +143,7 @@ export async function registerAdminRoutes(app: Express) {
           focus: 8 + (char.level * 2) + Math.floor(Math.random() * 7),
           accuracy: 80 + Math.floor(Math.random() * 10),
           resilience: 10 + (char.level * 1) + Math.floor(Math.random() * 5),
-          iconUrl: char.iconUrl,
+          avatarUrl: char.iconUrl || 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
           equippedAuraId: null,
           isActive: false
         });
@@ -178,8 +176,12 @@ export async function registerAdminRoutes(app: Express) {
   // Admin endpoint to add 15,000 Essence
   app.post('/api/admin/add-essence', async (req: Request, res: Response) => {
     try {
-      // Get user ID (using ID 1 for development)
-      const userId = 1;
+      // Get user ID from session or use a specific user ID as fallback
+      const userId = req.session?.userId || req.body.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
       
       // Check if Essence resource exists
       let essence = await storage.getResourceByNameAndUserId('Essence', userId);
@@ -222,8 +224,12 @@ export async function registerAdminRoutes(app: Express) {
   // Admin endpoint to add 5,000 Rogue Credits and 5,000 Forge Tokens
   app.post('/api/admin/add-currency', async (req: Request, res: Response) => {
     try {
-      // Get user ID (using ID 1 for development)
-      const userId = 1;
+      // Get user ID from session or use a specific user ID as fallback
+      const userId = req.session?.userId || req.body.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
       
       // Get the user
       const user = await storage.getUserById(userId);
