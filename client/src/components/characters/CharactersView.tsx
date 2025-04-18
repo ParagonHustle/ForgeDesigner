@@ -54,22 +54,28 @@ const CharactersView = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  // Default avatar mapping
+  const characterAvatars: Record<string, string> = {
+    "Kleos": "/images/kleos.jpg",
+    "Brawler Frank": "/images/brawlerfrank.jpg",
+    "G-Wolf": "/images/gwolf.jpg",
+    "Seraphina": "/images/seraphina.jpg",
+    "Dumbleboom": "/images/dumbleboom.jpg",
+    "Gideon": "/images/gideon.jpg",
+  };
+
   const handleRecruitCharacter = async () => {
     try {
       // Generate a random character for demonstration
       const randomNames = ["Eldrin", "Lyra", "Thorne", "Seraphina", "Gideon", "Isolde"];
       const randomClasses = ["Warrior", "Mage", "Rogue", "Cleric"];
-      const randomAvatars = [
-        "https://images.unsplash.com/photo-1577095972620-2f389ca3abcd?w=150&h=150&fit=crop",
-        "https://images.unsplash.com/photo-1613477564751-fc2a7c5bbb7a?w=150&h=150&fit=crop",
-        "https://images.unsplash.com/photo-1578336134673-1eef9c8c5e36?w=150&h=150&fit=crop"
-      ];
+      const defaultAvatar = "/images/default-avatar.jpg";
       
       const newCharacter = {
         name: randomNames[Math.floor(Math.random() * randomNames.length)],
         class: randomClasses[Math.floor(Math.random() * randomClasses.length)],
         level: 1,
-        avatarUrl: randomAvatars[Math.floor(Math.random() * randomAvatars.length)],
+        avatarUrl: characterAvatars[name] || defaultAvatar,
         attack: 10 + Math.floor(Math.random() * 5),
         defense: 10 + Math.floor(Math.random() * 5),
         vitality: 100 + Math.floor(Math.random() * 20),
@@ -203,7 +209,10 @@ const CharactersView = () => {
           {filteredCharacters.map((character) => (
             <CharacterCard 
               key={character.id} 
-              character={character} 
+              character={{
+                ...character,
+                avatarUrl: characterAvatars[character.name] || "/images/default-avatar.jpg"
+              }} 
               availableAuras={auras}
               allAuras={auras}
               refetchAura={() => refetchAuras()}
