@@ -61,7 +61,28 @@ const InventoryView = () => {
     rarity: "common" | "uncommon" | "rare" | "epic" | "legendary",
     avatarUrl?: string
   }>>([
-    // Explicitly add all 5 Kleos shard rarities
+    // Add Brawler Frank shards
+    {
+      id: 60001,
+      name: "Brawler Frank Common Shard",
+      quantity: 35,
+      required: 100,
+      characterClass: "Warrior",
+      characterName: "Brawler Frank",
+      rarity: "common",
+      avatarUrl: "/images/brawlerfrank.jpg"
+    },
+    {
+      id: 60002,
+      name: "Brawler Frank Uncommon Shard",
+      quantity: 40,
+      required: 100,
+      characterClass: "Warrior",
+      characterName: "Brawler Frank",
+      rarity: "uncommon", 
+      avatarUrl: "/images/brawlerfrank.jpg"
+    },
+    // Original Kleos shards
     {
       id: 50001,
       name: "Kleos Common Shard", 
