@@ -5,6 +5,7 @@ import { useDiscordAuth } from '@/lib/discordAuth';
 import { useGameStore } from '@/lib/zustandStore';
 import { useEffect } from 'react';
 import { Zap } from 'lucide-react';
+import { AdminTools } from '../admin/AdminTools';
 
 const DashboardView = () => {
   const { user } = useDiscordAuth();
@@ -60,6 +61,9 @@ const DashboardView = () => {
             activeDungeons={dungeonRuns.filter(run => !run.completed).length}
             farmingSlotsCount={farmingTasks.filter(task => !task.completed).length}
           />
+          
+          {/* Admin Tools Panel */}
+          <AdminTools />
         </div>
         
         {/* Active Tasks Column */}

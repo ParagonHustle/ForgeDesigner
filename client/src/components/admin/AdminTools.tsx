@@ -10,14 +10,14 @@ import { useGameStore } from '@/lib/zustandStore';
 export function AdminTools() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useGameStore();
+  const { userId } = useGameStore();
   
   const freeCharacters = async () => {
     try {
       const response = await fetch('/api/admin/free-characters', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id || 1 }),
+        body: JSON.stringify({ userId: userId || 3 }),
       });
       
       const data = await response.json();
@@ -52,7 +52,7 @@ export function AdminTools() {
       const response = await fetch('/api/admin/complete-dungeons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id || 1 }),
+        body: JSON.stringify({ userId: userId || 3 }),
       });
       
       const data = await response.json();
@@ -88,12 +88,14 @@ export function AdminTools() {
       const essenceResponse = await fetch('/api/admin/add-essence', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId || 3 }),
       });
       
       // Add currency
       const currencyResponse = await fetch('/api/admin/add-currency', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId || 3 }),
       });
       
       if (essenceResponse.ok && currencyResponse.ok) {
@@ -127,6 +129,7 @@ export function AdminTools() {
       const response = await fetch('/api/admin/add-advanced-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId || 3 }),
       });
       
       const data = await response.json();
