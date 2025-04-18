@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
   DialogFooter
@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
-import { Pause, Play, SkipForward, Swords, Heart, Shield, Zap } from 'lucide-react';
+import { Pause, Play, SkipForward, Rewind, Swords, Heart, Shield, Zap, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 /**
  * Types for battle system
@@ -110,13 +112,37 @@ export default function BattleLog({
   const [currentTab, setCurrentTab] = useState('battle');
   const [allies, setAllies] = useState<BattleUnit[]>([]);
   const [enemies, setEnemies] = useState<BattleUnit[]>([]);
-  const [battleMessages, setBattleMessages] = useState<string[]>([]);
-  const [currentRound, setCurrentRound] = useState(0);
+  
+  // Stage and round management
   const [currentStage, setCurrentStage] = useState(1);
   const [totalStages, setTotalStages] = useState(1);
   const [stagesCompleted, setStagesCompleted] = useState(0);
+  const [currentRound, setCurrentRound] = useState(0);
+  const [maxRoundPerStage, setMaxRoundPerStage] = useState<Record<number, number>>({});
+  
+  // Battle status tracking
   const [isVictory, setIsVictory] = useState<boolean | null>(null);
   const [currentView, setCurrentView] = useState<'start' | 'battle' | 'end'>('start');
+  
+  // Playback state
+  const [isPaused, setIsPaused] = useState(true);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Battle messages organized by stage and round
+  const [battleMessagesByStage, setBattleMessagesByStage] = useState<Record<number, string[]>>({});
+  const [currentStageBattleMessages, setCurrentStageBattleMessages] = useState<string[]>([]);
+  
+  // Animation states
+  const [activeAttacker, setActiveAttacker] = useState<string | null>(null);
+  const [activeTarget, setActiveTarget] = useState<string | null>(null);
+  const [activeSkill, setActiveSkill] = useState<string | null>(null);
+  const [showDamageAnimation, setShowDamageAnimation] = useState(false);
+  
+  // Track battle units by stage
+  const [alliesByStage, setAlliesByStage] = useState<Record<number, BattleUnit[]>>({});
+  const [enemiesByStage, setEnemiesByStage] = useState<Record<number, BattleUnit[]>>({});
   
   // Process battle log on initial load
   useEffect(() => {
@@ -128,135 +154,114 @@ export default function BattleLog({
       setStagesCompleted(0);
       setCurrentRound(0);
       setIsVictory(null);
+      setIsPaused(true);
       
-      // Initialize messages
-      const messages: string[] = [];
+      // Clear any existing playback timer
+      if (playbackTimerRef.current) {
+        clearTimeout(playbackTimerRef.current);
+        playbackTimerRef.current = null;
+      }
+      
+      // Initialize message collections
+      const messagesByStage: Record<number, string[]> = {};
+      const roundsByStage: Record<number, number> = {};
+      const stageAllies: Record<number, BattleUnit[]> = {};
+      const stageEnemies: Record<number, BattleUnit[]> = {};
       
       // If there's no battle log data or it's empty, add a default message
       if (!battleLog || battleLog.length === 0) {
-        messages.push('No battle data available. You can still complete this dungeon to free your characters.');
-        setBattleMessages(messages);
+        messagesByStage[1] = ['No battle data available. You can still complete this dungeon to free your characters.'];
+        setBattleMessagesByStage(messagesByStage);
+        setCurrentStageBattleMessages(messagesByStage[1] || []);
         return;
       }
       
       console.log('Analyzing battle log for stage transitions');
       
-      // Find the initial battle_start event to properly initialize character stats
+      // Find initialization events
       const battleStartEvent = battleLog.find(event => 
         event.type === 'battle_start' || 
-        event.type === 'init' || 
-        (event.type === 'stage_start' && event.currentStage === 1)
+        event.type === 'init'
       );
       
-      // Find the first stage event to correctly handle character HP
-      if (battleStartEvent) {
-        console.log('Found initial battle setup event:', battleStartEvent);
-        
-        // Set initial allies with proper HP
-        if (battleStartEvent.allies && battleStartEvent.allies.length > 0) {
-          // Make sure initial characters have their full HP
-          const initialAllies = battleStartEvent.allies.map(ally => ({
-            ...ally,
-            hp: ally.maxHp // Start with full health
-          }));
-          setAllies(initialAllies);
-          console.log(`Set ${initialAllies.length} initial allies with full HP`);
-        }
-        
-        // Set initial enemies
-        if (battleStartEvent.enemies && battleStartEvent.enemies.length > 0) {
-          setEnemies(battleStartEvent.enemies);
-          console.log(`Set ${battleStartEvent.enemies.length} initial enemies`);
-        }
-        
-        // Set total stages if available
-        if (battleStartEvent.totalStages) {
-          setTotalStages(battleStartEvent.totalStages);
-          console.log(`Set total stages to ${battleStartEvent.totalStages}`);
-        }
-      }
-      
-      // Look for stage_complete and stage_start events specifically
-      const stageCompleteEvents = battleLog.filter(event => event.type === 'stage_complete');
-      const stageStartEvents = battleLog.filter(event => event.type === 'stage_start');
-      
-      // Find the dungeon_complete or battle_end event for final stage information
-      const dungeonCompleteEvent = battleLog.find(event => event.type === 'dungeon_complete');
+      const stageStarts = battleLog.filter(event => event.type === 'stage_start');
+      const stageCompletes = battleLog.filter(event => event.type === 'stage_complete');
       const battleEndEvent = battleLog.find(event => event.type === 'battle_end');
       
-      // Extract the most accurate stage information
-      if (dungeonCompleteEvent) {
-        // Most reliable source of stage completion data
-        if (dungeonCompleteEvent.stagesCompleted !== undefined && dungeonCompleteEvent.totalStages !== undefined) {
-          setStagesCompleted(dungeonCompleteEvent.stagesCompleted);
-          setTotalStages(dungeonCompleteEvent.totalStages);
-          console.log(`From dungeon_complete: Completed ${dungeonCompleteEvent.stagesCompleted}/${dungeonCompleteEvent.totalStages} stages`);
-        }
-      } else if (battleEndEvent) {
-        // Second best source of stage completion data
-        if (battleEndEvent.completedStages !== undefined && battleEndEvent.totalStages !== undefined) {
-          setStagesCompleted(battleEndEvent.completedStages);
-          setTotalStages(battleEndEvent.totalStages);
-          console.log(`From battle_end: Completed ${battleEndEvent.completedStages}/${battleEndEvent.totalStages} stages`);
-        }
-      } else if (stageCompleteEvents.length > 0) {
-        // Third best - count the stage_complete events
-        setStagesCompleted(stageCompleteEvents.length);
-        if (stageCompleteEvents[0].totalStages) {
-          setTotalStages(stageCompleteEvents[0].totalStages);
-        }
-        console.log(`From stage_complete events: Completed ${stageCompleteEvents.length} stages`);
+      // Determine total stages from any reliable source
+      let totalStagesCount = 1;
+      if (battleStartEvent?.totalStages) {
+        totalStagesCount = battleStartEvent.totalStages;
+      } else if (battleEndEvent?.totalStages) {
+        totalStagesCount = battleEndEvent.totalStages;
+      } else if (stageStarts.length > 0) {
+        // Find maximum stage number from stage_start events
+        totalStagesCount = Math.max(...stageStarts.map(event => event.currentStage || 1));
       }
+      setTotalStages(totalStagesCount);
       
-      // Process the battle log events for display
+      // Set victory state
       if (battleEndEvent) {
+        setIsVictory(!!battleEndEvent.victory);
         if (battleEndEvent.completedStages) {
           setStagesCompleted(battleEndEvent.completedStages);
         }
-        setIsVictory(!!battleEndEvent.victory);
       }
       
-      console.log(`Found ${stageCompleteEvents.length} stage_complete events and ${stageStartEvents.length} stage_start events`);
+      // Initialize intro messages
+      messagesByStage[0] = [
+        'Battle begins! Your party enters the dungeon.',
+        `Entering a dungeon with ${totalStagesCount} stages.`,
+        'Prepare for combat!'
+      ];
       
-      // Ensure battle log is processed in the right order
-      messages.push('Battle begins! Your party enters the dungeon.');
-      
-      // Process each event in the log
-      battleLog.forEach((event, index) => {
-        // Extract battle configuration from battle_start event
-        if (event.type === 'battle_start' || event.type === 'init') {
-          if (event.allies) {
-            setAllies(event.allies);
-            console.log(`Set ${event.allies.length} initial allies`);
-          }
-          if (event.enemies) {
-            setEnemies(event.enemies);
-            console.log(`Set ${event.enemies.length} initial enemies`);
+      // Process each stage
+      for (let stage = 1; stage <= totalStagesCount; stage++) {
+        // Initialize empty arrays for this stage
+        messagesByStage[stage] = [];
+        
+        // Find stage start event for this stage
+        const stageStartEvent = stageStarts.find(event => event.currentStage === stage);
+        if (stageStartEvent) {
+          // Add stage start message
+          messagesByStage[stage].push(`--- Stage ${stage} Begins ---`);
+          
+          // Store enemies for this stage
+          if (stageStartEvent.enemies && stageStartEvent.enemies.length > 0) {
+            stageEnemies[stage] = stageStartEvent.enemies;
+            messagesByStage[stage].push(`${stageStartEvent.enemies.length} enemies appear!`);
           }
           
-          // Set total stages if available 
-          if (event.totalStages) {
-            setTotalStages(event.totalStages);
-            console.log(`Set total stages to ${event.totalStages}`);
+          // Store allies for this stage (carry over from previous stage if needed)
+          if (stageStartEvent.allies && stageStartEvent.allies.length > 0) {
+            stageAllies[stage] = stageStartEvent.allies;
+          } else if (stage > 1 && stageAllies[stage - 1]) {
+            // If no allies in this stage event, use the ones from the previous stage
+            stageAllies[stage] = stageAllies[stage - 1];
+          } else if (battleStartEvent?.allies) {
+            // Last resort: use allies from battle start
+            stageAllies[stage] = battleStartEvent.allies;
           }
-          
-          messages.push('Battle initialized.');
-          messages.push(`Entering a dungeon with ${event.totalStages || 'multiple'} stages.`);
         }
         
-        // Process round events
-        if (event.type === 'round') {
-          const roundNum = event.number || 0;
-          setCurrentRound(roundNum);
+        // Find all round events for this stage
+        const roundEvents = battleLog.filter(event => 
+          event.type === 'round' && 
+          (event.currentStage === stage || (!event.currentStage && stage === 1))
+        );
+        
+        // Process round events for this stage
+        let maxRound = 0;
+        roundEvents.forEach(roundEvent => {
+          const roundNum = roundEvent.number || 0;
+          if (roundNum > maxRound) maxRound = roundNum;
           
-          // Only add round begins message if this is a normal combat round (not a special transition round)
-          if (event.actions && event.actions.length > 0) {
-            messages.push(`Round ${roundNum} begins.`);
-          }
+          // Round header
+          messagesByStage[stage].push(`Round ${roundNum} begins.`);
           
           // Process actions in the round
-          if (event.actions) {
-            event.actions.forEach(action => {
+          if (roundEvent.actions && roundEvent.actions.length > 0) {
+            roundEvent.actions.forEach(action => {
               let actionText = '';
               
               if (action.healing) {
@@ -270,99 +275,150 @@ export default function BattleLog({
                 actionText = action.message;  // Override with custom message if provided
               }
               
-              messages.push(actionText);
+              messagesByStage[stage].push(actionText);
             });
           }
           
-          // Update remaining combatants
-          if (typeof event.remainingAllies === 'number' && typeof event.remainingEnemies === 'number') {
-            if (event.remainingEnemies === 0) {
-              messages.push(`All enemies defeated! End of round ${roundNum}.`);
-            } else if (event.remainingAllies === 0) {
-              messages.push(`Your party has been defeated! End of round ${roundNum}.`);
+          // Add round summary
+          if (typeof roundEvent.remainingAllies === 'number' && typeof roundEvent.remainingEnemies === 'number') {
+            if (roundEvent.remainingEnemies === 0) {
+              messagesByStage[stage].push(`All enemies defeated! End of round ${roundNum}.`);
+            } else if (roundEvent.remainingAllies === 0) {
+              messagesByStage[stage].push(`Your party has been defeated! End of round ${roundNum}.`);
             } else {
-              messages.push(`End of round ${roundNum}: ${event.remainingAllies} allies and ${event.remainingEnemies} enemies remaining.`);
+              messagesByStage[stage].push(`End of round ${roundNum}: ${roundEvent.remainingAllies} allies and ${roundEvent.remainingEnemies} enemies remaining.`);
             }
           }
-        }
+        });
         
-        // Process system messages
-        if (event.type === 'system_message' && event.message) {
-          messages.push(`System: ${event.message}`);
-        }
+        // Store max round for this stage
+        roundsByStage[stage] = maxRound;
         
-        // Process stage transitions
-        if (event.type === 'stage_complete') {
-          console.log('Processing stage_complete event:', event);
+        // Find stage complete event for this stage
+        const stageCompleteEvent = stageCompletes.find(event => event.currentStage === stage);
+        if (stageCompleteEvent) {
+          // Add stage complete message
+          messagesByStage[stage].push(`--- Stage ${stage} Complete ---`);
           
-          if (event.currentStage !== undefined) {
-            setCurrentStage(event.currentStage);
-            setStagesCompleted(event.currentStage);
-            messages.push(`Stage ${event.currentStage} completed! ${event.message || ''}`);
-          }
-          
-          // Update allies with the alive allies from this event
-          if (event.aliveAllies && Array.isArray(event.aliveAllies)) {
-            console.log(`Setting ${event.aliveAllies.length} alive allies from stage_complete event`);
-            setAllies(event.aliveAllies);
+          // Update allies with survivors
+          if (stageCompleteEvent.aliveAllies && stageCompleteEvent.aliveAllies.length > 0) {
+            stageAllies[stage] = stageCompleteEvent.aliveAllies;
+            messagesByStage[stage].push(`${stageCompleteEvent.aliveAllies.length} allies survived and continue to the next stage.`);
           }
         }
-        
-        // Process new stage starting
-        if (event.type === 'stage_start') {
-          console.log('Processing stage_start event:', event);
-          
-          if (event.currentStage !== undefined) {
-            setCurrentStage(event.currentStage);
-            messages.push(`Stage ${event.currentStage} begins! ${event.message || ''}`);
-          }
-          
-          // Update enemies with the new enemies for this stage
-          if (event.enemies && Array.isArray(event.enemies)) {
-            console.log(`Setting ${event.enemies.length} enemies from stage_start event`);
-            setEnemies(event.enemies);
-            messages.push(`New enemies appear for stage ${event.currentStage}!`);
-          }
-          
-          // Mark start of a new stage in the battle log
-          messages.push(`--- Stage ${event.currentStage || '?'} ---`);
-        }
-        
-        // Process battle end
-        if (event.type === 'battle_end') {
-          setIsVictory(!!event.victory);
-          
-          // Set completed stages if provided
-          if (event.completedStages !== undefined) {
-            setStagesCompleted(event.completedStages);
-          }
-          
-          if (event.summary) {
-            messages.push(event.summary);
-          } else {
-            messages.push(event.victory 
-              ? `Victory! Your party conquered ${event.completedStages || stagesCompleted}/${event.totalStages || totalStages} stages.` 
-              : `Defeat! Your party was overwhelmed at stage ${event.currentStage || currentStage}.`);
-          }
-        }
-      });
+      }
       
-      // Update battle message state
-      setBattleMessages(messages);
+      // Add a summary at the end
+      if (battleEndEvent) {
+        const finalStage = totalStagesCount;
+        if (!messagesByStage[finalStage]) messagesByStage[finalStage] = [];
+        
+        if (battleEndEvent.summary) {
+          messagesByStage[finalStage].push(`--- Battle Summary ---`);
+          messagesByStage[finalStage].push(battleEndEvent.summary);
+        } else {
+          messagesByStage[finalStage].push(`--- Battle Summary ---`);
+          messagesByStage[finalStage].push(battleEndEvent.victory 
+            ? `Victory! Your party conquered ${battleEndEvent.completedStages || stagesCompleted}/${totalStagesCount} stages.` 
+            : `Defeat! Your party was overwhelmed at stage ${battleEndEvent.currentStage || currentStage}.`);
+        }
+      }
+      
+      // Set state with all our stage data
+      setBattleMessagesByStage(messagesByStage);
+      setAlliesByStage(stageAllies);
+      setEnemiesByStage(stageEnemies);
+      setMaxRoundPerStage(roundsByStage);
+      
+      // Set current stage to 1 and set messages for stage 1
+      setCurrentStage(1);
+      setCurrentStageBattleMessages(messagesByStage[1] || messagesByStage[0] || []);
+      
+      // If we have allies and enemies for stage 1, set them as active
+      if (stageAllies[1]) setAllies(stageAllies[1]);
+      if (stageEnemies[1]) setEnemies(stageEnemies[1]);
+      
+      console.log('Battle log processing complete. Messages by stage:', messagesByStage);
     }
   }, [isOpen, battleLog]);
   
+  // Function to change the active stage
+  const changeStage = (stageNum: number) => {
+    // Make sure stage is within valid range
+    const validStage = Math.max(1, Math.min(stageNum, totalStages));
+    
+    // Update current stage
+    setCurrentStage(validStage);
+    
+    // Update UI with data for this stage
+    setCurrentStageBattleMessages(battleMessagesByStage[validStage] || []);
+    
+    // Update allies and enemies for this stage
+    if (alliesByStage[validStage]) {
+      setAllies(alliesByStage[validStage]);
+    }
+    if (enemiesByStage[validStage]) {
+      setEnemies(enemiesByStage[validStage]);
+    }
+    
+    // Reset current round when changing stages
+    setCurrentRound(0);
+    
+    // Pause playback when changing stages
+    setIsPaused(true);
+    if (playbackTimerRef.current) {
+      clearTimeout(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
+  };
+  
+  // Go to next stage
+  const goToNextStage = () => {
+    if (currentStage < totalStages) {
+      changeStage(currentStage + 1);
+    }
+  };
+  
+  // Go to previous stage
+  const goToPrevStage = () => {
+    if (currentStage > 1) {
+      changeStage(currentStage - 1);
+    }
+  };
+  
+  // Toggle auto-play
+  const toggleAutoPlay = () => {
+    setAutoPlay(!autoPlay);
+    
+    // If enabling autoplay, make sure we're not paused
+    if (!autoPlay) {
+      setIsPaused(false);
+    }
+  };
+  
   // Handle closing the dialog
   const handleClose = () => {
+    // Clear any playback timer
+    if (playbackTimerRef.current) {
+      clearTimeout(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
+    
     // Reset all state
     setAllies([]);
     setEnemies([]);
-    setBattleMessages([]);
+    setCurrentStageBattleMessages([]);
+    setBattleMessagesByStage({});
     setCurrentRound(0);
     setCurrentStage(1);
     setTotalStages(1);
     setStagesCompleted(0);
     setIsVictory(null);
+    setAlliesByStage({});
+    setEnemiesByStage({});
+    setMaxRoundPerStage({});
+    setAutoPlay(false);
+    setIsPaused(true);
     onClose();
   };
   
@@ -426,26 +482,58 @@ export default function BattleLog({
             <TabsTrigger value="units">Combatants</TabsTrigger>
           </TabsList>
           
+          {/* Stage Navigation */}
+          {totalStages > 1 && (
+            <div className="flex items-center justify-between mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentStage <= 1}
+                onClick={goToPrevStage}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous Stage
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                <div className="text-sm">
+                  Stage {currentStage} of {totalStages}
+                </div>
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentStage >= totalStages}
+                onClick={goToNextStage}
+              >
+                Next Stage
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
+          
           {/* Battle Log Tab */}
           <TabsContent value="battle" className="flex-1 min-h-0 flex flex-col">
             <ScrollArea className="flex-1 rounded-md border border-[#432874] p-4 bg-[#251942]">
-              {battleMessages.length === 0 ? (
+              {!currentStageBattleMessages || currentStageBattleMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-[#C8B8DB] space-y-2 py-8">
                   <div className="text-center">
-                    <p className="font-medium text-[#E5DBFF]">No battle data available</p>
-                    <p className="text-sm mt-1">Click the "Complete Dungeon & Claim Rewards" button below to free your characters</p>
+                    <p className="font-medium text-[#E5DBFF]">No battle data available for this stage</p>
+                    <p className="text-sm mt-1">Try viewing a different stage or click "Complete Dungeon & Claim Rewards" to free your characters</p>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {battleMessages.map((message, i) => (
+                  {currentStageBattleMessages.map((message: string, i: number) => (
                     <div 
                       key={i} 
                       className={`px-3 py-2 rounded-md ${
                         message.includes('Critical') ? 'bg-[#432874]' : 
                         message.includes('System:') ? 'bg-[#1D1128] border border-[#432874]' :
-                        message.includes('Stage') && message.includes('begins') ? 'bg-[#432874] border border-[#7B4AE2] mt-4 font-medium' :
-                        message.includes('Stage') && message.includes('completed') ? 'bg-[#1D4136] border border-[#4AE292] mt-2 font-medium' :
+                        message.includes('Stage') && message.includes('Begins') ? 'bg-[#432874] border border-[#7B4AE2] mt-4 font-medium' :
+                        message.includes('Stage') && message.includes('Complete') ? 'bg-[#1D4136] border border-[#4AE292] mt-2 font-medium' :
+                        message.includes('Battle Summary') ? 'bg-[#432874] border border-[#7B4AE2] mt-4 font-semibold' :
                         i % 2 === 0 ? 'bg-[#321959]/50' : 'bg-transparent'
                       }`}
                     >
@@ -455,6 +543,37 @@ export default function BattleLog({
                 </div>
               )}
             </ScrollArea>
+            
+            {/* Playback Controls */}
+            <div className="flex items-center justify-between mt-4 bg-[#1D1128] p-2 rounded-md">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsPaused(!isPaused)}
+              >
+                {isPaused ? <Play className="h-4 w-4 mr-1" /> : <Pause className="h-4 w-4 mr-1" />}
+                {isPaused ? 'Play' : 'Pause'}
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                <Label htmlFor="autoplay" className="text-xs">Auto-Play</Label>
+                <Switch 
+                  id="autoplay" 
+                  checked={autoPlay} 
+                  onCheckedChange={toggleAutoPlay} 
+                />
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={goToNextStage}
+                disabled={currentStage >= totalStages}
+              >
+                <SkipForward className="h-4 w-4 mr-1" />
+                Skip to Next Stage
+              </Button>
+            </div>
           </TabsContent>
           
           {/* Units Tab */}
