@@ -18,7 +18,7 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  loginWithDiscord: () => void; // This is now an auto-login function
+  login: () => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<User | null>;
 }
@@ -74,10 +74,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isAuthenticated: false,
   
-  loginWithDiscord: () => {
-    // For prototype - redirect to auto-login that creates admin account
-    console.log('Using auto-login for prototype');
-    window.location.href = '/api/auth/auto-login';
+  login: async () => {
+    try {
+      console.log('Using direct login');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        set({ user: userData, isAuthenticated: true, isLoading: false });
+        
+        // Update game store with user's currencies
+        const gameStore = useGameStore.getState();
+        gameStore.updateCurrencies(
+          userData.forgeTokens || 0, 
+          userData.rogueCredits || 0, 
+          userData.soulShards || 0
+        );
+      } else {
+        console.error('Login failed', await response.text());
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   },
   
   logout: async () => {

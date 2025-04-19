@@ -77,31 +77,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // WebSocket functionality temporarily removed to fix startup issues
   
-  // Auto-login route - bypasses Discord OAuth completely for prototyping
-  app.get('/api/auth/auto-login', async (req, res) => {
+  // Direct login API - creates a player account directly
+  app.post('/api/auth/login', async (req, res) => {
     try {
-      console.log('Starting auto-login process for admin access');
+      console.log('Starting direct login process');
       
-      // Define the admin user ID
-      const adminUserId = 'admin123456';
+      // Create a consistent user ID for testing
+      const userId = 'player123456';
       
       let userData = null;
       
-      // Check if admin user exists
+      // Check if user exists
       try {
-        userData = await storage.getUserByDiscordId(adminUserId);
-        console.log('Admin user check:', userData ? 'Found existing admin' : 'No admin found, will create');
+        userData = await storage.getUserByDiscordId(userId);
+        console.log('User check:', userData ? 'Found existing user' : 'No user found, will create');
       } catch (findError) {
-        console.error('Error checking for admin user:', findError);
+        console.error('Error checking for user:', findError);
         userData = null;
       }
       
       if (!userData) {
-        // Create new admin user with enhanced privileges
-        console.log('Creating new admin user');
+        // Create new user with privileges
+        console.log('Creating new user');
         userData = await storage.createUser({
-          discordId: adminUserId,
-          username: 'Admin',
+          discordId: userId,
+          username: 'Player',
           avatarUrl: 'https://cdn.pixabay.com/photo/2021/03/02/12/03/avatar-6062252_1280.png',
           roles: ['admin', 'member'],
           forgeTokens: 99999,
@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastLogin: new Date(),
           isAdmin: true
         });
-        console.log('Created admin user with ID:', userData.id);
+        console.log('Created user with ID:', userData.id);
         
         // Create starter resources
         await Promise.all([
@@ -188,41 +188,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log('Created starter resources and characters');
       } else {
-        // Update existing admin login time
-        console.log('Updating existing admin login time');
+        // Update existing user login time
+        console.log('Updating existing user login time');
         userData = await storage.updateUser(userData.id, { lastLogin: new Date() });
       }
       
-      // Set session with admin user
+      // Set session with user ID
       req.session.userId = userData.id;
-      console.log('Set session userId to admin ID:', userData.id);
+      console.log('Set session userId to ID:', userData.id);
       
-      // Redirect to client with admin flag
-      res.redirect('/?admin=true');
+      // Return user data directly
+      res.json(userData);
     } catch (error) {
-      console.error('Auto-login error:', error);
+      console.error('Login error:', error);
       res.status(500).json({ 
-        message: 'Auto-login failed', 
+        message: 'Login failed', 
         error: error instanceof Error ? error.message : String(error)
       });
     }
-  });
-
-  // Discord OAuth routes (redirect to auto-login for prototype)
-  app.get('/api/auth/discord', (req, res) => {
-    // For the prototype, redirect to auto-login
-    res.redirect('/api/auth/auto-login');
-  });
-  
-  // Direct login route for development (redirects to auto-login for prototype)
-  app.get('/api/auth/dev-login', async (req, res) => {
-    // For the prototype, redirect to auto-login
-    return res.redirect('/api/auth/auto-login');
-  });
-  
-  app.get('/api/auth/discord/callback', async (req, res) => {
-    // For the prototype, redirect to auto-login
-    return res.redirect('/api/auth/auto-login');
   });
   
   app.get('/api/auth/logout', (req, res) => {

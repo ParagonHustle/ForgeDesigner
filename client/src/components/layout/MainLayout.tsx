@@ -9,9 +9,7 @@ interface MainLayoutProps {
 }
 
 const MainLayout = ({ children }: MainLayoutProps) => {
-  const { isAuthenticated, isLoading, user, loginWithDiscord, fetchUser } = useAuthStore();
-  // Use auto-login function
-  const login = loginWithDiscord;
+  const { isAuthenticated, isLoading, user, login, fetchUser } = useAuthStore();
   const { 
     fetchResources, 
     fetchCharacters, 
