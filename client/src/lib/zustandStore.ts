@@ -18,7 +18,7 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  loginWithDiscord: () => void;
+  loginWithDiscord: () => void; // This is now an auto-login function
   logout: () => void;
   fetchUser: () => Promise<User | null>;
 }
