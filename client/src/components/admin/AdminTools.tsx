@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from '@tanstack/react-query';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 
 /**
  * Component for admin tools and actions
@@ -10,7 +10,7 @@ import { useDiscordAuth } from '@/lib/discordAuth';
 export function AdminTools() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   
   const freeCharacters = async () => {
     try {
