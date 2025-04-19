@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useGameStore } from '@/lib/zustandStore';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -60,7 +60,7 @@ const buildings: {
 }[] = [];
 
 const BuildingsView = () => {
-  const { user, fetchUser } = useDiscordAuth();
+  const { user, fetchUser } = useAuthStore();
   const { toast } = useToast();
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
   const [upgradeDialog, setUpgradeDialog] = useState<boolean>(false);

@@ -1,11 +1,11 @@
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 import { useGameStore } from '@/lib/zustandStore';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
 
 const ResourcesOverview = () => {
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   const { resources, fetchResources } = useGameStore();
 
   // Ensure we have the latest resources data

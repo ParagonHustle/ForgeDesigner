@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useGameStore } from '@/lib/zustandStore';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { 
@@ -32,7 +32,7 @@ import {
 import type { BlackMarketListing } from '@shared/schema';
 
 const BlackMarketView = () => {
-  const { user, fetchUser } = useDiscordAuth();
+  const { user, fetchUser } = useAuthStore();
   const { fetchResources, fetchCharacters, fetchAuras } = useGameStore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);

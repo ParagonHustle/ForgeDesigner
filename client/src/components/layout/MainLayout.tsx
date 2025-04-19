@@ -21,16 +21,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     fetchBountyQuests
   } = useGameStore();
 
-  // Load user data on mount and auto-login for prototype
+  // Load user data on mount
   useEffect(() => {
-    fetchUser().then((userData) => {
-      // For prototype: Auto-login if not authenticated
-      if (!userData) {
-        console.log('Auto-login for prototype initiated');
-        login();
-      }
-    });
-  }, [fetchUser, login]);
+    fetchUser();
+  }, [fetchUser]);
 
   // Fetch game data when authenticated
   useEffect(() => {
@@ -67,7 +61,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     );
   }
 
-  // If not authenticated, show auto-login screen
+  // If not authenticated, show login screen
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#1A1A2E] flex flex-col items-center justify-center p-4">
@@ -75,23 +69,23 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           <h1 className="text-4xl font-cinzel font-bold text-[#FF9D00] text-center mb-6">The Forge</h1>
           <p className="text-[#C8B8DB] text-center mb-8">
             Welcome to The Forge - the management platform for Aura Forge. 
-            <br/><span className="text-[#FF9D00]">(Prototype: Click below to log in automatically as an admin with full access)</span>
+            <br/><span className="text-[#FF9D00]">(Prototype: Click below to enter the game)</span>
           </p>
           
-          {/* Auto-login button */}
+          {/* Login button */}
           <button 
             onClick={() => login()}
             className="w-full bg-[#7855FF] hover:bg-[#6248BF] transition-colors text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 bg-green-500 text-white text-xs px-2 py-0.5">PROTOTYPE</div>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 mr-2">
-              <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+              <path d="M15 3h5v5M20 3L10 13m0-5v5h5" />
             </svg>
-            <span>Auto-Login as Admin</span>
+            <span>Enter The Forge</span>
           </button>
           
           <div className="mt-6 text-center text-[#C8B8DB]/60 text-sm">
-            Alpha v0.1 - Prototype Mode - No Discord Account Required
+            Alpha v0.1 - Prototype Mode - Direct Login
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useGameStore } from '@/lib/zustandStore';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -109,7 +109,7 @@ const formatTimeRemaining = (expiresAt: string | Date) => {
 };
 
 const BountyBoardView = () => {
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState<boolean>(false);

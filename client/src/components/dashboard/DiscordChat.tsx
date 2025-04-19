@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/lib/zustandStore';
 import { Send, Maximize2, Minimize2 } from 'lucide-react';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 
 const DiscordChat = () => {
   const { discordMessages, addDiscordMessage } = useGameStore();
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   const [message, setMessage] = useState('');
   const [expanded, setExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Bot, Sparkles, InfoIcon } from 'lucide-react';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 
 interface Message {
   id: string;
@@ -23,7 +23,7 @@ const KleosChatInterface = ({
   activeDungeons,
   farmingSlotsCount
 }: KleosChatInterfaceProps) => {
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);

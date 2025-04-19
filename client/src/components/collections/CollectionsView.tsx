@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/lib/zustandStore';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +31,7 @@ const CollectionsView = () => {
   const [equippedTitle, setEquippedTitle] = useState<number | null>(1); // Default to first title
   
   const gameStore = useGameStore();
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   const { toast } = useToast();
   
   // Get active characters and auras to calculate account power

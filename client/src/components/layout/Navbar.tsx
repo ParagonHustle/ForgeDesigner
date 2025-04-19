@@ -1,11 +1,10 @@
-import { useDiscordAuth } from '@/lib/discordAuth';
-import { useGameStore } from '@/lib/zustandStore';
+import { useAuthStore, useGameStore } from '@/lib/zustandStore';
 import { Zap } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
 import CompactDiscordChat from '@/components/common/CompactDiscordChat';
 
 const Navbar = () => {
-  const { user, logout } = useDiscordAuth();
+  const { user, logout } = useAuthStore();
   const { forgeTokens, rogueCredits, speedBoostActive, speedBoostMultiplier } = useGameStore();
   const location = useLocation();
 

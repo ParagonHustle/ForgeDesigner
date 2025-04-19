@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import CollectionsView from '@/components/collections/CollectionsView';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 import { Redirect } from 'wouter';
 
 export default function Collections() {
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
 
   // Redirect unauthenticated users
   if (!user) {

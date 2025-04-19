@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/zustandStore';
 import { Send, MessageSquare, ChevronDown, ChevronUp, Maximize2, MessageCircle } from 'lucide-react';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 const CompactDiscordChat = () => {
   const { discordMessages, addDiscordMessage } = useGameStore();
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   const [message, setMessage] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);

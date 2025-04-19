@@ -1,14 +1,14 @@
 import KleosChatInterface from './KleosChatInterface';
 import ActiveTasks from './ActiveTasks';
 import OfferBanner from '../ui/OfferBanner';
-import { useDiscordAuth } from '@/lib/discordAuth';
+import { useAuthStore } from '@/lib/zustandStore';
 import { useGameStore } from '@/lib/zustandStore';
 import { useEffect } from 'react';
 import { Zap } from 'lucide-react';
 import { AdminTools } from '../admin/AdminTools';
 
 const DashboardView = () => {
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   const { 
     fetchFarmingTasks, 
     fetchDungeonRuns, 

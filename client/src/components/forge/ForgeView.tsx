@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useGameStore } from "@/lib/zustandStore";
-import { useDiscordAuth } from "@/lib/discordAuth";
+import { useAuthStore } from '@/lib/zustandStore';
 import { motion } from "framer-motion";
 import { ArrowUpCircle, Clock, Flame, Hammer, LayoutGrid, Sparkles, User, Info } from "lucide-react";
 import {
@@ -74,7 +74,7 @@ const ForgeView = () => {
   const bonusSlots = townhallLevel >= 3 ? 1 : 0;
   
   // Use the admin status from the user to determine if unlimited slots are available
-  const { user } = useDiscordAuth();
+  const { user } = useAuthStore();
   const isAdmin = user?.isAdmin || false;
   const maxCraftingSlots = isAdmin ? 999 : baseSlots + bonusSlots; // Admin gets unlimited slots (999)
   
