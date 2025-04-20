@@ -500,6 +500,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log('Created abundant resources, characters, and auras');
       } else {
+        // Check if the user already has characters and auras
+        const existingCharacters = await storage.getCharacters(userData.id);
+        const existingAuras = await storage.getAuras(userData.id);
+        
+        // If the user has less than 10 characters, add more
+        if (existingCharacters.length < 10) {
+          console.log('Adding more characters to existing account');
+          
+          // Sample list of characters to add if needed
+          const additionalCharacters = [
+            {
+              userId: userData.id,
+              name: 'Ironheart',
+              class: 'Tank',
+              level: 35,
+              attack: 65,
+              defense: 95,
+              vitality: 520,
+              speed: 30,
+              focus: 40,
+              accuracy: 50,
+              resilience: 85,
+              avatarUrl: 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=250&h=250&fit=crop'
+            },
+            {
+              userId: userData.id,
+              name: 'Lightbringer',
+              class: 'Paladin',
+              level: 35,
+              attack: 70,
+              defense: 75,
+              vitality: 480,
+              speed: 45,
+              focus: 65,
+              accuracy: 60,
+              resilience: 70,
+              avatarUrl: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=250&h=250&fit=crop'
+            },
+            {
+              userId: userData.id,
+              name: 'Stormbringer',
+              class: 'Elementalist',
+              level: 35,
+              attack: 80,
+              defense: 45,
+              vitality: 350,
+              speed: 65,
+              focus: 85,
+              accuracy: 75,
+              resilience: 55,
+              avatarUrl: 'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=250&h=250&fit=crop'
+            },
+            {
+              userId: userData.id,
+              name: 'Nightshade',
+              class: 'Assassin',
+              level: 35,
+              attack: 85,
+              defense: 35,
+              vitality: 320,
+              speed: 90,
+              focus: 70,
+              accuracy: 90,
+              resilience: 40,
+              avatarUrl: 'https://images.unsplash.com/photo-1559123519-e05d8e2a15bd?w=250&h=250&fit=crop'
+            }
+          ];
+          
+          for (const charData of additionalCharacters) {
+            if (!existingCharacters.some(c => c.name === charData.name)) {
+              await storage.createCharacter(charData);
+            }
+          }
+        }
+        
+        // If the user has less than 15 auras, add more
+        if (existingAuras.length < 15) {
+          console.log('Adding more auras to existing account');
+          
+          // Sample list of auras to add if needed
+          const additionalAuras = [
+            {
+              userId: userData.id,
+              name: 'Shadow Cloak',
+              element: 'Shadow',
+              level: 25,
+              rarity: 'Legendary',
+              attack: 30,
+              defense: 30,
+              vitality: 120,
+              speed: 35,
+              focus: 40,
+              iconUrl: 'https://images.unsplash.com/photo-1519608425089-7f3bfa6f6bb8?w=150&h=150&fit=crop',
+              skills: JSON.stringify(['Dark Shroud', 'Shadow Step', 'Umbral Blast'])
+            },
+            {
+              userId: userData.id,
+              name: 'Light Halo',
+              element: 'Light',
+              level: 25,
+              rarity: 'Legendary',
+              attack: 35,
+              defense: 35,
+              vitality: 150,
+              speed: 30,
+              focus: 45,
+              iconUrl: 'https://images.unsplash.com/photo-1523401257547-36b5171b3be0?w=150&h=150&fit=crop',
+              skills: JSON.stringify(['Divine Ray', 'Blessing', 'Holy Nova'])
+            },
+            {
+              userId: userData.id,
+              name: 'Phoenix Rebirth',
+              element: 'Fire',
+              level: 30,
+              rarity: 'Legendary',
+              attack: 55,
+              defense: 15,
+              vitality: 120,
+              speed: 35,
+              focus: 25,
+              iconUrl: 'https://images.unsplash.com/photo-1599518537242-eecf4fecc159?w=150&h=150&fit=crop',
+              skills: JSON.stringify(['Rising Flame', 'Rebirth', 'Ashen Wings'])
+            },
+            {
+              userId: userData.id,
+              name: 'Glacier Mantle',
+              element: 'Ice',
+              level: 30,
+              rarity: 'Epic',
+              attack: 25,
+              defense: 55,
+              vitality: 150,
+              speed: 15,
+              focus: 30,
+              iconUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&h=150&fit=crop',
+              skills: JSON.stringify(['Frozen Armor', 'Winter Wind', 'Permafrost'])
+            },
+            {
+              userId: userData.id,
+              name: 'Void Entity',
+              element: 'Shadow',
+              level: 30,
+              rarity: 'Legendary',
+              attack: 45,
+              defense: 45,
+              vitality: 140,
+              speed: 40,
+              focus: 50,
+              iconUrl: 'https://images.unsplash.com/photo-1599227693667-d342bdbf5a3d?w=150&h=150&fit=crop',
+              skills: JSON.stringify(['Dark Absorption', 'Null Zone', 'Oblivion'])
+            }
+          ];
+          
+          for (const auraData of additionalAuras) {
+            if (!existingAuras.some(a => a.name === auraData.name)) {
+              await storage.createAura(auraData);
+            }
+          }
+        }
+        
+        // Ensure user has at least 9999 of essential resources
+        const resources = await storage.getResourcesByUserId(userData.id);
+        const essentialResources = [
+          { name: 'Celestial Ore', type: 'material', desc: 'A rare material used in crafting Auras', icon: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop' },
+          { name: 'Abyssal Pearl', type: 'material', desc: 'A rare material from the ocean depths', icon: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=150&h=150&fit=crop' },
+          { name: 'Mystic Crystal', type: 'material', desc: 'Crystal with magical properties', icon: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=150&h=150&fit=crop' },
+          { name: 'Essence', type: 'crafting', desc: 'Pure magical essence for crafting', icon: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=150&h=150&fit=crop' }
+        ];
+        
+        for (const resource of essentialResources) {
+          const existingResource = resources.find(r => r.name === resource.name);
+          if (!existingResource) {
+            await storage.createResource({
+              userId: userData.id,
+              name: resource.name,
+              type: resource.type,
+              quantity: 9999,
+              description: resource.desc,
+              iconUrl: resource.icon
+            });
+          } else if (existingResource.quantity < 9999) {
+            await storage.updateResource(existingResource.id, {
+              quantity: 9999
+            });
+          }
+        }
+        
         // Update existing user login time
         console.log('Updating existing user login time');
         userData = await storage.updateUser(userData.id, { lastLogin: new Date() });

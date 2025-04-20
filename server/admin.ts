@@ -233,9 +233,24 @@ export async function registerAdminRoutes(app: Express) {
       const createdAuras = [];
       for (const aura of aurasToCreate) {
         try {
+          // Extract skills from the stringified JSON for proper storage
+          const { skills: skillsString, ...auraData } = aura;
+          let skills = [];
+          
+          // Parse skills if they exist
+          if (skillsString) {
+            try {
+              skills = JSON.parse(skillsString as string);
+            } catch (e) {
+              console.warn(`Could not parse skills for ${aura.name}:`, e);
+              skills = [];
+            }
+          }
+          
           const newAura = await storage.createAura({
             userId,
-            ...aura
+            ...auraData,
+            skills: skills
           });
           createdAuras.push(newAura);
         } catch (error) {
