@@ -34,13 +34,28 @@ export async function registerAdminRoutes(app: Express) {
       
       console.log('Added 99999 Essence to user account');
       
-      // Create Level 1 Auras
+      // Create powerful auras
       const auraTypes = [
-        { name: 'Flame Aura', element: 'fire', rarity: 'common', tier: 1 },
-        { name: 'Ice Barrier', element: 'ice', rarity: 'common', tier: 1 },
-        { name: 'Lightning Shield', element: 'lightning', rarity: 'uncommon', tier: 1 },
-        { name: 'Earth Embrace', element: 'earth', rarity: 'common', tier: 1 },
-        { name: 'Void Mantle', element: 'void', rarity: 'rare', tier: 1 }
+        { name: 'Phoenix Rebirth', element: 'fire', rarity: 'legendary', tier: 5,
+          power: 55, defense: 15, vitality: 120, energy: 35, skills: ['Rising Flame', 'Rebirth', 'Ashen Wings'] },
+        { name: 'Glacier Mantle', element: 'ice', rarity: 'epic', tier: 4,
+          power: 25, defense: 55, vitality: 150, energy: 15, skills: ['Frozen Armor', 'Winter Wind', 'Permafrost'] },
+        { name: 'Thunder God', element: 'lightning', rarity: 'legendary', tier: 5,
+          power: 60, defense: 10, vitality: 100, energy: 45, skills: ['Lightning Strike', 'Thunder Clap', 'Storm Call'] },
+        { name: 'Mountain Strength', element: 'earth', rarity: 'epic', tier: 4,
+          power: 20, defense: 60, vitality: 220, energy: 5, skills: ['Stone Skin', 'Earth Spike', 'Avalanche'] },
+        { name: 'Void Entity', element: 'shadow', rarity: 'legendary', tier: 5,
+          power: 45, defense: 45, vitality: 140, energy: 40, skills: ['Dark Absorption', 'Null Zone', 'Oblivion'] },
+        { name: 'Light Halo', element: 'light', rarity: 'legendary', tier: 5,
+          power: 35, defense: 35, vitality: 150, energy: 30, skills: ['Divine Ray', 'Blessing', 'Holy Nova'] },
+        { name: 'Tornado Force', element: 'wind', rarity: 'epic', tier: 4,
+          power: 40, defense: 10, vitality: 80, energy: 60, skills: ['Gale Force', 'Cyclone', 'Air Shield'] },
+        { name: 'Arcane Power', element: 'arcane', rarity: 'legendary', tier: 5,
+          power: 50, defense: 20, vitality: 120, energy: 60, skills: ['Mystic Blast', 'Arcane Shield', 'Mana Surge'] },
+        { name: 'Nature\'s Blessing', element: 'nature', rarity: 'epic', tier: 4,
+          power: 25, defense: 25, vitality: 180, energy: 30, skills: ['Rejuvenate', 'Thornshield', 'Wild Growth'] },
+        { name: 'Water Flow', element: 'water', rarity: 'rare', tier: 3,
+          power: 20, defense: 30, vitality: 140, energy: 35, skills: ['Tidal Wave', 'Healing Stream', 'Whirlpool'] }
       ];
       
       const createdAuras = [];
@@ -48,18 +63,17 @@ export async function registerAdminRoutes(app: Express) {
         const newAura = await storage.createAura({
           userId,
           name: aura.name,
-          description: `A level 1 ${aura.element} aura that provides elemental protection.`,
           element: aura.element,
           tier: aura.tier,
           rarity: aura.rarity,
-          level: 1,
-          requiredLevel: 1,
-          power: 10 + Math.floor(Math.random() * 5),
-          defense: 5 + Math.floor(Math.random() * 5),
-          vitality: 3 + Math.floor(Math.random() * 3),
-          energy: 5 + Math.floor(Math.random() * 5),
+          level: 30,
+          requiredLevel: 25,
+          power: aura.power || 50,
+          defense: aura.defense || 30,
+          vitality: aura.vitality || 150,
+          energy: aura.energy || 30,
           iconUrl: `https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=150&h=150&fit=crop&auto=format&q=80&crop=entropy&cs=tinysrgb&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTY5MTkxMjcwMw&ixlib=rb-4.0.3`,
-          skills: [],
+          skills: aura.skills || [],
           equippedByCharacterId: null,
           isFusing: false
         });
@@ -106,7 +120,7 @@ export async function registerAdminRoutes(app: Express) {
           class: "battlemage",
           element: "fire",
           rarity: "legendary",
-          level: 15,
+          level: 35,
           iconUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop"
         },
         {
@@ -114,16 +128,72 @@ export async function registerAdminRoutes(app: Express) {
           class: "assassin",
           element: "ice",
           rarity: "epic",
-          level: 12,
+          level: 35,
           iconUrl: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150&h=150&fit=crop"
         },
         {
           name: "Thunderclap",
           class: "berserker",
           element: "lightning",
-          rarity: "rare",
-          level: 10,
+          rarity: "legendary",
+          level: 35,
           iconUrl: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&h=150&fit=crop"
+        },
+        {
+          name: "Titan",
+          class: "Guardian",
+          element: "earth",
+          rarity: "legendary",
+          level: 35,
+          iconUrl: "https://images.unsplash.com/photo-1560982631-1dcbf0d2e5d5?w=250&h=250&fit=crop"
+        },
+        {
+          name: "Blaze",
+          class: "Pyromancer",
+          element: "fire",
+          rarity: "epic",
+          level: 35,
+          iconUrl: "https://images.unsplash.com/photo-1599689868230-f88c0481f2a2?w=250&h=250&fit=crop"
+        },
+        {
+          name: "Phantom",
+          class: "Shadow Stalker",
+          element: "shadow",
+          rarity: "legendary",
+          level: 35,
+          iconUrl: "https://images.unsplash.com/photo-1596499058780-974c9225d88f?w=250&h=250&fit=crop"
+        },
+        {
+          name: "Ironheart",
+          class: "Tank",
+          element: "metal",
+          rarity: "epic",
+          level: 35,
+          iconUrl: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=250&h=250&fit=crop"
+        },
+        {
+          name: "Lightbringer",
+          class: "Paladin",
+          element: "light",
+          rarity: "legendary",
+          level: 35,
+          iconUrl: "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=250&h=250&fit=crop"
+        },
+        {
+          name: "Stormbringer",
+          class: "Elementalist",
+          element: "lightning",
+          rarity: "epic",
+          level: 35,
+          iconUrl: "https://images.unsplash.com/photo-1521119989659-a83eee488004?w=250&h=250&fit=crop"
+        },
+        {
+          name: "Nightshade",
+          class: "Assassin",
+          element: "shadow",
+          rarity: "epic",
+          level: 35,
+          iconUrl: "https://images.unsplash.com/photo-1559123519-e05d8e2a15bd?w=250&h=250&fit=crop"
         }
       ];
       

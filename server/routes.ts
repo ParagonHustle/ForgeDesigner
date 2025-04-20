@@ -77,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // WebSocket functionality temporarily removed to fix startup issues
   
-  // Direct login API - creates a player account directly
+  // Direct login API - creates a player account directly with lots of characters and auras
   app.post('/api/auth/login', async (req, res) => {
     try {
       console.log('Starting direct login process');
@@ -112,13 +112,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         console.log('Created user with ID:', userData.id);
         
-        // Create starter resources
+        // Create abundant resources
         await Promise.all([
           storage.createResource({
             userId: userData.id,
             name: 'Celestial Ore',
             type: 'material',
-            quantity: 1000,
+            quantity: 9999,
             description: 'A rare material used in crafting Auras',
             iconUrl: 'https://images.unsplash.com/photo-1608054791095-e0482e3e5139?w=150&h=150&fit=crop'
           }),
@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId: userData.id,
             name: 'Abyssal Pearl',
             type: 'material',
-            quantity: 1000,
+            quantity: 9999,
             description: 'A rare material from the ocean depths',
             iconUrl: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=150&h=150&fit=crop'
           }),
@@ -134,59 +134,371 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId: userData.id,
             name: 'Mystic Crystal',
             type: 'material',
-            quantity: 1000,
+            quantity: 9999,
             description: 'Crystal with magical properties',
             iconUrl: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=150&h=150&fit=crop'
+          }),
+          storage.createResource({
+            userId: userData.id,
+            name: 'Dragon Scale',
+            type: 'material',
+            quantity: 9999,
+            description: 'Rare scales from an ancient dragon',
+            iconUrl: 'https://images.unsplash.com/photo-1592950630581-03cb41342cc5?w=150&h=150&fit=crop'
+          }),
+          storage.createResource({
+            userId: userData.id,
+            name: 'Phoenix Feather',
+            type: 'material',
+            quantity: 9999,
+            description: 'Magical feathers that burn eternally',
+            iconUrl: 'https://images.unsplash.com/photo-1553356084-58ef4a67b2a7?w=150&h=150&fit=crop'
+          }),
+          storage.createResource({
+            userId: userData.id,
+            name: 'Essence',
+            type: 'crafting',
+            quantity: 99999,
+            description: 'Pure magical essence for crafting',
+            iconUrl: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=150&h=150&fit=crop'
           })
         ]);
         
-        // Create starter characters
-        await Promise.all([
-          storage.createCharacter({
-            userId: userData.id,
+        // Create a diverse set of characters
+        const charactersToCreate = [
+          {
             name: 'Dragonslayer',
             class: 'Warrior',
-            level: 30,
-            attack: 50,
-            defense: 60,
-            vitality: 300,
+            level: 35,
+            attack: 75,
+            defense: 80,
+            vitality: 450,
             speed: 40,
             focus: 30,
-            accuracy: 45,
-            resilience: 55,
+            accuracy: 55,
+            resilience: 65,
             avatarUrl: 'https://images.unsplash.com/photo-1580519542036-c47de6d5f458?w=250&h=250&fit=crop'
-          }),
-          storage.createCharacter({
-            userId: userData.id,
+          },
+          {
             name: 'Shadowmage',
             class: 'Mage',
-            level: 30,
-            attack: 60,
-            defense: 30,
-            vitality: 200,
-            speed: 45,
-            focus: 70,
-            accuracy: 60,
-            resilience: 40,
+            level: 35,
+            attack: 85,
+            defense: 40,
+            vitality: 320,
+            speed: 55,
+            focus: 90,
+            accuracy: 75,
+            resilience: 45,
             avatarUrl: 'https://images.unsplash.com/photo-1618336753974-aae8e04506a7?w=250&h=250&fit=crop'
-          }),
-          storage.createCharacter({
-            userId: userData.id,
+          },
+          {
             name: 'Swiftblade',
             class: 'Rogue',
-            level: 30,
-            attack: 55,
-            defense: 35,
-            vitality: 220,
-            speed: 70,
-            focus: 50,
-            accuracy: 65,
-            resilience: 35,
+            level: 35,
+            attack: 70,
+            defense: 45,
+            vitality: 350,
+            speed: 95,
+            focus: 60,
+            accuracy: 85,
+            resilience: 50,
             avatarUrl: 'https://images.unsplash.com/photo-1524117074681-31bd4de22ad3?w=250&h=250&fit=crop'
-          })
-        ]);
+          },
+          {
+            name: 'Ironheart',
+            class: 'Tank',
+            level: 35,
+            attack: 65,
+            defense: 95,
+            vitality: 520,
+            speed: 30,
+            focus: 40,
+            accuracy: 50,
+            resilience: 85,
+            avatarUrl: 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=250&h=250&fit=crop'
+          },
+          {
+            name: 'Lightbringer',
+            class: 'Paladin',
+            level: 35,
+            attack: 70,
+            defense: 75,
+            vitality: 480,
+            speed: 45,
+            focus: 65,
+            accuracy: 60,
+            resilience: 70,
+            avatarUrl: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=250&h=250&fit=crop'
+          },
+          {
+            name: 'Stormbringer',
+            class: 'Elementalist',
+            level: 35,
+            attack: 80,
+            defense: 45,
+            vitality: 350,
+            speed: 65,
+            focus: 85,
+            accuracy: 75,
+            resilience: 55,
+            avatarUrl: 'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=250&h=250&fit=crop'
+          },
+          {
+            name: 'Nightshade',
+            class: 'Assassin',
+            level: 35,
+            attack: 85,
+            defense: 35,
+            vitality: 320,
+            speed: 90,
+            focus: 70,
+            accuracy: 90,
+            resilience: 40,
+            avatarUrl: 'https://images.unsplash.com/photo-1559123519-e05d8e2a15bd?w=250&h=250&fit=crop'
+          },
+          {
+            name: 'Soulweaver',
+            class: 'Necromancer',
+            level: 35,
+            attack: 75,
+            defense: 50,
+            vitality: 360,
+            speed: 45,
+            focus: 95,
+            accuracy: 70,
+            resilience: 60,
+            avatarUrl: 'https://images.unsplash.com/photo-1604076913837-52ab5629fba9?w=250&h=250&fit=crop'
+          },
+          {
+            name: 'Wildheart',
+            class: 'Druid',
+            level: 35,
+            attack: 65,
+            defense: 60,
+            vitality: 420,
+            speed: 70,
+            focus: 75,
+            accuracy: 65,
+            resilience: 75,
+            avatarUrl: 'https://images.unsplash.com/photo-1525824236856-8c0aabe8dbde?w=250&h=250&fit=crop'
+          },
+          {
+            name: 'Frostbite',
+            class: 'Cryomancer',
+            level: 35,
+            attack: 80,
+            defense: 55,
+            vitality: 380,
+            speed: 50,
+            focus: 85,
+            accuracy: 75,
+            resilience: 60,
+            avatarUrl: 'https://images.unsplash.com/photo-1534947290-5ee0aff6e50f?w=250&h=250&fit=crop'
+          }
+        ];
         
-        console.log('Created starter resources and characters');
+        // Create characters sequentially to avoid DB conflicts
+        for (const charData of charactersToCreate) {
+          await storage.createCharacter({
+            userId: userData.id,
+            ...charData
+          });
+        }
+        
+        // Create a variety of auras
+        const aurasToCreate = [
+          {
+            name: 'Fire Emblem',
+            element: 'Fire',
+            level: 25,
+            rarity: 'Legendary',
+            attack: 45,
+            defense: 10,
+            vitality: 100,
+            speed: 25,
+            focus: 30,
+            iconUrl: 'https://images.unsplash.com/photo-1549813069-f95e44d7f498?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Ice Barrier',
+            element: 'Ice',
+            level: 25,
+            rarity: 'Epic',
+            attack: 15,
+            defense: 50,
+            vitality: 150,
+            speed: 5,
+            focus: 20,
+            iconUrl: 'https://images.unsplash.com/photo-1579974849948-1b0a7e76121a?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Lightning Strike',
+            element: 'Lightning',
+            level: 25,
+            rarity: 'Epic',
+            attack: 40,
+            defense: 5,
+            vitality: 80,
+            speed: 50,
+            focus: 35,
+            iconUrl: 'https://images.unsplash.com/photo-1537210249814-b9a10a161ae4?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Earth Shield',
+            element: 'Earth',
+            level: 25,
+            rarity: 'Rare',
+            attack: 10,
+            defense: 45,
+            vitality: 200,
+            speed: 0,
+            focus: 15,
+            iconUrl: 'https://images.unsplash.com/photo-1510343513665-87c889f8b0ef?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Wind Rush',
+            element: 'Wind',
+            level: 25,
+            rarity: 'Epic',
+            attack: 20,
+            defense: 15,
+            vitality: 90,
+            speed: 55,
+            focus: 25,
+            iconUrl: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Shadow Cloak',
+            element: 'Shadow',
+            level: 25,
+            rarity: 'Legendary',
+            attack: 30,
+            defense: 30,
+            vitality: 120,
+            speed: 35,
+            focus: 40,
+            iconUrl: 'https://images.unsplash.com/photo-1519608425089-7f3bfa6f6bb8?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Light Halo',
+            element: 'Light',
+            level: 25,
+            rarity: 'Legendary',
+            attack: 35,
+            defense: 35,
+            vitality: 150,
+            speed: 30,
+            focus: 45,
+            iconUrl: 'https://images.unsplash.com/photo-1523401257547-36b5171b3be0?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Nature\'s Blessing',
+            element: 'Nature',
+            level: 25,
+            rarity: 'Epic',
+            attack: 25,
+            defense: 25,
+            vitality: 180,
+            speed: 25,
+            focus: 30,
+            iconUrl: 'https://images.unsplash.com/photo-1462690417829-5b41247f6b0e?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Water Flow',
+            element: 'Water',
+            level: 25,
+            rarity: 'Rare',
+            attack: 20,
+            defense: 30,
+            vitality: 140,
+            speed: 20,
+            focus: 35,
+            iconUrl: 'https://images.unsplash.com/photo-1454789476662-53eb23ba5907?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Arcane Power',
+            element: 'Arcane',
+            level: 25,
+            rarity: 'Legendary',
+            attack: 50,
+            defense: 20,
+            vitality: 120,
+            speed: 15,
+            focus: 60,
+            iconUrl: 'https://images.unsplash.com/photo-1590496793929-36417d3117de?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Volcanic Fury',
+            element: 'Fire',
+            level: 25,
+            rarity: 'Epic',
+            attack: 55,
+            defense: 15,
+            vitality: 90,
+            speed: 20,
+            focus: 25,
+            iconUrl: 'https://images.unsplash.com/photo-1610498955353-c92da35d40da?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Frost Nova',
+            element: 'Ice',
+            level: 25,
+            rarity: 'Epic',
+            attack: 35,
+            defense: 35,
+            vitality: 110,
+            speed: 10,
+            focus: 40,
+            iconUrl: 'https://images.unsplash.com/photo-1476368571201-5b1ad1c8e3b5?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Thunder God',
+            element: 'Lightning',
+            level: 25,
+            rarity: 'Legendary',
+            attack: 60,
+            defense: 10,
+            vitality: 100,
+            speed: 45,
+            focus: 30,
+            iconUrl: 'https://images.unsplash.com/photo-1537210249814-b9a10a161ae4?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Mountain\'s Strength',
+            element: 'Earth',
+            level: 25,
+            rarity: 'Epic',
+            attack: 20,
+            defense: 60,
+            vitality: 220,
+            speed: 0,
+            focus: 15,
+            iconUrl: 'https://images.unsplash.com/photo-1553075712-453f7dfe1d6c?w=150&h=150&fit=crop'
+          },
+          {
+            name: 'Tornado Force',
+            element: 'Wind',
+            level: 25,
+            rarity: 'Epic',
+            attack: 40,
+            defense: 10,
+            vitality: 80,
+            speed: 60,
+            focus: 25,
+            iconUrl: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=150&h=150&fit=crop'
+          }
+        ];
+        
+        // Create auras sequentially to avoid DB conflicts
+        for (const auraData of aurasToCreate) {
+          await storage.createAura({
+            userId: userData.id,
+            ...auraData
+          });
+        }
+        
+        console.log('Created abundant resources, characters, and auras');
       } else {
         // Update existing user login time
         console.log('Updating existing user login time');

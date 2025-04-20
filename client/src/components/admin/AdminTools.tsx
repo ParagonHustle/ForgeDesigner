@@ -207,6 +207,19 @@ export function AdminTools() {
             >
               Add 99999 Essence + Characters & Auras
             </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                fetch('/api/auth/logout', { credentials: 'include' })
+                  .then(() => {
+                    window.location.href = '/';
+                  });
+              }}
+              className="border-purple-600 bg-purple-900/30 hover:bg-purple-900/50 text-purple-300"
+            >
+              Logout & Create Fresh Account
+            </Button>
           </div>
         </div>
       </div>
