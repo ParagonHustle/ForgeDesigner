@@ -37,6 +37,7 @@ export interface IStorage {
   
   // Resource methods
   getResources(userId: number): Promise<Resource[]>;
+  getResourcesByUserId(userId: number): Promise<Resource[]>;
   getResourceByNameAndUserId(name: string, userId: number): Promise<Resource | undefined>;
   createResource(resource: InsertResource): Promise<Resource>;
   updateResource(id: number, updates: Partial<Resource>): Promise<Resource | undefined>;
@@ -214,6 +215,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getResources(userId: number): Promise<Resource[]> {
+    return db.select().from(resources).where(eq(resources.userId, userId));
+  }
+  
+  async getResourcesByUserId(userId: number): Promise<Resource[]> {
     return db.select().from(resources).where(eq(resources.userId, userId));
   }
 

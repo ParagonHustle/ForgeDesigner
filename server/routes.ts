@@ -655,7 +655,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           for (const auraData of additionalAuras) {
             if (!existingAuras.some(a => a.name === auraData.name)) {
-              await storage.createAura(auraData);
+              // Parse skills from string to array
+              const { skills: skillsString, ...otherAuraData } = auraData;
+              let skillsArray = [];
+              
+              // Convert skills string to array if needed
+              if (skillsString) {
+                try {
+                  // If it's already a JSON string, parse it
+                  if (typeof skillsString === 'string') {
+                    skillsArray = JSON.parse(skillsString);
+                  } 
+                  // If it's already an array, use it directly
+                  else if (Array.isArray(skillsString)) {
+                    skillsArray = skillsString;
+                  }
+                } catch (e) {
+                  console.warn(`Could not parse skills for ${auraData.name}:`, e);
+                  skillsArray = [];
+                }
+              }
+              
+              await storage.createAura({
+                ...otherAuraData,
+                skills: skillsArray
+              });
             }
           }
         }
