@@ -211,6 +211,39 @@ export function AdminTools() {
             <Button 
               variant="outline" 
               onClick={() => {
+                fetch('/api/admin/add-more-auras', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  credentials: 'include'
+                })
+                  .then(response => response.json())
+                  .then(data => {
+                    toast({
+                      title: 'Auras Added',
+                      description: `Successfully added ${data.auras} new auras to your inventory.`,
+                      duration: 3000
+                    });
+                  })
+                  .catch(err => {
+                    console.error('Error adding auras:', err);
+                    toast({
+                      title: 'Error',
+                      description: 'Failed to add auras to inventory.',
+                      variant: 'destructive',
+                      duration: 3000
+                    });
+                  });
+              }}
+              className="border-blue-600 bg-blue-900/30 hover:bg-blue-900/50 text-blue-300"
+            >
+              Add More Auras
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => {
                 fetch('/api/auth/logout', { credentials: 'include' })
                   .then(() => {
                     window.location.href = '/';

@@ -5,6 +5,265 @@ import { characters } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 export async function registerAdminRoutes(app: Express) {
+  // Admin endpoint to add more auras to inventory
+  app.post('/api/admin/add-more-auras', async (req: Request, res: Response) => {
+    try {
+      // Get user ID from session or request
+      const userId = req.session?.userId || req.body.userId;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+      
+      // Create powerful auras
+      const aurasToCreate = [
+        {
+          name: 'Phoenix Rebirth',
+          element: 'fire',
+          tier: 5,
+          level: 30,
+          rarity: 'legendary',
+          attack: 55,
+          defense: 15,
+          vitality: 120, 
+          speed: 25,
+          focus: 30,
+          skills: JSON.stringify(['Rising Flame', 'Rebirth', 'Ashen Wings']),
+          iconUrl: 'https://images.unsplash.com/photo-1549813069-f95e44d7f498?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Glacier Mantle',
+          element: 'ice',
+          tier: 4,
+          level: 30,
+          rarity: 'epic',
+          attack: 25,
+          defense: 55,
+          vitality: 150,
+          speed: 5,
+          focus: 20,
+          skills: JSON.stringify(['Frozen Armor', 'Winter Wind', 'Permafrost']),
+          iconUrl: 'https://images.unsplash.com/photo-1579974849948-1b0a7e76121a?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Lightning Strike',
+          element: 'lightning',
+          tier: 4,
+          level: 30,
+          rarity: 'epic',
+          attack: 40,
+          defense: 5,
+          vitality: 80,
+          speed: 50,
+          focus: 35,
+          skills: JSON.stringify(['Thunder Bolt', 'Chain Lightning', 'Static Field']),
+          iconUrl: 'https://images.unsplash.com/photo-1537210249814-b9a10a161ae4?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Earth Shield',
+          element: 'earth',
+          tier: 3,
+          level: 30,
+          rarity: 'rare',
+          attack: 10,
+          defense: 45,
+          vitality: 200,
+          speed: 0,
+          focus: 15,
+          skills: JSON.stringify(['Stone Skin', 'Earth Spike', 'Boulder Toss']),
+          iconUrl: 'https://images.unsplash.com/photo-1510343513665-87c889f8b0ef?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Wind Rush',
+          element: 'wind',
+          tier: 4,
+          level: 30,
+          rarity: 'epic',
+          attack: 20,
+          defense: 15,
+          vitality: 90,
+          speed: 55,
+          focus: 25,
+          skills: JSON.stringify(['Gale Force', 'Cyclone', 'Air Shield']),
+          iconUrl: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Shadow Cloak',
+          element: 'shadow',
+          tier: 5,
+          level: 30,
+          rarity: 'legendary',
+          attack: 30,
+          defense: 30,
+          vitality: 120,
+          speed: 35,
+          focus: 40,
+          skills: JSON.stringify(['Dark Shroud', 'Shadow Step', 'Umbral Blast']),
+          iconUrl: 'https://images.unsplash.com/photo-1519608425089-7f3bfa6f6bb8?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Light Halo',
+          element: 'light',
+          tier: 5,
+          level: 30,
+          rarity: 'legendary',
+          attack: 35,
+          defense: 35,
+          vitality: 150,
+          speed: 30,
+          focus: 45,
+          skills: JSON.stringify(['Divine Ray', 'Blessing', 'Holy Nova']),
+          iconUrl: 'https://images.unsplash.com/photo-1523401257547-36b5171b3be0?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Nature\'s Blessing',
+          element: 'nature',
+          tier: 4,
+          level: 30,
+          rarity: 'epic',
+          attack: 25,
+          defense: 25,
+          vitality: 180,
+          speed: 25,
+          focus: 30,
+          skills: JSON.stringify(['Rejuvenate', 'Thornshield', 'Wild Growth']),
+          iconUrl: 'https://images.unsplash.com/photo-1462690417829-5b41247f6b0e?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Water Flow',
+          element: 'water',
+          tier: 3,
+          level: 30,
+          rarity: 'rare',
+          attack: 20,
+          defense: 30,
+          vitality: 140,
+          speed: 20,
+          focus: 35,
+          skills: JSON.stringify(['Tidal Wave', 'Healing Stream', 'Whirlpool']),
+          iconUrl: 'https://images.unsplash.com/photo-1454789476662-53eb23ba5907?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Arcane Power',
+          element: 'arcane',
+          tier: 5,
+          level: 30,
+          rarity: 'legendary',
+          attack: 50,
+          defense: 20,
+          vitality: 120,
+          speed: 15,
+          focus: 60,
+          skills: JSON.stringify(['Mystic Blast', 'Arcane Shield', 'Mana Surge']),
+          iconUrl: 'https://images.unsplash.com/photo-1590496793929-36417d3117de?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Volcanic Fury',
+          element: 'fire',
+          tier: 4,
+          level: 30,
+          rarity: 'epic',
+          attack: 55,
+          defense: 15,
+          vitality: 90,
+          speed: 20,
+          focus: 25,
+          skills: JSON.stringify(['Magma Strike', 'Lava Flow', 'Eruption']),
+          iconUrl: 'https://images.unsplash.com/photo-1610498955353-c92da35d40da?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Frost Nova',
+          element: 'ice',
+          tier: 4,
+          level: 30,
+          rarity: 'epic',
+          attack: 35,
+          defense: 35,
+          vitality: 110,
+          speed: 10,
+          focus: 40,
+          skills: JSON.stringify(['Frozen Core', 'Ice Blast', 'Winter\'s Grasp']),
+          iconUrl: 'https://images.unsplash.com/photo-1476368571201-5b1ad1c8e3b5?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Thunder God',
+          element: 'lightning',
+          tier: 5,
+          level: 30,
+          rarity: 'legendary',
+          attack: 60,
+          defense: 10,
+          vitality: 100,
+          speed: 45,
+          focus: 30,
+          skills: JSON.stringify(['Lightning Strike', 'Thunder Clap', 'Storm Call']),
+          iconUrl: 'https://images.unsplash.com/photo-1537210249814-b9a10a161ae4?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Mountain\'s Strength',
+          element: 'earth',
+          tier: 4,
+          level: 30,
+          rarity: 'epic',
+          attack: 20,
+          defense: 60,
+          vitality: 220,
+          speed: 0,
+          focus: 15,
+          skills: JSON.stringify(['Stone Skin', 'Earth Spike', 'Avalanche']),
+          iconUrl: 'https://images.unsplash.com/photo-1553075712-453f7dfe1d6c?w=150&h=150&fit=crop'
+        },
+        {
+          name: 'Tornado Force',
+          element: 'wind',
+          tier: 4,
+          level: 30,
+          rarity: 'epic',
+          attack: 40,
+          defense: 10,
+          vitality: 80,
+          speed: 60,
+          focus: 25,
+          skills: JSON.stringify(['Gale Force', 'Cyclone', 'Air Shield']),
+          iconUrl: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=150&h=150&fit=crop'
+        }
+      ];
+      
+      // Create auras sequentially to avoid DB conflicts
+      const createdAuras = [];
+      for (const aura of aurasToCreate) {
+        try {
+          const newAura = await storage.createAura({
+            userId,
+            ...aura
+          });
+          createdAuras.push(newAura);
+        } catch (error) {
+          console.error(`Error creating aura ${aura.name}:`, error);
+        }
+      }
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId,
+        activityType: 'auras_added',
+        description: `Added ${createdAuras.length} new auras`,
+        relatedIds: {}
+      });
+      
+      return res.json({
+        success: true,
+        message: `Added ${createdAuras.length} auras to inventory`,
+        auras: createdAuras.length
+      });
+    } catch (error) {
+      console.error('Error adding auras:', error);
+      return res.status(500).json({ 
+        message: 'Failed to add auras', 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
   // Admin endpoint to add advanced content (99999 Essence, Auras, and characters)
   app.post('/api/admin/add-advanced-content', async (req: Request, res: Response) => {
     try {
